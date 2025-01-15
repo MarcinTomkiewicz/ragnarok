@@ -1,0 +1,12 @@
+@import 'abstracts/variables';
+
+:host {
+    background-color: $primary-color;
+    color: $text-color;
+}
+
+.modal-header,
+.modal-body,
+.modal-footer {
+    background-color: $primary-color;
+}

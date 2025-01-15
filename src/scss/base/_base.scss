@@ -1,0 +1,58 @@
+body {
+  font-size: $font-size-base;
+}
+
+@media (max-width: $breakpoint-sm) {
+  body {
+    font-size: $font-size-sm;
+    padding-top: $navbar-height!important;
+  }
+}
+
+@media (min-width: $breakpoint-lg) {
+  body {
+    font-size: $font-size-lg;
+  }
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+    background-color: $bg-color;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: $primary-color;
+    border-radius: 10px;
+    border: 2px solid $bg-color;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: $button-hover-color;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background-color: $secondary-bg-color;
+    border-radius: 10px;
+  }
+  
+  * {
+    scrollbar-color: $primary-color $secondary-bg-color;
+    scrollbar-width: thin;
+  }
+
+  .container {
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  @media (min-width: $breakpoint-sm) {
+    .container {
+      width: $container-width-md;
+    }
+  }
+  
+  @media (min-width: $breakpoint-lg) {
+    .container {
+      width: $container-width-lg;
+    }
+  }

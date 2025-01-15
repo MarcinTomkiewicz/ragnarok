@@ -1,0 +1,25 @@
+header {
+    background-color: $secondary-bg-color;
+    color: $secondary-text-color;
+    padding: 2rem;
+    @include flex-wrapper(row);
+  
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+  
+    p {
+      text-align: center;
+      font-size: 1.2rem;
+      color: $secondary-text-color;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    .header {
+      padding: 10px;
+      background-color: $secondary-bg-color;
+    }
+  }

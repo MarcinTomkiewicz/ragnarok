@@ -1,0 +1,12 @@
+@import "abstracts/variables";
+
+:host {
+    display: block;
+    height: 100vh;
+
+    @media (max-width: $breakpoint-md) {
+      @media (orientation: landscape) {
+        height: auto;
+      }
+    }
+  }

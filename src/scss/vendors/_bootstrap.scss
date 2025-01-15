@@ -1,0 +1,19 @@
+.carousel-control-prev,
+.carousel-control-next {
+  background-color: $primary-color;
+  width: auto!important;
+  top: 50%!important;
+  transform: translateY(-50%);
+  filter: invert(1);
+
+  // Zmiana koloru SVG
+  svg {
+    fill: $primary-color; // Wykorzystaj currentColor, aby kontrować kolor
+  }
+
+  &:hover {
+    color: lighten($primary-color, 20%); // Zmiana koloru na hover
+  }
+}
+
+$form-label-font-size: large;

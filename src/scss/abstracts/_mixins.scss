@@ -1,0 +1,23 @@
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+@mixin flex-wrapper($direction) {
+  display: flex;
+  flex-direction: $direction;
+  align-items: center;
+  justify-content: space-between;
+}
+  
+  // Mixin for responsive font sizes
+  @mixin responsive-font-size($size) {
+    font-size: $size;
+    @media (min-width: 768px) {
+      font-size: $size * 1.2;
+    }
+    @media (min-width: 1200px) {
+      font-size: $size * 1.4;
+    }
+  }

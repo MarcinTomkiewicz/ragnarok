@@ -1,0 +1,207 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+:host {
+  display: block;
+  min-height: 100vh;
+  height: 100%;
+
+  @media (max-width: $breakpoint-md) {
+    @media (orientation: landscape) {
+      height: auto;
+    }
+  }
+}
+
+.component-container {
+  @include flex-wrapper(row);
+  background-color: $primary-color;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  flex-direction: row-reverse;
+  height: 100%;
+  gap: 10px;
+
+  @media (max-width: $breakpoint-md) {
+    flex-flow: column-reverse;
+    gap: 10px;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    height: 100%;
+    padding: 0.5rem;
+    gap: 10px;
+  }
+}
+
+.cta-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 50%;
+  height: 100%;
+  background: url("../../../../public/Cthulhu.jpg") center/cover no-repeat;
+
+  @media (max-width: $breakpoint-md) {
+    max-width: unset;
+    width: 100%;
+    height: auto;
+    flex-grow: 1;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    height: auto;
+  }
+
+  .cta-button {
+    background-color: $secondary-button-color;
+    color: $text-color;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      background-color: $secondary-button-hover-color;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+      transform: scale(1.05) translateY(-5px);
+      transition: all 0.4s ease;
+
+    }
+
+    @media (max-width: $breakpoint-xs) {
+      font-size: 1rem;
+      padding: 0.8rem 1.5rem;
+    }
+  }
+}
+
+.about-container {
+  flex: 1;
+  max-width: 50%;
+  margin-left: auto;
+  padding: 2rem;
+  line-height: 1.6;
+  background-color: $primary-color;
+  transition: all 0.3s ease;
+  overflow: hidden;
+
+  .about-paragraph {
+    font-size: large;
+    color: $secondary-bg-color;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+
+    &:nth-of-type(1) {
+      animation-delay: 0.3s;
+    }
+
+    &:nth-of-type(2) {
+      animation-delay: 0.6s;
+    }
+
+    &:nth-of-type(3) {
+      animation-delay: 0.9s;
+    }
+
+    &:last-child {
+      animation-delay: 1.2s;
+      margin-bottom: 0;
+    }
+
+    &:first-of-type::first-letter {
+      font-size: 4rem;
+      font-weight: bold;
+      color: $secondary-color;
+      float: left;
+      margin-right: 10px;
+      line-height: 1;
+    }
+  }
+
+  /* Efekty hover dla większych ekranów */
+  &:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05) translateY(-5px);
+    background-color: darken($primary-color, 5%);
+    transition: all 0.4s ease;
+    color: $secondary-bg-color;
+
+    .about-paragraph {
+      color: lighten($secondary-bg-color, 10%);
+      text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .about-paragraph:first-of-type::first-letter {
+      color: lighten($secondary-bg-color, 15%);
+      transform: rotate(-5deg) scale(1.1);
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+  }
+
+  /* Stylowanie dla mniejszych ekranów */
+  @media (max-width: $breakpoint-md) {
+    max-width: 100%;
+    padding: 0;
+    padding-top: 1rem;
+    margin: 0;
+    overflow: unset;
+
+    /* Wyłączanie efektów hover dla .about-paragraph */
+    &:hover {
+      box-shadow: none;
+      transform: none;
+      background-color: $primary-color;
+    }
+
+    &:hover .about-paragraph {
+      color: $text-color;
+      text-shadow: none;
+    }
+
+    &:hover .about-paragraph:first-of-type::first-letter {
+      transform: none;
+      color: $secondary-color;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    .about-paragraph {
+      font-size: large;
+
+      /* Ukrywanie 3. i 4. paragrafu */
+      &:nth-child(4) {
+        display: none;
+      }
+    }
+  }
+
+  @media (max-width: $breakpoint-xs) {
+    max-width: 100%;
+    padding: 1rem;
+
+    .about-paragraph {
+      font-size: small;
+      &:nth-child(3) {
+        display: none;
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

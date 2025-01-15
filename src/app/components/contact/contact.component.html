@@ -1,0 +1,174 @@
+<div class="component-container">
+  <div class="container">
+    <h2>Kontakt</h2>
+    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="topic" class="form-label">Temat</label>
+        <select
+          id="topic"
+          formControlName="topic"
+          class="form-select form-select-sm"
+          autocomplete="off"
+        >
+          <option *ngFor="let topic of topics" [value]="topic">
+            {{ topic }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="firstName" class="form-label">Imię*</label>
+        <input
+          id="firstName"
+          name="firstName"
+          type="text"
+          formControlName="firstName"
+          class="form-control form-control-sm"
+          required
+          autocomplete="given-name"
+        />
+        <div
+          *ngIf="
+            contactForm.get('firstName')?.invalid &&
+            contactForm.get('firstName')?.touched
+          "
+          class="text-danger"
+        >
+          Imię jest wymagane.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="lastName" class="form-label">Nazwisko*</label>
+        <input
+          id="lastName"
+          formControlName="lastName"
+          type="text"
+          class="form-control form-control-sm"
+          required
+          autocomplete="family-name"
+        />
+        <div
+          *ngIf="
+            contactForm.get('lastName')?.invalid &&
+            contactForm.get('lastName')?.touched
+          "
+          class="text-danger"
+        >
+          Nazwisko jest wymagane.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="company" class="form-label">Firma</label>
+        <input
+          id="company"
+          name="company"
+          type="text"
+          formControlName="company"
+          class="form-control form-control-sm"
+          autocomplete="organization"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="email" class="form-label">Email*</label>
+        <input
+          id="email"
+          formControlName="email"
+          type="email"
+          class="form-control form-control-sm"
+          required
+          autocomplete="email"
+        />
+        <div
+          *ngIf="
+            contactForm.get('email')?.invalid &&
+            contactForm.get('email')?.touched
+          "
+          class="text-danger"
+        >
+          Proszę podać poprawny adres email.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="phone" class="form-label">Nr telefonu*</label>
+        <input
+          id="phone"
+          formControlName="phone"
+          type="tel"
+          class="form-control form-control-sm"
+          required
+          autocomplete="tel"
+        />
+        <div
+          *ngIf="
+            contactForm.get('phone')?.invalid &&
+            contactForm.get('phone')?.touched
+          "
+          class="text-danger"
+        >
+          Nr telefonu jest wymagany.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="message" class="form-label">Treść zapytania*</label>
+        <textarea
+          id="message"
+          formControlName="message"
+          class="form-control responsive-textarea"
+          rows="5"
+          required
+          (click)="isSmallScreen ? openModal() : null"
+          [readonly]="isSmallScreen"
+          autocomplete="off"
+        ></textarea>
+        <div
+          *ngIf="
+            contactForm.get('message')?.invalid &&
+            contactForm.get('message')?.touched
+          "
+          class="text-danger"
+        >
+          Treść zapytania jest wymagana.
+        </div>
+      </div>
+
+      <div class="d-flex flex-row gap-3">
+        <button type="submit" class="btn btn-primary">Wyślij</button>
+        <button type="button" class="btn btn-secondary" (click)="onReset()">
+          Anuluj
+        </button>
+      </div>
+    </form>
+  </div>
+  <ngb-toast
+    *ngIf="showToast"
+    [autohide]="false"
+    [class]="toastType === 'success' ? 'bg-success text-light' : 'bg-danger text-light'"
+    (hidden)="closeToast()"
+    class="custom-toast"
+  >
+    <div class="d-flex justify-content-between align-items-center">
+      <span>{{ toastMessage }}</span>
+      <button
+        type="button"
+        class="btn-close btn-close-white me-2 m-auto"
+        (click)="closeToast()"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    <!-- Progress bar using ngb-progressbar -->
+    <ngb-progressbar
+      [value]="progress"
+      [animated]="true"
+      [striped]="true"
+      class="toast-progress-bar"
+      [type]="toastType === 'success' ? 'success' : 'danger'"
+      height="5px"
+    ></ngb-progressbar>
+  </ngb-toast>
+</div>

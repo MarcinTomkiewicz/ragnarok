@@ -1,0 +1,51 @@
+@import "abstracts/variables";
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: $primary-color;
+
+  @media (max-width: $breakpoint-md) {
+    @media (orientation: landscape) {
+      height: auto;
+    }
+  }
+}
+
+.responsive-textarea {
+  height: auto; /* Umożliwiamy dynamiczną wysokość */
+}
+
+@media (max-width: $breakpoint-md) {
+  .form-label {
+    font-size: smaller; // Nadpisanie rozmiaru czcionki dla etykiet
+  }
+}
+@media (max-width: $breakpoint-xs) {
+  .component-container {
+    padding: 0.5rem;
+  }
+  .form-label {
+    font-size: x-small; // Nadpisanie rozmiaru czcionki dla etykiet
+  }
+  .responsive-textarea {
+    height: 60px; /* Umożliwiamy dynamiczną wysokość */
+  }
+}
+
+.custom-toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1050;
+  
+  .toast-progress-bar {
+    margin: 0;
+    width: 100%;
+    margin-top: 5px; /* Odstęp między treścią toasta a paskiem */
+  }
+  
+  .btn-close {
+    margin-left: auto;  // Aby przycisk zamknięcia był po prawej stronie
+  }
+}

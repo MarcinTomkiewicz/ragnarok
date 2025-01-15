@@ -1,0 +1,29 @@
+<table class="table table-hover table-striped align-middle">
+    <thead>
+      <tr class="table-header">
+        <th scope="col" class="service-name">Nazwa usługi</th>
+        <th scope="col" style="width: 15%;">Cena</th>
+        <th scope="col" class="large-screens" style="width: 60%;">Opis</th>
+        <th scope="col" style="white-space: nowrap; width: 10%;">Czas realizacji</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let service of services()"
+        ngbTooltip="{{ service.longDescription }}"
+        tooltipClass="custom-tooltip"
+        triggers="click:blur"
+      >
+        <td>
+          <span><i class="bi bi-info-square"></i></span>
+          {{ service.name }}
+        </td>
+        <td>
+          {{ service.price | number }} zł
+          {{ service.priceOrMore ? "lub więcej" : "" }}
+        </td>
+        <td class="large-screens">{{ service.shortDescription }}</td>
+        <td>{{ service.realisation }}</td>
+      </tr>
+    </tbody>
+  </table>

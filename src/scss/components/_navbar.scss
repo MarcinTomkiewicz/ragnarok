@@ -1,0 +1,61 @@
+@import "abstracts/variables";
+
+.navbar {
+  position: fixed !important; // Ustawienie na fixed
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: $navbar-height; // Jeśli masz tę zmienną
+  z-index: 999; // Upewnij się, że navbar jest na wierzchu
+  background-color: $primary-color; // Kolor tła
+
+  @media (min-width: $breakpoint-sm) {
+    position: static !important; // Przyklejona nawigacja na większych ekranach
+    top: 0;
+    left: 0;
+    z-index: 1000; // Wysoki z-index, aby nawigacja była nad treścią
+  }
+
+  .navbar-brand {
+    padding-left: 2rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+
+    @media (max-width: $breakpoint-sm) {
+      display: none;
+    }
+  }
+
+  .navbar-nav {
+    list-style: none;
+    text-align: center;
+    @include flex-wrapper(row);
+
+    @media (max-width: $breakpoint-sm) {
+      justify-content: space-around;
+      width: 100%;
+    }
+
+    li {
+      margin-right: 2rem;
+      padding: 0.5rem;
+      @media (max-width: $breakpoint-sm) {
+        margin-right: 0%;
+      }
+      a {
+        text-decoration: none;
+        color: $secondary-bg-color;
+
+        @media (max-width: $breakpoint-sm) {
+          font-size: 0.9rem;
+          text-align: center;
+        }
+      }
+      &:hover {
+        border: 1px solid $secondary-bg-color;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+@import 'abstracts/variables';
+
+:host {
+    height: 75vh !important;
+    background-color: $primary-color; // Tło dla całego modala
+    color: $secondary-text-color; // Opcjonalnie: zmiana koloru tekstu
+}
+
+
+.modal-header,
+.modal-body,
+.modal-footer {
+    background-color: $primary-color; // Ustawienie tła dla nagłówka, treści i stopki
+}
+
+.modal-title {
+    color: $text-color
+}
+
+.modal-body {
+    height: 80%;
+}

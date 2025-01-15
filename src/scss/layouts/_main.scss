@@ -1,0 +1,29 @@
+main {
+  padding: 2rem;
+  color: $secondary-text-color; 
+  
+  h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    text-align: center;
+    font-size: 1.2rem;
+    color: $secondary-text-color;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  main {
+    padding: 0.5rem;
+  }
+}
+
+@media (orientation: landscape) {
+  main {
+    min-height: unset;
+    height: auto;
+  }
+}

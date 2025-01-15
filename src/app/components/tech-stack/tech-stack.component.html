@@ -1,0 +1,48 @@
+<div class="component-container">
+  <h2 class="section-title">Technologie</h2>
+  <div class="description">
+    Nasza praca opiera się na nowoczesnych technologiach, które stanowią
+    fundament każdego projektu, nad którym pracujemy. Korzystamy z najnowszych
+    rozwiązań i narzędzi, aby zapewnić, że nasze projekty są nie tylko
+    funkcjonalne, ale również przyszłościowe i dostosowane do dynamicznie
+    zmieniających się potrzeb rynku. Nasz zespół nieustannie śledzi trendy w
+    branży, co pozwala nam na wdrażanie innowacyjnych rozwiązań, które podnoszą
+    jakość naszych usług. Oto przegląd kluczowych technologii, które pomagają
+    nam w realizacji tych celów, zapewniając jednocześnie wysoką wydajność i
+    responsywność naszych aplikacji.
+  </div>
+  <div class="image-banner-container">
+    <img
+      src="Vampire.jpg"
+      alt="Banner for services"
+      class="image-banner"
+    />
+  </div>
+  <ngb-carousel #carousel class="tech-carousel" [interval]="0">
+    <ng-template
+      ngbSlide
+      *ngFor="let techStacks of techStackGroups; trackBy: trackTechs"
+    >
+      <div class="row justify-content-center">
+        <div
+          *ngFor="let techStack of techStacks; trackBy: trackById"
+          class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4"
+        >
+          <div class="card text-center h-100">
+            <a [href]="techStack.websiteUrl" target="_blank">
+              <img
+                [src]="techStack.logoUrl"
+                class="card-img-top img-fluid p-3"
+                [alt]="'Logo ' + techStack.name"
+              />
+            </a>
+            <div class="card-body">
+              <h5 class="card-title">{{ techStack.name }}</h5>
+              <p class="card-text">{{ techStack.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ngb-carousel>
+</div>

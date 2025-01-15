@@ -1,0 +1,20 @@
+h1, h2, h3, h4, h5, h6 {
+    color: $text-color;
+    font-weight: 700;
+  }
+  
+  p {
+    margin-bottom: 1.5rem;
+    color: $text-color;
+    font-size: $font-size-base;
+  }
+  
+  a {
+    color: $primary-color;
+    text-decoration: none;
+  
+    // &:hover {
+    //   text-decoration: none;
+    //   color: $secondary-color;
+    // }
+  }

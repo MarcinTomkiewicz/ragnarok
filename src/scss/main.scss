@@ -1,0 +1,65 @@
+// Abstracts
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+// Base
+@import "base/reset";
+@import "base/typography";
+@import "base/base";
+
+// Components
+@import "components/buttons";
+@import "components/navbar";
+
+// Layouts
+@import "layouts/header";
+@import "layouts/footer";
+@import "layouts/grid";
+@import "layouts/main";
+@import "layouts/div";
+
+// Vendors (Bootstrap)
+@import "vendors/bootstrap";
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons"; // Import Bootstrap SCSS
+
+@import "@fontsource/modern-antiqua/index.css";
+
+body {
+  margin: 0; /* Usuń domyślny margines */
+  padding: 0; /* Usuń domyślny padding */
+  overflow-x: hidden; /* Ukryj poziomy scrollbar */
+  font-family: "Modern Antiqua", serif; /* Ustawienia fontu */
+  background-color: $bg-color;
+  color: $text-color;
+}
+
+/* Resetowanie niechcianych stylów dla wszystkich elementów */
+* {
+  box-sizing: border-box; /* Upewnij się, że padding i border są wliczane w rozmiar elementu */
+}
+
+/* Linki */
+a {
+  text-decoration: none; /* Usuń podkreślenia */
+  color: inherit; /* Kolor taki sam jak kolor tekstu */
+  transition: color 0.3s ease;
+
+  &:hover {
+    border: 1px solid $border-color;
+    border-radius: 10px;
+  } /* Przyciemnienie koloru podczas hover */
+}
+
+/* Przyciski */
+button {
+  cursor: pointer; /* Kursor zmienia się na wskaźnik */
+}
+
+.flex-row-default {
+  @include flex-wrapper(row);
+}
+
+.flex-column-default {
+  @include flex-wrapper(column);
+}

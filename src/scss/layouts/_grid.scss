@@ -1,0 +1,29 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -0.5rem;
+  
+    > [class^="col-"] {
+      padding: 0.5rem;
+    }
+  }
+  
+  .col-6 {
+    width: 50%;
+  }
+  
+  .col-12 {
+    width: 100%;
+  }
+  
+  @media (max-width: 768px) {
+    .col-6 {
+      width: 100%;
+    }
+  }
