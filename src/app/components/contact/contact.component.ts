@@ -1,8 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbModal, NgbProgressbarModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
-// import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -13,18 +12,18 @@ import { OverlayService } from '../../core/services/overlay.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, NgbToastModule, NgbProgressbarModule],
   templateUrl: './contact.component.html',
-  styleUrl: './contact.component.scss'
+  styleUrls: ['./contact.component.scss']
 })
-export class ContactComponent {
+export class ContactComponent implements OnInit, OnDestroy {
   contactForm: FormGroup;
   modalService = inject(NgbModal);
-  overlayService = inject(OverlayService)
+  overlayService = inject(OverlayService);
   http = inject(HttpClient);
-  // private readonly breakpointObserver = inject(BreakpointObserver)
-  private readonly fb =  inject(FormBuilder)
-    topics = [
-    'Zapytanie ofertowe / Wycena',
-    'Zamówienie',
+  private readonly fb = inject(FormBuilder);
+  topics = [
+    'Rezerwacja salki',
+    'Zapytanie o towar',
+    'Organizacja eventu',
     'Ogólne'
   ];
   isSmallScreen = false;
@@ -45,16 +44,28 @@ export class ContactComponent {
       phone: ['', Validators.required],
       message: ['', Validators.required],
     });
+  }
 
-    // this.breakpointObserver.observe(Breakpoints.XSmall).subscribe(result => {
-    //   this.isSmallScreen = result.matches; // Zapisz stan czy to jest mały ekran
-    // });
+  ngOnInit() {
+    this.checkScreenSize(); // Sprawdź wielkość ekranu przy inicjalizacji
+    window.addEventListener('resize', this.handleResize.bind(this)); // Dodaj nasłuchiwanie zmian rozmiaru okna
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', this.handleResize.bind(this)); // Usuń nasłuchiwanie przy niszczeniu komponentu
+  }
+
+  private handleResize() {
+    this.checkScreenSize();
+  }
+
+  private checkScreenSize() {
+    this.isSmallScreen = window.innerWidth < 576; // Ustawia flagę na podstawie szerokości okna (<576px to Bootstrap XS)
   }
 
   openModal() {
-    // Używamy BreakpointObserver do sprawdzenia, czy ekran jest mniejszy niż xs
     if (this.isSmallScreen) {  // Otwórz modal tylko na małych ekranach
-      const modalRef = this.modalService.open(MessageModalComponent, { 
+      const modalRef = this.modalService.open(MessageModalComponent, {
         size: 'sm',
         centered: true,
       });
@@ -65,7 +76,6 @@ export class ContactComponent {
         this.contactForm.patchValue({ message: result });
       });
     }
-
   }
 
   onSubmit() {
@@ -107,12 +117,12 @@ export class ContactComponent {
 
   startProgressBar() {
     this.progress = 100; // Ustawiamy pasek na 100%
-    
+
     const intervalTime = 50; // Odświeżanie co 50ms dla płynnej animacji
     const totalSteps = this.toastDuration / intervalTime; // Ilość kroków animacji
-    
+
     const progressStep = 100 / totalSteps; // Jak dużo zmniejszać na krok
-  
+
     this.progressInterval = setInterval(() => {
       this.progress -= progressStep; // Zmniejszamy postęp
       if (this.progress <= 0) {

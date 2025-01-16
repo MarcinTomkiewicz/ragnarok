@@ -13,131 +13,217 @@ import { ServicesTableComponent } from '../../common/services-table/services-tab
   encapsulation: ViewEncapsulation.None,
 })
 export class ServicesComponent {
-  mainServices: IServices[] = [
+
+  standardRooms: IServices[] = [
     {
-      name: 'Wizytówka / Landing Page',
-      price: 2000,
-      priceOrMore: false,
-      shortDescription:
-        'Stworzenie statycznej strony wizytówki, optymalizacja SEO i responsywność. Idealne dla małych firm, freelancerów, startupów.',
-      longDescription:
-        'Wizytówka lub landing page to idealne rozwiązanie dla małych firm, freelancerów lub startupów, które potrzebują prostej, lecz efektywnej obecności w sieci. Projekt obejmuje stworzenie statycznej strony, która może zawierać informacje o firmie, jej usługach, galerię zdjęć, formularz kontaktowy oraz integrację z mediami społecznościowymi. Strona zostanie zoptymalizowana pod kątem SEO, co pomoże w lepszej widoczności w wynikach wyszukiwania. Całość będzie w pełni responsywna, co oznacza, że będzie działać na wszystkich urządzeniach, zarówno komputerach, jak i smartfonach.',
-      realisation: '2 tygodnie',
+      name: '1-2 godziny',
+      price: 80,
+      priceType: 'hour',
+      shortDescription: 'Salka na 1-2 godziny, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
     {
-      name: 'Blog / Portal Informacyjny',
-      price: 3000,
-      priceOrMore: false,
-      shortDescription:
-        'Dynamiczny blog lub portal informacyjny. Cena nie uwzględnia backendu (backend po stronie klienta). Możliwość przygotowania backendu w Strapi lub Google Firebase, koszt ustalany indywidualnie.',
-      longDescription:
-        'Tworzymy dynamiczne i funkcjonalne blogi oraz portale informacyjne, które pozwalają na łatwe zarządzanie treścią. Projekt obejmuje zaawansowane funkcje takie jak kategorie, tagi, system komentarzy, archiwum wpisów i możliwość integracji z mediami społecznościowymi. Istnieje opcja rozbudowy systemu o backend (na Strapi lub Google Firebase), który umożliwi zarządzanie bazą użytkowników oraz treściami. Cena nie obejmuje backendu, który może być dostarczony przez klienta lub stworzony indywidualnie jako dodatkowa usługa.',
-      realisation: '2-3 tygodnie',
+      name: '3-4 godziny',
+      price: 75,
+      priceType: 'hour',
+      shortDescription: 'Salka na 3-4 godziny, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
     {
-      name: 'Interaktywna Aplikacja Internetowa (frontend bez backendu)',
-      price: 4000,
-      priceOrMore: false,
-      shortDescription:
-        'Aplikacja z funkcjami interaktywnymi, dynamiczne elementy, bez backendu (lub z backendem dostarczonym przez klienta).',
-      longDescription:
-        'Nasza oferta obejmuje stworzenie interaktywnych aplikacji internetowych, które zawierają dynamiczne elementy oraz zaawansowane funkcje użytkownika, takie jak animacje, formularze, interaktywne tabele czy mapy. Tego typu aplikacje mogą być idealnym rozwiązaniem dla firm, które potrzebują platformy do zarządzania danymi lub realizacji specyficznych zadań bez konieczności korzystania z backendu (który może być dostarczony przez klienta).',
-      realisation: '4 tygodnie',
+      name: '5-6 godzin',
+      price: 70,
+      priceType: 'hour',
+      shortDescription: 'Salka na 5-6 godzin, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
     {
-      name: 'Interaktywna Aplikacja Internetowa z backendem (Strapi/Firebase)',
-      price: 6000,
-      priceOrMore: false,
-      shortDescription:
-        'Frontend z backendem na Strapi lub Google Firebase. Idealne do aplikacji z zarządzaniem danymi, user-generated content.',
-      longDescription:
-        'Tworzymy kompletne aplikacje internetowe z backendem opartym na Strapi lub Google Firebase. Tego typu aplikacje idealnie nadają się do zarządzania użytkownikami, danymi, treściami generowanymi przez użytkowników (user-generated content) oraz różnego rodzaju formularzami. Backend pozwala na łatwe zarządzanie danymi oraz użytkownikami z poziomu panelu administracyjnego. Rozwiązanie może być dostosowane do specyficznych potrzeb klienta, zarówno pod kątem funkcjonalności, jak i skalowalności.',
-      realisation: 'Indywidualnie',
+      name: '7+ godzin',
+      price: 65,
+      priceType: 'hour',
+      shortDescription: 'Salka na 7+ godzin, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
+    },
+  ];
+  
+  vipRooms: IServices[] = [
+    {
+      name: '1-2 godziny',
+      price: 95,
+      priceType: 'hour',
+      shortDescription: 'Salka na 1-2 godziny, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
     {
-      name: 'Sklep Internetowy (backend dostarczony przez klienta)',
-      price: 6000,
-      priceOrMore: true,
-      shortDescription:
-        'Kompleksowy frontend sklepu internetowego, z integracją dostarczonego backendu. Możliwość rozszerzeń o dodatkowe funkcje.',
-      longDescription:
-        'Realizujemy kompleksowe frontendowe rozwiązania dla sklepów internetowych. Projekt obejmuje pełną integrację z dostarczonym backendem, który obsługuje system zarządzania produktami, koszykiem, zamówieniami oraz płatnościami. Możliwe jest rozszerzenie sklepu o dodatkowe funkcje, takie jak rekomendacje produktów, integracje z zewnętrznymi API, analityka oraz narzędzia marketingowe. Idealne rozwiązanie dla firm, które posiadają już backend i szukają nowoczesnego interfejsu użytkownika.',
-      realisation: 'Indywidualnie',
+      name: '3-4 godziny',
+      price: 90,
+      priceType: 'hour',
+      shortDescription: 'Salka na 3-4 godziny, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
     {
-      name: 'Sklep Internetowy (backend Strapi / Firebase)',
-      price: 8000,
-      priceOrMore: true,
-      shortDescription:
-        'Kompletny sklep z backendem opartym o Strapi lub Google Firebase, z systemem zarządzania produktami, płatnościami, analityką.',
-      longDescription:
-        'Oferujemy kompleksowe wdrożenie sklepu internetowego, który zawiera zarówno frontend, jak i backend oparty na Strapi lub Google Firebase. Sklep będzie posiadał zaawansowany system zarządzania produktami, system płatności, analitykę oraz możliwość integracji z różnymi platformami zewnętrznymi. Dzięki backendowi, właściciel sklepu będzie mógł zarządzać ofertą, zamówieniami, użytkownikami oraz promocjami z poziomu intuicyjnego panelu administracyjnego. Idealne rozwiązanie dla firm, które poszukują skalowalnego sklepu z możliwością rozbudowy.',
-      realisation: 'Indywidualnie',
+      name: '5-6 godzin',
+      price: 85,
+      priceType: 'hour',
+      shortDescription: 'Salka na 5-6 godzin, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
+    },
+    {
+      name: '7+ godzin',
+      price: 80,
+      priceType: 'hour',
+      shortDescription: 'Salka na 7+ godzin, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
   ];
 
-  additionalServices: IServices[] = [
+  passes: IServices[] = [
     {
-      name: 'Projekt graficzny / Design',
-      price: 1200,
-      priceOrMore: false,
-      shortDescription: 'Profesjonalny projekt graficzny.',
-      longDescription:
-        'Tworzymy unikalne projekty graficzne dostosowane do Twoich potrzeb, obejmujące logo, materiały reklamowe oraz inne elementy wizualne.',
-      realisation: '2-3 tygodnie',
+      name: 'Karnet Legendy Ragnarok',
+      price: 1300,
+      priceType: 'piece',
+      shortDescription: '20 godzin do wykorzystania + 4 dodatkowe godziny gratis.',
+      longDescription: 'Karnet Legendy Ragnarok oferuje 20 godzin w standardowej salce, wyposażonej w laptopa, nagłośnienie, stół i krzesła. Dodatkowo w ramach oferty otrzymujesz 4 godziny gratis, aby w pełni wykorzystać potencjał naszych przestrzeni.',
     },
     {
-      name: 'Integracja z API',
-      price: 900,
-      priceOrMore: false,
-      shortDescription: 'Integracja frontend z backend API.',
-      longDescription:
-        'Zajmujemy się integracją aplikacji frontendowej z zewnętrznymi API, aby zapewnić pełną funkcjonalność.',
-      realisation: '1-2 tygodnie',
+      name: 'Karnet Legendy Ragnarok VIP',
+      price: 1600,
+      priceType: 'piece',
+      shortDescription: '20 godzin w salce VIP + 4 dodatkowe godziny w salce VIP gratis.',
+      longDescription: 'Karnet Legendy Ragnarok VIP oferuje 20 godzin w ekskluzywnej salce VIP, wyposażonej w wygodne fotele, funkcjonalne stoliki podręczne, laptopa i nagłośnienie. Dodatkowe 4 godziny gratis pozwalają cieszyć się jeszcze dłuższym czasem w luksusowych warunkach.',
     },
     {
-      name: 'Tworzenie komponentów w React/Angular*',
-      price: 1000,
-      priceOrMore: true,
-      shortDescription: 'Rozwój komponentów frontendowych.',
-      longDescription:
-        'Tworzymy komponenty zgodne z najlepszymi praktykami w popularnych frameworkach takich jak React, Angular lub Vue.',
-      realisation: '1-3 tygodnie',
+      name: 'Karnet Bogowie Ragnarok',
+      price: 2500,
+      priceType: 'piece',
+      shortDescription: '40 godzin do wykorzystania + 10 dodatkowych godzin gratis.',
+      longDescription: 'Karnet Bogowie Ragnarok zapewnia 40 godzin w standardowej salce, wyposażonej w laptopa, nagłośnienie, stół i krzesła. Dodatkowe 10 godzin gratis pozwala na jeszcze większą elastyczność i komfort użytkowania przestrzeni.',
     },
     {
-      name: "Konsultacje DevOps",
-      price: 400,
-      priceOrMore: false,
-      shortDescription: "Doradztwo w zakresie DevOps.",
-      longDescription: "Oferujemy konsultacje w zakresie optymalizacji procesów wdrożeniowych, automatyzacji i zarządzania infrastrukturą.",
-      realisation: "1 dzień"
-    },
-    {
-      name: 'Tworzenie interakcji w CSS/JS*',
-      price: 500,
-      priceOrMore: false,
-      shortDescription: 'Dodawanie interakcji do Twojej aplikacji.',
-      longDescription:
-        'Tworzymy efektowne interakcje w aplikacjach webowych, aby poprawić doświadczenie użytkowników.',
-      realisation: '1 tydzień',
-    },
-    {
-      name: 'Dostosowanie UI/UX**',
-      price: 800,
-      priceOrMore: true,
-      shortDescription: 'Poprawa interfejsu użytkownika.',
-      longDescription:
-        'Analizujemy i dostosowujemy interfejs użytkownika do potrzeb użytkowników, aby poprawić ich doświadczenia.',
-      realisation: '1-2 tygodnie',
-    },
-    {
-      name: 'Migracja aplikacji na nowe technologie**',
-      price: 1200,
-      priceOrMore: true,
-      shortDescription: 'Aktualizacja technologii aplikacji.',
-      longDescription:
-        'Pomagamy w migracji aplikacji frontendowych na nowoczesne technologie lub frameworki - takie jak Angular czy React.',
-      realisation: '2-4 tygodnie',
+      name: 'Karnet Bogowie Ragnarok VIP',
+      price: 3000,
+      priceType: 'piece',
+      shortDescription: '40 godzin w salce VIP + 10 dodatkowych godzin w salce VIP gratis.',
+      longDescription: 'Karnet Bogowie Ragnarok VIP zapewnia 40 godzin w przestronnej i komfortowej salce VIP, wyposażonej w wygodne fotele, funkcjonalne stoliki podręczne, laptopa i nagłośnienie. Dodatkowe 10 godzin gratis gwarantuje pełną swobodę i niezapomniane doświadczenia.',
     },
   ];
+
+  // mainServices: IServices[] = [
+  //   {
+  //     name: 'Wizytówka / Landing Page',
+  //     price: 2000,
+  //     priceOrMore: false,
+  //     shortDescription:
+  //       'Stworzenie statycznej strony wizytówki, optymalizacja SEO i responsywność. Idealne dla małych firm, freelancerów, startupów.',
+  //     longDescription:
+  //       'Wizytówka lub landing page to idealne rozwiązanie dla małych firm, freelancerów lub startupów, które potrzebują prostej, lecz efektywnej obecności w sieci. Projekt obejmuje stworzenie statycznej strony, która może zawierać informacje o firmie, jej usługach, galerię zdjęć, formularz kontaktowy oraz integrację z mediami społecznościowymi. Strona zostanie zoptymalizowana pod kątem SEO, co pomoże w lepszej widoczności w wynikach wyszukiwania. Całość będzie w pełni responsywna, co oznacza, że będzie działać na wszystkich urządzeniach, zarówno komputerach, jak i smartfonach.',
+  //     realisation: '2 tygodnie',
+  //   },
+  //   {
+  //     name: 'Blog / Portal Informacyjny',
+  //     price: 3000,
+  //     priceOrMore: false,
+  //     shortDescription:
+  //       'Dynamiczny blog lub portal informacyjny. Cena nie uwzględnia backendu (backend po stronie klienta). Możliwość przygotowania backendu w Strapi lub Google Firebase, koszt ustalany indywidualnie.',
+  //     longDescription:
+  //       'Tworzymy dynamiczne i funkcjonalne blogi oraz portale informacyjne, które pozwalają na łatwe zarządzanie treścią. Projekt obejmuje zaawansowane funkcje takie jak kategorie, tagi, system komentarzy, archiwum wpisów i możliwość integracji z mediami społecznościowymi. Istnieje opcja rozbudowy systemu o backend (na Strapi lub Google Firebase), który umożliwi zarządzanie bazą użytkowników oraz treściami. Cena nie obejmuje backendu, który może być dostarczony przez klienta lub stworzony indywidualnie jako dodatkowa usługa.',
+  //     realisation: '2-3 tygodnie',
+  //   },
+  //   {
+  //     name: 'Interaktywna Aplikacja Internetowa (frontend bez backendu)',
+  //     price: 4000,
+  //     priceOrMore: false,
+  //     shortDescription:
+  //       'Aplikacja z funkcjami interaktywnymi, dynamiczne elementy, bez backendu (lub z backendem dostarczonym przez klienta).',
+  //     longDescription:
+  //       'Nasza oferta obejmuje stworzenie interaktywnych aplikacji internetowych, które zawierają dynamiczne elementy oraz zaawansowane funkcje użytkownika, takie jak animacje, formularze, interaktywne tabele czy mapy. Tego typu aplikacje mogą być idealnym rozwiązaniem dla firm, które potrzebują platformy do zarządzania danymi lub realizacji specyficznych zadań bez konieczności korzystania z backendu (który może być dostarczony przez klienta).',
+  //     realisation: '4 tygodnie',
+  //   },
+  //   {
+  //     name: 'Interaktywna Aplikacja Internetowa z backendem (Strapi/Firebase)',
+  //     price: 6000,
+  //     priceOrMore: false,
+  //     shortDescription:
+  //       'Frontend z backendem na Strapi lub Google Firebase. Idealne do aplikacji z zarządzaniem danymi, user-generated content.',
+  //     longDescription:
+  //       'Tworzymy kompletne aplikacje internetowe z backendem opartym na Strapi lub Google Firebase. Tego typu aplikacje idealnie nadają się do zarządzania użytkownikami, danymi, treściami generowanymi przez użytkowników (user-generated content) oraz różnego rodzaju formularzami. Backend pozwala na łatwe zarządzanie danymi oraz użytkownikami z poziomu panelu administracyjnego. Rozwiązanie może być dostosowane do specyficznych potrzeb klienta, zarówno pod kątem funkcjonalności, jak i skalowalności.',
+  //     realisation: 'Indywidualnie',
+  //   },
+  //   {
+  //     name: 'Sklep Internetowy (backend dostarczony przez klienta)',
+  //     price: 6000,
+  //     priceOrMore: true,
+  //     shortDescription:
+  //       'Kompleksowy frontend sklepu internetowego, z integracją dostarczonego backendu. Możliwość rozszerzeń o dodatkowe funkcje.',
+  //     longDescription:
+  //       'Realizujemy kompleksowe frontendowe rozwiązania dla sklepów internetowych. Projekt obejmuje pełną integrację z dostarczonym backendem, który obsługuje system zarządzania produktami, koszykiem, zamówieniami oraz płatnościami. Możliwe jest rozszerzenie sklepu o dodatkowe funkcje, takie jak rekomendacje produktów, integracje z zewnętrznymi API, analityka oraz narzędzia marketingowe. Idealne rozwiązanie dla firm, które posiadają już backend i szukają nowoczesnego interfejsu użytkownika.',
+  //     realisation: 'Indywidualnie',
+  //   },
+  //   {
+  //     name: 'Sklep Internetowy (backend Strapi / Firebase)',
+  //     price: 8000,
+  //     priceOrMore: true,
+  //     shortDescription:
+  //       'Kompletny sklep z backendem opartym o Strapi lub Google Firebase, z systemem zarządzania produktami, płatnościami, analityką.',
+  //     longDescription:
+  //       'Oferujemy kompleksowe wdrożenie sklepu internetowego, który zawiera zarówno frontend, jak i backend oparty na Strapi lub Google Firebase. Sklep będzie posiadał zaawansowany system zarządzania produktami, system płatności, analitykę oraz możliwość integracji z różnymi platformami zewnętrznymi. Dzięki backendowi, właściciel sklepu będzie mógł zarządzać ofertą, zamówieniami, użytkownikami oraz promocjami z poziomu intuicyjnego panelu administracyjnego. Idealne rozwiązanie dla firm, które poszukują skalowalnego sklepu z możliwością rozbudowy.',
+  //     realisation: 'Indywidualnie',
+  //   },
+  // ];
+
+  // additionalServices: IServices[] = [
+  //   {
+  //     name: 'Projekt graficzny / Design',
+  //     price: 1200,
+  //     priceOrMore: false,
+  //     shortDescription: 'Profesjonalny projekt graficzny.',
+  //     longDescription:
+  //       'Tworzymy unikalne projekty graficzne dostosowane do Twoich potrzeb, obejmujące logo, materiały reklamowe oraz inne elementy wizualne.',
+  //     realisation: '2-3 tygodnie',
+  //   },
+  //   {
+  //     name: 'Integracja z API',
+  //     price: 900,
+  //     priceOrMore: false,
+  //     shortDescription: 'Integracja frontend z backend API.',
+  //     longDescription:
+  //       'Zajmujemy się integracją aplikacji frontendowej z zewnętrznymi API, aby zapewnić pełną funkcjonalność.',
+  //     realisation: '1-2 tygodnie',
+  //   },
+  //   {
+  //     name: 'Tworzenie komponentów w React/Angular*',
+  //     price: 1000,
+  //     priceOrMore: true,
+  //     shortDescription: 'Rozwój komponentów frontendowych.',
+  //     longDescription:
+  //       'Tworzymy komponenty zgodne z najlepszymi praktykami w popularnych frameworkach takich jak React, Angular lub Vue.',
+  //     realisation: '1-3 tygodnie',
+  //   },
+  //   {
+  //     name: "Konsultacje DevOps",
+  //     price: 400,
+  //     priceOrMore: false,
+  //     shortDescription: "Doradztwo w zakresie DevOps.",
+  //     longDescription: "Oferujemy konsultacje w zakresie optymalizacji procesów wdrożeniowych, automatyzacji i zarządzania infrastrukturą.",
+  //     realisation: "1 dzień"
+  //   },
+  //   {
+  //     name: 'Tworzenie interakcji w CSS/JS*',
+  //     price: 500,
+  //     priceOrMore: false,
+  //     shortDescription: 'Dodawanie interakcji do Twojej aplikacji.',
+  //     longDescription:
+  //       'Tworzymy efektowne interakcje w aplikacjach webowych, aby poprawić doświadczenie użytkowników.',
+  //     realisation: '1 tydzień',
+  //   },
+  //   {
+  //     name: 'Dostosowanie UI/UX**',
+  //     price: 800,
+  //     priceOrMore: true,
+  //     shortDescription: 'Poprawa interfejsu użytkownika.',
+  //     longDescription:
+  //       'Analizujemy i dostosowujemy interfejs użytkownika do potrzeb użytkowników, aby poprawić ich doświadczenia.',
+  //     realisation: '1-2 tygodnie',
+  //   },
+  //   {
+  //     name: 'Migracja aplikacji na nowe technologie**',
+  //     price: 1200,
+  //     priceOrMore: true,
+  //     shortDescription: 'Aktualizacja technologii aplikacji.',
+  //     longDescription:
+  //       'Pomagamy w migracji aplikacji frontendowych na nowoczesne technologie lub frameworki - takie jak Angular czy React.',
+  //     realisation: '2-4 tygodnie',
+  //   },
+  // ];
 }

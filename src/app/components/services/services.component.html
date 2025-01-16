@@ -1,24 +1,22 @@
 <div class="component-container">
   <div>
-    <h2 class="section-title">Oferta usług FBE Solutions</h2>
+    <h2 class="section-title">Poznaj ofertę Ragnaroku</h2>
     <div>
-      Zapraszamy serdecznie do skorzystania z naszej oferty usług, które
-      realizujemy z pełnym zaangażowaniem, zgodnie z najlepszymi praktykami
-      branżowymi. Każde zlecenie traktujemy indywidualnie, dopasowując
-      rozwiązania do specyficznych potrzeb klienta, aby efekt końcowy spełniał
-      najwyższe standardy. Tworzymy strony i aplikacje internetowe, które są nie
-      tylko funkcjonalne, ale również nowoczesne i przyjazne dla użytkownika.
-      Dbamy o każdy szczegół, począwszy od estetyki, aż po optymalizację
-      techniczną, zapewniając, że gotowy projekt będzie spełniał zarówno
-      potrzeby Twojej firmy, jak i oczekiwania użytkowników.
+      W „Ragnaroku” wiemy, jak ważne są detale – od klimatu po wygodę. Nasze
+      salki to przestrzeń stworzona przez graczy dla graczy. Niezależnie od
+      tego, czy szykujesz się na sesję RPG, maraton planszówek czy po prostu
+      chcesz spotkać się w wyjątkowej atmosferze, u nas znajdziesz idealne
+      warunki. Zapoznaj się z naszą ofertą i zobacz, jak łatwo przenieść się do
+      świata pełnego przygód!
     </div>
   </div>
   <div class="image-banner-container">
-    <img src="Postapo.jpeg" alt="Banner for services" class="image-banner" />
+    <img src="ragnarok-strip.png" alt="Banner for services" class="image-banner" />
   </div>
   <div class="w-100">
-    <app-services-table [services]="mainServices"></app-services-table>
-    <div class="disclaimer">
+    <h4>Salki standardowe</h4>
+    <app-services-table [services]="standardRooms"></app-services-table>
+    <!-- <div class="disclaimer">
       <div>
         Podane ceny w tabeli są kwotami netto, do których należy doliczyć 23%
         VAT. Zależnie od specyficznych wymagań klienta, końcowy koszt realizacji
@@ -28,17 +26,28 @@
         skomplikowanie projektu czy dodatkowe modyfikacje w trakcie realizacji.
         Cena nie obejmuje projektu graficznego ani designu.
       </div>
-    </div>
-    <h4>Usługi dodatkowe</h4>
+    </div> -->
+    <h4>Salka VIP</h4>
     <div class="w-100">
-      <app-services-table [services]="additionalServices"></app-services-table>
-      <div class="disclaimer">
+      <app-services-table [services]="vipRooms"></app-services-table>
+      <!-- <div class="disclaimer">
         <div>* Cena dotyczy jednego komponentu / jednej interakcji.</div>
         <div>
           ** Cena zależy od stopnia skomplikowania projektu i liczby komponentów
           / podstron do utworzenia.
         </div>
-      </div>
+      </div> -->
+    </div>
+    <h4>Karnety</h4>
+    <div class="w-100">
+      <app-services-table [services]="passes"></app-services-table>
+      <!-- <div class="disclaimer">
+        <div>* Cena dotyczy jednego komponentu / jednej interakcji.</div>
+        <div>
+          ** Cena zależy od stopnia skomplikowania projektu i liczby komponentów
+          / podstron do utworzenia.
+        </div>
+      </div> -->
     </div>
   </div>
 </div>
