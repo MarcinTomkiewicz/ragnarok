@@ -16,13 +16,19 @@ footer {
       a {
         color: $bg-color;
         text-decoration: none;
+        padding: 0.5rem;
+        position: relative;
 
         &:hover {
-          color: darken($bg-color, 10%);
+          border: 1px solid $secondary-text-color;
+          border-radius: 5px;
+          box-sizing: border-box;
+          color: $secondary-text-color;
         }
 
         &::after {
-          content: "|"; // lub "/"
+          position: absolute;
+          content: "|";
           margin-left: 10px;
           color: lighten($bg-color, 20%);
         }
@@ -45,9 +51,13 @@ footer {
 
     a {
       font-size: 1.5rem;
+      padding: 0.5rem;
 
       &:hover {
-        color: darken($bg-color, 15%);
+        border: 1px solid $secondary-text-color;
+        border-radius: 5px;
+        box-sizing: border-box;
+        color: $secondary-text-color;
       }
     }
   }

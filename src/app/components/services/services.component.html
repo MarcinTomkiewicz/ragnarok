@@ -16,38 +16,18 @@
   <div class="w-100">
     <h4>Salki standardowe</h4>
     <app-services-table [services]="standardRooms"></app-services-table>
-    <!-- <div class="disclaimer">
-      <div>
-        Podane ceny w tabeli są kwotami netto, do których należy doliczyć 23%
-        VAT. Zależnie od specyficznych wymagań klienta, końcowy koszt realizacji
-        projektu może być wyższy od przedstawionego w ofercie. Hosting serwisu
-        oraz baza danych leżą po stronie klienta. Czas realizacji usług jest
-        orientacyjny i może ulec zmianie z przyczyn obiektywnych, takich jak
-        skomplikowanie projektu czy dodatkowe modyfikacje w trakcie realizacji.
-        Cena nie obejmuje projektu graficznego ani designu.
-      </div>
-    </div> -->
     <h4>Salka VIP</h4>
     <div class="w-100">
       <app-services-table [services]="vipRooms"></app-services-table>
-      <!-- <div class="disclaimer">
-        <div>* Cena dotyczy jednego komponentu / jednej interakcji.</div>
-        <div>
-          ** Cena zależy od stopnia skomplikowania projektu i liczby komponentów
-          / podstron do utworzenia.
-        </div>
-      </div> -->
     </div>
     <h4>Karnety</h4>
     <div class="w-100">
-      <app-services-table [services]="passes"></app-services-table>
-      <!-- <div class="disclaimer">
-        <div>* Cena dotyczy jednego komponentu / jednej interakcji.</div>
-        <div>
-          ** Cena zależy od stopnia skomplikowania projektu i liczby komponentów
-          / podstron do utworzenia.
-        </div>
-      </div> -->
+      <app-services-table [services]="passes" [isServiceByHour]="false"></app-services-table>
+      Przed zakupem, zapoznj się z naszym <button (click)="openRules('pass')">Regulaminem karnetów</button>
+    </div>
+    <h4>Usługi dodatkowe</h4>
+    <div class="w-100">
+      <app-services-table [services]="additionalServices" [isServiceByHour]="false"></app-services-table>
     </div>
   </div>
 </div>

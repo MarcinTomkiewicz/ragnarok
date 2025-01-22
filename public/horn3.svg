@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <g fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Główna część rogu -->
+    <path d="M15 50 C20 30, 50 30, 55 15 L50 10 C45 25, 20 25, 15 45 Z" />
+    <!-- Dekoracyjny pasek na rogu -->
+    <line x1="20" y1="40" x2="50" y2="25" />
+    <line x1="22" y1="45" x2="52" y2="30" />
+    <!-- Ustnik -->
+    <path d="M15 50 L12 48 L14 45 L18 47 Z" />
+    <!-- Otwór dźwiękowy -->
+    <path d="M55 15 Q53 17, 52 13 Q54 12, 55 15 Z" />
+  </g>
+</svg>
+

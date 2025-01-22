@@ -1,7 +1,31 @@
 <div class="component-container">
   <div class="container">
     <h2 class="h2-contact">Kontakt</h2>
-    <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+    <div class="image-banner-container">
+      <img src="vikings.png" alt="Banner for services" class="image-banner" />
+    </div>
+    <div class="contact-info">
+      
+      <h2>Rezerwacje</h2>
+      <p><strong>Telefon:</strong> <a href="tel:+48533616491">&nbsp;+48 533 616 491</a></p>
+      <p><strong>E-mail:</strong> <a href="mailto:ragnarok.rooms@gmail.com">&nbsp;ragnarok.rooms&#64;gmail.com</a></p>
+      
+      <h2>Współpraca i organizacja eventów</h2>
+      <p><strong>Telefon:</strong> <a href="tel:+48792314240">&nbsp;+48 792 314 240</a></p>
+      <p><strong>E-mail:</strong> <a href="mailto:ragnarok.rooms@gmail.com">&nbsp;ragnarok.rooms&#64;gmail.com</a></p>
+    </div>
+    
+    <h2>Adres</h2>
+    <p>ul. Dolna Wilda 16A, 61-530 Poznań</p>
+
+    <div class="map-container">
+      <h2>Znajdź nas na mapie</h2>
+      <gmp-map center="52.39698791503906,16.9263858795166" zoom="17" map-id="8b65c28d3be15a0d" style="height: 300px;">
+        <gmp-advanced-marker position="52.39698791503906,16.9263858795166" title="Ragnarok Rooms"></gmp-advanced-marker>
+      </gmp-map>
+    </div>
+
+    <!-- <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
       <div class="mb-3">
         <label for="topic" class="form-label">Temat</label>
         <select
@@ -161,7 +185,7 @@
       ></button>
     </div>
 
-    <!-- Progress bar using ngb-progressbar -->
+    
     <ngb-progressbar
       [value]="progress"
       [animated]="true"
@@ -170,5 +194,5 @@
       [type]="toastType === 'success' ? 'success' : 'danger'"
       height="5px"
     ></ngb-progressbar>
-  </ngb-toast>
+  </ngb-toast> -->
 </div>

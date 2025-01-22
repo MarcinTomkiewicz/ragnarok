@@ -1,0 +1,10 @@
+<!-- <div *ngFor="let regulation of regulations" class="regulation"> -->
+    <h1>{{ regulation.title }}</h1>
+    <div *ngFor="let section of regulation.sections" class="section">
+      <h2>{{ section.title }}</h2>
+      <div *ngFor="let paragraph of section.content" class="paragraph">
+        <p>{{ paragraph }}</p>
+      </div>
+      <hr class="separator" />
+    </div>
+  <!-- </div> -->

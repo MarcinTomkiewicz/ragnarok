@@ -1,17 +1,18 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { supabase } from '../../../../../supabase.client';
 import { SupabaseClient, PostgrestSingleResponse, PostgrestResponse } from '@supabase/supabase-js';
+import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BackendService {
-  private supabase: SupabaseClient;
+  private readonly supabase: SupabaseClient;
+  private readonly supabaseService = inject(SupabaseService)
 
   constructor() {
-    this.supabase = supabase;
+    this.supabase = this.supabaseService.getClient();
   }
 
   /**

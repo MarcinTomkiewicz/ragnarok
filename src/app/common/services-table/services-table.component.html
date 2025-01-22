@@ -1,7 +1,7 @@
 <table class="table table-hover table-striped align-middle">
     <thead>
       <tr class="table-header table-light">
-        <th scope="col" class="service-name">Długość wynajmu</th>
+        <th scope="col" class="service-name">{{ isServiceByHour() ? 'Długość wynajmu' : 'Nazwa usługi'}}</th>
         <th scope="col" style="width: 15%;">Cena</th>
         <th scope="col" class="large-screens" style="width: 60%;">Opis</th>
         <!-- <th scope="col" style="white-space: nowrap; width: 10%;">Czas realizacji</th> -->

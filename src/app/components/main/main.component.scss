@@ -121,6 +121,7 @@ main {
     width: 60%;
     text-align: center; // Wyrównanie tekstu do środka
     z-index: 2; // Ustawiamy tekst nad obrazkiem
+    background-color: rgba($bg-color, 0.85);
   }
 }
 

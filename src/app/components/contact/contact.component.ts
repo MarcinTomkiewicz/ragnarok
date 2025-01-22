@@ -1,25 +1,33 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, HostListener, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA, Renderer2 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbModal, NgbProgressbarModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { OverlayService } from '../../core/services/overlay.service';
+import { SendGridService } from '../../core/services/send-grid/send-grid.service';
+import { BackendService } from '../../core/services/backend/backend.service';
+
+declare var google: any;
 
 @Component({
   selector: 'app-contact',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, NgbToastModule, NgbProgressbarModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
 export class ContactComponent implements OnInit, OnDestroy {
   contactForm: FormGroup;
-  modalService = inject(NgbModal);
-  overlayService = inject(OverlayService);
-  http = inject(HttpClient);
+  private readonly modalService = inject(NgbModal);
+  private readonly overlayService = inject(OverlayService);
+  private readonly http = inject(HttpClient);
+  private readonly backendService = inject(BackendService);
+  private readonly sendGridService = inject(SendGridService);
   private readonly fb = inject(FormBuilder);
+  private readonly renderer = inject(Renderer2);
   topics = [
     'Rezerwacja salki',
     'Zapytanie o towar',
@@ -27,16 +35,16 @@ export class ContactComponent implements OnInit, OnDestroy {
     'Ogólne'
   ];
   isSmallScreen = false;
-  showToast = false; // Flaga do wyświetlania toastów
-  toastMessage = ''; // Wiadomość dla toasta
-  toastType: 'success' | 'error' = 'success'; // Typ toasta (sukces lub błąd)
-  progress = 100; // Startujemy z pełnym postępem
+  showToast = false;
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  progress = 100;
   progressInterval: any;
-  toastDuration = 5000; // Czas wyświetlania toasta w ms (5 sekund)
+  toastDuration = 5000;
 
   constructor() {
     this.contactForm = this.fb.group({
-      topic: [this.topics[0]], // domyślny temat
+      topic: [this.topics[0]],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       company: [''],
@@ -47,12 +55,21 @@ export class ContactComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.checkScreenSize(); // Sprawdź wielkość ekranu przy inicjalizacji
-    window.addEventListener('resize', this.handleResize.bind(this)); // Dodaj nasłuchiwanie zmian rozmiaru okna
+    this.checkScreenSize();
+    window.addEventListener('resize', this.handleResize.bind(this));
+    const script = this.renderer.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=maps,marker&v=beta&loading=async&callback=initMap';
+    script.async = true;
+    this.renderer.appendChild(document.body, script);
+  
+    // Ustaw globalną funkcję initMap, jeśli jest wymagana
+    (window as any).initMap = () => {
+      console.log('Google Maps API załadowane.');
+    };
   }
 
   ngOnDestroy() {
-    window.removeEventListener('resize', this.handleResize.bind(this)); // Usuń nasłuchiwanie przy niszczeniu komponentu
+    window.removeEventListener('resize', this.handleResize.bind(this));
   }
 
   private handleResize() {
@@ -60,11 +77,11 @@ export class ContactComponent implements OnInit, OnDestroy {
   }
 
   private checkScreenSize() {
-    this.isSmallScreen = window.innerWidth < 576; // Ustawia flagę na podstawie szerokości okna (<576px to Bootstrap XS)
+    this.isSmallScreen = window.innerWidth < 576;
   }
 
   openModal() {
-    if (this.isSmallScreen) {  // Otwórz modal tylko na małych ekranach
+    if (this.isSmallScreen) {
       const modalRef = this.modalService.open(MessageModalComponent, {
         size: 'sm',
         centered: true,
@@ -81,17 +98,33 @@ export class ContactComponent implements OnInit, OnDestroy {
   onSubmit() {
     if (this.contactForm.valid) {
       this.overlayService.showLoader();
-      this.http.post('http://localhost:1337/api/contact', this.contactForm.value).subscribe({
-        next: (response) => {
-          this.overlayService.hideLoader();
-          this.showSuccessToast('Dziękujemy za wysłanie wiadomości. Skontaktujemy się z Państwem niebawem.');
-          this.onReset();
-        },
-        error: (error) => {
-          this.overlayService.hideLoader();
-          this.showErrorToast('Niestety, nie udało się wysłać wiadomości. Prosimy spróbować ponownie później.');
-        },
-      });
+
+      const emailPayload = {
+        to: 'ragnarok.rooms@gmail.com',
+        subject: `Nowa wiadomość od ${this.contactForm.value.firstName} ${this.contactForm.value.lastName}`,
+        message: `
+          Temat: ${this.contactForm.value.topic}
+          Firma: ${this.contactForm.value.company || 'Nie podano'}
+          Email: ${this.contactForm.value.email}
+          Telefon: ${this.contactForm.value.phone}
+          Wiadomość:
+          ${this.contactForm.value.message}
+        `,
+      };
+
+      this.sendGridService.sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message)
+        .subscribe({
+          next: () => {
+            this.overlayService.hideLoader();
+            this.showSuccessToast('Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.');
+            this.onReset();
+          },
+          error: (err: any) => {
+            this.overlayService.hideLoader();
+            console.error('Błąd podczas wysyłania e-maila:', err);
+            this.showErrorToast('Wystąpił problem z wysłaniem wiadomości. Spróbuj ponownie później.');
+          },
+        });
     }
   }
 
@@ -116,15 +149,15 @@ export class ContactComponent implements OnInit, OnDestroy {
   }
 
   startProgressBar() {
-    this.progress = 100; // Ustawiamy pasek na 100%
+    this.progress = 100;
 
-    const intervalTime = 50; // Odświeżanie co 50ms dla płynnej animacji
-    const totalSteps = this.toastDuration / intervalTime; // Ilość kroków animacji
+    const intervalTime = 50;
+    const totalSteps = this.toastDuration / intervalTime;
 
-    const progressStep = 100 / totalSteps; // Jak dużo zmniejszać na krok
+    const progressStep = 100 / totalSteps;
 
     this.progressInterval = setInterval(() => {
-      this.progress -= progressStep; // Zmniejszamy postęp
+      this.progress -= progressStep;
       if (this.progress <= 0) {
         this.closeToast();
       }
@@ -133,6 +166,37 @@ export class ContactComponent implements OnInit, OnDestroy {
 
   closeToast() {
     this.showToast = false;
-    clearInterval(this.progressInterval); // Zatrzymujemy interval
+    clearInterval(this.progressInterval);
+  }
+
+  private loadGoogleMapsScript(): void {
+    if (!document.getElementById('google-maps-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&q&callback=initMap&libraries=maps,marker&v=beta';
+      script.async = true;
+      script.defer = true;
+
+      // Ustawienie funkcji callback
+      (window as any).initMap = this.initMap.bind(this);
+
+      document.body.appendChild(script);
+    } else {
+      this.initMap();
+    }
+  }
+
+  private initMap(): void {
+    const map = new google.maps.Map(document.getElementById('map') as HTMLElement, {
+      center: { lat: 52.39698791503906, lng: 16.9263858795166 },
+      zoom: 14,
+      mapId: 'DEMO_MAP_ID'
+    });
+
+    new google.maps.marker.AdvancedMarkerElement({
+      position: { lat: 52.39698791503906, lng: 16.9263858795166 },
+      map,
+      title: 'Ragnarok Rooms',
+    });
   }
 }

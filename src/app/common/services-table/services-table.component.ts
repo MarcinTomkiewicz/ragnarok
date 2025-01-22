@@ -13,4 +13,5 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 })
 export class ServicesTableComponent {
   services = input<IServices[]>([])
+  isServiceByHour = input<boolean>(true);
 }

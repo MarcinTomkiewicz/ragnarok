@@ -1,8 +1,10 @@
 @import "abstracts/variables";
+@import "abstracts/mixins";
 
 @media (max-width: $breakpoint-sm) {
   header {
   justify-content: center;
+  @include flex-wrapper(column);
   }
 }
 
