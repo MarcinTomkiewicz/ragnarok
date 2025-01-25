@@ -1,0 +1,72 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+:host {
+    display: block;
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .tech-carousel {
+    width: 100%;
+  }
+  
+  .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 282px;
+  }
+  
+  .card-img-top {
+    width: auto;
+    height: 100px;
+  }
+  
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+  }
+  
+  .card-title {
+    margin-top: 10px;
+  }
+  
+  .card-text {
+    flex-grow: 1;
+    margin-bottom: 10px;
+  }
+  
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 5%; /* Zmniejszenie szerokości kontrolki */
+    color: $primary-color;
+  }
+  
+  .carousel-control-prev {
+    left: 0;
+  }
+  
+  .carousel-control-next {
+    right: 0;
+  }
+  
+  @media (max-width: 576px) {
+    .carousel-control-prev,
+    .carousel-control-next {
+      width: 10%;
+    }
+  
+    .card {
+      width: 80%;
+      margin: auto;
+      min-height: 265px;
+    }
+  
+    .card-text {
+      font-size: smaller;
+    }
+  }
+  

@@ -1,0 +1,13 @@
+@import 'abstracts/variables';
+
+.modal-header {
+    background: $secondary-bg-color;
+}
+
+.modal-body {
+    background: $secondary-bg-color;
+}
+
+.btn-close {
+    filter: $icon-filter
+}

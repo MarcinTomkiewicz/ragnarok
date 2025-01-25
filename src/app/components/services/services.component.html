@@ -11,7 +11,11 @@
     </div>
   </div>
   <div class="image-banner-container">
-    <img src="ragnarok-strip.png" alt="Banner for services" class="image-banner" />
+    <img
+      src="ragnarok-strip.png"
+      alt="Banner for services"
+      class="image-banner"
+    />
   </div>
   <div class="w-100">
     <h4>Salki standardowe</h4>
@@ -19,15 +23,39 @@
     <h4>Salka VIP</h4>
     <div class="w-100">
       <app-services-table [services]="vipRooms"></app-services-table>
+      <div class="disclaimer">
+        Przed rezerwacją salki, zapoznj się z naszym
+        <button (click)="openRules('rent')">
+          Regulaminem wynajmowania pomieszczeń
+        </button>
+      </div>
+      <div class="disclaimer">
+        Uczniowie i studenci otrzymują rabat w wysokości
+        <strong>15% od całkowitej kwoty rezerwacji</strong> (jedna zniżka na
+        grupę).
+      </div>
     </div>
-    <h4>Karnety</h4>
     <div class="w-100">
-      <app-services-table [services]="passes" [isServiceByHour]="false"></app-services-table>
-      Przed zakupem, zapoznj się z naszym <button (click)="openRules('pass')">Regulaminem karnetów</button>
+      <h4>Karnety</h4>
+      <app-services-table
+        [services]="passes"
+        [isServiceByHour]="false"
+      ></app-services-table>
+      <div class="disclaimer">
+        Przed zakupem, zapoznj się z naszym
+        <button (click)="openRules('pass')">Regulaminem karnetów</button>
+      </div>
+      <div class="disclaimer">
+        Uczniowie i studenci otrzymują rabat w wysokości
+        <strong>5% od całkowitej wartości karnetu</strong>.
+      </div>
     </div>
-    <h4>Usługi dodatkowe</h4>
     <div class="w-100">
-      <app-services-table [services]="additionalServices" [isServiceByHour]="false"></app-services-table>
+      <h4>Usługi dodatkowe</h4>
+      <app-services-table
+        [services]="additionalServices"
+        [isServiceByHour]="false"
+      ></app-services-table>
     </div>
   </div>
 </div>

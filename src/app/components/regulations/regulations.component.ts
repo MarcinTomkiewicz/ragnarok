@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core'
+import { Component, Input, OnInit, inject } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { REGULATIONS } from '../../core/utils/regulations';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-regulations',
@@ -9,15 +10,42 @@ import { REGULATIONS } from '../../core/utils/regulations';
   templateUrl: './regulations.component.html',
   styleUrl: './regulations.component.scss'
 })
-export class RegulationsComponent {
-  @Input() type!: 'pass' | 'rent';
+export class RegulationsComponent implements OnInit {
+  @Input() type: 'pass' | 'rent' | 'loyalty' | 'voucher' = 'pass';
+
+  private readonly activeModal = inject(NgbActiveModal)
 
   private readonly regulations = REGULATIONS;
-  private readonly regulationNumber = this.type === 'pass' ? 1 : 0;
-  public regulation = this.regulations[0];
+  private regulationNumber = 0;
+  public regulation = this.regulations[this.regulationNumber];
 
 
   ngOnInit() {
+    this.setRegulationNumber()
     this.regulation = this.regulations[this.regulationNumber]
+  }
+
+  setRegulationNumber() {
+    switch (this.type) {
+      case 'rent':
+        this.regulationNumber = 0
+        break;
+      case 'pass':
+        this.regulationNumber = 1
+        break;
+        case 'voucher':
+        this.regulationNumber = 2
+        break;
+        case 'loyalty':
+        this.regulationNumber = 3
+        break;
+      default:
+        this.regulationNumber = 1
+        break;
+    }
+  }
+
+  close() {
+    this.activeModal.close();
   }
 }

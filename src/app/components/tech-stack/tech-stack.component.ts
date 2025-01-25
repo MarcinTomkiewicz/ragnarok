@@ -2,11 +2,12 @@ import { Component, HostListener, inject, ViewChild } from '@angular/core';
 import { TechStack } from '../../core/interfaces/i-techStack';
 import { CommonModule } from '@angular/common';
 import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
+import { CarouselComponent } from '../../common/carousel/carousel.component'
 
 @Component({
   selector: 'app-tech-stack',
   standalone: true,
-  imports: [CommonModule, NgbCarouselModule],
+  imports: [CommonModule, NgbCarouselModule, CarouselComponent],
   providers: [NgbCarouselConfig],
   templateUrl: './tech-stack.component.html',
   styleUrl: './tech-stack.component.scss'

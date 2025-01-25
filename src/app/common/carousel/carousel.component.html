@@ -1,0 +1,34 @@
+<ngb-carousel #carousel [showNavigationArrows]="true" [interval]="0" class="tech-carousel">
+  <ng-template ngbSlide *ngFor="let group of groupedItems; trackBy: trackByGroup">
+    <div class="d-flex justify-content-around">
+      <ng-container *ngFor="let item of group">
+        <ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item }"></ng-container>
+      </ng-container>
+    </div>
+  </ng-template>
+</ngb-carousel>
+<!-- <ng-template
+  ngbSlide
+  *ngFor="let items of groupedItems; trackBy: trackByGroup"
+>
+  <div class="row justify-content-center">
+    <div
+      *ngFor="let item of items; trackBy: trackByFn"
+      class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4"
+    >
+      <div class="card text-center h-100">
+        <a [href]="techStack.websiteUrl" target="_blank">
+          <img
+            [src]="techStack.logoUrl"
+            class="card-img-top img-fluid p-3"
+            [alt]="'Logo ' + techStack.name"
+          />
+        </a>
+        <div class="card-body">
+          <h5 class="card-title">{{ techStack.name }}</h5>
+          <p class="card-text">{{ techStack.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template> -->

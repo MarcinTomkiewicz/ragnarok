@@ -9,6 +9,8 @@ $button-hover-color: darken($button-color, 10%);
 $secondary-button-color: #372F3B;
 $secondary-button-hover-color: darken($secondary-button-color, 10%);
 $border-color: #fbf5be;
+$icon-filter: brightness(0) saturate(100%) invert(88%) sepia(24%) saturate(374%) hue-rotate(1deg) brightness(107%) contrast(97%);
+$icon-filter-dark: brightness(0) saturate(100%) invert(14%) sepia(10%) saturate(1170%) hue-rotate(236deg) brightness(96%) contrast(85%);
 
 // Typography
 $font-family-base: 'Modern Antiqua', serif;

@@ -57,7 +57,15 @@ export class ContactComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.checkScreenSize();
     window.addEventListener('resize', this.handleResize.bind(this));
-
+    const script = this.renderer.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=maps,marker&v=beta&loading=async&callback=initMap';
+    script.async = true;
+    this.renderer.appendChild(document.body, script);
+  
+    // Ustaw globalną funkcję initMap, jeśli jest wymagana
+    (window as any).initMap = () => {
+      console.log('Google Maps API załadowane.');
+    };
   }
 
   ngOnDestroy() {

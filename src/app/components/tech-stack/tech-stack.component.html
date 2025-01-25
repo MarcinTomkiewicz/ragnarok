@@ -1,5 +1,24 @@
 <div class="component-container">
-  <h2 class="section-title">Technologie</h2>
+  <app-carousel
+    [items]="techStack"
+    [itemTemplate]="techTemplate"
+  ></app-carousel>
+
+  <ng-template #techTemplate let-item>
+    <div class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4">
+      <div class="card text-center h-100">
+        <img [src]="item.logoUrl" [alt]="item.name" class="card-img-top" />
+        <div class="card-body">
+          <h5 class="card-title">{{ item.name }}</h5>
+          <p class="card-text">{{ item.description }}</p>
+          <a [href]="item.websiteUrl" target="_blank" class="btn btn-primary"
+            >Visit</a
+          >
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <!-- <h2 class="section-title">Technologie</h2>
   <div class="description">
     Nasza praca opiera się na nowoczesnych technologiach, które stanowią
     fundament każdego projektu, nad którym pracujemy. Korzystamy z najnowszych
@@ -44,5 +63,5 @@
         </div>
       </div>
     </ng-template>
-  </ngb-carousel>
+  </ngb-carousel> -->
 </div>

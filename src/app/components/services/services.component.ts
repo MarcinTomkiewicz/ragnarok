@@ -103,7 +103,7 @@ export class ServicesComponent {
 
   additionalServices: IServices[] = [
     {
-      name: 'Mistrz Gry na miejscu',
+      name: 'Mistrz Gry na życzenie',
       price: 50,
       priceType: 'hour',
       shortDescription: 'Godzina sesji z Mistrzem Gry - sprawdź dostępność naszych Mistrzów Gry oraz systemy, które prowadzą. Cena nie uwzględnia kosztu rezerwacji salki.',
@@ -112,6 +112,7 @@ export class ServicesComponent {
   ]
 
   openRules(type: 'pass' | 'rent') {
-    this.modalService.open(RegulationsComponent, { size: 'lg' });
+    const modalRef = this.modalService.open(RegulationsComponent, { size: 'lg' });
+    modalRef.componentInstance.type = type;
   }
 }

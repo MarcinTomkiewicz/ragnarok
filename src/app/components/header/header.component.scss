@@ -13,6 +13,13 @@
   height: auto;
 }
 
+.icon {
+  height: 1em;
+  width: 1em;
+  margin-right: 10px;
+  filter: $icon-filter;
+}
+
 @media (max-width: $breakpoint-sm) {
   .display-on-large {
     display: none;
