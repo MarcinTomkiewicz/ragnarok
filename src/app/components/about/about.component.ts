@@ -1,4 +1,13 @@
-import { Component, HostListener, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  Inject,
+  OnInit,
+  PLATFORM_ID,
+  ViewChild,
+  ElementRef,
+  inject,
+} from '@angular/core';
 import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { WindowRef } from '../../core/services/window-ref';
 
@@ -7,25 +16,59 @@ import { WindowRef } from '../../core/services/window-ref';
   templateUrl: './about.component.html',
   standalone: true,
   imports: [CommonModule],
-  styleUrls: ['./about.component.scss']
+  providers: [Document],
+  styleUrls: ['./about.component.scss'],
 })
 export class AboutComponent implements OnInit {
   showMore = false;
   isLargeScreen = true;
-  
-  constructor(
-    @Inject(DOCUMENT) private document: Document,
-    private windowRef: WindowRef,
-    @Inject(PLATFORM_ID) private platformId: any
-  ) {}
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
+
+  isScrolledToTop = true;
+  isScrolledToBottom = false;
+  private readonly document = inject(Document);
+  private readonly windowRef = inject(WindowRef);
+
+  // constructor(
+  //   @Inject(PLATFORM_ID) private platformId: any
+  // ) {}
 
   ngOnInit(): void {
     this.checkHash();
   }
 
+  ngAfterViewInit() {
+    this.scrollContainer.nativeElement.addEventListener(
+      'scroll',
+      this.updateScrollState.bind(this)
+    );
+    this.updateScrollState(); // Sprawdzamy początkowy stan
+  }
+
+  updateScrollState() {
+    const container = this.scrollContainer.nativeElement;
+    this.isScrolledToTop = container.scrollTop === 0;
+    this.isScrolledToBottom =
+      container.scrollTop + container.clientHeight >= container.scrollHeight;
+  }
+
+  scrollUp() {
+    this.scrollContainer.nativeElement.scrollBy({
+      top: -50,
+      behavior: 'smooth',
+    });
+  }
+
+  scrollDown() {
+    this.scrollContainer.nativeElement.scrollBy({
+      top: 50,
+      behavior: 'smooth',
+    });
+  }
+
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
-    this.isLargeScreen = window.innerWidth >= 481;    
+    this.isLargeScreen = window.innerWidth >= 481;
   }
 
   private checkHash() {
@@ -40,10 +83,14 @@ export class AboutComponent implements OnInit {
       }
     }
   }
- 
+
   toggleShowMore() {
     this.showMore = !this.showMore;
-    console.log(this.isLargeScreen || !this.showMore, window.innerWidth, this.isLargeScreen, !this.showMore);
-    
+    console.log(
+      this.isLargeScreen || !this.showMore,
+      window.innerWidth,
+      this.isLargeScreen,
+      !this.showMore
+    );
   }
 }

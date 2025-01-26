@@ -1,6 +1,7 @@
 export interface TechStack {
     name: string;
-    logoUrl: string;
-    websiteUrl: string;
+    photo: string;
     description: string;
+    longDescription?: string;
+    ctaButton?: any;
   }

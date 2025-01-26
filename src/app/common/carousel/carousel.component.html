@@ -1,9 +1,16 @@
-<ngb-carousel #carousel [showNavigationArrows]="true" [interval]="0" class="tech-carousel">
+<ngb-carousel #carousel [showNavigationArrows]="true" [showNavigationIndicators]="false" [interval]="0" class="tech-carousel">
   <ng-template ngbSlide *ngFor="let group of groupedItems; trackBy: trackByGroup">
     <div class="d-flex justify-content-around">
-      <ng-container *ngFor="let item of group">
-        <ng-container *ngTemplateOutlet="itemTemplate; context: { $implicit: item }"></ng-container>
-      </ng-container>
+      <div class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4" *ngFor="let item of group">
+        <div class="card text-center h-100">
+          <img [src]="item.photo" [alt]="item.name" class="card-img-top img-fluid p-3" />
+          <div class="card-body">
+            <h5 class="card-title">{{ item.name }}</h5>
+            <p class="card-text">{{ item.description }} <span class=card-long-text *ngIf="item.longDescription">{{ item.longDescription }}</span></p>
+            <a *ngIf="item.ctaButton" [href]="item.ctaButton" target="_blank" class="btn btn-primary">Visit</a>
+          </div>
+        </div>
+      </div>
     </div>
   </ng-template>
 </ngb-carousel>

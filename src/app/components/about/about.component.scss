@@ -3,7 +3,7 @@
 
 :host {
   display: block;
-  // min-height: 100vh;
+  min-height: auto;
   height: 100%;
 
   @media (max-width: $breakpoint-md) {
@@ -90,7 +90,8 @@
   line-height: 1.6;
   background-color: $primary-color;
   transition: all 0.3s ease;
-  overflow: hidden;
+  overflow: scroll;
+  height: 100%;
 
   .about-paragraph {
     font-size: large;
@@ -124,6 +125,23 @@
       margin-right: 10px;
       line-height: 1;
     }
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+  
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+  
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+  
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
   }
 
   /* Efekty hover dla większych ekranów */
@@ -153,6 +171,7 @@
     padding-top: 1rem;
     margin: 0;
     overflow: unset;
+    height: 100%;
 
     /* Wyłączanie efektów hover dla .about-paragraph */
     &:hover {

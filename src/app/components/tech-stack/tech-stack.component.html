@@ -1,67 +1,15 @@
 <div class="component-container">
-  <app-carousel
-    [items]="techStack"
-    [itemTemplate]="techTemplate"
-  ></app-carousel>
-
-  <ng-template #techTemplate let-item>
-    <div class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4">
-      <div class="card text-center h-100">
-        <img [src]="item.logoUrl" [alt]="item.name" class="card-img-top" />
-        <div class="card-body">
-          <h5 class="card-title">{{ item.name }}</h5>
-          <p class="card-text">{{ item.description }}</p>
-          <a [href]="item.websiteUrl" target="_blank" class="btn btn-primary"
-            >Visit</a
-          >
-        </div>
-      </div>
-    </div>
-  </ng-template>
-  <!-- <h2 class="section-title">Technologie</h2>
+  <h2 class="section-title">Poznaj nasz zespół</h2>
   <div class="description">
-    Nasza praca opiera się na nowoczesnych technologiach, które stanowią
-    fundament każdego projektu, nad którym pracujemy. Korzystamy z najnowszych
-    rozwiązań i narzędzi, aby zapewnić, że nasze projekty są nie tylko
-    funkcjonalne, ale również przyszłościowe i dostosowane do dynamicznie
-    zmieniających się potrzeb rynku. Nasz zespół nieustannie śledzi trendy w
-    branży, co pozwala nam na wdrażanie innowacyjnych rozwiązań, które podnoszą
-    jakość naszych usług. Oto przegląd kluczowych technologii, które pomagają
-    nam w realizacji tych celów, zapewniając jednocześnie wysoką wydajność i
-    responsywność naszych aplikacji.
+    Zespół Ragnaroku to grupa kreatywnych osób, których pasja i zaangażowanie
+    sprawiają, że każda sesja RPG w Ragnaroku staje się wyjątkowym przeżyciem.
+    Każdy detal w Ragnaroku jest efektem współpracy, której celem jest
+    zapewnienie graczom wyjątkowego doświadczenia. Dzięki naszej wspólnej pracy
+    i zaangażowaniu, Ragnarok oferuje przestrzeń, która inspiruje do
+    niezapomnianych przygód.
   </div>
   <div class="image-banner-container">
-    <img
-      src="Vampire.jpg"
-      alt="Banner for services"
-      class="image-banner"
-    />
+    <img src="Vampire.jpg" alt="Banner for services" class="image-banner" />
   </div>
-  <ngb-carousel #carousel class="tech-carousel" [interval]="0">
-    <ng-template
-      ngbSlide
-      *ngFor="let techStacks of techStackGroups; trackBy: trackTechs"
-    >
-      <div class="row justify-content-center">
-        <div
-          *ngFor="let techStack of techStacks; trackBy: trackById"
-          class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4"
-        >
-          <div class="card text-center h-100">
-            <a [href]="techStack.websiteUrl" target="_blank">
-              <img
-                [src]="techStack.logoUrl"
-                class="card-img-top img-fluid p-3"
-                [alt]="'Logo ' + techStack.name"
-              />
-            </a>
-            <div class="card-body">
-              <h5 class="card-title">{{ techStack.name }}</h5>
-              <p class="card-text">{{ techStack.description }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-  </ngb-carousel> -->
+  <app-carousel [items]="techStack"></app-carousel>
 </div>

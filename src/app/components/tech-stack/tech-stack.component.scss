@@ -2,8 +2,9 @@
 @import "abstracts/mixins";
 
 :host {
-  min-height: 100vh;
   display: block;
+  min-height: 100vh;
+  height: auto;
 
   @media (max-width: $breakpoint-md) {
     @media (orientation: landscape) {
@@ -20,81 +21,7 @@
   gap: 10px;
 }
 
-.tech-carousel {
-  width: 100%;
-  margin: 0 auto;
-  // height: 100%;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 282px; /* Stała minimalna wysokość kart, dopasuj według potrzeb */
-}
-
-.card-img-top {
-  width: auto;
-  height: 100px;
-}
-
-.card-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex-grow: 1;
-}
-
-.card-title {
-  margin-top: 10px;
-}
-
-.card-text {
-  flex-grow: 1;
-  margin-bottom: 10px;
-}
-
-.section-title {
-  font-size: 2rem;
-  color: $secondary-color!important;
-  margin-bottom: 10px;
-}
-
-
-.carousel-control-prev,
-.carousel-control-next {
-  width: 5%; /* Zmniejszenie szerokości kontrolki */
-  color: $primary-color;
-}
-
-.carousel-control-prev {
-  left: 0;
-}
-
-.carousel-control-next {
-  right: 0;
-}
-
-.description {
-  font-size: medium;
-}
-
 @media (max-width: 576px) {
-  .carousel-control-prev,
-  .carousel-control-next {
-    width: 10%;
-  }
-
-  .card {
-    width: 80%;
-    margin: auto;
-    min-height: 265px;
-  }
-
-  .card-text {
-    font-size: smaller;
-  }
-
   .description {
     font-size: smaller;
   }
@@ -108,7 +35,7 @@
   width: 100%;
   max-height: 250px;
   object-fit: cover;
-  object-position: 0 90%;
+  object-position: 0 82%;
 }
 
 @media (max-width: $breakpoint-lg) {
@@ -132,11 +59,6 @@
 @media (max-width: $breakpoint-xs) {
   .component-container {
       font-size: x-small;
-  }
-  .section-title {
-      font-size: 1.5rem;
-      color: $secondary-color!important;
-      margin-bottom: 10px;
   }
   .image-banner {
       width: 100%;

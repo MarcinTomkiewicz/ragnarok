@@ -1,6 +1,7 @@
 import { Component, HostListener, Input, ViewChild, AfterViewInit, TemplateRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
+import { TechStack } from '../../core/interfaces/i-techStack';
 
 @Component({
   selector: 'app-carousel',
@@ -10,13 +11,13 @@ import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap
   templateUrl: './carousel.component.html',
   styleUrls: ['./carousel.component.scss']
 })
-export class CarouselComponent<T> implements AfterViewInit {
-  @Input() items!: T[]; // Elementy do wyświetlenia w karuzeli
+export class CarouselComponent implements AfterViewInit {
+  @Input() items!: TechStack[]; // Elementy do wyświetlenia w karuzeli
   @Input() itemTemplate!: TemplateRef<any>; // Template dla elementów
   @ViewChild('carousel', { static: false }) carousel: NgbCarousel | undefined;
   carouselConfig = inject(NgbCarouselConfig);
 
-  groupedItems: T[][] = [];
+  groupedItems: TechStack[][] = [];
   private touchStartX = 0;
   private touchEndX = 0;
 
@@ -27,8 +28,8 @@ export class CarouselComponent<T> implements AfterViewInit {
     
   }
 
-  chunkArray(array: T[], chunkSize: number): T[][] {
-    const result: T[][] = [];
+  chunkArray(array: TechStack[], chunkSize: number): TechStack[][] {
+    const result: TechStack[][] = [];
     for (let i = 0; i < array.length; i += chunkSize) {
       result.push(array.slice(i, i + chunkSize));
     }
@@ -70,11 +71,11 @@ export class CarouselComponent<T> implements AfterViewInit {
     if (swipeDistance < -50 && this.carousel) this.carousel.prev();
   }
 
-  trackByGroup(index: number, item: T[]): any {
+  trackByGroup(index: number, item: TechStack[]): any {
     return index;
   }
 
-  trackByFn(index: number, item: T): any {
+  trackByFn(index: number, item: TechStack): any {
     return index;
   }
 }

@@ -1,0 +1,73 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.carousel-control-prev,
+.carousel-control-next {
+  background-color: transparent;
+  width: auto!important;
+  top: 50%!important;
+  transform: translateY(-50%);
+  filter: $icon-filter;
+
+  // Zmiana koloru SVG
+  svg {
+    fill: $primary-color; // Wykorzystaj currentColor, aby kontrować kolor
+  }
+
+  &:hover {
+    color: lighten($primary-color, 20%); // Zmiana koloru na hover
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 282px;
+  align-items: center;
+  background: $text-color;
+}
+
+.card-img-top {
+  height: 250px;
+  width: auto;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+  height: 242px;
+}
+
+.card-title {
+  margin-top: 10px;
+}
+
+.card-text {
+  flex-grow: 1;
+  margin-bottom: 10px;
+  color: $bg-color;
+}
+
+.description {
+  font-size: medium;
+}
+
+@media (max-width: 576px) {
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 10%;
+  }
+
+  .card {
+    width: 80%;
+    margin: auto;
+    min-height: 265px;
+  }
+
+  .card-text {
+    font-size: medium;
+  }
+}
