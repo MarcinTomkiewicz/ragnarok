@@ -21,3 +21,21 @@
       font-size: $size * 1.4;
     }
   }
+
+  @mixin flex-justified($justify) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: $justify;
+  }
+    
+    // Mixin for responsive font sizes
+    @mixin responsive-font-size($size) {
+      font-size: $size;
+      @media (min-width: 768px) {
+        font-size: $size * 1.2;
+      }
+      @media (min-width: 1200px) {
+        font-size: $size * 1.4;
+      }
+    }

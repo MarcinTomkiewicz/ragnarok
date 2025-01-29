@@ -20,6 +20,31 @@
   filter: $icon-filter;
 }
 
+.social-icons {
+  gap: 15px;
+  width: 100%;
+  @include flex-justified(center);
+
+  a {
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    width: 10%;
+
+    &:hover {
+      border: 1px solid $secondary-text-color;
+      border-radius: 5px;
+      box-sizing: border-box;
+      color: $secondary-text-color;
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      width: unset;      
+    }
+  }
+
+  
+}
+
 @media (max-width: $breakpoint-sm) {
   .display-on-large {
     display: none;

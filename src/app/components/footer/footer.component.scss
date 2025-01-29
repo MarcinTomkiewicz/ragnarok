@@ -1,11 +1,16 @@
-@import 'abstracts/variables';
+@import "abstracts/variables";
 
 .link-like:hover {
-    cursor: pointer;
-    border: 1px solid $secondary-text-color;
-    border-radius: 5px;
-    box-sizing: border-box;
-    color: $secondary-text-color;
-    padding: 0.5rem;
-  
+  cursor: pointer;
+  border: 1px solid $secondary-text-color;
+  border-radius: 5px;
+  box-sizing: border-box;
+  color: $secondary-text-color;
+  padding: 0.5rem;
+}
+
+@media (max-width: $breakpoint-sm) {
+  .rules {
+    flex-direction: column;
+  }
 }

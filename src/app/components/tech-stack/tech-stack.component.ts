@@ -44,12 +44,12 @@ export class TechStackComponent {
       description: 'Dyżurny Mistrz Gry. Prowadzi Zew Cthulhu, Warhammer Fantasy Role Play, Wiedźmin RPG oraz Dungeon and Dragons 2024.',
       longDescription: ''
     },
-    // {
-    //   name: 'Kajetan',
-    //   photo: 'staff/avatar-m.png',
-    //   description: 'Dyżurny Mistrz Gry. Od długiego czasu prowadzi różne systemy.',
-    //   longDescription: 'Warto sprawdzać dostępność, bo bywa dostępny o różnych porach.'
-    // },
+    {
+      name: 'Kajetan',
+      photo: 'staff/kajetan.png',
+      description: 'Dyżurny Mistrz Gry. Od długiego czasu prowadzi różne systemy - przede wszystkim Mork Borg, CY_Borg oraz Zew Cthulhu.',
+      longDescription: 'Warto sprawdzać dostępność, bo bywa dostępny o różnych porach.'
+    },
     
   ];
 
