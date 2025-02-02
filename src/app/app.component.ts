@@ -10,6 +10,7 @@ import { ServicesComponent } from './components/services/services.component';
 import { PortfolioComponent } from './components/portfolio/portfolio.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { TechStackComponent } from './components/tech-stack/tech-stack.component';
+import { OurRoomsComponent } from './components/our-rooms/our-rooms.component';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,7 @@ import { TechStackComponent } from './components/tech-stack/tech-stack.component
     HeaderComponent,
     AboutComponent,
     ServicesComponent,
-    PortfolioComponent,
+    OurRoomsComponent,
     ContactComponent,
     TechStackComponent
 ],

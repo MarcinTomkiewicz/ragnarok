@@ -28,7 +28,7 @@ export class TechStackComponent {
     },
     {
       name: 'Dawid',
-      photo: 'staff/avatar-m.png',
+      photo: 'staff/dawid.jpeg',
       description: 'Huskarl Ragnaroku. Zajmuje się obsługą recepcji i zarządzaniem rezerwacjami.',
       longDescription: 'W wolnych chwilach zajmuje się też mistrzowaniem oraz jeździ na konwenty.'
     },

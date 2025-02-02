@@ -1,4 +1,4 @@
-<ngb-carousel #carousel [showNavigationArrows]="true" [showNavigationIndicators]="false" [interval]="0" class="tech-carousel">
+<ngb-carousel #carousel [showNavigationArrows]="items.length > 4" [showNavigationIndicators]="false" [interval]="0" class="tech-carousel">
   <ng-template ngbSlide *ngFor="let group of groupedItems; trackBy: trackByGroup">
     <div class="d-flex justify-content-around">
       <div class="col-12 col-sm-10 col-md-4 col-lg-3 col-xl-2 mb-4" *ngFor="let item of group">
