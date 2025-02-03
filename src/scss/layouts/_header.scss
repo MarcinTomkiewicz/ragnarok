@@ -18,6 +18,12 @@ header {
   }
 
   @media (max-width: $breakpoint-sm) {
+    header {
+      h5 {
+        font-size: 1rem;
+      }
+    }
+    
     .header {
       padding: 10px;
       background-color: $secondary-bg-color;

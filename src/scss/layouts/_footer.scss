@@ -6,9 +6,11 @@ footer {
   @include flex-wrapper(column);
 
   .navbar-nav {
-    gap: 15px;
+    gap: 10px;
     margin-bottom: 1rem;
-    @include flex-wrapper(row);
+    flex-wrap: wrap;
+    // @include flex-wrapper(row);
+    @include flex-justified(center);
 
     li {
       position: relative;

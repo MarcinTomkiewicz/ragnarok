@@ -20,7 +20,7 @@ export class CarouselComponent implements AfterViewInit {
   groupedItems: TechStack[][] = [];
   private touchStartX = 0;
   private touchEndX = 0;
-
+  public screenWidth = window.innerWidth;
 
   ngAfterViewInit(): void {
     this.initializeGroups();
@@ -36,16 +36,20 @@ export class CarouselComponent implements AfterViewInit {
     return result;
   }
 
+  setShowNavigation() {
+    return this.items.length > 4 || this.screenWidth < 1200
+  }
+
   initializeGroups(): void {
     const chunkSize = this.calculateChunkSize();
     this.groupedItems = this.chunkArray(this.items, chunkSize);
   }
 
   calculateChunkSize(): number {
-    const screenWidth = window.innerWidth;
-    if (screenWidth < 768) return 1;
-    if (screenWidth < 1000) return 2;
-    if (screenWidth < 1200) return 3;
+    
+    if (this.screenWidth < 768) return 1;
+    if (this.screenWidth < 1000) return 2;
+    if (this.screenWidth < 1200) return 3;
     return 5;
   }
 

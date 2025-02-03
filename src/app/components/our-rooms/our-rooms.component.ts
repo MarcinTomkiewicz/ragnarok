@@ -20,13 +20,13 @@ export class OurRoomsComponent {
       },
       {
         name: 'Salka Asgard',
-        photo: 'rooms/midgard.jpg',
+        photo: 'rooms/asgard.jpg',
         description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
         longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
       },
       {
         name: 'Salka Alfheim',
-        photo: 'rooms/midgard.jpg',
+        photo: 'rooms/alfheim.jpg',
         description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
         longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
       },

@@ -7,7 +7,6 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { HeaderComponent } from './components/header/header.component';
 import { AboutComponent } from './components/about/about.component';
 import { ServicesComponent } from './components/services/services.component';
-import { PortfolioComponent } from './components/portfolio/portfolio.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { TechStackComponent } from './components/tech-stack/tech-stack.component';
 import { OurRoomsComponent } from './components/our-rooms/our-rooms.component';
@@ -18,14 +17,15 @@ import { OurRoomsComponent } from './components/our-rooms/our-rooms.component';
   imports: [
     CommonModule,
     FooterComponent,
-    MainComponent,
+    RouterOutlet,
+    // MainComponent,
     NavbarComponent,
     HeaderComponent,
-    AboutComponent,
-    ServicesComponent,
-    OurRoomsComponent,
-    ContactComponent,
-    TechStackComponent
+    // AboutComponent,
+    // ServicesComponent,
+    // OurRoomsComponent,
+    // ContactComponent,
+    // TechStackComponent
 ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

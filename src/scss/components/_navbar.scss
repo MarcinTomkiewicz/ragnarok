@@ -14,6 +14,7 @@
     top: 0;
     left: 0;
     z-index: 1000; // Wysoki z-index, aby nawigacja była nad treścią
+    flex-wrap: nowrap!important;
   }
 
   .navbar-brand {
@@ -38,7 +39,6 @@
 
     li {
       margin-right: 2rem;
-      padding: 0.5rem;
       @media (max-width: $breakpoint-sm) {
         margin-right: 0%;
       }
