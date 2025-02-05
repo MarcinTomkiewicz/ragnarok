@@ -50,6 +50,12 @@ export class TechStackComponent {
       description: 'Dyżurny Mistrz Gry. Od długiego czasu prowadzi różne systemy - przede wszystkim Mork Borg, CY_Borg oraz Zew Cthulhu.',
       longDescription: 'Warto sprawdzać dostępność, bo bywa dostępny o różnych porach.'
     },
+    {
+      name: 'Kuba',
+      photo: 'staff/kuba.jpg',
+      description: 'Dyżurny Mistrz Gry. Spec od Pathfindera, rozpoczynał od D&D a także studiował Zew Cthulhu na Uniwersytecie Miskatonic.',
+      longDescription: 'Warto sprawdzać dostępność, bo bywa dostępny o różnych porach.'
+    },
     
   ];
 
