@@ -4,6 +4,7 @@ import { NgbCarouselModule, NgbCarouselConfig } from '@ng-bootstrap/ng-bootstrap
 import { CarouselComponent } from '../../common/carousel/carousel.component';
 import { TechStack } from '../../core/interfaces/i-techStack';
 import { BackendService } from '../../core/services/backend/backend.service';
+import { LoaderService } from '../../core/services/loader/loader.service';
 
 @Component({
   selector: 'app-tech-stack',
@@ -18,24 +19,20 @@ export class TechStackComponent implements OnInit {
 
   techStack = signal<TechStack[]>([]);
   isLoading = signal(true);
+  loaderService = inject(LoaderService)
   error = signal<string | null>(null);
 
   techStackLoaded = computed(() => this.techStack().length > 0);
 
   ngOnInit(): void {
     this.loadTechStack();
-
-    computed(() => {
-      if (this.techStackLoaded()) {
-        console.log('Dane zostały załadowane:', this.techStack());
-      }
-    });
   }
 
   /**
    * Pobiera dane z tabeli 'tech_stack' w Supabase
    */
   private loadTechStack(): void {
+    this.loaderService.show();
     this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc').subscribe({
       next: (data) => {
         this.techStack.set(data);
@@ -45,7 +42,8 @@ export class TechStackComponent implements OnInit {
         console.error('Błąd podczas pobierania danych:', err);
         this.error.set('Nie udało się załadować danych.');
         this.isLoading.set(false);
-      }
+      },
+      complete: () => this.loaderService.hide(),
     });
   }
 }

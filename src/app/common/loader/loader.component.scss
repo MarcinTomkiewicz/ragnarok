@@ -1,0 +1,58 @@
+$backdrop-color: black;
+$text-color: white;
+$spinner-size: 100px;
+$dot-animation-duration: 1.5s;
+
+.modal-backdrop {
+  opacity: 0.5;
+  background-color: $backdrop-color;
+}
+
+.loader-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.rotating-image {
+  width: $spinner-size;
+  height: $spinner-size;
+  animation: rotate 2s linear infinite;
+  border-radius: 100%;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  color: $text-color;
+  letter-spacing: 1px;
+
+  .dots {
+    display: inline-block;
+    width: 2ch;
+    text-align: left;
+    overflow: hidden;
+    animation: dots $dot-animation-duration steps(3, end) infinite;
+
+    vertical-align: bottom;  
+    position: relative;
+  }
+}
+
+@keyframes dots {
+  0% { width: 0ch; }
+  33% { width: 0.5ch; }
+  66% { width: 1ch; }
+  100% { width: 2ch; }
+}

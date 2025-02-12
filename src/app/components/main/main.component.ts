@@ -17,6 +17,7 @@ import { Router, RouterLink } from '@angular/router';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { INews } from '../../core/interfaces/i-news';
 import { ConverterService } from '../../core/services/converter/converter.service';
+import { LoaderService } from '../../core/services/loader/loader.service';
 
 @Component({
   selector: 'app-main',
@@ -34,6 +35,9 @@ export class MainComponent implements OnInit {
   carouselConfig = inject(NgbCarouselConfig);
   backend = inject(BackendService);
   converter = inject(ConverterService)
+  loaderService = inject(LoaderService)
+
+  isMobile: boolean = window.innerWidth <= 768;
 
   private touchStartX = 0;
   private touchEndX = 0;
@@ -41,6 +45,8 @@ export class MainComponent implements OnInit {
   public newsItems!: INews[];
 
   ngOnInit() {
+    this.loaderService.show();
+    
     this.backend.getAll<INews>('news').subscribe({
       next: (news: INews[]) => {
         this.newsItems = news.map((item) => ({
@@ -48,11 +54,16 @@ export class MainComponent implements OnInit {
           createdAt: this.converter.convert(item.created_at, 'date', 'dd-MM-yyyy HH:mm')
         }));
   
-        console.log(this.newsItems[0].imageURL);
       },
       error: (err) => console.error('Błąd pobierania newsów:', err),
+      complete: () => this.loaderService.hide(),
     });
 
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event) {
+    this.isMobile = window.innerWidth <= 768;
   }
 
   @HostListener('touchstart', ['$event'])

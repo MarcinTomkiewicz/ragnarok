@@ -3,7 +3,7 @@
 
 :host {
   display: flex;
-  height: 100%;
+  height: auto;
 
   @media (orientation: landscape) {
     min-height: unset;
@@ -11,7 +11,6 @@
   }
 }
 
-// Stylowanie dla większych ekranów
 main {
   display: flex;
   align-items: center;
@@ -27,7 +26,7 @@ main {
 }
 
 .flex-row {
-  @include flex-wrapper(row)
+  @include flex-wrapper(row);
 }
 
 .flex-column-left {
@@ -36,12 +35,14 @@ main {
 }
 
 .carousel-item {
-  display: flex!important;
-  justify-content: center!important;
-
+  display: flex !important;
+  justify-content: center !important;
 }
-.carousel-item.active, .carousel-item-next, .carousel-item-prev {
-  display: flex!important;
+
+.carousel-item.active, 
+.carousel-item-next, 
+.carousel-item-prev {
+  display: flex !important;
 }
 
 .main-content {
@@ -52,62 +53,21 @@ main {
   box-sizing: border-box;
   position: relative;
   width: 75%;
-
-  .highlight-stripe {
-    position: absolute;
-    top: 0;
-    right: 50%;
-    width: 20px;
-    height: 100%;
-    background: linear-gradient(180deg, $secondary-color, $primary-color);
-    clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
-    z-index: 100;
-  }
 }
 
-// Kontener na obrazek
 .image-container {
   position: relative;
   z-index: 1;
   flex: 1;
   width: 100%;
-  overflow: visible;
-  perspective: 1000px;
+  overflow: hidden;
   transition: transform 0.6s ease;
 
-  &::before {
-    width: 100%;
-    height: 100%;
-    background-color: $primary-color;
-    content: "";
-    z-index: -1;
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    clip-path: polygon(94% 0, 96% 0, 78% 100%, 76% 100%);
-  }
-
-  &::after {
-    width: 100%;
-    height: 100%;
-    background-color: $primary-color;
-    content: "";
-    z-index: -2;
-    display: block;
-    position: absolute;
-    top: 0;
-    right: 0;
-    clip-path: polygon(98% 0, 100% 0, 82% 100%, 80% 100%);
-  }
-
   img {
-    width: 92%;
+    width: 100%;
     height: auto;
-    display: block;
     object-fit: cover;
-    clip-path: polygon(0 0, 100% 0, 80.5% 100%, 0 100%);
-    transition: transform 0.6s ease, clip-path 0.6s ease;
+    transition: transform 0.6s ease;
     transform-origin: center;
   }
 }
@@ -118,7 +78,7 @@ main {
   display: flex;
   justify-content: flex-end;
 }
-// Kontener na tekst
+
 .text-overlay {
   position: relative;
   padding: 1rem;
@@ -127,82 +87,118 @@ main {
   flex: 1;
 }
 
-// Stylowanie dla mniejszych ekranów
+.news-wrapper {
+  @include flex-wrapper(row);
+  gap: 1rem;
+  margin: auto;
+  width: 90%;
+
+  .image-container {
+    width: 50%;
+  }
+
+  .content {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &.mobile-background {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1;
+    }
+
+    .content {
+      width: 100%;
+      padding: 1rem;
+      position: relative;
+      z-index: 2;
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    width: 85%;
+
+    .image-container {
+      display: none;
+    }
+  }
+}
+
 @media (max-width: $breakpoint-md) {
   .main-content {
-    flex-direction: column; // Zmienia układ na kolumnowy dla mniejszych ekranów
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: unset;
     height: 100%;
   }
 
-  .image-container {
-    width: 100%; // Obrazek zajmuje całą szerokość ekranu
-    position: relative;
-
-    img {
-      height: 100%; // Obrazek dopasowuje się do wysokości
-      object-fit: cover;
-      clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
-    }
-  }
-
+  .image-container,
   .image-container-square {
     width: 100%;
-    height: 100%;
     position: relative;
-    justify-content: center;
 
     img {
+      width: 100%;
+      height: auto;
       object-fit: cover;
     }
   }
 
   .text-overlay {
-    position: absolute; // Pozycjonujemy tekst względem kontenera obrazka
+    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(
-      -50%,
-      -50%
-    ); // Wycentrowanie tekstu w pionie i poziomie
-    color: $secondary-text-color; // Zmiana koloru tekstu
-    max-width: unset;
+    transform: translate(-50%, -50%);
+    color: $secondary-text-color;
     width: 60%;
-    text-align: center; // Wyrównanie tekstu do środka
-    z-index: 2; // Ustawiamy tekst nad obrazkiem
+    text-align: center;
+    z-index: 2;
     background-color: rgba($bg-color, 0.85);
   }
 }
 
 @media (max-width: $breakpoint-sm) {
   .text-overlay {
-    font-size: x-small; // Zmniejszamy rozmiar czcionki dla lepszej czytelności
+    font-size: x-small;
   }
 }
 
 @media (max-width: $breakpoint-xs) {
   .main-content {
-    flex-direction: column; // Ustawiamy układ kolumnowy
-    align-items: stretch; // Oba elementy zajmują 100% szerokości
+    flex-direction: column;
+    align-items: stretch;
     justify-content: flex-start;
   }
 
   .image-container {
-    width: 100%; // Obrazek zajmuje 100% szerokości
+    width: 100%;
+
     img {
-      width: 92%; // Obrazek zajmuje pełną szerokość w kolumnowym układzie
-      height: auto; // Obrazek dopasowuje się proporcjonalnie
+      width: 100%;
+      height: auto;
     }
   }
 
   .text-overlay {
-    position: relative; // Zmieniamy tekst na pozycjonowanie względem normalnego układu
-    top: unset;
-    left: unset;
-    color: $text-color;
+    position: relative;
     transform: none;
+    color: $text-color;
     width: 100%;
     text-align: center;
   }
