@@ -2,13 +2,32 @@
 @import "abstracts/mixins";
 
 :host {
-    display: block;
+    display: flex;
     width: 100%;
     margin: 0 auto;
   }
 
   .card-text {
     overflow: auto;
+  }
+  
+  .carousel-card {
+    flex: 1 1 calc(25% - 1rem); // Dla 4 elementów na desktopie
+    max-width: 350px;           // Ograniczenie szerokości
+    min-width: 180px;           // Minimum, żeby wyglądało estetycznie
+    margin: 0.5rem;             // Odstęp między kartami
+  
+    @media (max-width: 1200px) {
+      flex: 1 1 calc(33.33% - 1rem); // 3 elementy na dużych tabletach
+    }
+  
+    @media (max-width: 992px) {
+      flex: 1 1 calc(50% - 1rem);    // 2 elementy na mniejszych ekranach
+    }
+  
+    @media (max-width: 576px) {
+      flex: 1 1 100%;               // 1 element na smartfonach
+    }
   }
   
   

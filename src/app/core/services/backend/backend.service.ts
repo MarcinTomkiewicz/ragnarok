@@ -9,7 +9,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 })
 export class BackendService {
   private readonly supabase: SupabaseClient;
-  private readonly supabaseService = inject(SupabaseService)
+  private readonly supabaseService = inject(SupabaseService);
 
   constructor() {
     this.supabase = this.supabaseService.getClient();
@@ -20,30 +20,42 @@ export class BackendService {
    * @param table - Nazwa tabeli w Supabase
    * @returns Observable z listą rekordów
    */
-  getAll(table: string): Observable<Record<string, any>[]> {
-    return from(this.supabase.from(table).select('*')).pipe(
-      map((response: PostgrestResponse<Record<string, any>>) => {
+  getAll<T extends { image?: string; imageUrl?: string }>(
+    table: string, 
+    sortBy?: keyof T, 
+    sortOrder: 'asc' | 'desc' = 'asc'
+  ): Observable<T[]> {
+    let query = this.supabase.from(table).select('*');
+  
+    if (sortBy) {
+      query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
+    }
+  
+    return from(query).pipe(
+      map((response: PostgrestResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
-        return response.data || [];
+        return (response.data || []).map(item => this.processImage(item));
       })
     );
   }
-
+  
+  
   /**
    * Pobiera rekord według identyfikatora.
    * @param table - Nazwa tabeli w Supabase
    * @param id - ID rekordu
    * @returns Observable z rekordem
    */
-  getById(table: string, id: string | number): Observable<Record<string, any> | null> {
+  getById<T extends { image?: string; imageUrl?: string }>(table: string, id: string | number): Observable<T | null> {
     return from(this.supabase.from(table).select('*').eq('id', id).single()).pipe(
-      map((response: PostgrestSingleResponse<Record<string, any>>) => {
+      map((response: PostgrestSingleResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
-        return response.data || null;
+        // Dodajemy URL do obrazu, jeśli jest
+        return response.data ? this.processImage(response.data) : null;
       })
     );
   }
@@ -54,9 +66,9 @@ export class BackendService {
    * @param data - Dane do zapisania
    * @returns Observable z odpowiedzią od Supabase
    */
-  create(table: string, data: Record<string, any>): Observable<Record<string, any>> {
+  create<T>(table: string, data: T): Observable<T> {
     return from(this.supabase.from(table).insert(data).single()).pipe(
-      map((response: PostgrestSingleResponse<Record<string, any>>) => {
+      map((response: PostgrestSingleResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
@@ -72,9 +84,9 @@ export class BackendService {
    * @param data - Dane do aktualizacji
    * @returns Observable z odpowiedzią od Supabase
    */
-  update(table: string, id: string | number, data: Record<string, any>): Observable<Record<string, any>> {
+  update<T>(table: string, id: string | number, data: T): Observable<T> {
     return from(this.supabase.from(table).update(data).eq('id', id).single()).pipe(
-      map((response: PostgrestSingleResponse<Record<string, any>>) => {
+      map((response: PostgrestSingleResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
@@ -98,4 +110,25 @@ export class BackendService {
       })
     );
   }
+
+  /**
+   * Metoda pomocnicza do przetwarzania obrazu.
+   * Jeśli obiekt zawiera pole `image`, to pobiera publiczny URL z bucketu "images".
+   * @param item - Obiekt z polem `image`
+   * @returns Przetworzony obiekt z dodanym polem `imageUrl`
+   */
+  private processImage<T extends { image?: string; imageURL?: string }>(item: T): T {
+    if (item.image) { 
+      const { data } = this.supabase
+        .storage
+        .from('images')
+        .getPublicUrl(item.image);
+  
+        item.imageURL = data?.publicUrl || '';
+      }
+    // }
+  
+    return item;
+  }
+  
 }

@@ -9,8 +9,13 @@ export class SupabaseService {
 
   constructor() {
     const SUPABASE_URL = 'https://iqkltypxuzmchvxuzlcd.supabase.co';
-    const SUPABASE_ANON_KEY = '4ab21f904bfedfc893ce24838396121ab65d773b1a2a08df9bb0eeb2d5bf2304';
-    this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxa2x0eXB4dXptY2h2eHV6bGNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4MjU0NDgsImV4cCI6MjA1MjQwMTQ0OH0.zU_qIn1lYzYDrNwL8jpuTIkRPwY6zd15dIYOYJcmKg0';
+    this.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,  // 🚀 Wyłącza automatyczne zarządzanie sesją
+        autoRefreshToken: false // 🚀 Wyłącza automatyczne odświeżanie tokenów
+      }
+  });
   }
 
   getClient(): SupabaseClient {

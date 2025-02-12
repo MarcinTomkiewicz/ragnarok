@@ -1,36 +1,65 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+// ========== Carousel ========== //
+.carousel {
+  @include flex-center();
+  width: 100%;
+}
+
 .carousel-control-prev,
 .carousel-control-next {
-  background-color: transparent;
-  width: auto!important;
-  top: 50%!important;
+  background: transparent;
+  width: auto !important;
+  top: 50% !important;
   transform: translateY(-50%);
+  color: $primary-color; // Użycie koloru zdefiniowanego w zmiennych
   filter: $icon-filter;
 
-  // Zmiana koloru SVG
   svg {
-    fill: $primary-color; // Wykorzystaj currentColor, aby kontrować kolor
+    fill: currentColor; // Dziedziczenie koloru z rodzica
+    transition: fill 0.3s ease;
   }
 
   &:hover {
-    color: lighten($primary-color, 20%); // Zmiana koloru na hover
+    color: lighten($primary-color, 20%);
   }
 }
 
+// ========== Tech Carousel ========== //
+.tech-carousel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem; // Zamiast ręcznych marginesów
+  width: 100%;
+}
+
+// ========== Card Styles ========== //
 .card {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 282px;
   align-items: center;
   background: $text-color;
+  min-height: 282px;
+  height: 100%;
+  border: none; // Dla czystszej estetyki
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .card-img-top {
   height: 250px;
-  width: auto;
+  width: 250px;
+  object-fit: cover;
+  padding: 1rem;
+  padding-bottom: 0.5rem;
+  border-radius: 100%;
 }
 
 .card-body {
@@ -38,36 +67,59 @@
   flex-direction: column;
   justify-content: space-between;
   flex-grow: 1;
-  height: 242px;
+  padding: 1rem;
+  padding-top: 0.5rem;
+  text-align: center;
 }
 
 .card-title {
-  margin-top: 10px;
+  margin: 0.5rem 0;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: $secondary-color;
 }
 
 .card-text {
   flex-grow: 1;
-  margin-bottom: 10px;
   color: $bg-color;
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+
+  .card-long-text {
+    display: block;
+    margin-top: 0.5rem;
+    font-style: italic;
+    color: darken($bg-color, 10%);
+  }
 }
 
-.description {
-  font-size: medium;
-}
-
-@media (max-width: 576px) {
+// ========== Responsive ========== //
+@media (max-width: 768px) {
   .carousel-control-prev,
   .carousel-control-next {
-    width: 10%;
+    width: 8%;
   }
 
   .card {
-    width: 80%;
+    width: 90%;
     margin: auto;
     min-height: 265px;
   }
 
   .card-text {
-    font-size: medium;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .card {
+    width: 100%;
+    min-height: 250px;
+  }
+
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 10%;
   }
 }

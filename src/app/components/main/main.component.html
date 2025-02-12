@@ -3,59 +3,24 @@
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
-    [interval]="3000"
-    class="h-100"
+    [interval]="0"
+    class="d-flex w-100"
   >
-    <ng-template ngbSlide>
-      <div class="main-content">
-        <div class="image-container">
-          <img src="ragnarok-strip.png" alt="Rozpoczyna się Ragnarok!" />
+    <ng-template ngbSlide class="d-flex flex-center w-75">
+      @for (news of newsItems; track news.id) {
+      <div class="d-flex flex-row w-75" style="margin: auto;">
+        <div style="flex-basis: 50%">
+          <img src="{{ news.imageURL }}" alt="{{ news.header }}" class="w-75" />
         </div>
-        <div class="text-overlay">
-          <h1>Rozpoczyna się Ragnarok!</h1>
-          <div class="pb-3">
-            Dołącz do miejsca, gdzie legendy pisze się kostkami. Zasmakuj
-            niepowtarzalnego klimatu, tworzonego przez ludzi z pasją dla ludzi z
-            pasją. Wynajmuj pomieszczenia na swoje sesje RPG i ciesz się
-            niezmąconą rozrywką.
-          </div>
-          <a href="#services" class="btn btn-primary">Sprawdź naszą ofertę</a>
+        <div class="flex-column-left">
+          <h2>{{ news.header }}</h2>
+          <div>{{ news.description }}</div>
+          <button class="btn btn-primary" (click)="navigate(news.link)">
+            {{ news.linkDescription }}
+          </button>
         </div>
       </div>
-    </ng-template>
-    <ng-template ngbSlide>
-      <div class="main-content">
-        <div class="text-overlay w-100">
-          <h1>Otwarcie Ragnaroku już 1 lutego!</h1>
-          <div class="pb-3">
-            Ragnarok otwiera swoje drzwi! Wpadnij na wyjątkowe wydarzenie, które
-            łączy pasję do RPG z klimatycznymi pomieszczeniami, stworzonymi
-            specjalnie dla graczy. Czeka na Ciebie wiele atrakcji, od sesji
-            pokazowych, przez strefę Munchkinów, po emocjonującą zabawę tokenową
-            z nagrodami. Przyjdź i sprawdź, jak nasze sali RPG mogą tchnąć nowe
-            życie w Twoje ulubione gry – to wydarzenie, które na długo zostanie
-            w Twojej pamięci!
-          </div>
-          <a href="https://fb.me/e/4NSJoPxsr" class="btn btn-primary"
-            >Sprawdź wydarzenie</a
-          >
-        </div>
-        <div class="image-container-square">
-          <img src="dwarf.jpeg" alt="Rozpoczyna się Ragnarok!" class="h-50 w-50" />
-        </div>
-      </div>
+      }
     </ng-template>
   </ngb-carousel>
 </main>
-<!-- 
-
-<div class="main-content">
-  <div class="image-container">
-    <img src='ragnarok-strip.png' alt="Rozpoczyna się Ragnarok!">
-  </div>
-  <div class="text-overlay">
-    <h1>Rozpoczyna się Ragnarok!</h1>
-    <div class="pb-3">Dołącz do miejsca, gdzie legendy pisze się kostkami. Zasmakuj niepowtarzalnego klimatu, tworzonego przez ludzi z pasją dla ludzi z pasją. Wynajmuj pomieszczenia na swoje sesje RPG i ciesz się niezmąconą rozrywką.</div>
-    <a href="#services" class="btn btn-primary">Sprawdź naszą ofertę</a>
-  </div>
-</div> -->

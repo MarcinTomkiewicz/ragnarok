@@ -1,8 +1,9 @@
 @import "abstracts/variables";
+@import "abstracts/mixins";
 
 :host {
-  display: block;
-  height: auto;
+  display: flex;
+  height: 100%;
 
   @media (orientation: landscape) {
     min-height: unset;
@@ -14,6 +15,33 @@
 main {
   display: flex;
   align-items: center;
+  width: 100%;
+}
+
+.flex-center {
+  @include flex-center();
+}
+
+.flex-column {
+  @include flex-wrapper(column);
+}
+
+.flex-row {
+  @include flex-wrapper(row)
+}
+
+.flex-column-left {
+  @include flex-column-adjusted(start, column);
+  gap: 10px;
+}
+
+.carousel-item {
+  display: flex!important;
+  justify-content: center!important;
+
+}
+.carousel-item.active, .carousel-item-next, .carousel-item-prev {
+  display: flex!important;
 }
 
 .main-content {
@@ -23,7 +51,7 @@ main {
   min-height: 420px;
   box-sizing: border-box;
   position: relative;
-  width: 100%;
+  width: 75%;
 
   .highlight-stripe {
     position: absolute;
@@ -40,8 +68,6 @@ main {
 // Kontener na obrazek
 .image-container {
   position: relative;
-  // padding: 1rem;
-  // box-sizing: border-box;
   z-index: 1;
   flex: 1;
   width: 100%;

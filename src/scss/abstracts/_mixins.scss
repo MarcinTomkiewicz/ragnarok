@@ -28,6 +28,13 @@
     align-items: center;
     justify-content: $justify;
   }
+
+  @mixin flex-column-adjusted($justify, $direction) {
+    display: flex;
+    flex-direction: $direction;
+    align-items: $justify;
+    justify-content: center;
+  }
     
     // Mixin for responsive font sizes
     @mixin responsive-font-size($size) {

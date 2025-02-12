@@ -11,5 +11,5 @@
   <div class="image-banner-container">
     <img src="Vampire.jpg" alt="Banner for services" class="image-banner" />
   </div>
-  <app-carousel [items]="techStack"></app-carousel>
+  <app-carousel *ngIf="!isLoading()" [items]="techStack()"></app-carousel>
 </div>

@@ -1,4 +1,8 @@
-import { Component, HostListener, Input, ViewChild, AfterViewInit, TemplateRef, inject } from '@angular/core';
+import { 
+  Component, TemplateRef, ChangeDetectionStrategy, 
+  ChangeDetectorRef, inject, computed, signal, input, viewChild, AfterViewInit, 
+  OnInit
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
 import { TechStack } from '../../core/interfaces/i-techStack';
@@ -9,77 +13,67 @@ import { TechStack } from '../../core/interfaces/i-techStack';
   imports: [CommonModule, NgbCarouselModule],
   providers: [NgbCarouselConfig],
   templateUrl: './carousel.component.html',
-  styleUrls: ['./carousel.component.scss']
+  styleUrls: ['./carousel.component.scss'],
+  // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CarouselComponent implements AfterViewInit {
-  @Input() items!: TechStack[]; // Elementy do wyświetlenia w karuzeli
-  @Input() itemTemplate!: TemplateRef<any>; // Template dla elementów
-  @ViewChild('carousel', { static: false }) carousel: NgbCarousel | undefined;
+export class CarouselComponent implements OnInit {
+  items = input<TechStack[]>([]);                  
+  itemTemplate = input<TemplateRef<any> | null>(null);
+
+  carousel = viewChild(NgbCarousel);               
+
   carouselConfig = inject(NgbCarouselConfig);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  groupedItems: TechStack[][] = [];
-  private touchStartX = 0;
-  private touchEndX = 0;
-  public screenWidth = window.innerWidth;
+  screenWidth = signal(window.innerWidth);         
+  groupedItems = signal<TechStack[][]>([]);        
 
-  ngAfterViewInit(): void {
+  showNavigation = computed(() =>                  
+    this.items().length > 4 || this.screenWidth() < 1601
+  );
+
+  ngOnInit(): void {
+    computed(() => {
+      const data = this.items();
+      if (data.length) {
+        this.initializeGroups();
+        this.cdr.detectChanges();
+      }
+    });
     this.initializeGroups();
-    console.log(this.carouselConfig);
-    
+    this.observeResize();
   }
 
-  chunkArray(array: TechStack[], chunkSize: number): TechStack[][] {
-    const result: TechStack[][] = [];
-    for (let i = 0; i < array.length; i += chunkSize) {
-      result.push(array.slice(i, i + chunkSize));
-    }
-    return result;
+  private observeResize(): void {
+    const resizeObserver = new ResizeObserver(() => {
+      this.screenWidth.set(window.innerWidth);
+      this.initializeGroups();
+    });
+    resizeObserver.observe(document.body);
   }
 
-  setShowNavigation() {
-    return this.items.length > 4 || this.screenWidth < 1200
+  private chunkArray(array: TechStack[], chunkSize: number): TechStack[][] {
+    return Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, i) =>
+      array.slice(i * chunkSize, i * chunkSize + chunkSize)
+    );
   }
 
-  initializeGroups(): void {
+  private initializeGroups(): void {
     const chunkSize = this.calculateChunkSize();
-    this.groupedItems = this.chunkArray(this.items, chunkSize);
+    this.groupedItems.set(this.chunkArray(this.items(), chunkSize));
   }
 
-  calculateChunkSize(): number {
-    
-    if (this.screenWidth < 768) return 1;
-    if (this.screenWidth < 1000) return 2;
-    if (this.screenWidth < 1200) return 3;
-    return 5;
+  private calculateChunkSize(): number {
+    const width = this.screenWidth();
+    if (width < 823) return 1;
+    if (width < 1201) return 2;
+    if (width < 1601) return 3;
+    return 4;
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(): void {
-    this.initializeGroups();
-  }
-
-  @HostListener('touchstart', ['$event'])
-  onTouchStart(event: TouchEvent): void {
-    this.touchStartX = event.changedTouches[0].screenX;
-  }
-
-  @HostListener('touchend', ['$event'])
-  onTouchEnd(event: TouchEvent): void {
-    this.touchEndX = event.changedTouches[0].screenX;
-    this.handleSwipeGesture();
-  }
-
-  handleSwipeGesture(): void {
-    const swipeDistance = this.touchStartX - this.touchEndX;
-    if (swipeDistance > 50 && this.carousel) this.carousel.next();
-    if (swipeDistance < -50 && this.carousel) this.carousel.prev();
-  }
-
-  trackByGroup(index: number, item: TechStack[]): any {
-    return index;
-  }
-
-  trackByFn(index: number, item: TechStack): any {
-    return index;
+  handleSwipeGesture(startX: number, endX: number): void {
+    const swipeDistance = startX - endX;
+    if (swipeDistance > 50) this.carousel()?.next();
+    if (swipeDistance < -50) this.carousel()?.prev();
   }
 }

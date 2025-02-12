@@ -13,26 +13,30 @@ import { TechStack } from '../../core/interfaces/i-techStack';
 export class OurRoomsComponent {
   ourRoomsDetails: TechStack[] = [
       {
+        id: 1,
         name: 'Salka Midgard',
-        photo: 'rooms/midgard.jpg',
+        imageURL: 'rooms/midgard.jpg',
         description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
         longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
       },
       {
+        id: 2,
         name: 'Salka Asgard',
-        photo: 'rooms/asgard.jpg',
+        imageURL: 'rooms/asgard.jpg',
         description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
         longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
       },
       {
+        id: 3,
         name: 'Salka Alfheim',
-        photo: 'rooms/alfheim.jpg',
+        imageURL: 'rooms/alfheim.jpg',
         description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
         longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
       },
       {
+        id: 4,
         name: 'Salka Jotunheim',
-        photo: 'rooms/jotunheim.jpg',
+        imageURL: 'rooms/jotunheim.jpg',
         description: 'Salka VIP, wyposażona w 6 wygodnych foteli, funkcjonalne podręczne stoliki oraz Chromebooka podłączonego do soundbara.',
         longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na długie posiedzenia z RPG.'
       },
