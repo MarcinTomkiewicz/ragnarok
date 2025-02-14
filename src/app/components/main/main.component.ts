@@ -47,7 +47,7 @@ export class MainComponent implements OnInit {
   ngOnInit() {
     this.loaderService.show();
     
-    this.backend.getAll<INews>('news').subscribe({
+    this.backend.getAll<INews>('news', 'created_at', 'asc').subscribe({
       next: (news: INews[]) => {
         this.newsItems = news.map((item) => ({
           ...item,

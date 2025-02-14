@@ -3,15 +3,21 @@
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
-    [interval]="0"
+    [interval]="5000"
     class="d-flex w-100"
   >
-    <ng-template ngbSlide class="d-flex flex-center" style="width: 90%">
-      @for (news of newsItems; track news.id) {
-        <div class="news-wrapper" [ngClass]="{ 'mobile-background': isMobile }" [style.backgroundImage]="isMobile ? 'url(' + news.imageURL + ')' : 'none'">
-          <div class="image-container" *ngIf="!isMobile">
-            <img [src]="news.imageURL" [alt]="news.header" />
-          </div>
+    @for (news of newsItems; track news.id) {
+      <ng-template ngbSlide class="d-flex flex-center" style="width: 90%">
+        <div
+          class="news-wrapper"
+          [ngClass]="{ 'mobile-background': isMobile }"
+          [style.backgroundImage]="isMobile ? 'url(' + news.imageURL + ')' : 'none'"
+        >
+          @if (!isMobile) {
+            <div class="image-container">
+              <img [src]="news.imageURL" [alt]="news.header" />
+            </div>
+          }
           <div class="content">
             <h2>{{ news.header }}</h2>
             <div>{{ news.description }}</div>
@@ -20,8 +26,7 @@
             </button>
           </div>
         </div>
-        
-      }
-    </ng-template>
+      </ng-template>
+    }
   </ngb-carousel>
 </main>
