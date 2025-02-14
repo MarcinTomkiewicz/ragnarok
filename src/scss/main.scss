@@ -7,6 +7,7 @@
 @import "base/typography";
 @import "base/base";
 @import "base/img";
+@import "base/flex";
 
 // Components
 @import "components/buttons";
@@ -51,7 +52,7 @@ a {
     border: 1px solid $secondary-text-color;
     border-radius: 5px;
     box-sizing: border-box;
-    color: $secondary-bg-color;
+    color: $bg-color;
     padding: 0.5rem;
   } 
 }

@@ -9,8 +9,7 @@ footer {
     gap: 10px;
     margin-bottom: 1rem;
     flex-wrap: wrap;
-    // @include flex-wrapper(row);
-    @include flex-justified(center);
+    @include flex-wrapper(row, center, center);;
 
     li {
       position: relative;
@@ -20,6 +19,7 @@ footer {
         text-decoration: none;
         padding: 0.5rem;
         position: relative;
+        @include responsive-font-size(11px);
 
         &:hover {
           border: 1px solid $secondary-text-color;
@@ -30,8 +30,10 @@ footer {
 
         &::after {
           position: absolute;
+          @include responsive-font-size(11px);
           content: "|";
           margin-left: 10px;
+          top: 6px;
           color: lighten($bg-color, 20%);
         }
       }

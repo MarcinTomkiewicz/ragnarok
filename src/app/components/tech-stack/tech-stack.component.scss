@@ -21,10 +21,9 @@
   gap: 10px;
 }
 
-@media (max-width: 576px) {
+
   .description {
-    font-size: smaller;
-  }
+    @include responsive-font-size(10px);
 }
 
 .image-banner-container {

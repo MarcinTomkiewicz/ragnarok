@@ -32,12 +32,12 @@ body {
   }
   
   ::-webkit-scrollbar-track {
-    background-color: $secondary-bg-color;
+    background-color: $bg-color;
     border-radius: 10px;
   }
   
   * {
-    scrollbar-color: $primary-color $secondary-bg-color;
+    scrollbar-color: $primary-color $bg-color;
     scrollbar-width: thin;
   }
 

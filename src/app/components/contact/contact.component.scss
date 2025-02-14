@@ -5,7 +5,7 @@
   display: block;
   min-height: 100vh;
   background-color: $primary-color;
-  color: $secondary-bg-color;
+  color: $bg-color;
 
   @media (max-width: $breakpoint-md) and (orientation: landscape) {
     height: auto;
@@ -25,7 +25,7 @@
 }
 
 p, .h2-contact, .form-label {
-  color: $secondary-bg-color;
+  color: $bg-color;
 }
 
 .responsive-textarea {

@@ -1,15 +1,44 @@
-h1, h2, h3, h4, h5, h6 {
-    color: $text-color;
-    font-weight: 700;
-  }
-  
-  p {
-    margin-bottom: 1.5rem;
-    color: $text-color;
-    font-size: $font-size-base;
-  }
-  
-  a {
-    color: $primary-color;
-    text-decoration: none;
-  }
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: $text-color;
+  font-weight: 700;
+}
+
+h5 {
+  @include responsive-font-size(14px);
+}
+
+h4 {
+  @include responsive-font-size(16px);
+}
+
+h3 {
+  @include responsive-font-size(18px);
+}
+
+h2 {
+  @include responsive-font-size(22px);
+}
+
+h1 {
+  @include responsive-font-size(26px);
+}
+
+h6 {
+  @include responsive-font-size(12px);
+}
+
+p {
+  margin-bottom: 1.5rem;
+  color: $text-color;
+  font-size: $font-size-base;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+}

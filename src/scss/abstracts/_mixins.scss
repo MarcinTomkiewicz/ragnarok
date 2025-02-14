@@ -1,48 +1,24 @@
 @mixin flex-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-@mixin flex-wrapper($direction) {
+@mixin flex-wrapper($direction: row, $justify: space-between, $align: center) {
   display: flex;
   flex-direction: $direction;
-  align-items: center;
-  justify-content: space-between;
+  align-items: $align;
+  justify-content: $justify;
 }
+
+@mixin responsive-font-size($size) {
+  font-size: $size;
   
-  // Mixin for responsive font sizes
-  @mixin responsive-font-size($size) {
-    font-size: $size;
-    @media (min-width: 768px) {
+  @media (min-width: $breakpoint-sm) {
       font-size: $size * 1.2;
-    }
-    @media (min-width: 1200px) {
+  }
+  
+  @media (min-width: $breakpoint-lg) {
       font-size: $size * 1.4;
-    }
   }
-
-  @mixin flex-justified($justify) {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: $justify;
-  }
-
-  @mixin flex-column-adjusted($justify, $direction) {
-    display: flex;
-    flex-direction: $direction;
-    align-items: $justify;
-    justify-content: center;
-  }
-    
-    // Mixin for responsive font sizes
-    @mixin responsive-font-size($size) {
-      font-size: $size;
-      @media (min-width: 768px) {
-        font-size: $size * 1.2;
-      }
-      @media (min-width: 1200px) {
-        font-size: $size * 1.4;
-      }
-    }
+}

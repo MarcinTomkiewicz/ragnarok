@@ -7,9 +7,9 @@
     class="d-flex w-100"
   >
     @for (news of newsItems; track news.id) {
-      <ng-template ngbSlide class="d-flex flex-center" style="width: 90%">
+      <ng-template ngbSlide class="flex-center" style="width: 90%">
         <div
-          class="news-wrapper"
+          class="flex-row news-wrapper"
           [ngClass]="{ 'mobile-background': isMobile }"
           [style.backgroundImage]="isMobile ? 'url(' + news.imageURL + ')' : 'none'"
         >
@@ -18,7 +18,7 @@
               <img [src]="news.imageURL" [alt]="news.header" />
             </div>
           }
-          <div class="content">
+          <div class="flex-column-between content">
             <h2>{{ news.header }}</h2>
             <div>{{ news.description }}</div>
             <button class="btn btn-primary align-self-center mt-2" (click)="navigate(news.link)">

@@ -1,36 +1,43 @@
 $primary-color: #f9f5c6;
 $secondary-color: #808080;
+
+// Tło
 $bg-color: #372F3B;
-$secondary-bg-color: #372F3B;
-$text-color: #f9f5c6;
-$secondary-text-color: #fbf5be;
-$button-color: #f9f5c6;
-$button-hover-color: darken($button-color, 10%);
-$secondary-button-color: #372F3B;
-$secondary-button-hover-color: darken($secondary-button-color, 10%);
-$border-color: #fbf5be;
+$border-color: #fbf5be; // zachowane dla kontrastu
+
+// Tekst
+$text-color: $primary-color;
+$secondary-text-color: lighten($primary-color, 5%); // zamiast osobnej wartości
+
+// Przyciski
+$button-color: $primary-color;
+$button-hover-color: darken($primary-color, 10%);
+$secondary-button-color: $bg-color;
+$secondary-button-hover-color: darken($bg-color, 10%);
+
+// Filtry ikon
 $icon-filter: brightness(0) saturate(100%) invert(88%) sepia(24%) saturate(374%) hue-rotate(1deg) brightness(107%) contrast(97%);
 $icon-filter-dark: brightness(0) saturate(100%) invert(14%) sepia(10%) saturate(1170%) hue-rotate(236deg) brightness(96%) contrast(85%);
 
-// Typography
+// Typografia
 $font-family-base: 'Modern Antiqua', serif;
 $font-size-base: 1rem;
 $line-height-base: 1.5;
-$font-size-sm: 0.875rem;  // for small screens
-$font-size-lg: 1.125rem;  // for large screens
+$font-size-sm: 0.875rem;
+$font-size-lg: 1.125rem;
 
-// Breakpoints
-$breakpoint-xs: 479px;   // for mobile devices
-$breakpoint-sm: 767px;   // for tablets
-$breakpoint-md: 1023px;  // for small desktops
-$breakpoint-lg: 1270px;  // for larger desktops
+// Breakpointy
+$breakpoint-xs: 479px;
+$breakpoint-sm: 767px;
+$breakpoint-md: 1023px;
+$breakpoint-lg: 1270px;
 
 $height-breakpoint-md: 768px;
 
-// Container widths
-$container-width-sm: 100%;  // full width for mobile
-$container-width-md: 960px; // for tablets
-$container-width-lg: 1140px; // for desktops
+// Szerokości kontenerów
+$container-width-sm: 100%;
+$container-width-md: 960px;
+$container-width-lg: 1140px;
 
-// Navbar settings
+// Ustawienia nawigacji
 $navbar-height: 60px;

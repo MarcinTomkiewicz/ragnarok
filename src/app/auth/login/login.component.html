@@ -1,25 +1,27 @@
-<div class="login-container">
-    <h2>Zaloguj się</h2>
-  
-    <form [formGroup]="loginForm" (ngSubmit)="login()">
-      <div>
-        <label for="email">E-mail</label>
-        <input id="email" type="email" formControlName="email" />
-        <small *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
+<div class="login-container d-flex justify-content-center align-items-center flex-column">
+  <!-- <div class="card p-4 shadow-lg custom-card"> -->
+    <h2 class="text-center mb-4">Zaloguj się</h2>
+
+    <form [formGroup]="loginForm" (ngSubmit)="login()" class="d-flex justify-content-center flex-column align-items-center">
+      <div class="mb-3">
+        <label for="email" class="form-label">E-mail</label>
+        <input id="email" type="email" class="form-control" formControlName="email" />
+        <div *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" class="invalid-feedback">
           Podaj poprawny e-mail.
-        </small>
+        </div>
       </div>
-  
-      <div>
-        <label for="password">Hasło</label>
-        <input id="password" type="password" formControlName="password" />
-        <small *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Hasło</label>
+        <input id="password" type="password" class="form-control" formControlName="password" />
+        <div *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" class="invalid-feedback">
           Hasło musi mieć co najmniej 6 znaków.
-        </small>
+        </div>
       </div>
-  
-      <button type="submit" [disabled]="loginForm.invalid">Zaloguj</button>
+
+      <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid">Zaloguj</button>
     </form>
-  
-    <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
-</div>
+
+    <p *ngIf="errorMessage" class="text-danger text-center mt-3">{{ errorMessage }}</p>
+  </div>
+<!-- </div> -->

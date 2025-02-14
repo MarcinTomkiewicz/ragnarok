@@ -44,15 +44,15 @@
       }
       a {
         text-decoration: none;
-        color: $secondary-bg-color;
+        color: $bg-color;
+        @include responsive-font-size(11px);
 
         @media (max-width: $breakpoint-sm) {
-          font-size: 0.9rem;
           text-align: center;
         }
       }
       &:hover {
-        border: 1px solid $secondary-bg-color;
+        border: 1px solid $bg-color;
         border-radius: 5px;
         box-sizing: border-box;
       }
