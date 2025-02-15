@@ -2,16 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { Event, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, RouteConfigLoadEnd, RouteConfigLoadStart, Router, RouterOutlet } from '@angular/router';
 import { FooterComponent } from './components/footer/footer.component';
-import { MainComponent } from './components/main/main.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { HeaderComponent } from './components/header/header.component';
-import { AboutComponent } from './components/about/about.component';
-import { ServicesComponent } from './components/services/services.component';
-import { ContactComponent } from './components/contact/contact.component';
-import { TechStackComponent } from './components/tech-stack/tech-stack.component';
-import { OurRoomsComponent } from './components/our-rooms/our-rooms.component';
 import { LoaderComponent } from './common/loader/loader.component';
 import { LoaderService } from './core/services/loader/loader.service';
+
+declare let fbq: Function; // Deklaracja Meta Pixel
 
 @Component({
   selector: 'app-root',
@@ -23,15 +19,15 @@ import { LoaderService } from './core/services/loader/loader.service';
     NavbarComponent,
     HeaderComponent,
     LoaderComponent,
-],
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   title = 'ragnarok';
   @ViewChild('services') services!: ElementRef;
-  private readonly loaderService = inject(LoaderService)
-  private readonly router = inject(Router)
+  private readonly loaderService = inject(LoaderService);
+  private readonly router = inject(Router);
 
   ngOnInit(): void {
     this.router.events.subscribe((event: Event) => {
@@ -41,7 +37,28 @@ export class AppComponent {
       if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError || event instanceof RouteConfigLoadEnd) {
         this.loaderService.hide();
       }
+
+      // Jeśli trasa została załadowana, wyślij zdarzenie do Facebook Pixel
+      if (event instanceof NavigationEnd) {
+        this.trackPageView(event.urlAfterRedirects);
+      }
     });
+  }
+
+  trackPageView(url: string) {
+    if (typeof fbq === 'function') {
+      console.log(`Tracking page: ${url}`); // Debugowanie
+
+      // Standardowe zdarzenie PageView dla każdej strony
+      fbq('track', 'PageView', { page_path: url });
+
+      // Niestandardowe zdarzenia dla konkretnych podstron
+      if (url === '/services') {
+        fbq('track', 'ViewServices');
+      } else if (url === '/contact') {
+        fbq('track', 'ViewContact');
+      }
+    }
   }
 
   navigateToServices() {

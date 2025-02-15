@@ -1,46 +1,13 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-:host {
-  @include flex-wrapper(row, center, center);
-  height: auto;
-
-  @media (orientation: landscape) {
-    min-height: unset;
-    height: auto;
-  }
-}
-
-main {
-  @include flex-wrapper(row, center, center);
-  width: 100%;
-}
-
-.carousel-item {
-  @include flex-wrapper(row, center, center);
-}
-
+:host,
+main,
+.carousel-item,
 .carousel-item.active,
 .carousel-item-next,
 .carousel-item-prev {
   @include flex-wrapper(row, center, center);
-}
-
-.image-container {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  width: 100%;
-  overflow: hidden;
-  transition: transform 0.6s ease;
-
-  img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    transition: transform 0.6s ease;
-    transform-origin: center;
-  }
 }
 
 .news-wrapper {
@@ -50,6 +17,12 @@ main {
 
   .image-container {
     width: 50%;
+    overflow: hidden;
+
+    img {
+      object-fit: contain;
+      object-position: center;
+    }
   }
 
   .content {
@@ -62,6 +35,7 @@ main {
     background-position: top;
     position: relative;
     border-radius: 5px;
+    min-height: 220px;
 
     &::before {
       content: "";
@@ -76,23 +50,17 @@ main {
     }
 
     .content {
-      width: 100%;
-      padding: 1rem;
       position: relative;
       z-index: 2;
+      width: 100%;
+      padding: 10px;
     }
   }
 
+ 
   @media (max-width: $breakpoint-md) {
     .image-container {
       width: 100%;
-      position: relative;
-
-      img {
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-      }
     }
   }
 
@@ -109,11 +77,12 @@ main {
   @media (max-width: $breakpoint-xs) {
     .image-container {
       width: 100%;
-
-      img {
-        width: 100%;
-        height: auto;
-      }
     }
+  }
+}
+
+@media (orientation: landscape) {
+  :host {
+    height: auto;
   }
 }

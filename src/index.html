@@ -6,15 +6,19 @@
       Ragnarok - pokoje do sesji RPG | Nowy wymiar gier fabularnych w Poznaniu
     </title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
+    <link rel="canonical" href="https://ragnarok-rooms.pl/" />
     <meta
       name="keywords"
-      content="Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, klimatyczne miejsce, nordycki klimat, RPG Poznań, przestrzeń do RPG, Poznań"
+      content="RPG, rpg, Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, klimatyczne miejsce, nordycki klimat, RPG Poznań, przestrzeń do RPG, Poznań"
+    />
+    <meta
+      name="description"
+      content="Ragnarok – epickie sesje RPG w klimatycznych salach w Poznaniu. Gry fabularne, wynajem pokoi RPG i niezapomniane przygody. Zbierz drużynę i graj!"
     />
     <meta name="author" content="Ragnarok - Pokoje do sesji RPG" />
     <meta name="robots" content="index, follow" />
@@ -31,7 +35,7 @@
     />
     <meta
       property="og:image"
-      content="https://ragnarok-rooms.pl/ragnarok.png"
+      content="https://ragnarok-rooms.pl/ragnarok.webp"
     />
     <meta property="og:url" content="https://ragnarok-rooms.pl" />
     <meta property="og:type" content="website" />
@@ -49,7 +53,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://ragnarok-rooms.pl/ragnarok.png"
+      content="https://ragnarok-rooms.pl/ragnarok.webp"
     />
     <!-- Google tag (gtag.js) -->
     <script
@@ -71,7 +75,63 @@
         send_to: "AW-16834781429/ONpJCPGnlpUaEPXBuds-",
       });
     </script>
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Ragnarok Rooms",
+        "image": "https://ragnarok-rooms.pl/ragnarok.webp",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Dolna Wilda 16A",
+          "addressLocality": "Poznań",
+          "addressCountry": "PL"
+        },
+        "telephone": "+48 531 616 491",
+        "url": "https://ragnarok-rooms.pl",
+        "sameAs": [
+          "https://www.facebook.com/ragnarokrooms",
+          "https://www.instagram.com/ragnarokrooms"
+        ]
+      }
+    </script>
+    <!-- Meta Pixel Code -->
+    <script>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod
+            ? n.callMethod.apply(n, arguments)
+            : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(
+        window,
+        document,
+        "script",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      );
+      fbq("init", "3926612600944622");
+      fbq("track", "PageView");
+    </script>
+    <!-- End Meta Pixel Code -->
   </head>
+  <noscript
+    ><img
+      height="1"
+      width="1"
+      style="display: none"
+      src="https://www.facebook.com/tr?id=3926612600944622&ev=PageView&noscript=1"
+  /></noscript>
   <body>
     <app-root></app-root>
   </body>
