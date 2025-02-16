@@ -28,7 +28,10 @@
               "src/scss/main.scss"
             ],
             "stylePreprocessorOptions": {
-              "includePaths": ["src/scss", "node_modules"]
+              "includePaths": [
+                "src/scss",
+                "node_modules"
+              ]
             },
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -37,7 +40,12 @@
                 "input": "public"
               }
             ],
-            "scripts": []
+            "scripts": [],
+            "server": "src/main.server.ts",
+            "prerender": false,
+            "ssr": {
+              "entry": "server.ts"
+            }
           },
           "configurations": {
             "production": {
