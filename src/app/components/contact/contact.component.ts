@@ -1,97 +1,116 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, HostListener, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA, Renderer2 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbModal, NgbProgressbarModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
-import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
+import {
+  AfterViewInit,
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  inject,
+  OnDestroy,
+  signal,
+} from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  NgbModal,
+  NgbProgressbarModule,
+  NgbToastModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { take } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { OverlayService } from '../../core/services/overlay.service';
+import { PlatformService } from '../../core/services/platform/platform.service';
 import { SendGridService } from '../../core/services/send-grid/send-grid.service';
-import { BackendService } from '../../core/services/backend/backend.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
-declare var google: any;
+declare const google: any;
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbToastModule, NgbProgressbarModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgbToastModule,
+    NgbProgressbarModule,
+  ],
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss']
+  styleUrls: ['./contact.component.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class ContactComponent implements OnInit, OnDestroy {
-  contactForm: FormGroup;
+export class ContactComponent implements AfterViewInit, OnDestroy {
   private readonly modalService = inject(NgbModal);
   private readonly overlayService = inject(OverlayService);
-  private readonly http = inject(HttpClient);
-  private readonly backendService = inject(BackendService);
   private readonly sendGridService = inject(SendGridService);
   private readonly fb = inject(FormBuilder);
-  private readonly renderer = inject(Renderer2);
+  private readonly platformService = inject(PlatformService);
+
   topics = [
     'Rezerwacja salki',
     'Zapytanie o towar',
     'Organizacja eventu',
-    'Ogólne'
+    'Ogólne',
   ];
-  isSmallScreen = false;
-  showToast = false;
-  toastMessage = '';
-  toastType: 'success' | 'error' = 'success';
-  progress = 100;
+
+  contactForm = this.fb.group({
+    topic: [this.topics[0]],
+    firstName: ['', Validators.required],
+    lastName: ['', Validators.required],
+    company: [''],
+    email: ['', [Validators.required, Validators.email]],
+    phone: ['', Validators.required],
+    message: ['', Validators.required],
+  });
+
+  isSmallScreen = signal(false);
+  showToast = signal(false);
+  toastMessage = signal('');
+  toastType = signal<'success' | 'error'>('success');
+  progress = signal(100);
   progressInterval: any;
-  toastDuration = 5000;
+  private readonly seo = inject(SeoService);
 
   constructor() {
-    this.contactForm = this.fb.group({
-      topic: [this.topics[0]],
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      company: [''],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', Validators.required],
-      message: ['', Validators.required],
-    });
+    if (this.platformService.isBrowser) {
+      this.isSmallScreen.set(window.innerWidth < 576);
+      this.observeResize();
+    }
   }
 
   ngOnInit() {
-    this.checkScreenSize();
-    window.addEventListener('resize', this.handleResize.bind(this));
-    const script = this.renderer.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=maps,marker&v=beta&loading=async&callback=initMap';
-    script.async = true;
-    this.renderer.appendChild(document.body, script);
-  
-    // Ustaw globalną funkcję initMap, jeśli jest wymagana
-    (window as any).initMap = () => {
-      console.log('Google Maps API załadowane.');
-    };
+    this.seo.setTitleAndMeta('Kontakt');
+  }
+
+  ngAfterViewInit() {
+    if (this.platformService.isBrowser) {
+      this.loadGoogleMapsScript();
+    }
   }
 
   ngOnDestroy() {
-    window.removeEventListener('resize', this.handleResize.bind(this));
+    clearInterval(this.progressInterval);
   }
 
-  private handleResize() {
-    this.checkScreenSize();
-  }
+  private observeResize(): void {
+    if (!this.platformService.isBrowser) return;
 
-  private checkScreenSize() {
-    this.isSmallScreen = window.innerWidth < 576;
+    const resizeObserver = new ResizeObserver(() => {
+      this.isSmallScreen.set(window.innerWidth < 576);
+    });
+    resizeObserver.observe(document.body);
   }
 
   openModal() {
-    if (this.isSmallScreen) {
+    if (this.isSmallScreen()) {
       const modalRef = this.modalService.open(MessageModalComponent, {
         size: 'sm',
         centered: true,
       });
+      modalRef.componentInstance.message =
+        this.contactForm.get('message')?.value || '';
 
-      modalRef.componentInstance.message = this.contactForm.get('message')?.value || '';
-
-      modalRef.componentInstance.result$.pipe(take(1)).subscribe((result: string) => {
-        this.contactForm.patchValue({ message: result });
-      });
+      modalRef.componentInstance.result$
+        .pipe(take(1))
+        .subscribe((result: string) => {
+          this.contactForm.patchValue({ message: result });
+        });
     }
   }
 
@@ -112,60 +131,61 @@ export class ContactComponent implements OnInit, OnDestroy {
         `,
       };
 
-      this.sendGridService.sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message)
+      this.sendGridService
+        .sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message)
         .subscribe({
           next: () => {
             this.overlayService.hideLoader();
-            this.showSuccessToast('Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.');
+            this.showSuccessToast(
+              'Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.'
+            );
             this.onReset();
           },
           error: (err: any) => {
             this.overlayService.hideLoader();
             console.error('Błąd podczas wysyłania e-maila:', err);
-            this.showErrorToast('Wystąpił problem z wysłaniem wiadomości. Spróbuj ponownie później.');
+            this.showErrorToast(
+              'Wystąpił problem z wysyłaniem wiadomości. Spróbuj ponownie później.'
+            );
           },
         });
     }
   }
 
   onReset() {
-    this.contactForm.reset({
-      topic: this.topics[0],
-    });
+    this.contactForm.reset({ topic: this.topics[0] });
   }
 
   showSuccessToast(message: string) {
-    this.showToast = true;
-    this.toastMessage = message;
-    this.toastType = 'success';
+    this.showToast.set(true);
+    this.toastMessage.set(message);
+    this.toastType.set('success');
     this.startProgressBar();
   }
 
   showErrorToast(message: string) {
-    this.showToast = true;
-    this.toastMessage = message;
-    this.toastType = 'error';
+    this.showToast.set(true);
+    this.toastMessage.set(message);
+    this.toastType.set('error');
     this.startProgressBar();
   }
 
   startProgressBar() {
-    this.progress = 100;
-
+    this.progress.set(100);
     const intervalTime = 50;
-    const totalSteps = this.toastDuration / intervalTime;
-
+    const totalSteps = 5000 / intervalTime;
     const progressStep = 100 / totalSteps;
 
     this.progressInterval = setInterval(() => {
-      this.progress -= progressStep;
-      if (this.progress <= 0) {
+      this.progress.set(this.progress() - progressStep);
+      if (this.progress() <= 0) {
         this.closeToast();
       }
     }, intervalTime);
   }
 
   closeToast() {
-    this.showToast = false;
+    this.showToast.set(false);
     clearInterval(this.progressInterval);
   }
 
@@ -173,13 +193,12 @@ export class ContactComponent implements OnInit, OnDestroy {
     if (!document.getElementById('google-maps-script')) {
       const script = document.createElement('script');
       script.id = 'google-maps-script';
-      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&q&callback=initMap&libraries=maps,marker&v=beta';
+      script.src =
+        'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&q&callback=initMap&libraries=maps,marker&v=beta';
       script.async = true;
       script.defer = true;
 
-      // Ustawienie funkcji callback
       (window as any).initMap = this.initMap.bind(this);
-
       document.body.appendChild(script);
     } else {
       this.initMap();
@@ -187,11 +206,16 @@ export class ContactComponent implements OnInit, OnDestroy {
   }
 
   private initMap(): void {
-    const map = new google.maps.Map(document.getElementById('map') as HTMLElement, {
-      center: { lat: 52.39698791503906, lng: 16.9263858795166 },
-      zoom: 14,
-      mapId: 'DEMO_MAP_ID'
-    });
+    if (!this.platformService.isBrowser) return;
+
+    const map = new google.maps.Map(
+      document.getElementById('map') as HTMLElement,
+      {
+        center: { lat: 52.39698791503906, lng: 16.9263858795166 },
+        zoom: 14,
+        mapId: 'DEMO_MAP_ID',
+      }
+    );
 
     new google.maps.marker.AdvancedMarkerElement({
       position: { lat: 52.39698791503906, lng: 16.9263858795166 },

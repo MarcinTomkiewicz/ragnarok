@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
   <head>
     <meta charset="utf-8" />
     <title>
-      Ragnarok - pokoje do sesji RPG | Nowy wymiar gier fabularnych w Poznaniu
+      Ragnarok - pokoje do sesji RPG w Poznaniu
     </title>
-    <base href="/" />
+    <base href="." />
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
@@ -14,7 +14,7 @@
     <link rel="canonical" href="https://ragnarok-rooms.pl/" />
     <meta
       name="keywords"
-      content="RPG, rpg, Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, klimatyczne miejsce, nordycki klimat, RPG Poznań, przestrzeń do RPG, Poznań"
+      content="RPG, rpg, rpg Poznań, Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, RPG Poznań, przestrzeń do RPG, Poznań"
     />
     <meta
       name="description"
@@ -56,8 +56,15 @@
       content="https://ragnarok-rooms.pl/ragnarok.webp"
     />
     <!-- Google tag (gtag.js) -->
+    <!-- Google Maps API -->
     <script
+      loading="async"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=places"
       async
+    ></script>
+
+    <script
+      loading="async"
       src="https://www.googletagmanager.com/gtag/js?id=AW-16834781429"
     ></script>
     <script>
@@ -69,6 +76,20 @@
 
       gtag("config", "AW-16834781429");
     </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-P5FPPLDC");
+    </script>
+    <!-- End Google Tag Manager -->
     <!-- Event snippet for Kontakt conversion page -->
     <script>
       gtag("event", "conversion", {
@@ -125,6 +146,16 @@
     </script>
     <!-- End Meta Pixel Code -->
   </head>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript
+    ><iframe
+      src="https://www.googletagmanager.com/ns.html?id=GTM-P5FPPLDC"
+      height="0"
+      width="0"
+      style="display: none; visibility: hidden"
+    ></iframe
+  ></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <noscript
     ><img
       height="1"

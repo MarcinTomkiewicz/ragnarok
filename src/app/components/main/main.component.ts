@@ -1,10 +1,11 @@
 import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { Component, HostListener, OnInit, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, HostListener, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
 import { INews } from '../../core/interfaces/i-news';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { ConverterService } from '../../core/services/converter/converter.service';
 import { LoaderService } from '../../core/services/loader/loader.service';
+import { PlatformService } from '../../core/services/platform/platform.service';
 
 @Component({
   selector: 'app-main',
@@ -14,37 +15,56 @@ import { LoaderService } from '../../core/services/loader/loader.service';
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
 })
-export class MainComponent implements OnInit {
+export class MainComponent implements OnInit, AfterViewInit {
   @ViewChild('carousel', { static: false }) carousel: NgbCarousel | undefined;
 
-  isMobile: boolean = window.innerWidth <= 768;
+  isMobile = signal(false);
   newsItems: INews[] = [];
-
   private touchStartX = 0;
   private touchEndX = 0;
 
-  private readonly backend = inject(BackendService)
-  private readonly converter = inject(ConverterService)
-  private readonly loaderService = inject(LoaderService)
-  
+  private readonly backend = inject(BackendService);
+  private readonly converter = inject(ConverterService);
+  private readonly loaderService = inject(LoaderService);
+  private readonly platformService = inject(PlatformService);
 
   ngOnInit() {
-    this.loaderService.show();
-    this.backend.getAll<INews>('news', 'created_at', 'asc').subscribe({
-      next: (news: INews[]) => {
-        this.newsItems = news.map((item) => ({
-          ...item,
-          createdAt: this.converter.convert(item.created_at, 'date', 'dd-MM-yyyy HH:mm'),
-        }));
-      },
-      error: (err) => console.error('Błąd pobierania newsów:', err),
-      complete: () => this.loaderService.hide(),
-    });
+    if (this.platformService.isBrowser) {     
+      this.isMobile.set(window.innerWidth <= 768);
+      this.loaderService.show(); // Pokaż loader tylko w przeglądarce
+
+      this.backend.getAll<INews>('news', 'created_at', 'asc').subscribe({
+        next: (news: INews[]) => {
+          this.newsItems = news.map((item) => ({
+            ...item,
+            createdAt: this.converter.convert(item.created_at, 'date', 'dd-MM-yyyy HH:mm'),
+          }));
+          console.log(this.newsItems);
+          
+        },
+        error: (err) => console.error('Błąd pobierania newsów:', err),
+        complete: () => {
+          // Zatrzymaj loader tylko w przeglądarkach
+          if (this.platformService.isBrowser) {
+            this.loaderService.hide();
+          }
+        },
+      });
+    }
   }
 
-  @HostListener('window:resize', ['$event'])
+  ngAfterViewInit() {    
+    if (this.platformService.isBrowser) {
+      this.addResizeListener();
+    }
+  }
+
+  addResizeListener() {
+    window.addEventListener('resize', this.onResize.bind(this));
+  }
+
   onResize() {
-    this.isMobile = window.innerWidth <= 768;
+    this.isMobile.set(window.innerWidth <= 768);
   }
 
   @HostListener('touchstart', ['$event'])

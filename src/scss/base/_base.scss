@@ -39,6 +39,7 @@ body {
   * {
     scrollbar-color: $primary-color $bg-color;
     scrollbar-width: thin;
+    font-display: swap;
   }
 
   .container {

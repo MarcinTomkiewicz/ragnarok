@@ -1,7 +1,17 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-:host,
+:host {
+  @include flex-wrapper(row, center, center);
+  min-height: 435px;
+  height: 100%;
+
+  @media (max-width: $breakpoint-md) {
+    min-height: 236px;
+    @include flex-wrapper(row, center, start);
+  }
+}
+
 main,
 .carousel-item,
 .carousel-item.active,
@@ -57,7 +67,6 @@ main,
     }
   }
 
- 
   @media (max-width: $breakpoint-md) {
     .image-container {
       width: 100%;

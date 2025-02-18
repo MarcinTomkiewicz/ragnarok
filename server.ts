@@ -1,11 +1,12 @@
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr';
 import express from 'express';
-import { fileURLToPath } from 'node:url';
+import fs from 'fs';
+import https from 'https';
 import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import bootstrap from './src/main.server';
 
-// The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
   const serverDistFolder = dirname(fileURLToPath(import.meta.url));
@@ -17,10 +18,7 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserDistFolder);
 
-  // Example Express Rest API endpoints
-  // server.get('/api/**', (req, res) => { });
-  // Serve static files from /browser
-  server.get('**', express.static(browserDistFolder, {
+  server.get('*.*', express.static(browserDistFolder, {
     maxAge: '1y',
     index: 'index.html',
   }));
@@ -49,8 +47,14 @@ function run(): void {
 
   // Start up the Node server
   const server = app();
-  server.listen(port, () => {
-    console.log(`Node Express server listening on http://localhost:${port}`);
+
+  const options = {
+    key: fs.readFileSync('/etc/ssl/private/ragnarok-rooms.pl.key'),
+    cert: fs.readFileSync('/etc/ssl/certs/ragnarok-rooms.pl.bundle.crt'),
+  };
+
+  https.createServer(options, server).listen(port, () => {
+    console.log(`Node HTTPS server listening on https://localhost:${port}`);
   });
 }
 

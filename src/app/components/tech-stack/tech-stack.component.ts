@@ -5,6 +5,8 @@ import { CarouselComponent } from '../../common/carousel/carousel.component';
 import { TechStack } from '../../core/interfaces/i-techStack';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { LoaderService } from '../../core/services/loader/loader.service';
+import { PlatformService } from '../../core/services/platform/platform.service';  // Dodano
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-tech-stack',
@@ -16,16 +18,22 @@ import { LoaderService } from '../../core/services/loader/loader.service';
 })
 export class TechStackComponent implements OnInit {
   private readonly backendService = inject(BackendService);
+  private readonly loaderService = inject(LoaderService);
+  private readonly platformService = inject(PlatformService);  // Dodano
+  private readonly seo = inject(SeoService);
 
   techStack = signal<TechStack[]>([]);
   isLoading = signal(true);
-  loaderService = inject(LoaderService)
   error = signal<string | null>(null);
 
   techStackLoaded = computed(() => this.techStack().length > 0);
 
   ngOnInit(): void {
-    this.loadTechStack();
+    this.seo.setTitleAndMeta('Nasz zespół')
+    // Tylko po stronie przeglądarki wykonuj operację z loaderem
+    if (this.platformService.isBrowser) {
+      this.loadTechStack();
+    }
   }
 
   /**

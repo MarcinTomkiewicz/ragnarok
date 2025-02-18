@@ -1,4 +1,5 @@
 <main>
+  @if (newsItems.length > 0) {
   <ngb-carousel
     #carousel
     [showNavigationArrows]="true"
@@ -7,31 +8,38 @@
     class="d-flex w-100"
   >
     @for (news of newsItems; track news.id) {
-      <ng-template ngbSlide class="flex-center" style="width: 90%">
-        <div
-          class="flex-row news-wrapper"
-          [ngClass]="{ 'mobile-background': isMobile }"
-          [style.backgroundImage]="isMobile ? 'url(' + news.imageURL + ')' : 'none'"
-        >
-          @if (!isMobile) {
-            <div class="image-container">
-              <img 
-                [ngSrc]="news.imageURL" 
-                [alt]="news.header" 
-                width="597"
-                height="371"
-                priority />
-            </div>
-          }
-          <div class="flex-column-between content">
-            <h2>{{ news.header }}</h2>
-            <div>{{ news.description }}</div>
-            <button class="btn btn-primary align-self-center mt-2" (click)="navigate(news.link)">
-              {{ news.linkDescription }}
-            </button>
-          </div>
+    <ng-template ngbSlide class="flex-center" style="width: 90%">
+      <div
+        class="flex-row news-wrapper"
+        [ngClass]="{ 'mobile-background': isMobile() }"
+        [style.backgroundImage]="
+          isMobile() ? 'url(' + news.imageURL + ')' : 'none'
+        "
+      >
+        @if (!isMobile()) {
+        <div class="image-container">
+          <img
+            [ngSrc]="news.imageURL"
+            [alt]="news.header"
+            width="597"
+            height="371"
+            priority
+          />
         </div>
-      </ng-template>
+        }
+        <div class="flex-column-between content">
+          <h2>{{ news.header }}</h2>
+          <div>{{ news.description }}</div>
+          <button
+            class="btn btn-primary align-self-center mt-2"
+            (click)="navigate(news.link)"
+          >
+            {{ news.linkDescription }}
+          </button>
+        </div>
+      </div>
+    </ng-template>
     }
   </ngb-carousel>
+  }
 </main>

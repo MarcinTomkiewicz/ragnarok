@@ -1,55 +1,61 @@
+import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
-  HostListener,
-  Inject,
-  OnInit,
-  PLATFORM_ID,
-  ViewChild,
   ElementRef,
   inject,
+  signal,
+  ViewChild,
 } from '@angular/core';
-import { CommonModule, DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { WindowRef } from '../../core/services/window-ref';
+import { PlatformService } from '../../core/services/platform/platform.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-about',
   templateUrl: './about.component.html',
   standalone: true,
   imports: [CommonModule],
-  providers: [Document],
   styleUrls: ['./about.component.scss'],
 })
-export class AboutComponent implements OnInit {
-  showMore = false;
-  isLargeScreen = true;
+export class AboutComponent implements AfterViewInit {
+  showMore = signal(false);
+  isScrolledToTop = signal(true);
+  isScrolledToBottom = signal(false);
+  isLargeScreen = signal(false);
+  private readonly seo = inject(SeoService);
+
   @ViewChild('scrollContainer') scrollContainer!: ElementRef;
 
-  isScrolledToTop = true;
-  isScrolledToBottom = false;
-  private readonly document = inject(Document);
-  private readonly windowRef = inject(WindowRef);
+  private readonly platformService = inject(PlatformService);
 
-  // constructor(
-  //   @Inject(PLATFORM_ID) private platformId: any
-  // ) {}
+  constructor() {
+    // Ustawiamy wartość ekranu tylko w CSR
+    if (this.platformService.isBrowser) {
+      this.isLargeScreen.set(window.innerWidth >= 481);
+      this.observeResize();
+    }
+  }
 
   ngOnInit(): void {
-    this.checkHash();
+    this.seo.setTitleAndMeta('O nas');
   }
 
   ngAfterViewInit() {
-    this.scrollContainer.nativeElement.addEventListener(
-      'scroll',
-      this.updateScrollState.bind(this)
+    if (!this.platformService.isBrowser) return;
+
+    this.scrollContainer.nativeElement.addEventListener('scroll', () =>
+      this.updateScrollState()
     );
-    this.updateScrollState(); // Sprawdzamy początkowy stan
+    this.updateScrollState();
+    this.checkHash();
   }
 
-  updateScrollState() {
+  private updateScrollState() {
     const container = this.scrollContainer.nativeElement;
-    this.isScrolledToTop = container.scrollTop === 0;
-    this.isScrolledToBottom =
-      container.scrollTop + container.clientHeight >= container.scrollHeight;
+    this.isScrolledToTop.set(container.scrollTop === 0);
+    this.isScrolledToBottom.set(
+      container.scrollTop + container.clientHeight >= container.scrollHeight
+    );
   }
 
   scrollUp() {
@@ -66,31 +72,33 @@ export class AboutComponent implements OnInit {
     });
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event: any) {
-    this.isLargeScreen = window.innerWidth >= 481;
+  private observeResize(): void {
+    if (!this.platformService.isBrowser) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      this.isLargeScreen.set(window.innerWidth >= 481);
+    });
+    resizeObserver.observe(document.body);
   }
 
   private checkHash() {
-    const window = this.windowRef.nativeWindow;
-    if (window) {
-      const hash = window.location.hash;
-      if (hash) {
-        const element = this.document.querySelector(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
+    if (!this.platformService.isBrowser) return;
+
+    const hash = window.location.hash;
+    if (hash) {
+      const element = document.querySelector(hash);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
       }
     }
   }
 
   toggleShowMore() {
-    this.showMore = !this.showMore;
+    this.showMore.set(!this.showMore());
     console.log(
-      this.isLargeScreen || !this.showMore,
-      window.innerWidth,
-      this.isLargeScreen,
-      !this.showMore
+      this.isLargeScreen() || !this.showMore(),
+      this.isLargeScreen(),
+      this.showMore()
     );
   }
 }

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ServicesTableComponent } from '../../common/services-table/services-table.component';
 import { RegulationsComponent } from '../regulations/regulations.component'
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-services',
@@ -15,6 +16,11 @@ import { RegulationsComponent } from '../regulations/regulations.component'
 })
 export class ServicesComponent {
   private readonly modalService = inject(NgbModal);
+  private readonly seo = inject(SeoService);
+
+  ngOnInit() {
+    this.seo.setTitleAndMeta('Cennik')
+  }
 
   standardRooms: IServices[] = [
     {

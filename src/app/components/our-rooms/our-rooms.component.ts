@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CarouselComponent } from '../../common/carousel/carousel.component';
 import { CommonModule } from '@angular/common';
 import { TechStack } from '../../core/interfaces/i-techStack';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-our-rooms',
@@ -11,6 +12,13 @@ import { TechStack } from '../../core/interfaces/i-techStack';
   styleUrl: './our-rooms.component.scss'
 })
 export class OurRoomsComponent {
+private readonly seo = inject(SeoService);
+
+ngOnInit() {
+  this.seo.setTitleAndMeta('Nasze pomieszczenia')
+}
+
+
   ourRoomsDetails: TechStack[] = [
       {
         id: 1,

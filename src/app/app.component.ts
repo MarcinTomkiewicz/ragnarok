@@ -1,11 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
-import { Event, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, RouteConfigLoadEnd, RouteConfigLoadStart, Router, RouterOutlet } from '@angular/router';
-import { FooterComponent } from './components/footer/footer.component';
-import { NavbarComponent } from './components/navbar/navbar.component';
-import { HeaderComponent } from './components/header/header.component';
+import { Meta, Title } from '@angular/platform-browser';
+import {
+  Event,
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationStart,
+  RouteConfigLoadEnd,
+  RouteConfigLoadStart,
+  Router,
+  RouterOutlet,
+} from '@angular/router';
 import { LoaderComponent } from './common/loader/loader.component';
+import { FooterComponent } from './components/footer/footer.component';
+import { HeaderComponent } from './components/header/header.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
 import { LoaderService } from './core/services/loader/loader.service';
+import { PlatformService } from './core/services/platform/platform.service';
+import { SeoService } from './core/services/seo/seo.service';
 
 declare let fbq: Function; // Deklaracja Meta Pixel
 
@@ -21,26 +34,39 @@ declare let fbq: Function; // Deklaracja Meta Pixel
     LoaderComponent,
   ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  title = 'ragnarok';
   @ViewChild('services') services!: ElementRef;
   private readonly loaderService = inject(LoaderService);
   private readonly router = inject(Router);
+  private readonly platformService = inject(PlatformService);
+  private readonly seo = inject(SeoService)
 
   ngOnInit(): void {
+    this.seo.setTitleAndMeta('Strona główna');
     this.router.events.subscribe((event: Event) => {
-      if (event instanceof NavigationStart || event instanceof RouteConfigLoadStart) {
-        this.loaderService.show();
-      } 
-      if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError || event instanceof RouteConfigLoadEnd) {
-        this.loaderService.hide();
-      }
+      if (this.platformService.isBrowser) {
+        if (
+          event instanceof NavigationStart ||
+          event instanceof RouteConfigLoadStart
+        ) {
+          this.loaderService.show();
+        }
 
-      // Jeśli trasa została załadowana, wyślij zdarzenie do Facebook Pixel
-      if (event instanceof NavigationEnd) {
-        this.trackPageView(event.urlAfterRedirects);
+        if (
+          event instanceof NavigationEnd ||
+          event instanceof NavigationCancel ||
+          event instanceof NavigationError ||
+          event instanceof RouteConfigLoadEnd
+        ) {
+          this.loaderService.hide();
+        }
+
+        // Jeśli trasa została załadowana, wyślij zdarzenie do Facebook Pixel
+        if (event instanceof NavigationEnd) {
+          this.trackPageView(event.urlAfterRedirects);
+        }
       }
     });
   }
