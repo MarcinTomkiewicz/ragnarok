@@ -13,26 +13,23 @@
 }
 
 main,
-.carousel-item,
-.carousel-item.active,
-.carousel-item-next,
-.carousel-item-prev {
+.carousel-item {
   @include flex-wrapper(row, center, center);
+  width: 100%;
 }
 
 .news-wrapper {
   gap: 1rem;
   margin: auto;
   width: 90%;
+  position: relative;
+  min-height: 371px;
 
   .image-container {
-    width: 50%;
-    overflow: hidden;
-
-    img {
-      object-fit: contain;
-      object-position: center;
-    }
+    width: 597px;
+    height: 371px;
+    position: relative;
+    contain: content;
   }
 
   .content {
@@ -43,17 +40,13 @@ main,
   &.mobile-background {
     background-size: cover;
     background-position: top;
-    position: relative;
     border-radius: 5px;
     min-height: 220px;
 
     &::before {
       content: "";
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0, 0, 0, 0.4);
       z-index: 1;
       border-radius: 5px;
@@ -80,12 +73,6 @@ main,
 
     .image-container {
       display: none;
-    }
-  }
-
-  @media (max-width: $breakpoint-xs) {
-    .image-container {
-      width: 100%;
     }
   }
 }

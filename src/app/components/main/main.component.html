@@ -4,7 +4,7 @@
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
-    [interval]="0"
+    [interval]="000"
     class="d-flex w-100"
   >
     @for (news of newsItems; track news.id) {
@@ -17,15 +17,15 @@
         "
       >
         @if (!isMobile()) {
-        <div class="image-container">
-          <img
-            [ngSrc]="news.imageURL"
-            [alt]="news.header"
-            width="597"
-            height="371"
-            priority
-          />
-        </div>
+          <div class="image-container">
+            <img
+              [ngSrc]="news.imageURL"
+              [alt]="news.header"
+              fill
+              [attr.loading]="newsItems.indexOf(news) === 0 ? 'eager' : 'lazy'"
+              [priority]="newsItems.indexOf(news) === 0"
+            />
+          </div>          
         }
         <div class="flex-column-between content">
           <h2>{{ news.header }}</h2>

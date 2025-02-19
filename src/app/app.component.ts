@@ -73,12 +73,7 @@ export class AppComponent {
 
   trackPageView(url: string) {
     if (typeof fbq === 'function') {
-      console.log(`Tracking page: ${url}`); // Debugowanie
-
-      // Standardowe zdarzenie PageView dla każdej strony
       fbq('track', 'PageView', { page_path: url });
-
-      // Niestandardowe zdarzenia dla konkretnych podstron
       if (url === '/services') {
         fbq('track', 'ViewServices');
       } else if (url === '/contact') {

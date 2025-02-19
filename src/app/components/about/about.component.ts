@@ -95,10 +95,5 @@ export class AboutComponent implements AfterViewInit {
 
   toggleShowMore() {
     this.showMore.set(!this.showMore());
-    console.log(
-      this.isLargeScreen() || !this.showMore(),
-      this.isLargeScreen(),
-      this.showMore()
-    );
   }
 }

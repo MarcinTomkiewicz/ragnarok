@@ -31,20 +31,25 @@ export class MainComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     if (this.platformService.isBrowser) {     
       this.isMobile.set(window.innerWidth <= 768);
-      this.loaderService.show(); // Pokaż loader tylko w przeglądarce
-
-      this.backend.getAll<INews>('news', 'created_at', 'asc').subscribe({
+      this.loaderService.show();
+  
+      this.backend.getAll<INews>('news', 'created_at', 'desc').subscribe({
         next: (news: INews[]) => {
           this.newsItems = news.map((item) => ({
             ...item,
             createdAt: this.converter.convert(item.created_at, 'date', 'dd-MM-yyyy HH:mm'),
           }));
-          console.log(this.newsItems);
-          
+  
+          if (news.length > 0) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = news[0].imageURL;
+            document.head.appendChild(link);
+          }
         },
         error: (err) => console.error('Błąd pobierania newsów:', err),
         complete: () => {
-          // Zatrzymaj loader tylko w przeglądarkach
           if (this.platformService.isBrowser) {
             this.loaderService.hide();
           }
@@ -52,7 +57,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       });
     }
   }
-
+  
   ngAfterViewInit() {    
     if (this.platformService.isBrowser) {
       this.addResizeListener();
