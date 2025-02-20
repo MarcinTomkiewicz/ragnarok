@@ -1,7 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { SupabaseClient, PostgrestSingleResponse, PostgrestResponse } from '@supabase/supabase-js';
+import {
+  SupabaseClient,
+  PostgrestSingleResponse,
+  PostgrestResponse,
+} from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable({
@@ -21,35 +25,45 @@ export class BackendService {
    * @returns Observable z listą rekordów
    */
   getAll<T extends { image?: string; imageUrl?: string }>(
-    table: string, 
-    sortBy?: keyof T, 
-    sortOrder: 'asc' | 'desc' = 'asc'
+    table: string,
+    sortBy?: keyof T,
+    sortOrder: 'asc' | 'desc' = 'asc',
+    width?: number,
+    height?: number
   ): Observable<T[]> {
     let query = this.supabase.from(table).select('*');
-  
+
     if (sortBy) {
       query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
     }
-  
+
     return from(query).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
-        return (response.data || []).map(item => this.processImage(item));
+        return (response.data || []).map((item) =>
+          this.processImage(item, width, height)
+        );
       })
     );
   }
-  
-  
+
   /**
    * Pobiera rekord według identyfikatora.
    * @param table - Nazwa tabeli w Supabase
    * @param id - ID rekordu
    * @returns Observable z rekordem
    */
-  getById<T extends { image?: string; imageUrl?: string }>(table: string, id: string | number): Observable<T | null> {
-    return from(this.supabase.from(table).select('*').eq('id', id).single()).pipe(
+  getById<T extends { image?: string; imageUrl?: string }>(
+    table: string,
+    id: string | number,
+    width?: number,
+    height?: number
+  ): Observable<T | null> {
+    return from(
+      this.supabase.from(table).select('*').eq('id', id).single()
+    ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
@@ -85,7 +99,9 @@ export class BackendService {
    * @returns Observable z odpowiedzią od Supabase
    */
   update<T>(table: string, id: string | number, data: T): Observable<T> {
-    return from(this.supabase.from(table).update(data).eq('id', id).single()).pipe(
+    return from(
+      this.supabase.from(table).update(data).eq('id', id).single()
+    ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
@@ -117,18 +133,37 @@ export class BackendService {
    * @param item - Obiekt z polem `image`
    * @returns Przetworzony obiekt z dodanym polem `imageUrl`
    */
-  private processImage<T extends { image?: string; imageURL?: string }>(item: T): T {
-    if (item.image) { 
-      const { data } = this.supabase
-        .storage
+  private processImage<T extends { image?: string; imageURL?: string }>(
+    item: T,
+    width: number = 600,
+    height: number = 400
+  ): T {
+    if (item.image) {
+      const { data } = this.supabase.storage
         .from('images')
         .getPublicUrl(item.image);
-  
-        item.imageURL = data?.publicUrl || '';
-      }
+
+      item.imageURL =
+        this.getOptimizedImageUrl(data.publicUrl, width, height) || '';
+    }
     // }
-  
+
     return item;
   }
-  
+
+  /**
+   * Optymalizuje URL obrazu, zmieniając jego rozmiar i jakość w locie.
+   * @param imageUrl - URL oryginalnego obrazu
+   * @param width - Szerokość docelowa
+   * @param height - Wysokość docelowa
+   * @returns Zoptymalizowany URL obrazu
+   */
+  private getOptimizedImageUrl(
+    imageUrl: string,
+    width: number = 600,
+    height: number = 400
+  ): string {
+    if (!imageUrl) return '';
+    return `${imageUrl}?width=${width}&height=${height}`;
+  }
 }

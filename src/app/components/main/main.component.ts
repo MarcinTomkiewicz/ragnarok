@@ -33,7 +33,7 @@ export class MainComponent implements OnInit, AfterViewInit {
       this.isMobile.set(window.innerWidth <= 768);
       this.loaderService.show();
   
-      this.backend.getAll<INews>('news', 'created_at', 'desc').subscribe({
+      this.backend.getAll<INews>('news', 'created_at', 'desc', 960, 502).subscribe({
         next: (news: INews[]) => {
           this.newsItems = news.map((item) => ({
             ...item,
