@@ -1,32 +1,37 @@
 @import "abstracts/variables";
 
 .navbar {
-  position: fixed !important; // Ustawienie na fixed
-  top: 0;
+  top: 0;            // Górna krawędź
   left: 0;
   width: 100%;
-  height: $navbar-height; // Jeśli masz tę zmienną
-  z-index: 999; // Upewnij się, że navbar jest na wierzchu
-  background-color: $primary-color; // Kolor tła
+  height: $navbar-height;
+  z-index: 999;
+  background-color: $primary-color;
+  @include flex-wrapper(row, space-between, center);
+  padding: 0 1rem;
 
-  @media (min-width: $breakpoint-sm) {
-    position: static !important; // Przyklejona nawigacja na większych ekranach
-    top: 0;
+  // Ustawienie dla breakpointu $breakpoint-sm
+  @media (max-width: $breakpoint-sm) {
+    position: fixed!important;   // Przyspawanie navbaru do góry
+    top: 0;           // Górna krawędź
     left: 0;
-    z-index: 1000; // Wysoki z-index, aby nawigacja była nad treścią
-    flex-wrap: nowrap!important;
+    width: 100%;
+    z-index: 999;
+    background-color: $primary-color;
   }
 
   .navbar-brand {
-    padding-left: 2rem;
     font-size: 1.5rem;
     font-weight: bold;
+    padding-left: 10px;
 
+    // Zmiana ustawienia dla mniejszych ekranów
     @media (max-width: $breakpoint-sm) {
-      display: none;
+      position: sticky!important;
     }
   }
 
+  // Standardowe menu nawigacyjne
   .navbar-nav {
     list-style: none;
     text-align: center;
@@ -50,12 +55,33 @@
         @media (max-width: $breakpoint-sm) {
           text-align: center;
         }
+        &:hover {
+          border: 1px solid $bg-color;
+          border-radius: 5px;
+          box-sizing: border-box;
+        }
       }
-      &:hover {
-        border: 1px solid $bg-color;
-        border-radius: 5px;
-        box-sizing: border-box;
-      }
+    }
+  }
+
+  // Ukrycie menu dla mobilnych
+  @media (max-width: $breakpoint-sm) {
+    .navbar-nav {
+      display: none;
+    }
+  }
+
+  // Przycisk otwierający offcanvas
+  .offcanvas-toggle {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: $bg-color;
+    cursor: pointer;
+    padding-right: 10px;
+
+    @media (min-width: $breakpoint-sm) {
+      display: none;
     }
   }
 }

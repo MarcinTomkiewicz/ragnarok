@@ -3,16 +3,11 @@
 
 :host {
   @include flex-wrapper(row, center, center);
-  min-height: 435px;
-  height: 100%;
-
-  @media (max-width: $breakpoint-md) {
-    min-height: 236px;
-    @include flex-wrapper(row, center, start);
-  }
 }
 
-main,
+main {
+  @include flex-wrapper(column, center, center);
+}
 .carousel-item {
   @include flex-wrapper(row, center, center);
   width: 100%;
@@ -59,21 +54,92 @@ main,
       padding: 10px;
     }
   }
+}
 
-  @media (max-width: $breakpoint-md) {
-    .image-container {
-      width: 100%;
-    }
+.skeleton-wrapper {
+  gap: 1rem;
+  margin: auto;
+  width: 100%;
+  height: 371px;
+  margin-bottom: 3rem;
+  @include flex-wrapper(row, center, center);
+  @media (max-width: $breakpoint-sm) {
+    width: 95%;
+    max-height: 220px;
+   }
+   @media (max-width: $breakpoint-xs) {
+    width: 95%;
+    max-height: 360px;
+   }
+}
+
+.skeleton-content-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 50%;
+  padding: 10px;
+  @include flex-wrapper(column, space-between, center);
+  @media (max-width: $breakpoint-sm) {
+    display: none;    
+  }
+}
+
+.skeleton {
+  background-color: #ccc;
+  margin: 10px 0;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-image {
+  width: 597px;
+  height: 371px;
+  border-radius: 10px;
+  @media (max-width: $breakpoint-sm) {
+   width: 95%;
+   max-height: 220px;
+  }
+  @media (max-width: $breakpoint-xs) {
+    width: 95%;
+    max-height: 360px;
+   }
+}
+
+.skeleton-content {
+  width: 80%;
+  height: 20px;
+  border-radius: 5px;
+
+  &:first-of-type {
+    height: 40px;
+    margin-bottom: 25px;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #ccc;
+  }
+  50% {
+    background-color: #ddd;
+  }
+  100% {
+    background-color: #ccc;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .image-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .content {
+    border-radius: 5px;
   }
 
-  @media (max-width: $breakpoint-sm) {
-    .content {
-      border-radius: 5px;
-    }
-
-    .image-container {
-      display: none;
-    }
+  .image-container {
+    display: none;
   }
 }
 

@@ -1,10 +1,24 @@
 <nav class="navbar">
-  <a class="navbar-brand" href="#">Ragnarok | Pokoje RPG</a>
+  <a class="navbar-brand" href="https://ragnarok-rooms.pl">Ragnarok | Pokoje RPG</a>
   <ul class="navbar-nav">
-    <li><a href="/about" id="about-link">O nas</a></li>
-    <li><a href="/services" id="services-link">Cennik</a></li>
-    <li><a href="/tech-stack" id="tech-stack-link">Nasz zespół</a></li>
-    <li><a href="/our-rooms" id="tech-stack-link">Pomieszczenia</a></li>
-    <li><a href="/contact" id="contact-link">Kontakt</a></li>
+    @for (link of menuLinks; track link.path) {
+      <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+    }
   </ul>
+
+  <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
+    <i class="bi bi-map icon-dark"></i>
+    </button>
 </nav>
+
+<ng-template #offcanvas let-close="close">
+  <!-- <div class="offcanvas-menu"> -->
+    <button class="close-btn" (click)="close()">✖</button>
+    <h2>Menu</h2>
+    <ul>
+      @for (link of menuLinks; track link.path) {
+        <li><a [routerLink]="link.path" (click)="close()">{{ link.label }}</a></li>
+      }
+    </ul>
+  <!-- </div> -->
+</ng-template>

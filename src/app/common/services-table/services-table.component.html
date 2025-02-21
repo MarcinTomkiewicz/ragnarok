@@ -2,9 +2,9 @@
     <thead>
       <tr class="table-header table-light">
         <th scope="col" class="service-name">{{ isServiceByHour() ? 'Długość wynajmu' : 'Nazwa usługi'}}</th>
-        <th scope="col" style="width: 15%;">Cena</th>
-        <th scope="col" class="large-screens" style="width: 60%;">Opis</th>
-        <!-- <th scope="col" style="white-space: nowrap; width: 10%;">Czas realizacji</th> -->
+        <th scope="col" class="td-15">Cena</th>
+        <th scope="col" class="td-20">Cena/os (przy 5 osobach)</th>
+        <th scope="col" class="large-screens td-60">Opis</th>
       </tr>
     </thead>
     <tbody class="table-group-divider">
@@ -20,6 +20,9 @@
         </td>
         <td>
           {{ service.price | number }} {{service.priceType === 'hour' ? 'zł / h' : 'zł' }}
+        </td>
+        <td>
+          {{ service.price/5 | number }} {{service.priceType === 'hour' ? 'zł za osobę / h' : 'zł za osobę' }}
         </td>
         <td class="large-screens">{{ service.shortDescription }}</td>
         <!-- <td>{{ service.realisation }}</td> -->

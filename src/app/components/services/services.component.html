@@ -19,12 +19,14 @@
   </div>
   <div class="w-100">
     <h4>Salki standardowe</h4>
+    <div class="w-100">Koszt obejmuje godzinę wynajmu salki standardowej - nie ma znaczenia liczba osób. </div>
     <app-services-table [services]="standardRooms"></app-services-table>
     <h4>Salka VIP</h4>
     <div class="w-100">
+      <div class="w-100">Koszt obejmuje godzinę wynajmu salki VIP - nie ma znaczenia liczba osób. </div>
       <app-services-table [services]="vipRooms"></app-services-table>
       <div class="disclaimer">
-        Przed rezerwacją salki, zapoznj się z naszym
+        Przed rezerwacją salki, zapoznaj się z naszym
         <button (click)="openRules('rent')">
           Regulaminem wynajmowania pomieszczeń
         </button>
@@ -37,12 +39,13 @@
     </div>
     <div class="w-100">
       <h4>Karnety</h4>
+      <div class="w-100">Aby skorzystać z karnetu wystarczy jeden karnet na drużynę!</div>
       <app-services-table
         [services]="passes"
         [isServiceByHour]="false"
       ></app-services-table>
       <div class="disclaimer">
-        Przed zakupem, zapoznj się z naszym
+        Przed zakupem, zapoznaj się z naszym
         <button (click)="openRules('pass')">Regulaminem karnetów</button>
       </div>
       <div class="disclaimer">
@@ -52,6 +55,7 @@
     </div>
     <div class="w-100">
       <h4>Usługi dodatkowe</h4>
+      <div class="w-100">Koszt obejmuje godzinę sesji z profesjonalnym Mistrzem Gry. Koszt jest stały, niezależny od liczby uczestników.</div>
       <app-services-table
         [services]="additionalServices"
         [isServiceByHour]="false"

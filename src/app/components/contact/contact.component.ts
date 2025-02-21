@@ -1,18 +1,8 @@
 import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  CUSTOM_ELEMENTS_SCHEMA,
-  inject,
-  OnDestroy,
-  signal,
-} from '@angular/core';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  NgbModal,
-  NgbProgressbarModule,
-  NgbToastModule,
-} from '@ng-bootstrap/ng-bootstrap';
+import { GoogleMapsModule } from '@angular/google-maps';
+import { NgbModal, NgbProgressbarModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { take } from 'rxjs';
 import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { OverlayService } from '../../core/services/overlay.service';
@@ -30,18 +20,34 @@ declare const google: any;
     ReactiveFormsModule,
     NgbToastModule,
     NgbProgressbarModule,
+    GoogleMapsModule
   ],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class ContactComponent implements AfterViewInit, OnDestroy {
+export class ContactComponent implements OnDestroy {
+  // Services
   private readonly modalService = inject(NgbModal);
   private readonly overlayService = inject(OverlayService);
   private readonly sendGridService = inject(SendGridService);
   private readonly fb = inject(FormBuilder);
   private readonly platformService = inject(PlatformService);
+  private readonly seo = inject(SeoService);
 
+  // Google Maps options and markers
+  options: google.maps.MapOptions = {
+    mapId: 'Ragnarok',
+    center: { lat: 52.39693009077769, lng: 16.92630935511027 },
+    zoom: 17,
+  };
+
+  markerPosition: google.maps.LatLngLiteral = { lat: 52.39693009077769, lng: 16.92630935511027 };
+  markerOptions: google.maps.marker.AdvancedMarkerElementOptions = {
+    position: this.markerPosition,
+    content: this.createIcon(),
+  };
+
+  // Form properties
   topics = [
     'Rezerwacja salki',
     'Zapytanie o towar',
@@ -59,35 +65,28 @@ export class ContactComponent implements AfterViewInit, OnDestroy {
     message: ['', Validators.required],
   });
 
+  // UI properties (signals)
   isSmallScreen = signal(false);
   showToast = signal(false);
   toastMessage = signal('');
   toastType = signal<'success' | 'error'>('success');
   progress = signal(100);
   progressInterval: any;
-  private readonly seo = inject(SeoService);
 
-  constructor() {
+  // Lifecycle hooks
+  ngOnInit(): void {
+    this.seo.setTitleAndMeta('Kontakt');
     if (this.platformService.isBrowser) {
       this.isSmallScreen.set(window.innerWidth < 576);
       this.observeResize();
     }
   }
 
-  ngOnInit() {
-    this.seo.setTitleAndMeta('Kontakt');
-  }
-
-  ngAfterViewInit() {
-    if (this.platformService.isBrowser) {
-      this.loadGoogleMapsScript();
-    }
-  }
-
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     clearInterval(this.progressInterval);
   }
 
+  // Methods for handling window resizing
   private observeResize(): void {
     if (!this.platformService.isBrowser) return;
 
@@ -97,15 +96,26 @@ export class ContactComponent implements AfterViewInit, OnDestroy {
     resizeObserver.observe(document.body);
   }
 
-  openModal() {
+  // Map Icon creation (only works on the client-side)
+  private createIcon(): HTMLElement | null {
+    if (!this.platformService.isBrowser) return null;
+
+    const img = document.createElement('img');
+    img.src = 'ragnarok.webp';
+    img.style.width = '50px';
+    img.style.height = '50px';
+    img.style.borderRadius = '100%';
+    return img;
+  }
+
+  // Modal handling for small screens
+  openModal(): void {
     if (this.isSmallScreen()) {
       const modalRef = this.modalService.open(MessageModalComponent, {
         size: 'sm',
         centered: true,
       });
-      modalRef.componentInstance.message =
-        this.contactForm.get('message')?.value || '';
-
+      modalRef.componentInstance.message = this.contactForm.get('message')?.value || '';
       modalRef.componentInstance.result$
         .pipe(take(1))
         .subscribe((result: string) => {
@@ -114,7 +124,8 @@ export class ContactComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  onSubmit() {
+  // Form submission handler
+  onSubmit(): void {
     if (this.contactForm.valid) {
       this.overlayService.showLoader();
 
@@ -131,46 +142,43 @@ export class ContactComponent implements AfterViewInit, OnDestroy {
         `,
       };
 
-      this.sendGridService
-        .sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message)
-        .subscribe({
-          next: () => {
-            this.overlayService.hideLoader();
-            this.showSuccessToast(
-              'Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.'
-            );
-            this.onReset();
-          },
-          error: (err: any) => {
-            this.overlayService.hideLoader();
-            console.error('Błąd podczas wysyłania e-maila:', err);
-            this.showErrorToast(
-              'Wystąpił problem z wysyłaniem wiadomości. Spróbuj ponownie później.'
-            );
-          },
-        });
+      this.sendGridService.sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message).subscribe({
+        next: () => {
+          this.overlayService.hideLoader();
+          this.showSuccessToast('Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.');
+          this.onReset();
+        },
+        error: (err: any) => {
+          this.overlayService.hideLoader();
+          console.error('Błąd podczas wysyłania e-maila:', err);
+          this.showErrorToast('Wystąpił problem z wysyłaniem wiadomości. Spróbuj ponownie później.');
+        },
+      });
     }
   }
 
-  onReset() {
+  // Reset the form
+  onReset(): void {
     this.contactForm.reset({ topic: this.topics[0] });
   }
 
-  showSuccessToast(message: string) {
+  // Toast message handling
+  showSuccessToast(message: string): void {
     this.showToast.set(true);
     this.toastMessage.set(message);
     this.toastType.set('success');
     this.startProgressBar();
   }
 
-  showErrorToast(message: string) {
+  showErrorToast(message: string): void {
     this.showToast.set(true);
     this.toastMessage.set(message);
     this.toastType.set('error');
     this.startProgressBar();
   }
 
-  startProgressBar() {
+  // Progress bar handling
+  startProgressBar(): void {
     this.progress.set(100);
     const intervalTime = 50;
     const totalSteps = 5000 / intervalTime;
@@ -184,43 +192,8 @@ export class ContactComponent implements AfterViewInit, OnDestroy {
     }, intervalTime);
   }
 
-  closeToast() {
+  closeToast(): void {
     this.showToast.set(false);
     clearInterval(this.progressInterval);
-  }
-
-  private loadGoogleMapsScript(): void {
-    if (!document.getElementById('google-maps-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-maps-script';
-      script.src =
-        'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&q&callback=initMap&libraries=maps,marker&v=beta';
-      script.async = true;
-      script.defer = true;
-
-      (window as any).initMap = this.initMap.bind(this);
-      document.body.appendChild(script);
-    } else {
-      this.initMap();
-    }
-  }
-
-  private initMap(): void {
-    if (!this.platformService.isBrowser) return;
-
-    const map = new google.maps.Map(
-      document.getElementById('map') as HTMLElement,
-      {
-        center: { lat: 52.39698791503906, lng: 16.9263858795166 },
-        zoom: 14,
-        mapId: 'DEMO_MAP_ID',
-      }
-    );
-
-    new google.maps.marker.AdvancedMarkerElement({
-      position: { lat: 52.39698791503906, lng: 16.9263858795166 },
-      map,
-      title: 'Ragnarok Rooms',
-    });
   }
 }

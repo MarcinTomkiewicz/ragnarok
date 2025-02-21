@@ -37,7 +37,7 @@
         >
       </p>
     </div>
-      <img src="icons/separator.svg" alt="Separator" class="separator">
+    <img src="icons/separator.svg" alt="Separator" class="separator" />
     <div>
       <h2 class="h2-contact">
         <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Współpraca i
@@ -56,9 +56,8 @@
           >&nbsp;eventy&#64;ragnarok-rooms.pl</a
         >
       </p>
-      
 
-      <div style="width: 100%">
+      <div class="w-100">
         <h2 class="h2-contact">
           <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Adres
         </h2>
@@ -68,195 +67,13 @@
       </div>
     </div>
   </div>
-    <div class="map-container">
-      <h2 class="h2-contact">
-        <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Znajdź nas
-        na mapie
-      </h2>
-      <gmp-map
-        center="52.39698791503906,16.9263858795166"
-        zoom="17"
-        map-id="8b65c28d3be15a0d"
-        style="height: 300px"
-      >
-        <gmp-advanced-marker
-          position="52.39698791503906,16.9263858795166"
-          title="Ragnarok Rooms"
-        ></gmp-advanced-marker>
-      </gmp-map>
-      <!-- </div> -->
-    
-
-    <!-- <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <label for="topic" class="form-label">Temat</label>
-        <select
-          id="topic"
-          formControlName="topic"
-          class="form-select form-select-sm"
-          autocomplete="off"
-        >
-          <option *ngFor="let topic of topics" [value]="topic">
-            {{ topic }}
-          </option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="firstName" class="form-label">Imię*</label>
-        <input
-          id="firstName"
-          name="firstName"
-          type="text"
-          formControlName="firstName"
-          class="form-control form-control-sm"
-          required
-          autocomplete="given-name"
-        />
-        <div
-          *ngIf="
-            contactForm.get('firstName')?.invalid &&
-            contactForm.get('firstName')?.touched
-          "
-          class="text-danger"
-        >
-          Imię jest wymagane.
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="lastName" class="form-label">Nazwisko*</label>
-        <input
-          id="lastName"
-          formControlName="lastName"
-          type="text"
-          class="form-control form-control-sm"
-          required
-          autocomplete="family-name"
-        />
-        <div
-          *ngIf="
-            contactForm.get('lastName')?.invalid &&
-            contactForm.get('lastName')?.touched
-          "
-          class="text-danger"
-        >
-          Nazwisko jest wymagane.
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="company" class="form-label">Firma</label>
-        <input
-          id="company"
-          name="company"
-          type="text"
-          formControlName="company"
-          class="form-control form-control-sm"
-          autocomplete="organization"
-        />
-      </div>
-
-      <div class="mb-3">
-        <label for="email" class="form-label">Email*</label>
-        <input
-          id="email"
-          formControlName="email"
-          type="email"
-          class="form-control form-control-sm"
-          required
-          autocomplete="email"
-        />
-        <div
-          *ngIf="
-            contactForm.get('email')?.invalid &&
-            contactForm.get('email')?.touched
-          "
-          class="text-danger"
-        >
-          Proszę podać poprawny adres email.
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="phone" class="form-label">Nr telefonu*</label>
-        <input
-          id="phone"
-          formControlName="phone"
-          type="tel"
-          class="form-control form-control-sm"
-          required
-          autocomplete="tel"
-        />
-        <div
-          *ngIf="
-            contactForm.get('phone')?.invalid &&
-            contactForm.get('phone')?.touched
-          "
-          class="text-danger"
-        >
-          Nr telefonu jest wymagany.
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="message" class="form-label">Treść zapytania*</label>
-        <textarea
-          id="message"
-          formControlName="message"
-          class="form-control responsive-textarea"
-          rows="5"
-          required
-          (click)="isSmallScreen ? openModal() : null"
-          [readonly]="isSmallScreen"
-          autocomplete="off"
-        ></textarea>
-        <div
-          *ngIf="
-            contactForm.get('message')?.invalid &&
-            contactForm.get('message')?.touched
-          "
-          class="text-danger"
-        >
-          Treść zapytania jest wymagana.
-        </div>
-      </div>
-
-      <div class="d-flex flex-row gap-3">
-        <button type="submit" class="btn btn-primary">Wyślij</button>
-        <button type="button" class="btn btn-secondary" (click)="onReset()">
-          Anuluj
-        </button>
-      </div>
-    </form>
+  <div class="map-container">
+    <h2 class="h2-contact">
+      <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Znajdź nas na
+      mapie
+    </h2>
+    <google-map width="100%" height="300" [options]="options">
+      <map-advanced-marker [options]="markerOptions"></map-advanced-marker>
+    </google-map>
   </div>
-  <ngb-toast
-    *ngIf="showToast"
-    [autohide]="false"
-    [class]="toastType === 'success' ? 'bg-success text-light' : 'bg-danger text-light'"
-    (hidden)="closeToast()"
-    class="custom-toast"
-  >
-    <div class="d-flex justify-content-between align-items-center">
-      <span>{{ toastMessage }}</span>
-      <button
-        type="button"
-        class="btn-close btn-close-white me-2 m-auto"
-        (click)="closeToast()"
-        aria-label="Close"
-      ></button>
-    </div>
-
-    
-    <ngb-progressbar
-      [value]="progress"
-      [animated]="true"
-      [striped]="true"
-      class="toast-progress-bar"
-      [type]="toastType === 'success' ? 'success' : 'danger'"
-      height="5px"
-    ></ngb-progressbar>
-  </ngb-toast> -->
-  </div>
-  <!-- </div> -->
 </div>

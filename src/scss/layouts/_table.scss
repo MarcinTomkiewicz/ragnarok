@@ -1,0 +1,13 @@
+@import "abstracts/mixins";
+
+.td-15 {
+    @include td-width(15%)
+}
+
+.td-20 {
+    @include td-width(20%)
+}
+
+.td-60 {
+    @include td-width(60%)
+}

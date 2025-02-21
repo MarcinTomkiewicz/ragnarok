@@ -13,6 +13,16 @@
   height: auto;
 }
 
+a {
+  all: unset;
+  cursor: pointer;
+
+  &:hover {
+    all: unset;
+    cursor: pointer;
+  }
+}
+
 .container {
   position: relative;
 }
@@ -36,7 +46,6 @@
   a {
     @include responsive-font-size(20px);
     padding: 0.5rem;
-    width: 10%;
 
     &:hover {
       border: 1px solid $secondary-text-color;

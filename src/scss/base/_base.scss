@@ -1,17 +1,31 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
 body {
-  font-size: $font-size-base;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: "Modern Antiqua", serif;
+  background-color: $bg-color;
+  color: $text-color;
+  @include responsive-font-size(14px);
+}
+
+/* Resetowanie niechcianych stylów dla wszystkich elementów */
+* {
+  box-sizing: border-box;
 }
 
 @media (max-width: $breakpoint-sm) {
   body {
-    font-size: $font-size-sm;
+    // font-size: $font-size-sm;
     padding-top: $navbar-height!important;
   }
 }
 
 @media (min-width: $breakpoint-lg) {
   body {
-    font-size: $font-size-lg;
+    // font-size: $font-size-lg;
   }
 }
 
