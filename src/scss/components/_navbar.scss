@@ -1,8 +1,7 @@
 @import "abstracts/variables";
+@import "abstracts/mixins";
 
 .navbar {
-  top: 0;            // Górna krawędź
-  left: 0;
   width: 100%;
   height: $navbar-height;
   z-index: 999;
@@ -18,10 +17,11 @@
     width: 100%;
     z-index: 999;
     background-color: $primary-color;
+    flex-wrap: nowrap;
   }
 
   .navbar-brand {
-    font-size: 1.5rem;
+    @include responsive-font-size(18px);
     font-weight: bold;
     padding-left: 10px;
 
@@ -75,7 +75,7 @@
   .offcanvas-toggle {
     background: none;
     border: none;
-    font-size: 1.8rem;
+    // font-size: 1.8rem;
     color: $bg-color;
     cursor: pointer;
     padding-right: 10px;

@@ -1,24 +1,28 @@
 <nav class="navbar">
-  <a class="navbar-brand" href="https://ragnarok-rooms.pl">Ragnarok | Pokoje RPG</a>
+  <a class="navbar-brand" href="https://ragnarok-rooms.pl"
+    >Ragnarok | Pokoje RPG</a
+  >
   <ul class="navbar-nav">
     @for (link of menuLinks; track link.path) {
-      <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+    <li>
+      <a [routerLink]="link.path">{{ link.label }}</a>
+    </li>
     }
   </ul>
 
   <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
-    <i class="bi bi-map icon-dark"></i>
-    </button>
+    <img ngSrc="icons/d20.svg" width="40" height="40" alt="Kostka k20" class="icon-filter-dark d20-icon">
+  </button>
 </nav>
 
 <ng-template #offcanvas let-close="close">
-  <!-- <div class="offcanvas-menu"> -->
-    <button class="close-btn" (click)="close()">✖</button>
-    <h2>Menu</h2>
-    <ul>
-      @for (link of menuLinks; track link.path) {
-        <li><a [routerLink]="link.path" (click)="close()">{{ link.label }}</a></li>
-      }
-    </ul>
-  <!-- </div> -->
+  <button class="close-btn" (click)="close()">✖</button>
+  <h2>Menu</h2>
+  <ul>
+    @for (link of menuLinks; track link.path) {
+    <li>
+      <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
+    </li>
+    }
+  </ul>
 </ng-template>

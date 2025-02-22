@@ -1,14 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgbOffcanvas } from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule } from '@angular/router';
-
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, NgOptimizedImage],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  styleUrls: ['./navbar.component.scss'],
 })
 export class NavbarComponent {
   private readonly offcanvasService = inject(NgbOffcanvas);
@@ -23,7 +23,21 @@ export class NavbarComponent {
   ];
 
   openOffcanvas(content: any) {
-    this.isOffcanvasOpen.set(true);
-    this.offcanvasService.open(content, { position: 'end', panelClass: 'offcanvas-menu' });
+    const icon = document.querySelector('.d20-icon');
+    if (icon) {
+      icon.classList.add('spin'); // Dodajemy animację
+    }
+
+    setTimeout(() => {
+      this.isOffcanvasOpen.set(true);
+      this.offcanvasService.open(content, {
+        position: 'end',
+        panelClass: 'offcanvas-menu',
+      });
+
+      if (icon) {
+        icon.classList.remove('spin');
+      }
+    }, 200);
   }
 }
