@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
 import { AUTH_ROUTES } from './auth/auth.routes';
+import { ADMIN_ROUTES } from './admin/admin-routing';
 
 export const routes: Routes = [
+  { path: 'admin', children: ADMIN_ROUTES},
   { path: 'auth', children: AUTH_ROUTES },
     {
       path: '',

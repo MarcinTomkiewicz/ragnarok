@@ -25,25 +25,25 @@ export class ServicesComponent {
   standardRooms: IServices[] = [
     {
       name: '1-2 godziny',
-      price: 80,
+      price: 16,
       priceType: 'hour',
       shortDescription: 'Salka na 1-2 godziny, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
     {
       name: '3-4 godziny',
-      price: 75,
+      price: 15,
       priceType: 'hour',
       shortDescription: 'Salka na 3-4 godziny, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
     {
       name: '5-6 godzin',
-      price: 70,
+      price: 14,
       priceType: 'hour',
       shortDescription: 'Salka na 5-6 godzin, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
     {
       name: '7+ godzin',
-      price: 65,
+      price: 13,
       priceType: 'hour',
       shortDescription: 'Salka na 7+ godzin, wyposażona w laptopa, nagłośnienie, stół z krzesłami.',
     },
@@ -52,25 +52,25 @@ export class ServicesComponent {
   vipRooms: IServices[] = [
     {
       name: '1-2 godziny',
-      price: 95,
+      price: 20,
       priceType: 'hour',
       shortDescription: 'Salka na 1-2 godziny, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
     {
       name: '3-4 godziny',
-      price: 90,
+      price: 19,
       priceType: 'hour',
       shortDescription: 'Salka na 3-4 godziny, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
     {
       name: '5-6 godzin',
-      price: 85,
+      price: 18,
       priceType: 'hour',
       shortDescription: 'Salka na 5-6 godzin, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
     {
       name: '7+ godzin',
-      price: 80,
+      price: 17,
       priceType: 'hour',
       shortDescription: 'Salka na 7+ godzin, wyposażona w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
@@ -79,28 +79,28 @@ export class ServicesComponent {
   passes: IServices[] = [
     {
       name: 'Karnet Legendy Ragnarok',
-      price: 1300,
+      price: 260,
       priceType: 'piece',
       shortDescription: '20 godzin do wykorzystania + 4 dodatkowe godziny gratis.',
       longDescription: 'Karnet Legendy Ragnarok oferuje 20 godzin w standardowej salce, wyposażonej w laptopa, nagłośnienie, stół i krzesła. Dodatkowo w ramach oferty otrzymujesz 4 godziny gratis, aby w pełni wykorzystać potencjał naszych przestrzeni.',
     },
     {
       name: 'Karnet Legendy Ragnarok VIP',
-      price: 1600,
+      price: 340,
       priceType: 'piece',
       shortDescription: '20 godzin w salce VIP + 4 dodatkowe godziny w salce VIP gratis.',
       longDescription: 'Karnet Legendy Ragnarok VIP oferuje 20 godzin w ekskluzywnej salce VIP, wyposażonej w wygodne fotele, funkcjonalne stoliki podręczne, laptopa i nagłośnienie. Dodatkowe 4 godziny gratis pozwalają cieszyć się jeszcze dłuższym czasem w luksusowych warunkach.',
     },
     {
       name: 'Karnet Bogowie Ragnarok',
-      price: 2500,
+      price: 500,
       priceType: 'piece',
       shortDescription: '40 godzin do wykorzystania + 10 dodatkowych godzin gratis.',
       longDescription: 'Karnet Bogowie Ragnarok zapewnia 40 godzin w standardowej salce, wyposażonej w laptopa, nagłośnienie, stół i krzesła. Dodatkowe 10 godzin gratis pozwala na jeszcze większą elastyczność i komfort użytkowania przestrzeni.',
     },
     {
       name: 'Karnet Bogowie Ragnarok VIP',
-      price: 3000,
+      price: 650,
       priceType: 'piece',
       shortDescription: '40 godzin w salce VIP + 10 dodatkowych godzin w salce VIP gratis.',
       longDescription: 'Karnet Bogowie Ragnarok VIP zapewnia 40 godzin w przestronnej i komfortowej salce VIP, wyposażonej w wygodne fotele, funkcjonalne stoliki podręczne, laptopa i nagłośnienie. Dodatkowe 10 godzin gratis gwarantuje pełną swobodę i niezapomniane doświadczenia.',

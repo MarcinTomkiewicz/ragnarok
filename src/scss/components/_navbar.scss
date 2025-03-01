@@ -23,7 +23,11 @@
   .navbar-brand {
     @include responsive-font-size(18px);
     font-weight: bold;
+    padding: 0;
     padding-left: 10px;
+    &:hover {
+      border: unset;
+    }
 
     // Zmiana ustawienia dla mniejszych ekranów
     @media (max-width: $breakpoint-sm) {

@@ -36,7 +36,7 @@ main {
     background-size: cover;
     background-position: top;
     border-radius: 5px;
-    min-height: 220px;
+    height: 400px;
 
     &::before {
       content: "";
@@ -59,17 +59,17 @@ main {
 .skeleton-wrapper {
   gap: 1rem;
   margin: auto;
-  width: 100%;
+  width: 95%;
   height: 371px;
   margin-bottom: 3rem;
   @include flex-wrapper(row, center, center);
   @media (max-width: $breakpoint-sm) {
     width: 95%;
-    max-height: 220px;
+    height: 400px;
    }
    @media (max-width: $breakpoint-xs) {
     width: 95%;
-    max-height: 360px;
+    height: 400px;
    }
 }
 
@@ -96,11 +96,11 @@ main {
   border-radius: 10px;
   @media (max-width: $breakpoint-sm) {
    width: 95%;
-   max-height: 220px;
+   max-height: 400px;
   }
   @media (max-width: $breakpoint-xs) {
     width: 95%;
-    max-height: 360px;
+    max-height: 400px;
    }
 }
 
