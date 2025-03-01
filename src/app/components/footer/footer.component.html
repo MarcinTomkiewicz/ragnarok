@@ -1,31 +1,69 @@
 <footer>
-    <ul class="navbar-nav">
-        <li><a href="/about" id="about-link">O nas</a></li>
-        <li><a href="/services" id="services-link">Cennik</a></li>
-        <li><a href="/tech-stack" id="tech-stack-link">Nasz zespół</a></li>
-        <li><a href="/our-rooms" id="tech-stack-link">Pomieszczenia</a></li>
-        <li><a href="/contact" id="contact-link">Kontakt</a></li>
-    </ul>
-    
-    <p class="footer-summary">Ragnarok - Pokoje do sesji RPG. Przygoda i gawęda!</p>
+  <ul class="navbar-nav">
+    <li><a href="/about" id="about-link">O nas</a></li>
+    <li><a href="/services" id="services-link">Cennik</a></li>
+    <li><a href="/tech-stack" id="tech-stack-link">Nasz zespół</a></li>
+    <li><a href="/our-rooms" id="tech-stack-link">Pomieszczenia</a></li>
+    <li><a href="/contact" id="contact-link">Kontakt</a></li>
+  </ul>
 
-    <ul class="navbar-nav rules">
-        <li><button class="btn link-like" (click)="openRules('loyalty')" onkeydown>Regulamin Programu Lojalnościowego</button></li>
-        <li><button class="btn link-like" (click)="openRules('voucher')" onkeydown>Regulamin Voucherów</button></li>
-    </ul>
-    
-    <div class="social-icons">
-        <a href="https://facebook.com/ragnarokrooms" target="_blank" rel="noopener" aria-label="Facebook">
-            <i class="bi bi-facebook"></i>
-        </a>
-        <a href="https://instagram.com/ragnarokrooms" target="_blank" rel="noopener" aria-label="Instagram">
-            <i class="bi bi-instagram"></i>
-        </a>
-        <a href="mailto:ragnarok.rooms@gmail.com" aria-label="Email">
-            <i class="bi bi-envelope"></i>
-        </a>
-    </div>
-    
-    <a href="#" (click)="openPrivacyPolicy(); $event.preventDefault()" class="p-2">Polityka prywatności</a>
-    <p>&copy; 2025 Ragnarok. Wszystkie prawa zastrzeżone.</p>
+  <p class="footer-summary">
+    Ragnarok - Pokoje do sesji RPG. Przygoda i gawęda!
+  </p>
+
+  <ul class="navbar-nav rules">
+    <li>
+      <button class="btn link-like" (click)="openRules('loyalty')" onkeydown>
+        Regulamin Programu Lojalnościowego
+      </button>
+    </li>
+    <li>
+      <button class="btn link-like" (click)="openRules('voucher')" onkeydown>
+        Regulamin Voucherów
+      </button>
+    </li>
+  </ul>
+
+  <div class="social-icons">
+    <a
+      href="https://facebook.com/ragnarokrooms"
+      target="_blank"
+      rel="noopener"
+      aria-label="Facebook"
+    >
+      <i class="bi bi-facebook"></i>
+    </a>
+    <a
+      href="https://instagram.com/ragnarokrooms"
+      target="_blank"
+      rel="noopener"
+      aria-label="Instagram"
+    >
+      <i class="bi bi-instagram"></i>
+    </a>
+    <a
+      href="https://tiktok.com/@ragnarokrooms"
+      target="_blank"
+      rel="noopener"
+      aria-label="Tik Tok"
+    >
+      <i class="bi bi-tiktok"></i>
+    </a>
+    <a
+      href="https://www.youtube.com/@Ragnarok-Pokoje-Rpg"
+      target="_blank"
+      rel="noopener"
+      aria-label="Youtube"
+    >
+      <i class="bi bi-youtube"></i>
+    </a>
+    <a href="mailto:ragnarok.rooms@gmail.com" aria-label="Email">
+      <i class="bi bi-envelope"></i>
+    </a>
+  </div>
+
+  <a href="#" (click)="openPrivacyPolicy(); $event.preventDefault()" class="p-2"
+    >Polityka prywatności</a
+  >
+  <p>&copy; 2025 Ragnarok. Wszystkie prawa zastrzeżone.</p>
 </footer>

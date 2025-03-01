@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GoogleMapsModule } from '@angular/google-maps';
@@ -20,7 +20,8 @@ declare const google: any;
     ReactiveFormsModule,
     NgbToastModule,
     NgbProgressbarModule,
-    GoogleMapsModule
+    GoogleMapsModule,
+    NgOptimizedImage
   ],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],

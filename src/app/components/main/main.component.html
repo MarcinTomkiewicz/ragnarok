@@ -14,7 +14,7 @@
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
-    [interval]="5000"
+    [interval]="000"
     class="d-flex w-100 mb-5"
   >
     @for (news of newsItems; track news.id) {
@@ -31,9 +31,10 @@
           <img
             [ngSrc]="news.imageURL"
             [alt]="news.header"
-            fill
+            width="597"
+            height="371"
             [attr.loading]="newsItems.indexOf(news) === 0 ? 'eager' : 'lazy'"
-            [priority]="newsItems.indexOf(news) === 0"
+            priority
           />
         </div>
         }

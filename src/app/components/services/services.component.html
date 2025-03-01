@@ -19,11 +19,11 @@
   </div>
   <div class="w-100">
     <h4>Salki standardowe</h4>
-    <div class="w-100">Koszt obejmuje godzinę wynajmu salki standardowej - nie ma znaczenia liczba osób. </div>
+    <div class="w-100">Koszt obejmuje godzinę wynajmu salki standardowej dla jednej osoby. </div>
     <app-services-table [services]="standardRooms"></app-services-table>
     <h4>Salka VIP</h4>
     <div class="w-100">
-      <div class="w-100">Koszt obejmuje godzinę wynajmu salki VIP - nie ma znaczenia liczba osób. </div>
+      <div class="w-100">Koszt obejmuje godzinę wynajmu salki VIP dla jednej osoby. </div>
       <app-services-table [services]="vipRooms"></app-services-table>
       <div class="disclaimer">
         Przed rezerwacją salki, zapoznaj się z naszym
@@ -39,7 +39,6 @@
     </div>
     <div class="w-100">
       <h4>Karnety</h4>
-      <div class="w-100">Aby skorzystać z karnetu wystarczy jeden karnet na drużynę!</div>
       <app-services-table
         [services]="passes"
         [isServiceByHour]="false"

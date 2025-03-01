@@ -5,7 +5,8 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  font-family: "Modern Antiqua", serif;
+  font-family: "Modern Antiqua", Georgia, serif;
+  font-display: swap;
   background-color: $bg-color;
   color: $text-color;
   @include responsive-font-size(14px);

@@ -4,7 +4,6 @@ import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap
 import { INews } from '../../core/interfaces/i-news';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { ConverterService } from '../../core/services/converter/converter.service';
-import { LoaderService } from '../../core/services/loader/loader.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 
 @Component({
@@ -25,7 +24,6 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   private readonly backend = inject(BackendService);
   private readonly converter = inject(ConverterService);
-  private readonly loaderService = inject(LoaderService);
   private readonly platformService = inject(PlatformService);
 
   ngOnInit() {

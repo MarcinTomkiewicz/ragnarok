@@ -24,7 +24,6 @@ main {
     width: 597px;
     height: 371px;
     position: relative;
-    contain: content;
   }
 
   .content {
@@ -59,18 +58,18 @@ main {
 .skeleton-wrapper {
   gap: 1rem;
   margin: auto;
-  width: 95%;
+  width: 90%;
   height: 371px;
   margin-bottom: 3rem;
-  @include flex-wrapper(row, center, center);
+  @include flex-wrapper(row, space-between, center);
   @media (max-width: $breakpoint-sm) {
     width: 95%;
     height: 400px;
-   }
-   @media (max-width: $breakpoint-xs) {
+  }
+  @media (max-width: $breakpoint-xs) {
     width: 95%;
     height: 400px;
-   }
+  }
 }
 
 .skeleton-content-wrapper {
@@ -80,7 +79,7 @@ main {
   padding: 10px;
   @include flex-wrapper(column, space-between, center);
   @media (max-width: $breakpoint-sm) {
-    display: none;    
+    display: none;
   }
 }
 
@@ -95,13 +94,13 @@ main {
   height: 371px;
   border-radius: 10px;
   @media (max-width: $breakpoint-sm) {
-   width: 95%;
-   max-height: 400px;
+    width: 95%;
+    max-height: 400px;
   }
   @media (max-width: $breakpoint-xs) {
     width: 95%;
     max-height: 400px;
-   }
+  }
 }
 
 .skeleton-content {
