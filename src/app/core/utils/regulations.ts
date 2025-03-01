@@ -18,7 +18,8 @@ export const REGULATIONS = [
             'W przypadku spóźnienia użytkownika:',
             '- Rezerwacja przepada po 30 minutach od wyznaczonej godziny rozpoczęcia, jeśli użytkownik nie poinformował obsługi o spóźnieniu.',
             '- Poinformowanie o spóźnieniu nie powoduje wydłużenia godzin rezerwacji ani zmniejszenia należnej opłaty — czas wynajmu kończy się zgodnie z pierwotnym harmonogramem.',
-            'Lokal zastrzega sobie prawo do odmowy rezerwacji bez podania przyczyny.'
+            'Lokal zastrzega sobie prawo do odmowy rezerwacji bez podania przyczyny.',
+            'Koszt wynajmu sali naliczany jest od osoby za każdą godzinę użytkowania. Każda osoba uczestnicząca w rezerwacji rozlicza się indywidualnie.'
           ]
         },
         {
@@ -76,20 +77,22 @@ export const REGULATIONS = [
           title: '§2 Zasady Korzystania z Karnetu',
           content: [
             'Karnet uprawnia do korzystania z salek standardowych lub VIP (zgodnie z rodzajem Karnetu) w wymiarze godzinowym określonym na Karnecie.',
-            'Zarówno godziny opłacone z góry, jak i godziny dodatkowe (darmowe) będą oznaczane na Karnecie.',
-            'Karnet nie musi być wykorzystany w całości podczas jednej rezerwacji – godziny mogą być używane w podziale na kilka rezerwacji.',
-            'Jeśli rezerwacja obejmuje więcej godzin niż pozostało na Karnecie (opłaconych lub darmowych), nadwyżka godzin zostanie naliczona zgodnie z faktyczną liczbą godzin gry i obowiązującym Cennikiem.',
-            'Przykład: Jeśli na Karnecie pozostały 4 godziny, a rezerwacja jest na 6 godzin, pozostałe 2 godziny zostaną naliczone zgodnie ze stawką dla rezerwacji 6-godzinnej.'
+            'Godziny opłacone z góry oraz dodatkowe (darmowe) godziny przypisane do Karnetu dotyczą wyłącznie osoby posługującej się danym Karnetem.',
+            'Każda inna osoba uczestnicząca w rezerwacji rozlicza się indywidualnie według obowiązującego cennika.',
+            'Jeśli rezerwacja obejmuje więcej godzin niż pozostało na Karnecie (opłaconych lub darmowych), nadwyżka godzin dla danej osoby zostanie naliczona zgodnie z faktyczną liczbą godzin gry i obowiązującym Cennikiem.',
+            'Karnety wydawane są bezterminowo.'
           ]
         },
         {
           title: '§3 Ograniczenia Korzystania z Karnetów',
           content: [
-            'Jeden Karnet może być wykorzystany tylko raz na jedną grupę podczas jednej rezerwacji.',
+            'Jeden Karnet może być wykorzystany tylko przez osobę, która się nim posługuje, podczas jednej rezerwacji.',
             'Nie można łączyć dwóch lub więcej Karnetów do wykorzystania na jedną rezerwację.',
+            'Nie można wykorzystać Karnetu do opłacenia kosztów wynajmu salki innej osoby niż posiadacz Karnetu',
             'Godziny z Karnetu nie mogą być łączone z promocjami, voucherami, rabatami ani innymi programami lojalnościowymi.',
             'Karnet Legendy Ragnarok może być wykorzystany wyłącznie w salce standardowej, a Karnet Legendy Ragnarok VIP – wyłącznie w salce VIP. To samo dotyczy Karnetów Bogowie Ragnarok i Bogowie Ragnarok VIP.',
-            'Karnety nie mogą być wykorzystywane podczas oficjalnych eventów prowadzonych przez Ragnarok ani podczas eventów organizowanych przez zewnętrznych partnerów, odbywających się w Ragnarok.'
+            'Karnety nie mogą być wykorzystywane podczas oficjalnych eventów prowadzonych przez Ragnarok ani podczas eventów organizowanych przez zewnętrznych partnerów, odbywających się w Ragnarok.',
+            'Karnet nie może być stosowany do skorzystania z usług dodatkowych, takich jak wynajem Mistrza Gry (MG).',
           ]
         },
         {
@@ -104,6 +107,7 @@ export const REGULATIONS = [
           content: [
             'Ragnarok zastrzega sobie prawo do weryfikacji prawidłowości korzystania z Karnetów i odmowy realizacji Karnetu w przypadku podejrzenia nadużyć.',
             'Regulamin Karnetów może ulec zmianie w dowolnym momencie, przy czym wszelkie zmiany będą publikowane na stronie internetowej lub w siedzibie Ragnarok.',
+            'Wszelkie sprawy sporne rozstrzyga obsługa lokalu, której decyzje są ostateczne.',
             'Zakup Karnetu oznacza akceptację niniejszego Regulaminu.'
           ]
         }
@@ -117,23 +121,23 @@ export const REGULATIONS = [
           content: [
             'Voucher uprawnia do darmowego korzystania z salek standardowych przez liczbę godzin określoną na voucherze.',
             'Voucher nie podlega wymianie na ekwiwalent pieniężny ani na inne usługi lub produkty.',
-            'Voucher można wykorzystać jedynie w Ragnarok, zgodnie z niniejszym regulaminem.',
+            'Voucher można wykorzystać jedynie w Ragnarok, zgodnie z niniejszym Regulaminem.',
           ],
         },
         {
           title: '§2 Zasady korzystania z voucherów',
           content: [
             'Jeden voucher można wykorzystać wyłącznie w ramach jednej rezerwacji.',
-            'Na jedną rezerwację można użyć tylko jednego vouchera, niezależnie od liczby graczy w grupie.',
+            'Na jedną rezerwację jeden uczestnik może użyć tylko jednego vouchera.',
             'Voucher może zostać użyty tylko na rezerwację salek standardowych i nie obejmuje wynajmu sali VIP.',
           ],
         },
         {
           title: '§3 Rezerwacje dłuższe niż czas przewidziany w voucherze',
           content: [
-            'W przypadku rezerwacji przekraczającej liczbę godzin przewidzianą w voucherze, pozostały czas będzie naliczany zgodnie z faktycznym czasem gry i obowiązującym cennikiem.',
-            'Koszt całej rezerwacji będzie liczony w oparciu o cenę wynikającą z całkowitego czasu gry, pomniejszoną o liczbę darmowych godzin wynikających z vouchera.',
-            'Przykład: Jeśli grupa rezerwuje salę na 5 godzin, z czego 2 godziny pokrywa voucher, opłata za pozostałe 3 godziny zostanie naliczona zgodnie z ceną za 5 godzin gry.',
+            'W przypadku rezerwacji przekraczającej liczbę godzin przewidzianą w voucherze, pozostały czas dla danej osoby będzie naliczany zgodnie z faktycznym czasem gry i obowiązującym cennikiem.',
+            'Koszt całej rezerwacji będzie liczony osobno dla każdego uczestnika w oparciu o jego indywidualny czas gry i ewentualne wykorzystanie darmowych godzin z vouchera.',
+            'Przykład: Jeśli gracz rezerwuje salę na 5 godzin, z czego 2 godziny pokrywa voucher, opłata za pozostałe 3 godziny zostanie naliczona zgodnie z ceną za 5 godzin gry.',
           ],
         },
         {
@@ -149,6 +153,7 @@ export const REGULATIONS = [
           content: [
             'Aby zarezerwować salę z użyciem vouchera, należy skontaktować się z obsługą Ragnarok z odpowiednim wyprzedzeniem i poinformować o zamiarze skorzystania z vouchera.',
             'Obsługa ma prawo odmówić przyjęcia vouchera w przypadku braku dostępności salek standardowych w wybranym terminie.',
+            'Wszelkie sprawy sporne rozstrzyga obsługa lokalu, której decyzje są ostateczne.',
           ],
         },
         {
@@ -195,10 +200,13 @@ export const REGULATIONS = [
         {
           title: '§4 Ograniczenia korzystania z darmowych godzin',
           content: [
-            'Z jednej Karty Lojalnościowej można skorzystać tylko raz na jedną grupę podczas jednej rezerwacji.',
+            'Darmowe godziny uzyskane w ramach Programu Lojalnościowego dotyczą wyłącznie osoby posługującej się Kartą Lojalnościową.',
+            'Każda inna osoba uczestnicząca w rezerwacji rozlicza się indywidualnie według obowiązującego cennika.',
             'Darmowe godziny wynikające z Programu Lojalnościowego:',
             '- Nie mogą być łączone z voucherami, promocjami, rabatami ani innymi zniżkami.',
             '- Nie mogą być wymieniane na ekwiwalent pieniężny ani na godziny w salce innej niż wskazana w odpowiedniej karcie (Wojownicy lub Legendarni Wojownicy).',
+            '- Nie mogą być stosowane do skorzystania z usług dodatkowych, takich jak wynajem Mistrza Gry (MG).',
+            '- Nie mogą być stosowane w oficjalnych wydarzeniach w lokalu Ragnarok.',
             'Darmowe godziny muszą być zarezerwowane z wyprzedzeniem i zgłoszone podczas składania rezerwacji.',
           ],
         },
@@ -214,6 +222,7 @@ export const REGULATIONS = [
           content: [
             'Ragnarok zastrzega sobie prawo do weryfikacji korzystania z Kart Lojalnościowych i odmowy przyznania darmowych godzin w przypadku podejrzenia nadużyć.',
             'Regulamin Programu Lojalnościowego może ulec zmianie w dowolnym momencie, przy czym wszelkie zmiany będą publikowane na stronie internetowej lub w siedzibie Ragnarok.',
+            'Wszelkie sprawy sporne rozstrzyga obsługa lokalu, której decyzje są ostateczne.',
             'Uczestnik Programu akceptuje niniejszy regulamin poprzez skorzystanie z Karty Lojalnościowej.',
           ],
         },
