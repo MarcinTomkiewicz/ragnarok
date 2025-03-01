@@ -86,6 +86,24 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   navigate(link: string) {
-    window.open(link);
+    if (this.platformService.isBrowser) {
+      const isExternal = this.isExternalLink(link);
+      
+      if (isExternal) {
+        window.open(link, '_blank');
+      } else {
+        window.location.href = link;
+      }
+    }
+  }
+
+  // Funkcja do sprawdzania, czy link jest zewnętrzny
+  isExternalLink(url: string): boolean {
+    try {
+      const link = new URL(url, window.location.href);
+      return link.hostname !== window.location.hostname;
+    } catch (e) {
+      return false;
+    }
   }
 }
