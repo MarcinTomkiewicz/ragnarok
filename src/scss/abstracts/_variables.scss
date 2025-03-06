@@ -15,6 +15,9 @@ $button-hover-color: darken($primary-color, 10%);
 $secondary-button-color: $bg-color;
 $secondary-button-hover-color: darken($bg-color, 10%);
 
+// Kolory ogólne
+$info-color: #0DCAF0;
+
 // Filtry ikon
 $icon-filter: brightness(0) saturate(100%) invert(88%) sepia(24%) saturate(374%) hue-rotate(1deg) brightness(107%) contrast(97%);
 $icon-filter-dark: brightness(0) saturate(100%) invert(14%) sepia(10%) saturate(1170%) hue-rotate(236deg) brightness(96%) contrast(85%);

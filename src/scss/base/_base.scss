@@ -19,14 +19,7 @@ body {
 
 @media (max-width: $breakpoint-sm) {
   body {
-    // font-size: $font-size-sm;
     padding-top: $navbar-height!important;
-  }
-}
-
-@media (min-width: $breakpoint-lg) {
-  body {
-    // font-size: $font-size-lg;
   }
 }
 
@@ -71,5 +64,18 @@ body {
   @media (min-width: $breakpoint-lg) {
     .container {
       width: $container-width-lg;
+    }
+
+  }
+
+  @media (min-width: $breakpoint-sm) {
+    .small-screens {
+      display: none;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    .large-screens {
+      display: none;
     }
   }

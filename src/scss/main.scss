@@ -9,7 +9,6 @@
 @import "base/flex";
 
 // Components
-@import "components/buttons";
 @import "components/navbar";
 
 // Layouts
@@ -26,6 +25,7 @@
 @import "vendors/bootstrap";
 @import "vendors/carousel";
 @import "vendors/offcanvas";
+@import "vendors/buttons";
 
 @import "@fontsource/modern-antiqua/index.css";
 @import "@fontsource/material-icons/index.css";

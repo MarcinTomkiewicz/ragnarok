@@ -1,0 +1,14 @@
+@if (eventData) {
+  <div class="component-container flex-column-center">
+    <img class="event-image" [src]="eventData.imageURL" alt="{{ eventData.name }}" />
+    <div class="event-container">
+      <h2 class="text-center">{{ eventData.name }}</h2>
+      <div class="event-description">
+        @let paragraphs = eventData.longDescription.split('\n');
+         @for (paragraph of paragraphs; track paragraph) {
+        <p class="event-paragraph">{{ paragraph }}</p>
+         }
+      </div>
+    </div>
+  </div>
+}

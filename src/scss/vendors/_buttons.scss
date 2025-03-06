@@ -1,8 +1,17 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+// Mixin do hovera
+@mixin btn-hover($color) {
+  background-color: darken($color, 10%);
+  transform: translateY(-3px);
+}
+
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
-  font-size: 1rem;
+  @include responsive-font-size(12px);
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
   font-family: $font-family-base;
@@ -12,8 +21,7 @@
     color: $bg-color;
 
     &:hover {
-      background-color: $button-hover-color;
-      transform: translateY(-3px);
+      @include btn-hover($primary-color);
       color: darken($bg-color, 10%);
     }
 
@@ -28,15 +36,29 @@
   &.btn-secondary {
     background-color: $secondary-color;
     color: $bg-color;
-    border-radius: 5px;
 
     &:hover {
-      background-color: darken($secondary-color, 10%);
-      transform: translateY(-3px);
+      @include btn-hover($secondary-color);
     }
 
     &:disabled {
       background-color: lighten($secondary-color, 15%);
+      color: lighten($bg-color, 10%);
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+
+  &.btn-info {
+    background-color: $info-color;
+    color: $bg-color;
+
+    &:hover {
+      @include btn-hover($info-color);
+    }
+
+    &:disabled {
+      background-color: lighten($info-color, 15%);
       color: lighten($bg-color, 10%);
       cursor: not-allowed;
       transform: none;
@@ -58,6 +80,13 @@
       border-color: lighten($border-color, 20%);
       color: lighten($text-color, 15%);
       cursor: not-allowed;
+    }
+  }
+  &.btn-plain {
+    padding: unset;
+    border: unset;
+    &:hover {
+      background-color: transparent;
     }
   }
 }

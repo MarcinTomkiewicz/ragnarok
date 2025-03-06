@@ -1,0 +1,64 @@
+<table class="table table-hover table-striped align-middle text-center">
+  <thead>
+    <tr class="table-header table-light">
+      <th scope="col" class="td-15">Nazwa</th>
+      <th scope="col" class="td-10">{{ recurring() ? "Następne" : "Data" }}</th>
+      <th scope="col" class="td-10">Godzina</th>
+      <th scope="col" class="large-screens">Opis</th>
+      <th scope="col" class="td-10">Szczegóły</th>
+      @if (checkScreenWidth()) {
+        <th scope="col" class="td-10">Facebook</th>
+      }
+    </tr>
+  </thead>
+  <tbody class="table-group-divider">
+    @for (event of events(); track event.id) {
+      <tr>
+        <td class="font-size-small text-start">{{ event.name }}</td>
+        <td class="font-size-small">
+          {{ event.eventDate | date : "dd-MM-yyyy" }}
+        </td>
+        <td class="font-size-small">
+          {{ event.time | slice : 0 : 5 }}
+        </td>
+        <td class="font-size-small large-screens text-start">
+          {{ event.shortDescription }}
+        </td>
+        <td class="font-size-small">
+          <button
+            class="btn btn-primary large-screens"
+            (click)="openEventDetails(event.id)"
+          >
+            <span>Szczegóły</span>
+          </button>
+          <button
+            class="btn btn-outline small-screens w-100 btn-plain"
+            (click)="openEventDetails(event.id)"
+          >
+            <img
+              src="icons/3.svg"
+              alt="Ikona drakkara"
+              class="icon small-screens"
+              width="2em"
+              height="2em"
+            />
+          </button>
+        </td>
+        @if (checkScreenWidth()) {
+          <td class="font-size-small">
+            @if (event.facebookLink) {
+              <button class="btn btn-info large-screens" (click)="openFacebook(event.facebookLink)">
+                Wydarzenie
+              </button>
+              <button class="btn small-screens" (click)="openFacebook(event.facebookLink)">
+                <i class="bi bi-facebook icon"></i>
+              </button>
+            } @else {
+              Brak wydarzenia
+            }
+          </td>
+        }
+      </tr>
+    }
+  </tbody>
+</table>

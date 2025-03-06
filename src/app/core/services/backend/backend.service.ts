@@ -7,6 +7,8 @@ import {
   PostgrestResponse,
 } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
+import { FilterOperator } from '../../enums/filterOperator';
+import { IFilter } from '../../interfaces/i-filters';
 
 @Injectable({
   providedIn: 'root',
@@ -24,19 +26,16 @@ export class BackendService {
    * @param table - Nazwa tabeli w Supabase
    * @returns Observable z listą rekordów
    */
-  getAll<T extends { image?: string; imageUrl?: string }>(
-    table: string,
-    sortBy?: keyof T,
-    sortOrder: 'asc' | 'desc' = 'asc',
-    width?: number,
-    height?: number
-  ): Observable<T[]> {
+  getAll<T extends { image?: string; imageURL?: string; }>(table: string, sortBy?: keyof T, sortOrder: 'asc' | 'desc' = 'asc', width?: number, height?: number, filters?: { [key: string]: IFilter }): Observable<T[]> {
     let query = this.supabase.from(table).select('*');
-
+  
+    query = this.applyFilters(query, filters);
+  
+    // Sortowanie
     if (sortBy) {
       query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
     }
-
+  
     return from(query).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) {
@@ -48,6 +47,7 @@ export class BackendService {
       })
     );
   }
+  
 
   /**
    * Pobiera rekord według identyfikatora.
@@ -68,7 +68,7 @@ export class BackendService {
         if (response.error) {
           throw new Error(response.error.message);
         }
-        // Dodajemy URL do obrazu, jeśli jest
+
         return response.data ? this.processImage(response.data) : null;
       })
     );
@@ -146,7 +146,6 @@ export class BackendService {
       item.imageURL =
         this.getOptimizedImageUrl(data.publicUrl, width, height) || '';
     }
-    // }
 
     return item;
   }
@@ -166,4 +165,39 @@ export class BackendService {
     if (!imageUrl) return '';
     return `${imageUrl}?width=${width}&height=${height}`;
   }
+
+  private applyFilters<T>(query: any, filters?: { [key: string]: IFilter }): any {
+    if (filters) {
+      for (const [key, filter] of Object.entries(filters)) {
+        if (filter.value !== undefined) {
+          const operator = filter.operator || FilterOperator.EQ; // Używamy domyślnego 'eq' jeśli operator nie jest podany
+          switch (operator) {
+            case FilterOperator.EQ:
+              query = query.eq(key, filter.value);
+              break;
+            case FilterOperator.GTE:
+              query = query.gte(key, filter.value);
+              break;
+            case FilterOperator.LTE:
+              query = query.lte(key, filter.value);
+              break;
+            case FilterOperator.GT:
+              query = query.gt(key, filter.value);
+              break;
+            case FilterOperator.LT:
+              query = query.lt(key, filter.value);
+              break;
+            case FilterOperator.LIKE:
+              query = query.like(key, filter.value);
+              break;
+            default:
+              throw new Error(`Unsupported filter operator: ${operator}`);
+          }
+        }
+      }
+    }
+    return query;
+  }
+  
+
 }
