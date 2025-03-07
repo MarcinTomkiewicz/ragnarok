@@ -1,7 +1,5 @@
 <nav class="navbar">
-  <a class="navbar-brand" routerLink="/" aria-label="Przejdź do strony głównej" rel="home"
-    >Ragnarok | Pokoje RPG</a
-  >
+  <span class="navbar-brand">Ragnarok | Pokoje RPG</span>
   <ul class="navbar-nav">
     @for (link of menuLinks; track link.path) {
     <li>
@@ -11,7 +9,13 @@
   </ul>
 
   <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
-    <img ngSrc="icons/d20.svg" width="40" height="40" alt="Kostka k20" class="icon-filter-dark d20-icon">
+    <img
+      ngSrc="icons/d20.svg"
+      width="40"
+      height="40"
+      alt="Kostka k20"
+      class="icon-filter-dark d20-icon"
+    />
   </button>
 </nav>
 

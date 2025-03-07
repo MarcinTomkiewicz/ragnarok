@@ -11,4 +11,5 @@ export interface EventData {
     isActive: boolean;
     interval: number;
     imageURL: string;
+    cost?: number;
   }

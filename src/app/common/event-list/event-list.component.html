@@ -45,13 +45,13 @@
           </button>
         </td>
         @if (checkScreenWidth()) {
-          <td class="font-size-small">
+          <td class="">
             @if (event.facebookLink) {
-              <button class="btn btn-info large-screens" (click)="openFacebook(event.facebookLink)">
+              <button class="btn btn-info large-screens font-size-small" (click)="openFacebook(event.facebookLink)">
                 Wydarzenie
               </button>
-              <button class="btn small-screens" (click)="openFacebook(event.facebookLink)">
-                <i class="bi bi-facebook icon"></i>
+              <button class="btn btn-plain small-screens" (click)="openFacebook(event.facebookLink)">
+                <span class="font-size-medium"><i class="bi bi-facebook icon"></i></span>
               </button>
             } @else {
               Brak wydarzenia

@@ -5,6 +5,7 @@ import { EventListComponent } from '../../common/event-list/event-list.component
 import { FilterOperator } from '../../core/enums/filterOperator';
 import { EventData } from '../../core/interfaces/i-event';
 import { BackendService } from '../../core/services/backend/backend.service';
+import { EventsService } from '../../core/services/events/events.service';
 
 @Component({
   selector: 'app-event-calendar',
@@ -18,6 +19,7 @@ export class EventCalendarComponent implements OnInit {
   singleEvents: EventData[] = [];
 
   private readonly backendService = inject(BackendService);
+  private readonly eventsService = inject(EventsService)
 
   ngOnInit() {
     const today = new Date().toISOString().split('T')[0]; 
@@ -30,7 +32,6 @@ export class EventCalendarComponent implements OnInit {
       {
         isActive: { value: true, operator: FilterOperator.EQ },
         isRecurring: { value: true, operator: FilterOperator.EQ },
-        // eventDate: { value: today, operator: FilterOperator.GTE },
       }
     );
 
@@ -49,31 +50,10 @@ export class EventCalendarComponent implements OnInit {
 
     forkJoin([recurringEvents$, singleEvents$]).subscribe(
       ([recurring, single]) => {
-        this.recurringEvents = this.processRecurringEvents(recurring, today);
+        this.recurringEvents = this.eventsService.processRecurringEvents(recurring, today);
         this.singleEvents = single;
       }
       
     );    
-  }
-
-  private processRecurringEvents(events: EventData[], today: string): EventData[] {
-    const recurring = events.map((event) => {
-      const nextEventDate = this.calculateNextEventDate(event.eventDate, event.interval, today);
-      return { ...event, eventDate: nextEventDate };
-    }).sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime());
-    
-    return recurring;
-  }
-
-  // Oblicza najbliższą datę wydarzenia na podstawie eventDate oraz interval (liczba dni)
-  private calculateNextEventDate(startDate: string, interval: number, today: string): string {
-    let nextDate = new Date(startDate);
-    
-    // Sprawdzamy, czy początkowa data jest już po dzisiejszej, jeśli nie, dodajemy interwał
-    while (nextDate < new Date(today)) {
-      nextDate.setDate(nextDate.getDate() + interval); // Dodajemy interval dni
-    }
-
-    return nextDate.toISOString().split('T')[0]; // Zwracamy datę w formacie YYYY-MM-DD
   }
 }
