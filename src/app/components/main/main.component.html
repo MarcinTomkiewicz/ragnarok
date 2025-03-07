@@ -41,12 +41,14 @@
         <div class="flex-column-between content">
           <h2>{{ news.header }}</h2>
           <div>{{ news.description }}</div>
+          @if (news.link) {
           <button
             class="btn btn-primary align-self-center mt-2"
             (click)="navigate(news.link)"
           >
             {{ news.linkDescription }}
           </button>
+        }
         </div>
       </div>
     </ng-template>
