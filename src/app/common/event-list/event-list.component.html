@@ -19,7 +19,8 @@
           {{ event.eventDate | date : "dd-MM-yyyy" }}
         </td>
         <td class="font-size-small">
-          {{ event.time | slice : 0 : 5 }}
+          @let eventTime = event.time | slice : 0 : 5;
+          {{ event.time !== '00:00:00' ? eventTime : 'Cały dzień' }}
         </td>
         <td class="font-size-small large-screens text-start">
           {{ event.shortDescription }}
