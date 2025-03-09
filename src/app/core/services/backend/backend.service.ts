@@ -10,6 +10,19 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { FilterOperator } from '../../enums/filterOperator';
 import { IFilter } from '../../interfaces/i-filters';
 
+interface Pagination {
+  page?: number;
+  pageSize?: number;
+  filters?: { [key: string]: IFilter };
+}
+
+interface ImageConfig {
+  width?: number;
+  height?: number;
+}
+
+type WithImage<T> = T & { image?: string; imageURL?: string };
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,14 +39,30 @@ export class BackendService {
    * @param table - Nazwa tabeli w Supabase
    * @returns Observable z listą rekordów
    */
-  getAll<T extends { image?: string; imageURL?: string; }>(table: string, sortBy?: keyof T, sortOrder: 'asc' | 'desc' = 'asc', width?: number, height?: number, filters?: { [key: string]: IFilter }): Observable<T[]> {
+
+  
+  getAll<T extends object>(
+    table: string,
+    sortBy?: keyof T,
+    sortOrder: 'asc' | 'desc' = 'asc',
+    pagination?: Pagination,
+    imageConfig?: ImageConfig,
+  ): Observable<T[]> {
     let query = this.supabase.from(table).select('*');
   
-    query = this.applyFilters(query, filters);
+    // Zastosowanie filtrów
+    query = this.applyFilters(query, pagination?.filters);
   
     // Sortowanie
     if (sortBy) {
       query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
+    }
+  
+    // Paginacja
+    if (pagination?.page !== undefined && pagination?.pageSize !== undefined) {
+      const from = (pagination.page - 1) * pagination.pageSize;
+      const to = from + pagination.pageSize - 1;
+      query = query.range(from, to);
     }
   
     return from(query).pipe(
@@ -41,12 +70,19 @@ export class BackendService {
         if (response.error) {
           throw new Error(response.error.message);
         }
-        return (response.data || []).map((item) =>
-          this.processImage(item, width, height)
-        );
+  
+        return (response.data || []).map((item) => {
+          // Sprawdzanie, czy element jest typu z obrazkiem
+          if ('image' in item || 'imageURL' in item) {
+            // TypeScript teraz wie, że mamy do czynienia z obiektem, który zawiera te pola
+            return this.processImage(item as WithImage<T>, imageConfig?.width, imageConfig?.height);
+          }
+          return item; // Zwrócenie elementu bez zmian, jeśli nie ma image/imageURL
+        });
       })
     );
   }
+  
   
 
   /**
@@ -166,7 +202,10 @@ export class BackendService {
     return `${imageUrl}?width=${width}&height=${height}`;
   }
 
-  private applyFilters<T>(query: any, filters?: { [key: string]: IFilter }): any {
+  private applyFilters<T>(
+    query: any,
+    filters?: { [key: string]: IFilter }
+  ): any {
     if (filters) {
       for (const [key, filter] of Object.entries(filters)) {
         if (filter.value !== undefined) {
@@ -198,6 +237,4 @@ export class BackendService {
     }
     return query;
   }
-  
-
 }

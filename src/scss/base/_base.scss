@@ -68,6 +68,19 @@ body {
 
   }
 
+  @media (min-width: $breakpoint-mid) {
+    .medium-screens {
+      display: none;
+    }
+    
+  }
+
+  @media (max-width: $breakpoint-mid) {
+    .mid-screens {
+      display: none;
+    }
+  }
+
   @media (min-width: $breakpoint-sm) {
     .small-screens {
       display: none;

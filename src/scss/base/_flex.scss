@@ -48,6 +48,10 @@
   .flex-column-start {
     @include flex-wrapper(column, flex-start, center);
   }
+
+  .flex-column-all-start {
+    @include flex-wrapper(column, flex-start, flex-start);
+  }
   
   .flex-column-end {
     @include flex-wrapper(column, flex-end, center);
@@ -55,6 +59,10 @@
   
   .flex-column-space-around {
     @include flex-wrapper(column, space-around, center);
+  }
+
+  .flex-column-around-end {
+    @include flex-wrapper(column, space-around, flex-end);
   }
   
   .flex-column-space-evenly {
@@ -81,6 +89,12 @@
     @include flex-wrapper(column, center, center);
   }
   
+  @media screen and (max-width: $breakpoint-mid) {
+    .flex-column-start-mid {
+      @include flex-wrapper(column, start, center);
+    }
+  }
+
   @media screen and (max-width: $breakpoint-sm) {
     .flex-column-sm {
       @include flex-wrapper(column, flex-start, flex-start);

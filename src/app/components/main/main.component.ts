@@ -29,7 +29,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     if (this.platformService.isBrowser) {     
       this.isMobile.set(window.innerWidth <= 768);  
-      this.backend.getAll<INews>('news', 'created_at', 'desc', 960, 502).subscribe({
+      this.backend.getAll<INews>('news', 'created_at', 'desc').subscribe({
         next: (news: INews[]) => {
           this.newsItems = news.map((item) => ({
             ...item,

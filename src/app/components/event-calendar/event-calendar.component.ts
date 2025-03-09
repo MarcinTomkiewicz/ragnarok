@@ -22,38 +22,47 @@ export class EventCalendarComponent implements OnInit {
   private readonly eventsService = inject(EventsService)
 
   ngOnInit() {
-    const today = new Date().toISOString().split('T')[0]; 
+    const today = new Date().toISOString().split('T')[0];
+  
+    // Filtry dla wydarzeń cyklicznych
     const recurringEvents$ = this.backendService.getAll<EventData>(
       'events',
       'eventDate',
       'asc',
-      undefined,
-      undefined,
       {
-        isActive: { value: true, operator: FilterOperator.EQ },
-        isRecurring: { value: true, operator: FilterOperator.EQ },
+        filters: {
+          isActive: { value: true, operator: FilterOperator.EQ },
+          isRecurring: { value: true, operator: FilterOperator.EQ },
+        }
       }
     );
-
+  
+    // Filtry dla wydarzeń pojedynczych
     const singleEvents$ = this.backendService.getAll<EventData>(
       'events',
       'eventDate',
       'asc',
-      undefined,
-      undefined,
       {
-        isActive: { value: true, operator: FilterOperator.EQ },
-        isRecurring: { value: false, operator: FilterOperator.EQ },
-        eventDate: { value: today, operator: FilterOperator.GTE },
+        filters: {
+          isActive: { value: true, operator: FilterOperator.EQ },
+          isRecurring: { value: false, operator: FilterOperator.EQ },
+          eventDate: { value: today, operator: FilterOperator.GTE },
+        }
       }
     );
-
-    forkJoin([recurringEvents$, singleEvents$]).subscribe(
-      ([recurring, single]) => {
-        this.recurringEvents = this.eventsService.processRecurringEvents(recurring, today);
-        this.singleEvents = single;
-      }
-      
-    );    
+  
+    // Łączenie wyników za pomocą forkJoin
+    forkJoin({
+      recurringEvents: recurringEvents$,
+      singleEvents: singleEvents$,
+    }).subscribe({
+      next: ({ recurringEvents, singleEvents }) => {
+        this.recurringEvents = recurringEvents;
+        this.singleEvents = singleEvents;
+      },
+      error: (err) => console.error('Błąd podczas pobierania wydarzeń:', err),
+      complete: () => console.log('Wszystkie wydarzenia zostały pobrane'),
+    });
   }
+  
 }

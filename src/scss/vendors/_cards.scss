@@ -1,0 +1,26 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.card-dark {
+    background-color: $bg-color;
+    border: $primary-color solid 1px;
+}
+
+.title-dark,
+.header-dark {
+  color: $primary-color;
+  @include responsive-font-size(18px);
+}
+
+.header-dark {
+  border-bottom: $primary-color solid 1px;
+}
+
+.card-text-dark {
+    color: $primary-color;
+    @include responsive-font-size(12px);
+
+    &.large {
+        @include responsive-font-size(18px)
+    }
+}

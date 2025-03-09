@@ -59,6 +59,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'offers-list',
+    loadComponent: () =>
+      import('./components/offers-list/offers-list.component').then(
+        (m) => m.OffersListComponent
+      ),
+  },
+  {
     path: '**',
     redirectTo: '',
   },

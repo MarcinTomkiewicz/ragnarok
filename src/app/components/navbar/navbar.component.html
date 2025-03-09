@@ -1,6 +1,6 @@
-<nav class="navbar">
+<nav class="nav-bar">
   <span class="navbar-brand">Ragnarok | Pokoje RPG</span>
-  <ul class="navbar-nav">
+  <ul class="nav-bar-nav flex-row-end">
     @for (link of menuLinks; track link.path) {
     <li>
       <a [routerLink]="link.path">{{ link.label }}</a>

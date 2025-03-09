@@ -41,7 +41,7 @@ export class TechStackComponent implements OnInit {
    */
   private loadTechStack(): void {
     this.loaderService.show();
-    this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc', 234, 234).subscribe({
+    this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc', undefined, {width: 234, height: 234}).subscribe({
       next: (data) => {
         this.techStack.set(data);
         this.isLoading.set(false);

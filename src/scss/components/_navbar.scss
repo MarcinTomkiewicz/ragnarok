@@ -1,13 +1,13 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-.navbar {
+.nav-bar {
   width: 100%;
   height: $navbar-height;
   z-index: 999;
   background-color: $primary-color;
   @include flex-wrapper(row, space-between, center);
-  padding: 0 1rem;
+  gap: 15px;
 
   // Ustawienie dla breakpointu $breakpoint-sm
   @media (max-width: $breakpoint-sm) {
@@ -25,6 +25,7 @@
     font-weight: bold;
     padding: 0;
     padding-left: 10px;
+    color: $bg-color;
     &:hover {
       border: unset;
     }
@@ -36,10 +37,15 @@
   }
 
   // Standardowe menu nawigacyjne
-  .navbar-nav {
+  .nav-bar-nav {
     list-style: none;
     text-align: center;
-    @include flex-wrapper(row);
+    margin: 0;
+
+    @media (max-width: $breakpoint-mid) {
+      flex-wrap: wrap;
+      height: 100%;
+    }
 
     @media (max-width: $breakpoint-sm) {
       justify-content: space-around;
@@ -70,16 +76,14 @@
 
   // Ukrycie menu dla mobilnych
   @media (max-width: $breakpoint-sm) {
-    .navbar-nav {
+    .nav-bar-nav {
       display: none;
     }
   }
 
-  // Przycisk otwierający offcanvas
   .offcanvas-toggle {
     background: none;
     border: none;
-    // font-size: 1.8rem;
     color: $bg-color;
     cursor: pointer;
     padding-right: 10px;

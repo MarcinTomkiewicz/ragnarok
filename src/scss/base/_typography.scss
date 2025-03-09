@@ -43,6 +43,10 @@ h6 {
   @include responsive-font-size(14px)
 }
 
+.font-size-large {
+  @include responsive-font-size(18px)
+}
+
 p {
   margin-bottom: 1.5rem;
   color: $text-color;
