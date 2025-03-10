@@ -14,7 +14,9 @@ export const routes: Routes = [
   {
     path: 'about',
     loadComponent: () =>
-      import('./components/about/about.component').then((m) => m.AboutComponent),
+      import('./components/about/about.component').then(
+        (m) => m.AboutComponent
+      ),
   },
   {
     path: 'services',
@@ -72,7 +74,7 @@ export const routes: Routes = [
         (m) => m.OfferDetailsComponent
       ),
   },
-  
+
   {
     path: '**',
     redirectTo: '',

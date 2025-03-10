@@ -12,7 +12,6 @@ import { SeoService } from '../../core/services/seo/seo.service';
   imports: [CommonModule, ServicesTableComponent],
   templateUrl: './services.component.html',
   styleUrl: './services.component.scss',
-  encapsulation: ViewEncapsulation.None,
 })
 export class ServicesComponent {
   private readonly modalService = inject(NgbModal);

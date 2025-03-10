@@ -13,13 +13,8 @@
 }
 
 .component-container {
-  @include flex-wrapper(row);
-  background-color: $primary-color;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
   flex-direction: row-reverse;
-  height: 100%;
-  gap: 10px;
+
 
   @media (max-width: $breakpoint-md) {
     flex-flow: column-reverse;

@@ -12,18 +12,6 @@
   }
 }
 
-.component-container {
-  @include flex-wrapper(column);
-  gap: 15px;
-  justify-content: flex-start;
-  width: 100%;
-  align-items: baseline;
-
-  @media (max-width: $breakpoint-md) and (orientation: landscape) {
-    height: auto;
-  }
-}
-
 p, .h2-contact, .form-label {
   color: $bg-color !important;
 }

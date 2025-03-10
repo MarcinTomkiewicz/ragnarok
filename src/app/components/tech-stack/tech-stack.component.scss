@@ -13,15 +13,6 @@
   }
 }
 
-.component-container {
-  @include flex-wrapper(column);
-  height: 100%;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-
   .description {
     @include responsive-font-size(10px);
 }

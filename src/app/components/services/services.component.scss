@@ -13,17 +13,17 @@
   }
 }
 
-.component-container {
-  @include flex-wrapper(column);
-  gap: 15px;
-  justify-content: flex-start;
+// .component-container {
+//   @include flex-wrapper(column);
+//   gap: 15px;
+//   justify-content: flex-start;
 
-  @media (max-width: $breakpoint-md) {
-    @media (orientation: landscape) {
-      height: auto;
-    }
-  }
-}
+//   @media (max-width: $breakpoint-md) {
+//     @media (orientation: landscape) {
+//       height: auto;
+//     }
+//   }
+// }
 
 .section-title {
   font-size: 2rem;
