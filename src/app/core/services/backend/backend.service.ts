@@ -50,15 +50,12 @@ export class BackendService {
   ): Observable<T[]> {
     let query = this.supabase.from(table).select('*');
   
-    // Zastosowanie filtrów
     query = this.applyFilters(query, pagination?.filters);
   
-    // Sortowanie
     if (sortBy) {
       query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
     }
   
-    // Paginacja
     if (pagination?.page !== undefined && pagination?.pageSize !== undefined) {
       const from = (pagination.page - 1) * pagination.pageSize;
       const to = from + pagination.pageSize - 1;
@@ -91,7 +88,7 @@ export class BackendService {
    * @param id - ID rekordu
    * @returns Observable z rekordem
    */
-  getById<T extends { image?: string; imageUrl?: string }>(
+  getById<T extends object>(
     table: string,
     id: string | number,
     width?: number,

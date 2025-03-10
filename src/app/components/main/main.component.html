@@ -14,13 +14,13 @@
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
-    [interval]="5000"
+    [interval]="000"
     class="d-flex w-100 mb-5"
   >
     @for (news of newsItems; track news.id) {
     <ng-template ngbSlide class="flex-center w-90">
       <div
-        class="flex-row news-wrapper"
+        class="flex-row-regular news-wrapper"
         [ngClass]="{ 'mobile-background': isMobile() }"
         [style.backgroundImage]="
           isMobile() ? 'url(' + news.imageURL + ')' : 'none'

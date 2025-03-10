@@ -54,6 +54,12 @@ body {
     width: 100%;
     margin: 0 auto;
   }
+
+  .component-container {
+    @include flex-wrapper(column, start, start);
+    height: 100%;
+    gap: 10px;
+  }
   
   @media (min-width: $breakpoint-sm) {
     .container {

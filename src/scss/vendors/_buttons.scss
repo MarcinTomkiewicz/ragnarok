@@ -82,29 +82,53 @@
       cursor: not-allowed;
     }
 
-  // &.btn-secondary-outline {
-  //   background-color: transparent;
-  //   border: 2px solid $border-color;
-  //   color: $text-color;
+    // &.btn-secondary-outline {
+    //   background-color: transparent;
+    //   border: 2px solid $border-color;
+    //   color: $text-color;
 
-  //   &:hover {
-  //     background-color: $border-color;
-  //     color: $bg-color;
-  //   }
+    //   &:hover {
+    //     background-color: $border-color;
+    //     color: $bg-color;
+    //   }
 
-  //   &:disabled {
-  //     background-color: transparent;
-  //     border-color: lighten($border-color, 20%);
-  //     color: lighten($text-color, 15%);
-  //     cursor: not-allowed;
-  //   }
-  // }
+    //   &:disabled {
+    //     background-color: transparent;
+    //     border-color: lighten($border-color, 20%);
+    //     color: lighten($text-color, 15%);
+    //     cursor: not-allowed;
+    //   }
+    // }
   }
   &.btn-plain {
     padding: unset;
     border: unset;
     &:hover {
       background-color: transparent;
+    }
+  }
+
+  &.btn-plain-light {
+    color: $text-color;
+  }
+
+  &.btn-outline-reverse {
+    @media (max-width: $breakpoint-mid) {
+      background-color: $bg-color;
+      border: 2px solid $border-color;
+      color: $text-color;
+
+      &:hover {
+        background-color: $border-color;
+        color: $bg-color;
+      }
+
+      &:disabled {
+        background-color: transparent;
+        border-color: lighten($border-color, 20%);
+        color: lighten($text-color, 15%);
+        cursor: not-allowed;
+      }
     }
   }
 }

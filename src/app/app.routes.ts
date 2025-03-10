@@ -66,6 +66,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'offer/:id',
+    loadComponent: () =>
+      import('./common/offer-details/offer-details.component').then(
+        (m) => m.OfferDetailsComponent
+      ),
+  },
+  
+  {
     path: '**',
     redirectTo: '',
   },

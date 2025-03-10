@@ -1,97 +1,95 @@
-<div class="flex-row-align-start flex-column-start-mid gap-2 mt-2 mx-2">
-  <div class="card card-dark mid-screens w-25">
-    <h2 class="card-header header-dark w-100 text-center">Kategorie</h2>
-    <div ngbAccordion class="mt-3 w-90">
-      @for (category of categories; track category.id) {
-      <div ngbAccordionItem class="accordion-dark">
-        <h2 ngbAccordionHeader>
-          <button ngbAccordionButton class="accordion-dark">
-            {{ category.name }}
-          </button>
-        </h2>
-        <div ngbAccordionCollapse class="accordion-dark">
-          @for (subcategory of subcategories; track subcategory.id) {
-          @if(subcategory.categoryId === category.id) {
-          <div ngbAccordionBody class="accordion-hover ps-4">
-            <div class="font-size-small">{{ subcategory.name }}</div>
+<div class="component-container">
+  <div class="flex-row-align-start flex-column-start-mid gap-2 w-100">
+    <div class="card card-dark mid-screens w-25">
+      <h2 class="card-header header-dark w-100 text-center">Kategorie</h2>
+      <app-category-list
+        [categories]="categories"
+        [subcategories]="subcategories"
+        (subcategorySelected)="onSubcategoryClick($event)"
+      ></app-category-list>
+    </div>
+
+    <div ngbDropdown class="medium-screens w-100">
+      <button
+        type="button"
+        class="btn btn-outline w-100"
+        id="categories"
+        ngbDropdownToggle
+      >
+        Kategorie
+      </button>
+      <div ngbDropdownMenu aria-labelledby="categories" class="w-100">
+        <app-category-list
+          [categories]="categories"
+          [subcategories]="subcategories"
+        ></app-category-list>
+      </div>
+    </div>
+
+    <div class="flex-column-all-start gap-3 h-100"
+    [ngClass]="{'w-100': !isMobile()}">
+      @for (offer of filteredOffers; track offer.title) {
+      <div
+        class="card card-dark card-350"
+        [ngClass]="{ 'mobile-background': isMobile(), 'w-100': !isMobile() }"
+        [style.backgroundImage]="
+          isMobile() ? 'url(' + offer.imageURL + ')' : 'none'
+        "
+      >
+        <div class="card-body flex-row w-100">
+          @if (!isMobile()) {
+          <div>
+            <img
+              [src]="offer.imageURL"
+              [alt]="offer.title"
+              width="260"
+              height="326"
+            />
           </div>
-          } }
+          }
+          <div
+            class="flex-column-align-end w-100 h-100 flex-column-space-around-xs"
+          >
+            <h3 class="card-title title-dark">{{ offer.title }}</h3>
+            <div class="card-text card-text-dark">
+              Kategorie:
+              {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
+              {{
+                getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY)
+              }}
+            </div>
+            <div
+              class="flex-column-align-end gap-2 flex-column-between-center-xs"
+            >
+              <div class="card-text card-text-dark large">
+                <strong>Cena:</strong> {{ offer.price }} PLN
+              </div>
+              <div class="card-text card-text-dark">
+                @if (offer.stock > 0) {
+                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                } @else {
+                <strong class="text-danger">Produkt niedostępny</strong>
+                }
+              </div>
+              <button
+                class="btn btn-primary w-75"
+                [routerLink]="['/offer', offer.id]"
+              >
+                Szczegóły
+              </button>
+
+              <button
+                class="btn btn-warning w-75"
+                [disabled]="!offer.buyNowLink || !offer.stock"
+                (click)="buyNow(offer.buyNowLink)"
+              >
+                Kup Teraz
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       }
     </div>
-  </div>
-
-  <div ngbDropdown class="medium-screens w-100">
-    <button
-      type="button"
-      class="btn btn-outline w-100"
-      id="dropdownBasic1"
-      ngbDropdownToggle
-    >
-      Kategorie
-    </button>
-    <div ngbDropdownMenu aria-labelledby="dropdownBasic1" class="w-100">
-      <div ngbAccordion class="mt-3">
-        @for (category of categories; track category.id) {
-        <div ngbAccordionItem class="accordion-dark">
-          <h2 ngbAccordionHeader>
-            <button ngbAccordionButton class="accordion-dark">
-              {{ category.name }}
-            </button>
-          </h2>
-          <div ngbAccordionCollapse class="accordion-dark">
-            @for (subcategory of subcategories; track subcategory.id) {
-            @if(subcategory.categoryId === category.id) {
-            <div ngbAccordionBody class="accordion-hover ps-4">
-              <div class="font-size-small">{{ subcategory.name }}</div>
-            </div>
-            } }
-          </div>
-        </div>
-        }
-      </div>
-    </div>
-  </div>
-
-  <div class="flex-column-all-start gap-3 h-100 w-100">
-    @for (offer of offers; track offer.title) {
-    <div class="card card-dark w-100" style="height: 452px">
-      <div class="card-body flex-row w-100">
-        <div>
-          <img
-            [src]="offer.imageUrl"
-            [alt]="offer.title"
-            width="341"
-            height="auto"
-          />
-        </div>
-        <div class="flex-column-align-end w-100 h-100 py-3">
-          <h3 class="card-title title-dark">{{ offer.title }}</h3>
-          <div class="flex-column-align-end gap-2">
-            <div class="card-text card-text-dark large">
-              <strong>Cena:</strong> {{ offer.price }} PLN
-            </div>
-            <div class="card-text card-text-dark">
-              @if (offer.stock > 0) {
-              <strong>Sztuk na stanie:</strong> {{ offer.stock }}
-              } @else {
-              <strong class="text-danger">Produkt niedostępny</strong>
-              }
-            </div>
-
-            <button class="btn btn-primary w-75">Szczegóły</button>
-            <button
-              class="btn btn-info w-75"
-              [disabled]="!offer.buyNowLink"
-              (click)="buyNow(offer.buyNowLink)"
-            >
-              Kup Teraz
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    }
   </div>
 </div>
