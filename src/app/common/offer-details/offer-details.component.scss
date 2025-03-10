@@ -1,0 +1,14 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+:host {
+    display: block;
+    min-height: 100vh;
+    height: auto;
+  
+    @media (max-width: $breakpoint-md) {
+      @media (orientation: landscape) {
+        height: auto;
+      }
+    }
+  }
