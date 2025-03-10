@@ -1,4 +1,4 @@
-<div ngbAccordion class="mt-3">
+<div ngbAccordion class="mt-3" [closeOthers]="true">
   @if(categories() && subcategories()) { @for (category of categories(); track
   category.id) {
   <div ngbAccordionItem class="accordion-dark">
@@ -10,7 +10,7 @@
     <div ngbAccordionCollapse class="accordion-dark">
       @for (subcategory of subcategories(); track subcategory.id) {
       @if(subcategory.categoryId === category.id) {
-      <button
+      <button ngbDropdownItem
         ngbAccordionBody
         class="btn btn-plain-light accordion-hover ps-4 w-100 text-start"
         (click)="onSubcategoryClick(subcategory.id)"
@@ -28,6 +28,7 @@
     <button
       class="btn btn-outline btn-outline-reverse w-100 mb-2"
       (click)="onSubcategoryClick(null)"
+      ngbDropdownItem
     >
       Pokaż wszystkie
     </button>
