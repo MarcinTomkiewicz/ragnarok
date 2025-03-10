@@ -1,17 +1,25 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
 body {
-  font-size: $font-size-base;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: "Modern Antiqua", Georgia, serif;
+  font-display: swap;
+  background-color: $bg-color;
+  color: $text-color;
+  @include responsive-font-size(14px);
+}
+
+/* Resetowanie niechcianych stylów dla wszystkich elementów */
+* {
+  box-sizing: border-box;
 }
 
 @media (max-width: $breakpoint-sm) {
   body {
-    font-size: $font-size-sm;
     padding-top: $navbar-height!important;
-  }
-}
-
-@media (min-width: $breakpoint-lg) {
-  body {
-    font-size: $font-size-lg;
   }
 }
 
@@ -39,11 +47,18 @@ body {
   * {
     scrollbar-color: $primary-color $bg-color;
     scrollbar-width: thin;
+    font-display: swap;
   }
 
   .container {
     width: 100%;
     margin: 0 auto;
+  }
+
+  .component-container {
+    @include flex-wrapper(column, start, start);
+    height: 100%;
+    gap: 10px;
   }
   
   @media (min-width: $breakpoint-sm) {
@@ -55,5 +70,31 @@ body {
   @media (min-width: $breakpoint-lg) {
     .container {
       width: $container-width-lg;
+    }
+
+  }
+
+  @media (min-width: $breakpoint-mid) {
+    .medium-screens {
+      display: none;
+    }
+    
+  }
+
+  @media (max-width: $breakpoint-mid) {
+    .mid-screens {
+      display: none;
+    }
+  }
+
+  @media (min-width: $breakpoint-sm) {
+    .small-screens {
+      display: none;
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    .large-screens {
+      display: none;
     }
   }

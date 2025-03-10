@@ -1,0 +1,23 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.accordion-dark, .accordion-button {
+    background-color: $bg-color;
+    border: $primary-color solid 1px;
+    color: $primary-color;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: $bg-color;
+    border: $primary-color solid 1px;
+    color: $primary-color;
+}
+
+.accordion-button::after {
+    filter: $icon-filter;
+}
+
+.accordion-hover:hover {
+    background-color: $primary-color;
+    color: $bg-color;
+}

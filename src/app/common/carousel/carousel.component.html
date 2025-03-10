@@ -3,8 +3,7 @@
   [showNavigationArrows]="showNavigation()" 
   [showNavigationIndicators]="false" 
   [interval]="0" 
-  class="tech-carousel" 
-  style="display: flex;"
+  class="tech-carousel d-flex" 
 >
 @for (group of groupedItems(); track group[0].id) {
     <ng-template ngbSlide class="w-100">
@@ -22,7 +21,7 @@
                   }
                 </p>
                 @if (item.ctaButton) {
-                  <a [href]="item.ctaButton" target="_blank" class="btn btn-primary">Visit</a>
+                  <a [href]="item.ctaButton" target="_blank" rel="noopener" class="btn btn-primary">Visit</a>
                 }
               </div>
             </div>

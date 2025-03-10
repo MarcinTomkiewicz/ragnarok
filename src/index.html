@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
   <head>
     <meta charset="utf-8" />
-    <title>
-      Ragnarok - pokoje do sesji RPG | Nowy wymiar gier fabularnych w Poznaniu
-    </title>
-    <base href="/" />
+    <title>Ragnarok - pokoje do sesji RPG w Poznaniu</title>
+    <base href="." />
+    <link
+      rel="preconnect"
+      href="https://iqkltypxuzmchvxuzlcd.supabase.co"
+      crossorigin="anonymous"
+    />
+    <link rel="dns-prefetch" href="https://iqkltypxuzmchvxuzlcd.supabase.co" />
+    <link rel="preload" as="image" href="ragnarok.webp" type="image/webp" />
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/favicon.ico" />
@@ -14,7 +19,7 @@
     <link rel="canonical" href="https://ragnarok-rooms.pl/" />
     <meta
       name="keywords"
-      content="RPG, rpg, Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, klimatyczne miejsce, nordycki klimat, RPG Poznań, przestrzeń do RPG, Poznań"
+      content="RPG, rpg, rpg Poznań, Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, RPG Poznań, przestrzeń do RPG, Poznań"
     />
     <meta
       name="description"
@@ -55,47 +60,14 @@
       name="twitter:image"
       content="https://ragnarok-rooms.pl/ragnarok.webp"
     />
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=AW-16834781429"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
 
-      gtag("config", "AW-16834781429");
-    </script>
-    <!-- Event snippet for Kontakt conversion page -->
-    <script>
-      gtag("event", "conversion", {
-        send_to: "AW-16834781429/ONpJCPGnlpUaEPXBuds-",
-      });
-    </script>
-    <script type="application/ld+json">
-      {
-        "@context": "http://schema.org",
-        "@type": "LocalBusiness",
-        "name": "Ragnarok Rooms",
-        "image": "https://ragnarok-rooms.pl/ragnarok.webp",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Dolna Wilda 16A",
-          "addressLocality": "Poznań",
-          "addressCountry": "PL"
-        },
-        "telephone": "+48 531 616 491",
-        "url": "https://ragnarok-rooms.pl",
-        "sameAs": [
-          "https://www.facebook.com/ragnarokrooms",
-          "https://www.instagram.com/ragnarokrooms"
-        ]
-      }
-    </script>
-    <!-- Meta Pixel Code -->
+    <!-- Google Tag Manager (preload, ale bez wykonania kodu) -->
+    <link
+      rel="preload"
+      as="script"
+      href="https://www.googletagmanager.com/gtm.js?id=GTM-P5FPPLDC"
+    />
+
     <script>
       !(function (f, b, e, v, n, t, s) {
         if (f.fbq) return;
@@ -123,16 +95,75 @@
       fbq("init", "3926612600944622");
       fbq("track", "PageView");
     </script>
-    <!-- End Meta Pixel Code -->
   </head>
-  <noscript
-    ><img
-      height="1"
-      width="1"
-      style="display: none"
-      src="https://www.facebook.com/tr?id=3926612600944622&ev=PageView&noscript=1"
-  /></noscript>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-P5FPPLDC"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+        title="Google Tag Manager"
+      ></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <app-root></app-root>
+
+    <!-- Google Maps API -->
+    <!-- <script
+      loading="async"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=places"
+    ></script> -->
+
+    <script>
+      (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+        v: "weekly",
+        key: "AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs"
+      });
+    </script>
+
+    <!-- Google Tag Manager -->
+    <script
+      defer
+      src="https://www.googletagmanager.com/gtm.js?id=GTM-P5FPPLDC"
+    ></script>
+
+    <!-- Google Analytics -->
+    <script
+      defer
+      src="https://www.googletagmanager.com/gtag/js?id=AW-16834781429"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "AW-16834781429");
+    </script>
+
+    <!-- JSON-LD Schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Ragnarok Rooms",
+        "image": "https://ragnarok-rooms.pl/ragnarok.webp",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Dolna Wilda 16A",
+          "addressLocality": "Poznań",
+          "addressCountry": "PL"
+        },
+        "telephone": "+48 531 616 491",
+        "url": "https://ragnarok-rooms.pl",
+        "sameAs": [
+          "https://www.facebook.com/ragnarokrooms",
+          "https://www.instagram.com/ragnarokrooms"
+        ]
+      }
+    </script>
   </body>
 </html>

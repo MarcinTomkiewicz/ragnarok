@@ -1,37 +1,169 @@
 <main>
+  @if (isLoading() && newsItems.length <= 0) {
+  <div class="skeleton-wrapper">
+    <div class="skeleton skeleton-image"></div>
+    <div class="skeleton-content-wrapper">
+      <div class="skeleton skeleton-content"></div>
+      <div class="skeleton skeleton-content"></div>
+      <div class="skeleton skeleton-content"></div>
+      <div class="skeleton skeleton-content"></div>
+    </div>
+  </div>
+  } @if (newsItems.length > 0 && !isLoading()) {
   <ngb-carousel
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
-    [interval]="0"
-    class="d-flex w-100"
+    [interval]="000"
+    class="d-flex w-100 mb-5"
   >
     @for (news of newsItems; track news.id) {
-      <ng-template ngbSlide class="flex-center" style="width: 90%">
-        <div
-          class="flex-row news-wrapper"
-          [ngClass]="{ 'mobile-background': isMobile }"
-          [style.backgroundImage]="isMobile ? 'url(' + news.imageURL + ')' : 'none'"
-        >
-          @if (!isMobile) {
-            <div class="image-container">
-              <img 
-                [ngSrc]="news.imageURL" 
-                [alt]="news.header" 
-                width="597"
-                height="371"
-                priority />
-            </div>
-          }
-          <div class="flex-column-between content">
-            <h2>{{ news.header }}</h2>
-            <div>{{ news.description }}</div>
-            <button class="btn btn-primary align-self-center mt-2" (click)="navigate(news.link)">
-              {{ news.linkDescription }}
-            </button>
-          </div>
+    <ng-template ngbSlide class="flex-center w-90">
+      <div
+        class="flex-row-regular news-wrapper"
+        [ngClass]="{ 'mobile-background': isMobile() }"
+        [style.backgroundImage]="
+          isMobile() ? 'url(' + news.imageURL + ')' : 'none'
+        "
+      >
+        @if (!isMobile()) {
+        <div class="image-container">
+          <img
+            [ngSrc]="news.imageURL"
+            [alt]="news.header"
+            width="597"
+            height="371"
+            [attr.loading]="newsItems.indexOf(news) === 0 ? 'eager' : 'lazy'"
+            priority
+          />
         </div>
-      </ng-template>
+        }
+        <div class="flex-column-between content">
+          <h2>{{ news.header }}</h2>
+          <div>{{ news.description }}</div>
+          @if (news.link) {
+          <button
+            class="btn btn-primary align-self-center mt-2"
+            (click)="navigate(news.link)"
+          >
+            {{ news.linkDescription }}
+          </button>
+        }
+        </div>
+      </div>
+    </ng-template>
     }
   </ngb-carousel>
+  }
+  <div class="row">
+    <div class="mb-4">
+      <h3>Gry fabularne – świat wyobraźni na wyciągnięcie ręki</h3>
+      <div>
+        Gry fabularne (RPG) to wyjątkowy sposób na spędzanie wolnego czasu.
+        Pozwalają wcielić się w bohaterów i przeżywać niezwykłe przygody w
+        światach fantasy, science fiction, horroru czy innych. Każda sesja RPG
+        to interaktywna opowieść, w której gracze podejmują decyzje kształtujące
+        historię. Popularność gier fabularnych rośnie, a w Poznaniu coraz więcej
+        osób szuka miejsc, gdzie mogą spotkać się ze znajomymi na sesję RPG.
+      </div>
+      <div class="mt-3">
+        W grach fabularnych kluczową rolę odgrywa Mistrz Gry – osoba, która
+        prowadzi sesję, opowiada o świecie i wciela się w postacie niezależne.
+        Reszta uczestników tworzy swoje postacie i odgrywa ich rolę w narracji.
+        Wspólne przeżywanie historii, budowanie postaci i podejmowanie decyzji
+        sprawiają, że RPG to świetna forma rozrywki, która rozwija wyobraźnię i
+        umiejętności interpersonalne.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h3>Ragnarok – idealne miejsce na sesje RPG w Poznaniu</h3>
+      <div>
+        Wiele osób gra w RPG w domowym zaciszu, ale często brakuje im
+        odpowiednich warunków – wygodnej przestrzeni, odpowiedniej atmosfery i
+        ciszy potrzebnej do skupienia. Właśnie dlatego powstał *Ragnarok* –
+        miejsce stworzone specjalnie dla fanów gier fabularnych. Tutaj możesz
+        wynająć salę na sesję RPG, spotkać innych miłośników tego hobby i
+        cieszyć się niczym nie zakłóconą immersją.
+      </div>
+      <div class="mt-3">
+        Nasze pomieszczenia są dostosowane do potrzeb graczy – zapewniają
+        wygodne miejsca do siedzenia, duże stoły na podręczniki i kostki oraz
+        odpowiednie oświetlenie, które sprzyja długim sesjom. Wynajem sali w
+        *Ragnaroku* to świetna opcja dla drużyn, które chcą zagrać w spokojnym
+        miejscu i w pełni skupić się na rozgrywce.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h3>Komfort i klimat sprzyjający grze</h3>
+      <div>
+        Wiemy, jak ważna jest atmosfera podczas sesji RPG. Dlatego nasze salki
+        są zaprojektowane tak, aby tworzyć klimat sprzyjający wcielaniu się w
+        postacie i przeżywaniu przygód. Ciepłe oświetlenie, wygodne meble i
+        odpowiednia akustyka pomagają w pełni zanurzyć się w grze. Dodatkowo
+        każda sala ma przestrzeń na rozłożenie map, podręczników i innych
+        akcesoriów niezbędnych podczas sesji.
+      </div>
+      <div class="mt-3">
+        W *Ragnaroku* można wynająć salę na godziny, co pozwala dopasować czas
+        gry do potrzeb drużyny. Nie trzeba martwić się o hałas czy
+        przeszkadzających domowników – tutaj liczy się tylko sesja RPG i dobra
+        zabawa. To idealne miejsce zarówno dla doświadczonych graczy, jak i
+        tych, którzy dopiero zaczynają swoją przygodę z grami fabularnymi.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h3>Sesje RPG dla każdego – niezależnie od doświadczenia</h3>
+      <div>
+        Wiele osób chciałoby spróbować gier fabularnych, ale nie wie, od czego
+        zacząć. W *Ragnaroku* pomagamy również nowicjuszom. Jeśli nie masz
+        jeszcze doświadczenia, ale chcesz spróbować swoich sił w RPG, możemy
+        pomóc w znalezieniu grupy lub Mistrza Gry, który poprowadzi pierwszą
+        sesję.
+      </div>
+      <div class="mt-3">
+        Doświadczeni Mistrzowie Gry mogą wynająć salę na prowadzenie sesji dla
+        nowych graczy lub testowanie własnych scenariuszy. W *Ragnaroku*
+        regularnie odbywają się otwarte sesje, na które można się zapisać,
+        poznać nowych ludzi i odkryć różne systemy RPG – od klasycznego
+        *Dungeons & Dragons*, *Warhammera*, *Zew Cthulhu*, *Wampir: Maskarada*,
+        *Jedyny Pierścień*, po mniej znane, ale równie ciekawe gry fabularne.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <h3>Dlaczego warto wybrać Ragnarok?</h3>
+      <div>
+        *Ragnarok* to nie tylko przestrzeń do gry, ale także miejsce, które
+        wspiera społeczność RPG w Poznaniu. Oferujemy:
+        <ul>
+          <li>
+            Wygodne sale do sesji RPG – dostosowane do różnych potrzeb i liczby
+            graczy.
+          </li>
+          <li>
+            Możliwość rezerwacji na godziny – opłata dotyczy całej salki,
+            niezależnie od liczby osób, a płacisz tylko za czas, który
+            rzeczywiście wykorzystasz.
+          </li>
+          <li>
+            Klimatyczne wyposażenie – pomagające wczuć się w grę i stworzyć
+            odpowiednią atmosferę.
+          </li>
+          <li>
+            Wsparcie dla początkujących – jeśli dopiero zaczynasz, pomożemy Ci
+            znaleźć grupę lub Mistrza Gry.
+          </li>
+        </ul>
+      </div>
+      <div class="mt-3">
+        Chcemy, aby RPG były dostępne dla każdego – niezależnie od poziomu
+        doświadczenia. Jeśli szukasz miejsca, gdzie możesz regularnie spotykać
+        się ze swoją drużyną, prowadzić kampanie RPG i cieszyć się grami
+        fabularnymi w komfortowych warunkach, *Ragnarok* to idealne rozwiązanie.
+      </div>
+    </div>
+  </div>
 </main>

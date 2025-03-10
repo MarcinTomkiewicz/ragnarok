@@ -1,10 +1,32 @@
-<nav class="navbar">
-  <a class="navbar-brand" href="#">Ragnarok | Pokoje RPG</a>
-  <ul class="navbar-nav">
-    <li><a href="/about" id="about-link">O nas</a></li>
-    <li><a href="/services" id="services-link">Cennik</a></li>
-    <li><a href="/tech-stack" id="tech-stack-link">Nasz zespół</a></li>
-    <li><a href="/our-rooms" id="tech-stack-link">Pomieszczenia</a></li>
-    <li><a href="/contact" id="contact-link">Kontakt</a></li>
+<nav class="nav-bar">
+  <span class="navbar-brand">Ragnarok | Pokoje RPG</span>
+  <ul class="nav-bar-nav flex-row-end">
+    @for (link of menuLinks; track link.path) {
+    <li>
+      <a [routerLink]="link.path">{{ link.label }}</a>
+    </li>
+    }
   </ul>
+
+  <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
+    <img
+      ngSrc="icons/d20.svg"
+      width="40"
+      height="40"
+      alt="Kostka k20"
+      class="icon-filter-dark d20-icon"
+    />
+  </button>
 </nav>
+
+<ng-template #offcanvas let-close="close">
+  <button class="close-btn" (click)="close()">✖</button>
+  <h2>Menu</h2>
+  <ul>
+    @for (link of menuLinks; track link.path) {
+    <li>
+      <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
+    </li>
+    }
+  </ul>
+</ng-template>

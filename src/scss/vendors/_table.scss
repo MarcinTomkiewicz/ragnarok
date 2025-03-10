@@ -1,0 +1,32 @@
+@import "abstracts/mixins";
+
+.td-10 {
+  @include td-width(10%);
+}
+
+.td-15 {
+  @include td-width(15%);
+}
+
+.td-20 {
+  @include td-width(20%);
+}
+
+.td-40 {
+  @include td-width(40%);
+}
+
+.td-60 {
+  @include td-width(60%);
+}
+
+@media (max-width: $breakpoint-lg) {
+  th.large-screens,
+  td.large-screens {
+    display: none;
+  }
+}
+
+.table.td-light > :not(caption) > * > * {
+    color: $text-color;
+  }

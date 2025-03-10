@@ -1,28 +1,29 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-:host,
-main,
-.carousel-item,
-.carousel-item.active,
-.carousel-item-next,
-.carousel-item-prev {
+:host {
   @include flex-wrapper(row, center, center);
+}
+
+main {
+  @include flex-wrapper(column, center, center);
+}
+.carousel-item {
+  @include flex-wrapper(row, center, center);
+  width: 100%;
 }
 
 .news-wrapper {
   gap: 1rem;
   margin: auto;
   width: 90%;
+  position: relative;
+  min-height: 371px;
 
   .image-container {
-    width: 50%;
-    overflow: hidden;
-
-    img {
-      object-fit: contain;
-      object-position: center;
-    }
+    width: 597px;
+    height: 371px;
+    position: relative;
   }
 
   .content {
@@ -33,17 +34,13 @@ main,
   &.mobile-background {
     background-size: cover;
     background-position: top;
-    position: relative;
     border-radius: 5px;
-    min-height: 220px;
+    height: 400px;
 
     &::before {
       content: "";
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0, 0, 0, 0.4);
       z-index: 1;
       border-radius: 5px;
@@ -56,28 +53,92 @@ main,
       padding: 10px;
     }
   }
+}
 
- 
-  @media (max-width: $breakpoint-md) {
-    .image-container {
-      width: 100%;
-    }
-  }
-
+.skeleton-wrapper {
+  gap: 1rem;
+  margin: auto;
+  width: 90%;
+  height: 371px;
+  margin-bottom: 3rem;
+  @include flex-wrapper(row, space-between, center);
   @media (max-width: $breakpoint-sm) {
-    .content {
-      border-radius: 5px;
-    }
+    width: 95%;
+    height: 400px;
+  }
+  @media (max-width: $breakpoint-xs) {
+    width: 95%;
+    height: 400px;
+  }
+}
 
-    .image-container {
-      display: none;
-    }
+.skeleton-content-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 50%;
+  padding: 10px;
+  @include flex-wrapper(column, space-between, center);
+  @media (max-width: $breakpoint-sm) {
+    display: none;
+  }
+}
+
+.skeleton {
+  background-color: #ccc;
+  margin: 10px 0;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-image {
+  width: 597px;
+  height: 371px;
+  border-radius: 10px;
+  @media (max-width: $breakpoint-sm) {
+    width: 95%;
+    max-height: 400px;
+  }
+  @media (max-width: $breakpoint-xs) {
+    width: 95%;
+    max-height: 400px;
+  }
+}
+
+.skeleton-content {
+  width: 80%;
+  height: 20px;
+  border-radius: 5px;
+
+  &:first-of-type {
+    height: 40px;
+    margin-bottom: 25px;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #ccc;
+  }
+  50% {
+    background-color: #ddd;
+  }
+  100% {
+    background-color: #ccc;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .image-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .content {
+    border-radius: 5px;
   }
 
-  @media (max-width: $breakpoint-xs) {
-    .image-container {
-      width: 100%;
-    }
+  .image-container {
+    display: none;
   }
 }
 

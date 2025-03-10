@@ -1,105 +1,130 @@
 @import "abstracts/mixins";
- 
-  .flex-row {
-    @include flex-wrapper(row, space-between, center);
+
+.flex-row-regular {
+  @include flex-wrapper(row, space-between, center);
+}
+
+.flex-row-center {
+  @include flex-wrapper(row, center, center);
+}
+
+.flex-row-start {
+  @include flex-wrapper(row, flex-start, center);
+}
+
+.flex-row-end {
+  @include flex-wrapper(row, flex-end, center);
+}
+
+.flex-row-space-around {
+  @include flex-wrapper(row, space-around, center);
+}
+
+.flex-row-space-evenly {
+  @include flex-wrapper(row, space-evenly, center);
+}
+
+.flex-row-align-start {
+  @include flex-wrapper(row, space-between, flex-start);
+}
+
+.flex-row-align-end {
+  @include flex-wrapper(row, space-between, flex-end);
+}
+
+.flex-row-align-stretch {
+  @include flex-wrapper(row, space-between, stretch);
+}
+
+.flex-row-align-baseline {
+  @include flex-wrapper(row, space-between, baseline);
+}
+
+// Column
+.flex-column-between {
+  @include flex-wrapper(column, space-between, center);
+}
+
+.flex-column-start {
+  @include flex-wrapper(column, flex-start, center);
+}
+
+.flex-column-all-start {
+  @include flex-wrapper(column, flex-start, flex-start);
+}
+
+.flex-column-end {
+  @include flex-wrapper(column, flex-end, center);
+}
+
+.flex-column-space-around {
+  @include flex-wrapper(column, space-around, center);
+}
+
+.flex-column-around-end {
+  @include flex-wrapper(column, space-around, flex-end);
+}
+
+.flex-column-space-evenly {
+  @include flex-wrapper(column, space-evenly, center);
+}
+
+.flex-column-align-start {
+  @include flex-wrapper(column, space-between, flex-start);
+}
+
+.flex-column-align-end {
+  @include flex-wrapper(column, space-between, flex-end);
+}
+
+.flex-column-align-stretch {
+  @include flex-wrapper(column, space-between, stretch);
+}
+
+.flex-column-align-baseline {
+  @include flex-wrapper(column, space-between, baseline);
+}
+
+.flex-column-center {
+  @include flex-wrapper(column, center, center);
+}
+
+@media screen and (max-width: $breakpoint-mid) {
+  .flex-column-start-mid {
+    @include flex-wrapper(column, start, center);
+  }
+}
+
+@media screen and (max-width: $breakpoint-sm) {
+  .flex-column-sm {
+    @include flex-wrapper(column, flex-start, flex-start);
   }
 
-  .flex-row-center {
-    @include flex-wrapper(row, center, center);
-  }
-  
-  .flex-row-start {
-    @include flex-wrapper(row, flex-start, center);
-  }
-  
-  .flex-row-end {
-    @include flex-wrapper(row, flex-end, center);
-  }
-  
-  .flex-row-space-around {
-    @include flex-wrapper(row, space-around, center);
-  }
-  
-  .flex-row-space-evenly {
-    @include flex-wrapper(row, space-evenly, center);
-  }
-  
-  .flex-row-align-start {
-    @include flex-wrapper(row, space-between, flex-start);
-  }
-  
-  .flex-row-align-end {
-    @include flex-wrapper(row, space-between, flex-end);
-  }
-  
-  .flex-row-align-stretch {
-    @include flex-wrapper(row, space-between, stretch);
-  }
-  
-  .flex-row-align-baseline {
-    @include flex-wrapper(row, space-between, baseline);
-  }
-  
-  // Column
-  .flex-column-between {
-    @include flex-wrapper(column, space-between, center);
-  }
-  
-  .flex-column-start {
-    @include flex-wrapper(column, flex-start, center);
-  }
-  
-  .flex-column-end {
-    @include flex-wrapper(column, flex-end, center);
-  }
-  
-  .flex-column-space-around {
-    @include flex-wrapper(column, space-around, center);
-  }
-  
-  .flex-column-space-evenly {
-    @include flex-wrapper(column, space-evenly, center);
-  }
-  
-  .flex-column-align-start {
-    @include flex-wrapper(column, space-between, flex-start);
-  }
-  
-  .flex-column-align-end {
-    @include flex-wrapper(column, space-between, flex-end);
-  }
-  
-  .flex-column-align-stretch {
-    @include flex-wrapper(column, space-between, stretch);
-  }
-  
-  .flex-column-align-baseline {
-    @include flex-wrapper(column, space-between, baseline);
-  }
-
-  .flex-column-center {
+  .flex-column-center-sm {
     @include flex-wrapper(column, center, center);
   }
-  
-  @media screen and (max-width: $breakpoint-sm) {
-    .flex-column-sm {
-      @include flex-wrapper(column, flex-start, flex-start);
-    }
 
-    .flex-column-center-sm {
-        @include flex-wrapper(column, center, center);
-      }
-  
-    .flex-column-space-around-sm {
-      @include flex-wrapper(column, space-around, center);
-    }
-  
-    .flex-column-space-evenly-sm {
-      @include flex-wrapper(column, space-evenly, center);
-    }
-  
-    .flex-column-end-sm {
-      @include flex-wrapper(column, flex-end, flex-start);
-    }
+  .flex-column-space-around-sm {
+    @include flex-wrapper(column, space-around, center);
   }
-  
+
+  .flex-column-space-evenly-sm {
+    @include flex-wrapper(column, space-evenly, center);
+  }
+
+  .flex-column-end-sm {
+    @include flex-wrapper(column, flex-end, flex-start);
+  }
+
+  .flex-column-start-center-sm {
+    @include flex-wrapper(column, flex-start, center);
+  }
+}
+@media (max-width: $breakpoint-xs) {
+  .flex-column-space-around-xs {
+    @include flex-wrapper(column, space-around, center);
+  }
+  .flex-column-between-center-xs {
+    @include flex-wrapper(column, space-between, center);
+  }
+}

@@ -3,7 +3,6 @@
 
 :host {
   display: block;
-  min-height: auto;
   height: 100%;
 
   @media (max-width: $breakpoint-md) {

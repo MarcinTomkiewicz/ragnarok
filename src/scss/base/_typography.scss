@@ -1,3 +1,6 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
 h1,
 h2,
 h3,
@@ -21,7 +24,7 @@ h3 {
 }
 
 h2 {
-  @include responsive-font-size(22px);
+  @include responsive-font-size(20px);
 }
 
 h1 {
@@ -30,6 +33,18 @@ h1 {
 
 h6 {
   @include responsive-font-size(12px);
+}
+
+.font-size-small {
+  @include responsive-font-size(12px)
+}
+
+.font-size-medium {
+  @include responsive-font-size(14px)
+}
+
+.font-size-large {
+  @include responsive-font-size(18px)
 }
 
 p {

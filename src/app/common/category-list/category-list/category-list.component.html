@@ -1,0 +1,35 @@
+<div ngbAccordion class="mt-3">
+  @if(categories() && subcategories()) { @for (category of categories(); track
+  category.id) {
+  <div ngbAccordionItem class="accordion-dark">
+    <h2 ngbAccordionHeader>
+      <button ngbAccordionButton class="accordion-dark">
+        {{ category.name }}
+      </button>
+    </h2>
+    <div ngbAccordionCollapse class="accordion-dark">
+      @for (subcategory of subcategories(); track subcategory.id) {
+      @if(subcategory.categoryId === category.id) {
+      <button
+        ngbAccordionBody
+        class="btn btn-plain-light accordion-hover ps-4 w-100 text-start"
+        (click)="onSubcategoryClick(subcategory.id)"
+        onkeydown=""
+      >
+        <div class="font-size-small">
+          {{ subcategory.name }}
+        </div>
+      </button>
+      } }
+    </div>
+  </div>
+  } }   
+  <div class="text-center mt-3">
+    <button
+      class="btn btn-outline btn-outline-reverse w-100 mb-2"
+      (click)="onSubcategoryClick(null)"
+    >
+      Pokaż wszystkie
+    </button>
+  </div>
+</div>

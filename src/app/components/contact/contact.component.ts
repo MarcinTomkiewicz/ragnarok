@@ -1,101 +1,132 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject, HostListener, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA, Renderer2 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { GoogleMapsModule } from '@angular/google-maps';
 import { NgbModal, NgbProgressbarModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
-import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { take } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { OverlayService } from '../../core/services/overlay.service';
+import { PlatformService } from '../../core/services/platform/platform.service';
 import { SendGridService } from '../../core/services/send-grid/send-grid.service';
-import { BackendService } from '../../core/services/backend/backend.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
-declare var google: any;
+declare const google: any;
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbToastModule, NgbProgressbarModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgbToastModule,
+    NgbProgressbarModule,
+    GoogleMapsModule,
+    NgOptimizedImage
+  ],
   templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss']
+  styleUrls: ['./contact.component.scss'],
 })
-export class ContactComponent implements OnInit, OnDestroy {
-  contactForm: FormGroup;
+export class ContactComponent implements OnDestroy {
+  // Services
   private readonly modalService = inject(NgbModal);
   private readonly overlayService = inject(OverlayService);
-  private readonly http = inject(HttpClient);
-  private readonly backendService = inject(BackendService);
   private readonly sendGridService = inject(SendGridService);
   private readonly fb = inject(FormBuilder);
-  private readonly renderer = inject(Renderer2);
+  private readonly platformService = inject(PlatformService);
+  private readonly seo = inject(SeoService);
+
+  // Google Maps options and markers
+  options: google.maps.MapOptions = {
+    mapId: 'Ragnarok',
+    center: { lat: 52.39693009077769, lng: 16.92630935511027 },
+    zoom: 17,
+  };
+
+  markerPosition: google.maps.LatLngLiteral = { lat: 52.39693009077769, lng: 16.92630935511027 };
+  markerOptions: google.maps.marker.AdvancedMarkerElementOptions = {
+    position: this.markerPosition,
+    content: this.createIcon(),
+  };
+
+  // Form properties
   topics = [
     'Rezerwacja salki',
     'Zapytanie o towar',
     'Organizacja eventu',
-    'Ogólne'
+    'Ogólne',
   ];
-  isSmallScreen = false;
-  showToast = false;
-  toastMessage = '';
-  toastType: 'success' | 'error' = 'success';
-  progress = 100;
+
+  contactForm = this.fb.group({
+    topic: [this.topics[0]],
+    firstName: ['', Validators.required],
+    lastName: ['', Validators.required],
+    company: [''],
+    email: ['', [Validators.required, Validators.email]],
+    phone: ['', Validators.required],
+    message: ['', Validators.required],
+  });
+
+  // UI properties (signals)
+  isSmallScreen = signal(false);
+  showToast = signal(false);
+  toastMessage = signal('');
+  toastType = signal<'success' | 'error'>('success');
+  progress = signal(100);
   progressInterval: any;
-  toastDuration = 5000;
 
-  constructor() {
-    this.contactForm = this.fb.group({
-      topic: [this.topics[0]],
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      company: [''],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', Validators.required],
-      message: ['', Validators.required],
+  // Lifecycle hooks
+  ngOnInit(): void {
+    this.seo.setTitleAndMeta('Kontakt');
+    if (this.platformService.isBrowser) {
+      this.isSmallScreen.set(window.innerWidth < 576);
+      this.observeResize();
+    }
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.progressInterval);
+  }
+
+  // Methods for handling window resizing
+  private observeResize(): void {
+    if (!this.platformService.isBrowser) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      this.isSmallScreen.set(window.innerWidth < 576);
     });
+    resizeObserver.observe(document.body);
   }
 
-  ngOnInit() {
-    this.checkScreenSize();
-    window.addEventListener('resize', this.handleResize.bind(this));
-    const script = this.renderer.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=maps,marker&v=beta&loading=async&callback=initMap';
-    script.async = true;
-    this.renderer.appendChild(document.body, script);
-  
-    // Ustaw globalną funkcję initMap, jeśli jest wymagana
-    (window as any).initMap = () => {
-      console.log('Google Maps API załadowane.');
-    };
+  // Map Icon creation (only works on the client-side)
+  private createIcon(): HTMLElement | null {
+    if (!this.platformService.isBrowser) return null;
+
+    const img = document.createElement('img');
+    img.src = 'ragnarok.webp';
+    img.style.width = '50px';
+    img.style.height = '50px';
+    img.style.borderRadius = '100%';
+    return img;
   }
 
-  ngOnDestroy() {
-    window.removeEventListener('resize', this.handleResize.bind(this));
-  }
-
-  private handleResize() {
-    this.checkScreenSize();
-  }
-
-  private checkScreenSize() {
-    this.isSmallScreen = window.innerWidth < 576;
-  }
-
-  openModal() {
-    if (this.isSmallScreen) {
+  // Modal handling for small screens
+  openModal(): void {
+    if (this.isSmallScreen()) {
       const modalRef = this.modalService.open(MessageModalComponent, {
         size: 'sm',
         centered: true,
       });
-
       modalRef.componentInstance.message = this.contactForm.get('message')?.value || '';
-
-      modalRef.componentInstance.result$.pipe(take(1)).subscribe((result: string) => {
-        this.contactForm.patchValue({ message: result });
-      });
+      modalRef.componentInstance.result$
+        .pipe(take(1))
+        .subscribe((result: string) => {
+          this.contactForm.patchValue({ message: result });
+        });
     }
   }
 
-  onSubmit() {
+  // Form submission handler
+  onSubmit(): void {
     if (this.contactForm.valid) {
       this.overlayService.showLoader();
 
@@ -112,91 +143,58 @@ export class ContactComponent implements OnInit, OnDestroy {
         `,
       };
 
-      this.sendGridService.sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message)
-        .subscribe({
-          next: () => {
-            this.overlayService.hideLoader();
-            this.showSuccessToast('Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.');
-            this.onReset();
-          },
-          error: (err: any) => {
-            this.overlayService.hideLoader();
-            console.error('Błąd podczas wysyłania e-maila:', err);
-            this.showErrorToast('Wystąpił problem z wysłaniem wiadomości. Spróbuj ponownie później.');
-          },
-        });
+      this.sendGridService.sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message).subscribe({
+        next: () => {
+          this.overlayService.hideLoader();
+          this.showSuccessToast('Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.');
+          this.onReset();
+        },
+        error: (err: any) => {
+          this.overlayService.hideLoader();
+          console.error('Błąd podczas wysyłania e-maila:', err);
+          this.showErrorToast('Wystąpił problem z wysyłaniem wiadomości. Spróbuj ponownie później.');
+        },
+      });
     }
   }
 
-  onReset() {
-    this.contactForm.reset({
-      topic: this.topics[0],
-    });
+  // Reset the form
+  onReset(): void {
+    this.contactForm.reset({ topic: this.topics[0] });
   }
 
-  showSuccessToast(message: string) {
-    this.showToast = true;
-    this.toastMessage = message;
-    this.toastType = 'success';
+  // Toast message handling
+  showSuccessToast(message: string): void {
+    this.showToast.set(true);
+    this.toastMessage.set(message);
+    this.toastType.set('success');
     this.startProgressBar();
   }
 
-  showErrorToast(message: string) {
-    this.showToast = true;
-    this.toastMessage = message;
-    this.toastType = 'error';
+  showErrorToast(message: string): void {
+    this.showToast.set(true);
+    this.toastMessage.set(message);
+    this.toastType.set('error');
     this.startProgressBar();
   }
 
-  startProgressBar() {
-    this.progress = 100;
-
+  // Progress bar handling
+  startProgressBar(): void {
+    this.progress.set(100);
     const intervalTime = 50;
-    const totalSteps = this.toastDuration / intervalTime;
-
+    const totalSteps = 5000 / intervalTime;
     const progressStep = 100 / totalSteps;
 
     this.progressInterval = setInterval(() => {
-      this.progress -= progressStep;
-      if (this.progress <= 0) {
+      this.progress.set(this.progress() - progressStep);
+      if (this.progress() <= 0) {
         this.closeToast();
       }
     }, intervalTime);
   }
 
-  closeToast() {
-    this.showToast = false;
+  closeToast(): void {
+    this.showToast.set(false);
     clearInterval(this.progressInterval);
-  }
-
-  private loadGoogleMapsScript(): void {
-    if (!document.getElementById('google-maps-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-maps-script';
-      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&q&callback=initMap&libraries=maps,marker&v=beta';
-      script.async = true;
-      script.defer = true;
-
-      // Ustawienie funkcji callback
-      (window as any).initMap = this.initMap.bind(this);
-
-      document.body.appendChild(script);
-    } else {
-      this.initMap();
-    }
-  }
-
-  private initMap(): void {
-    const map = new google.maps.Map(document.getElementById('map') as HTMLElement, {
-      center: { lat: 52.39698791503906, lng: 16.9263858795166 },
-      zoom: 14,
-      mapId: 'DEMO_MAP_ID'
-    });
-
-    new google.maps.marker.AdvancedMarkerElement({
-      position: { lat: 52.39698791503906, lng: 16.9263858795166 },
-      map,
-      title: 'Ragnarok Rooms',
-    });
   }
 }

@@ -48,13 +48,6 @@
   object-position: 0 50%;
 }
 
-@media (max-width: $breakpoint-lg) {
-  th.large-screens,
-  td.large-screens {
-    display: none;
-  }
-}
-
 .service-name {
   width: 40%;
 

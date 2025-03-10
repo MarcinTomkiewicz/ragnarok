@@ -1,0 +1,88 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+:host {
+  display: block;
+  min-height: 100vh;
+  height: auto;
+
+  @media (max-width: $breakpoint-md) {
+    @media (orientation: landscape) {
+      height: auto;
+    }
+  }
+}
+
+.component-container {
+  @include flex-wrapper(column);
+  gap: 15px;
+  justify-content: flex-start;
+
+  @media (max-width: $breakpoint-md) {
+    @media (orientation: landscape) {
+      height: auto;
+    }
+  }
+}
+
+.section-title {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.disclaimer {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-size: smaller;
+  color: $secondary-color;
+}
+
+.image-banner-container {
+  width: 100%;
+}
+
+.image-banner {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  object-position: 0 50%;
+}
+
+.service-name {
+  width: 40%;
+
+  @media (max-width: $breakpoint-lg) {
+    width: 60%;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .component-container {
+    font-size: smaller;
+  }
+  .image-banner {
+    width: 100%;
+    max-height: 150px;
+    object-fit: cover;
+    object-position: 0 30%;
+  }
+}
+
+@media (max-width: $breakpoint-xs) {
+  .component-container {
+    font-size: x-small;
+  }
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  .image-banner {
+    width: 100%;
+    max-height: auto;
+    object-fit: cover;
+    object-position: 0 30%;
+  }
+  .disclaimer {
+    font-size: x-small;
+  }
+}

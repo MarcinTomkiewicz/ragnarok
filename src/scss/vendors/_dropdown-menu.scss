@@ -1,0 +1,6 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.dropdown-menu {
+    background-color: $text-color;
+}

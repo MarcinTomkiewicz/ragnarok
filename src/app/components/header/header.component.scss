@@ -1,7 +1,7 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-@media (max-width: $breakpoint-sm) {
+@media (max-width: $breakpoint-mid) {
   header {
   justify-content: center;
   @include flex-wrapper(column);
@@ -13,6 +13,20 @@
   height: auto;
 }
 
+a {
+  all: unset;
+  cursor: pointer;
+
+  &:hover {
+    all: unset;
+    cursor: pointer;
+  }
+}
+
+.container {
+  position: relative;
+}
+
 .icon {
   height: 1em;
   width: 1em;
@@ -22,19 +36,16 @@
 
 .phone {
   all: unset; 
-  // @include responsive-font-size(14px);
   cursor: pointer;
 }
 
 .social-icons {
   gap: 15px;
   width: 100%;
-  @include flex-wrapper(row, center, center);;
 
   a {
     @include responsive-font-size(20px);
     padding: 0.5rem;
-    width: 10%;
 
     &:hover {
       border: 1px solid $secondary-text-color;

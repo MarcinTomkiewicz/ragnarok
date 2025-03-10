@@ -1,0 +1,64 @@
+@if (eventData) {
+<div class="component-container flex-column-center">
+  <img
+    class="event-image"
+    [src]="eventData.imageURL"
+    alt="{{ eventData.name }}"
+  />
+  <div class="event-container w-100">
+    <h2 class="text-center">{{ eventData.name }}</h2>
+    <div class="event-description">
+      @let paragraphs = eventData.longDescription.split('\n'); @for (paragraph
+      of paragraphs; track paragraph) {
+      <p class="event-paragraph">{{ paragraph }}</p>
+      }
+    </div>
+    <table
+      class="table table-transparent dark-color align-middle font-size-small responsive-table"
+    >
+      <th></th>
+      <th></th>
+      <tbody>
+        <tr>
+          <td>
+            {{ eventData.recurring ? "Następna data:" : "Data spotkania:" }}
+          </td>
+          <td>{{ eventData.eventDate | date : "dd.MM.yyyy" }}</td>
+        </tr>
+        <tr>
+          <td>Godzina rozpoczęcia:</td>
+          @let eventTime = eventData.time | slice : 0 : 5;
+          <td>
+            {{ eventData.time !== '00:00:00' ? eventTime : "Cały dzień" }}
+          </td>
+        </tr>
+        <tr>
+          <td>Koszt uczestnictwa:</td>
+          <td>
+            {{
+              eventData.cost && eventData.cost >= 0
+                ? eventData.cost + " zł"
+                : "Bezpłatny"
+            }}
+          </td>
+        </tr>
+        <tr>
+          <td>Link do wydarzenia:</td>
+          <td>
+            @if (eventData.facebookLink) {
+            <button
+              class="btn btn-plain btn-info px-2 py-1"
+              (click)="openFacebook(eventData.facebookLink)"
+            >
+              Zobacz na Facebooku
+            </button>
+            } @else {
+            <span>Brak wydarzenia</span>
+            }
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+}

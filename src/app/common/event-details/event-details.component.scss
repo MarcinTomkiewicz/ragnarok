@@ -1,0 +1,87 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+:host {
+  display: block;
+}
+
+.component-container {
+  background-color: $primary-color;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  height: 100%;
+  width: 100%;  /* Zajmuje całą szerokość */
+  gap: 10px;
+
+  /* Usunięcie flex-direction z tego miejsca, bo teraz jest to kontrolowane w HTML */
+  
+  @media (max-width: $breakpoint-md) {
+    padding: 1rem;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    padding: 0.5rem;
+    gap: 10px;
+  }
+}
+
+.event-image {
+  width: 591px;
+  height: 371px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+
+  @media (max-width: $breakpoint-sm) {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.event-container {
+  flex: 1;
+  max-width: 100%;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+
+  h2 {
+    color: $bg-color;
+  }
+
+  .event-paragraph {
+    color: $bg-color;
+    // margin-bottom: 1rem;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+
+    /* Animacja z dynamicznym opóźnieniem */
+    &:nth-of-type(n) {
+      animation-delay: calc(0.3s * (n));
+    }
+
+    &:first-of-type::first-letter {
+      font-size: 4rem;
+      font-weight: bold;
+      color: $secondary-color;
+      float: left;
+      margin-right: 10px;
+      line-height: 1;
+    }
+  }
+}
+
+.responsive-table {
+  width: 50%;
+  @media (max-width: $breakpoint-md) {
+    width: 100%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

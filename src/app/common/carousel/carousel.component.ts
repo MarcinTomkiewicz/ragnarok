@@ -1,11 +1,11 @@
 import { 
   Component, TemplateRef, ChangeDetectionStrategy, 
-  ChangeDetectorRef, inject, computed, signal, input, viewChild, AfterViewInit, 
-  OnInit
+  ChangeDetectorRef, inject, computed, signal, input, viewChild, OnInit 
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
 import { TechStack } from '../../core/interfaces/i-techStack';
+import { PlatformService } from '../../core/services/platform/platform.service';
 
 @Component({
   selector: 'app-carousel',
@@ -17,22 +17,33 @@ import { TechStack } from '../../core/interfaces/i-techStack';
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CarouselComponent implements OnInit {
-  items = input<TechStack[]>([]);                  
+  items = input<TechStack[]>([]);
   itemTemplate = input<TemplateRef<any> | null>(null);
 
-  carousel = viewChild(NgbCarousel);               
+  carousel = viewChild(NgbCarousel);
 
   carouselConfig = inject(NgbCarouselConfig);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly platformService = inject(PlatformService);
 
-  screenWidth = signal(window.innerWidth);         
-  groupedItems = signal<TechStack[][]>([]);        
+  /** Szerokość ekranu jako Signal */
+  screenWidth = signal(0);
 
-  showNavigation = computed(() =>                  
+  /** Zgrupowane elementy na podstawie szerokości */
+  groupedItems = signal<TechStack[][]>([]);
+
+  /** Czy pokazywać nawigację */
+  showNavigation = computed(() => 
     this.items().length > 4 || this.screenWidth() < 1601
   );
 
   ngOnInit(): void {
+    // Jeśli jesteśmy w przeglądarce, ustawiamy szerokość ekranu i obserwujemy zmiany
+    if (this.platformService.isBrowser) {
+      this.screenWidth.set(window.innerWidth);
+      this.observeResize();
+    }
+
     computed(() => {
       const data = this.items();
       if (data.length) {
@@ -41,10 +52,12 @@ export class CarouselComponent implements OnInit {
       }
     });
     this.initializeGroups();
-    this.observeResize();
   }
 
+  /** Obserwacja zmian szerokości ekranu (tylko w przeglądarce) */
   private observeResize(): void {
+    if (!this.platformService.isBrowser) return;
+
     const resizeObserver = new ResizeObserver(() => {
       this.screenWidth.set(window.innerWidth);
       this.initializeGroups();
@@ -52,17 +65,20 @@ export class CarouselComponent implements OnInit {
     resizeObserver.observe(document.body);
   }
 
+  /** Podział elementów na grupy */
   private chunkArray(array: TechStack[], chunkSize: number): TechStack[][] {
     return Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, i) =>
       array.slice(i * chunkSize, i * chunkSize + chunkSize)
     );
   }
 
+  /** Inicjalizacja grup na podstawie szerokości */
   private initializeGroups(): void {
     const chunkSize = this.calculateChunkSize();
     this.groupedItems.set(this.chunkArray(this.items(), chunkSize));
   }
 
+  /** Obliczanie rozmiaru grupy na podstawie szerokości */
   private calculateChunkSize(): number {
     const width = this.screenWidth();
     if (width < 823) return 1;
@@ -71,6 +87,7 @@ export class CarouselComponent implements OnInit {
     return 4;
   }
 
+  /** Obsługa gestów przesuwania */
   handleSwipeGesture(startX: number, endX: number): void {
     const swipeDistance = startX - endX;
     if (swipeDistance > 50) this.carousel()?.next();

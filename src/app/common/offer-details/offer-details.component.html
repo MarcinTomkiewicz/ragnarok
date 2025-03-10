@@ -1,0 +1,66 @@
+@if(offer) { @let paragraphs = offer.description.split('\n'); @let
+firstParagraphs = paragraphs.slice(0, 2); @let remainingParagraphs =
+paragraphs.slice(2);
+
+<div class="flex-column-all-start">
+  <div class="flex-row-regular gap-3 flex-column-start-center-sm w-100">
+    <img [src]="offer.imageURL" [alt]="offer.title" class="offer-image" />
+    <div class="flex-column-all-start mt-2 w-100">
+      <h2>{{ offer.title }}</h2>
+      <table
+        class="table table-transparent td-light align-middle font-size-small responsive-table"
+        [ngClass]="isMobile() ? 'w-100' : 'w-50'"
+      >
+        <th></th>
+        <th></th>
+        <tbody>
+          <tr>
+            <td>Kategorie:</td>
+            <td>
+              {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
+              {{ getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY) }}
+            </td>
+          </tr>
+          <tr>
+            <td>Cena:</td>
+            <td>
+              {{ offer.price }}
+            </td>
+          </tr>
+          <tr>
+            <td>Ilość sztuk na stanie:</td>
+            <td>
+              @if (offer.stock > 0) {
+                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                } @else {
+                <strong class="text-danger">Produkt niedostępny</strong>
+                }
+            </td>
+          </tr>
+          <tr>
+            <td>Kup teraz:</td>
+            <td>
+              <button
+                class="btn btn-warning"
+                [disabled]="!offer.buyNowLink || !offer.stock"
+                (click)="buyNow(offer.buyNowLink)"
+              >
+                Kup Teraz
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      @for (paragraph of firstParagraphs; let idx = $index; track idx) {
+      <div class="mb-2">{{ paragraph }}</div>
+      }
+    </div>
+  </div>
+
+  <div class="offer-description">
+    @for (paragraph of remainingParagraphs; let idx = $index; track idx) {
+    <div class="mb-2">{{ paragraph }}</div>
+    }
+  </div>
+</div>
+}

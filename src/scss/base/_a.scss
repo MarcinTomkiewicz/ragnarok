@@ -1,0 +1,13 @@
+a {
+    text-decoration: none; /* Usuń podkreślenia */
+    color: inherit; /* Kolor taki sam jak kolor tekstu */
+    transition: color 0.3s ease;
+  
+    &:hover {
+      border: 1px solid $secondary-text-color;
+      border-radius: 5px;
+      box-sizing: border-box;
+      color: $bg-color;
+      padding: 0.5rem;
+    } 
+  }

@@ -1,0 +1,42 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+:host {
+  display: block;
+  min-height: 100vh;
+  height: auto;
+
+  @media (max-width: $breakpoint-md) {
+    @media (orientation: landscape) {
+      height: auto;
+    }
+  }
+}
+
+.component-container {
+  @include flex-wrapper(column);
+  height: 100%;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mobile-background {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); // Przyciemnienie tła
+  }
+  .card-body {
+    position: relative; // Żeby treść była nad przyciemnieniem
+    z-index: 1;
+  }
+}
