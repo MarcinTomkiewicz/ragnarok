@@ -1,29 +1,42 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { NgbAccordionModule, NgbDropdownModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbAccordionModule,
+  NgbDropdownModule,
+  NgbPaginationModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
 import { CategoryType } from '../../core/enums/categories';
 import { FilterOperator } from '../../core/enums/filterOperator';
 import { IFilters } from '../../core/interfaces/i-filters';
 import { Category, Offer, Subcategory } from '../../core/interfaces/i-offers';
-import { BackendService, IPagination } from '../../core/services/backend/backend.service';
+import {
+  BackendService,
+  IPagination,
+} from '../../core/services/backend/backend.service';
 import { CategoryService } from '../../core/services/category/category.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 
 @Component({
   selector: 'app-offers-list',
   standalone: true,
-  imports: [CommonModule, NgbAccordionModule, NgbDropdownModule, RouterModule, CategoryListComponent, NgbPaginationModule],
+  imports: [
+    CommonModule,
+    NgbAccordionModule,
+    NgbDropdownModule,
+    RouterModule,
+    CategoryListComponent,
+    NgbPaginationModule,
+  ],
   templateUrl: './offers-list.component.html',
-  styleUrl: './offers-list.component.scss'
+  styleUrl: './offers-list.component.scss',
 })
 export class OffersListComponent implements OnInit {
-
-  private readonly backendService = inject(BackendService)
+  private readonly backendService = inject(BackendService);
   private readonly platformService = inject(PlatformService);
-  readonly categoryService = inject(CategoryService)
-  readonly CategoryType = CategoryType
+  readonly categoryService = inject(CategoryService);
+  readonly CategoryType = CategoryType;
 
   categories: Category[] = [];
   subcategories: Subcategory[] = [];
@@ -36,6 +49,9 @@ export class OffersListComponent implements OnInit {
   pageSize = signal<number>(10);
   totalOffers = signal<number>(0);
 
+  sorting = signal<keyof Offer>('id');
+  order = signal<'asc' | 'desc'>('asc');
+
   ngOnInit(): void {
     this.categoryService.loadCategories().subscribe({
       next: ({ categories, subcategories }) => {
@@ -43,42 +59,43 @@ export class OffersListComponent implements OnInit {
         this.subcategories = subcategories;
         this.loadOffers();
       },
-      error: (err) => console.error('Błąd podczas pobierania kategorii:', err)
+      error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
     });
   }
-  
-  loadOffers(page: number = this.currentPage()): void { // <-- Teraz currentPage to sygnał, więc wywołujemy jako funkcję
+
+  loadOffers(page: number = this.currentPage()): void {
     const subcategoryId = this.currentSubcategoryId();
     const pagination: IPagination = {
       page: page,
-      pageSize: this.pageSize(), // <-- pageSize też sygnał
+      pageSize: this.pageSize(),
       filters: subcategoryId
         ? {
             subcategoryId: {
               operator: FilterOperator.EQ,
-              value: subcategoryId
-            }
+              value: subcategoryId,
+            },
           }
-        : undefined
+        : undefined,
     };
-  
-    this.backendService.getAll<Offer>('offers', 'id', 'asc', pagination).subscribe({
-      next: (offers) => {
-        this.offersList = offers;
-        this.filteredOffers = offers;        
-        this.updateTotalOffers(pagination.filters);
-      },
-      error: (err) => console.error('Błąd podczas pobierania ofert:', err),
-    });
+
+    this.backendService
+      .getAll<Offer>('offers', this.sorting(), this.order(), pagination)
+      .subscribe({
+        next: (offers) => {
+          this.offersList = offers;
+          this.filteredOffers = offers;
+          this.updateTotalOffers(pagination.filters);
+        },
+        error: (err) => console.error('Błąd podczas pobierania ofert:', err),
+      });
   }
-  
 
   updateTotalOffers(filters?: IFilters): void {
     this.backendService.getCount<Offer>('offers', filters).subscribe({
       next: (count) => {
         this.totalOffers.set(count);
       },
-      error: (err) => console.error('Błąd podczas liczenia ofert:', err)
+      error: (err) => console.error('Błąd podczas liczenia ofert:', err),
     });
   }
 
@@ -92,7 +109,7 @@ export class OffersListComponent implements OnInit {
     this.currentSubcategoryId.set(subcategoryId);
     this.loadOffers();
   }
-  
+
   getCategoryName(id: number, categoryType: CategoryType): string {
     return this.categoryService.getCategoryName(id, categoryType);
   }
@@ -105,6 +122,15 @@ export class OffersListComponent implements OnInit {
     if (link) {
       window.open(link, '_blank', 'noopener,noreferrer');
     }
-  }  
-}
+  }
 
+  sortBy(value: string): void {
+    this.sorting.set(value as keyof Offer);
+    this.loadOffers();
+  }
+
+  sortOrder(): void {
+    this.order.update((current) => (current === 'asc' ? 'desc' : 'asc'));
+    this.loadOffers();
+  }
+}

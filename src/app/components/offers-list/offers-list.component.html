@@ -33,7 +33,28 @@
     >
       @if(!filteredOffers.length) {
       <div class="align-self-center">Nie znaleziono pasujących produktów!</div>
-      } @else { @for (offer of filteredOffers; track offer.title) {
+      } @else { 
+        <div class="flex-row-start gap-2 w-100">Sortuj
+          <div>
+            <button class="btn btn-plain-light" (click)="sortBy('title')">Tytuł</button>
+            <button class="btn btn-plain-light" (click)="sortOrder()">
+              <i [ngClass]="order() === 'asc' ? 'bi bi-sort-down-alt' : 'bi bi-sort-down'"></i>
+            </button>
+          </div>
+          <div>
+            <button class="btn btn-plain-light" (click)="sortBy('price')">Cena</button>
+            <button class="btn btn-plain-light" (click)="sortOrder()">
+              <i [ngClass]="order() === 'asc' ? 'bi bi-sort-down-alt' : 'bi bi-sort-down'"></i>
+            </button>
+          </div>
+          <div>
+            <button class="btn btn-plain-light" (click)="sortBy('id')">Domyślnie</button>
+            <button class="btn btn-plain-light" (click)="sortOrder()">
+              <i [ngClass]="order() === 'asc' ? 'bi bi-sort-down-alt' : 'bi bi-sort-down'"></i>
+            </button>
+          </div>
+        </div>
+        @for (offer of filteredOffers; track offer.title) {
       <div
         class="card card-dark card-350"
         [ngClass]="{ 'mobile-background': isMobile(), 'w-100': !isMobile() }"
