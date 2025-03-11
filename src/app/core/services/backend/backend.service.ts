@@ -10,7 +10,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { FilterOperator } from '../../enums/filterOperator';
 import { IFilter } from '../../interfaces/i-filters';
 
-interface Pagination {
+export interface IPagination {
   page?: number;
   pageSize?: number;
   filters?: { [key: string]: IFilter };
@@ -45,7 +45,7 @@ export class BackendService {
     table: string,
     sortBy?: keyof T,
     sortOrder: 'asc' | 'desc' = 'asc',
-    pagination?: Pagination,
+    pagination?: IPagination,
     imageConfig?: ImageConfig,
   ): Observable<T[]> {
     let query = this.supabase.from(table).select('*');
@@ -80,6 +80,22 @@ export class BackendService {
     );
   }
   
+  getCount<T extends object>(table: string, filters?: { [key: string]: any }): Observable<number> {
+    let query = this.supabase.from(table).select('*', { count: 'exact', head: true });
+  
+    if (filters) {
+      query = this.applyFilters(query, filters);
+    }
+  
+    return from(query).pipe(
+      map((response: PostgrestResponse<T>) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        return response.count ?? 0;
+      })
+    );
+  }
   
 
   /**

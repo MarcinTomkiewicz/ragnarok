@@ -1,5 +1,6 @@
 <div class="component-container">
   <div class="flex-row-align-start flex-column-start-mid gap-2 w-100">
+
     <div class="card card-dark mid-screens w-25">
       <h2 class="card-header header-dark w-100 text-center">Kategorie</h2>
       <app-category-list
@@ -27,7 +28,10 @@
     </div>
 
     <div class="flex-column-all-start gap-3 h-100"
-    [ngClass]="{'w-100': !isMobile()}">
+         [ngClass]="{'w-100': !isMobile()}">
+         @if(!filteredOffers.length) {
+          <div class="align-self-center text-center">Brak pasujących ofert.</div>
+         }
       @for (offer of filteredOffers; track offer.title) {
       <div
         class="card card-dark card-350"
@@ -90,6 +94,20 @@
         </div>
       </div>
       }
+
+      @if (totalOffers > pageSize) {
+      <ngb-pagination
+        [collectionSize]="totalOffers"
+        [(page)]="currentPage"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+        [boundaryLinks]="true"
+        [maxSize]="3"
+        size="sm"
+        class="d-flex justify-content-center w-100"
+      >
+      </ngb-pagination>
+    }
     </div>
   </div>
 </div>

@@ -1,0 +1,30 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.page-link {
+  color: $text-color;
+  background-color: $bg-color;
+  border-color: $text-color;
+
+  &:hover {
+    color: $bg-color;
+    background-color: darken($text-color, 10%);
+    border-color: $text-color;
+  }
+}
+
+.page-link.active,
+.active > .page-link {
+  color: $bg-color;
+  background-color: $text-color;
+  border-color: $text-color;
+}
+
+.page-link.disabled .disabled > .page-link
+{
+  color: lighten($text-color, 30%);
+  background-color: lighten($bg-color, 10%);
+  border-color: lighten($text-color, 20%);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
