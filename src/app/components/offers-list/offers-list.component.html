@@ -20,10 +20,10 @@
       </button>
       <div ngbDropdownMenu aria-labelledby="categories" class="w-100">
         <app-category-list
-          [categories]="categories"
-          [subcategories]="subcategories"
-          (subcategorySelected)="onSubcategoryClick($event)"
-        ></app-category-list>
+        [categories]="categories"
+        [subcategories]="subcategories"
+        (subcategorySelected)="onSubcategoryClick($event)"
+      ></app-category-list>
       </div>
     </div>
 
@@ -94,11 +94,11 @@
           </div>
         </div>
       </div>
-      } } @if (totalOffers > pageSize) {
+      } } @if (totalOffers() > pageSize()) {
       <ngb-pagination
-        [collectionSize]="totalOffers"
+        [collectionSize]="totalOffers()"
         [(page)]="currentPage"
-        [pageSize]="pageSize"
+        [pageSize]="pageSize()"
         (pageChange)="onPageChange($event)"
         [boundaryLinks]="true"
         [maxSize]="3"

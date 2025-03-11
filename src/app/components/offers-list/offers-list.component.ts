@@ -1,15 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NgbAccordionModule, NgbDropdownModule, NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
 import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
 import { CategoryType } from '../../core/enums/categories';
+import { FilterOperator } from '../../core/enums/filterOperator';
+import { IFilters } from '../../core/interfaces/i-filters';
 import { Category, Offer, Subcategory } from '../../core/interfaces/i-offers';
 import { BackendService, IPagination } from '../../core/services/backend/backend.service';
 import { CategoryService } from '../../core/services/category/category.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
-import { FilterOperator } from '../../core/enums/filterOperator';
-import { IFilters } from '../../core/interfaces/i-filters';
 
 @Component({
   selector: 'app-offers-list',
@@ -30,9 +30,11 @@ export class OffersListComponent implements OnInit {
   offersList: Offer[] = [];
   filteredOffers: Offer[] = [];
 
-  currentPage = 1;
-  pageSize = 10;
-  totalOffers = 0;
+  // Zamieniamy na sygnały
+  currentSubcategoryId = signal<number | null>(null);
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(10);
+  totalOffers = signal<number>(0);
 
   ngOnInit(): void {
     this.categoryService.loadCategories().subscribe({
@@ -45,10 +47,11 @@ export class OffersListComponent implements OnInit {
     });
   }
   
-  loadOffers(page: number = this.currentPage, subcategoryId: number | null = null): void {
+  loadOffers(page: number = this.currentPage()): void { // <-- Teraz currentPage to sygnał, więc wywołujemy jako funkcję
+    const subcategoryId = this.currentSubcategoryId();
     const pagination: IPagination = {
       page: page,
-      pageSize: this.pageSize,
+      pageSize: this.pageSize(), // <-- pageSize też sygnał
       filters: subcategoryId
         ? {
             subcategoryId: {
@@ -62,11 +65,10 @@ export class OffersListComponent implements OnInit {
     this.backendService.getAll<Offer>('offers', 'id', 'asc', pagination).subscribe({
       next: (offers) => {
         this.offersList = offers;
-        this.filteredOffers = offers;
+        this.filteredOffers = offers;        
         this.updateTotalOffers(pagination.filters);
       },
       error: (err) => console.error('Błąd podczas pobierania ofert:', err),
-      complete: () => console.log('Oferty zostały pobrane')
     });
   }
   
@@ -74,31 +76,21 @@ export class OffersListComponent implements OnInit {
   updateTotalOffers(filters?: IFilters): void {
     this.backendService.getCount<Offer>('offers', filters).subscribe({
       next: (count) => {
-        this.totalOffers = count;
+        this.totalOffers.set(count);
       },
       error: (err) => console.error('Błąd podczas liczenia ofert:', err)
     });
   }
 
   onPageChange(page: number): void {
-    this.currentPage = page;
+    this.currentPage.set(page);
     this.loadOffers(page);
   }
 
-
-  filterOffersBySubcategory(subcategoryId: number | null): void {
-    if (subcategoryId === null) {
-      this.filteredOffers = this.offersList;
-    } else {
-      this.filteredOffers = this.offersList.filter(
-        (offer) => offer.subcategoryId === subcategoryId
-      );
-    }
-  }
-
   onSubcategoryClick(subcategoryId: number | null): void {
-    this.currentPage = 1; // Resetujemy paginację przy zmianie filtra
-    this.loadOffers(this.currentPage, subcategoryId);
+    this.currentPage.set(1);
+    this.currentSubcategoryId.set(subcategoryId);
+    this.loadOffers();
   }
   
   getCategoryName(id: number, categoryType: CategoryType): string {
@@ -114,5 +106,5 @@ export class OffersListComponent implements OnInit {
       window.open(link, '_blank', 'noopener,noreferrer');
     }
   }  
-
 }
+
