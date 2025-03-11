@@ -26,8 +26,8 @@ export class CategoryListComponent {
     this.subcategorySelected.next(subcategoryId);
   }
 
-  toggleCategory(categoryId: number) {
-    this.activeCategoryId =
-      this.activeCategoryId === categoryId ? null : categoryId;
+  showAll(accordion: any): void {
+    accordion.collapseAll();
+    this.subcategorySelected.next(null);
   }
 }

@@ -31,10 +31,9 @@
       class="flex-column-all-start gap-3 h-100"
       [ngClass]="{ 'w-100': !isMobile() }"
     >
-    @if(!filteredOffers.length) {
-    <div class="align-self-center">Nie znaleziono pasujących produktów!</div>
-    } @else {
-      @for (offer of filteredOffers; track offer.title) {
+      @if(!filteredOffers.length) {
+      <div class="align-self-center">Nie znaleziono pasujących produktów!</div>
+      } @else { @for (offer of filteredOffers; track offer.title) {
       <div
         class="card card-dark card-350"
         [ngClass]="{ 'mobile-background': isMobile(), 'w-100': !isMobile() }"
@@ -95,7 +94,19 @@
           </div>
         </div>
       </div>
-      } }
+      } } @if (totalOffers > pageSize) {
+      <ngb-pagination
+        [collectionSize]="totalOffers"
+        [(page)]="currentPage"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+        [boundaryLinks]="true"
+        [maxSize]="3"
+        size="sm"
+        class="d-flex justify-content-center w-100"
+      >
+      </ngb-pagination>
+      }
     </div>
   </div>
 </div>
