@@ -81,10 +81,10 @@ export class OffersListComponent implements OnInit {
         this.categories = categories;
         this.subcategories = subcategories;
         this.loadOffers();
+        this.openModal();
       },
       error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
     });
-    this.openModal();
   }
 
   openModal(): void {
