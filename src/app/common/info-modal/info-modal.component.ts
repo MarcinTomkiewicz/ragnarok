@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -14,11 +14,6 @@ export class InfoModalComponent {
   currentHeader = computed(() => this.header ? this.header : 'Informacja');
   currentMessage = computed(() => this.message);
   public activeModal = inject(NgbActiveModal);
-
-  ngOnInit(): void {
-    console.log(this.header, this.message, this.currentHeader());
-    
-  }
 
   close(): void {
     this.activeModal.close();

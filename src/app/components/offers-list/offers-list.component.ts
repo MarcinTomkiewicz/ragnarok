@@ -75,6 +75,8 @@ export class OffersListComponent implements OnInit {
   currentSorting = signal<OfferKeys>(OfferKeys.ID);
   order = signal<'asc' | 'desc'>('asc');
 
+  modalOpened = false;
+
   ngOnInit(): void {
     this.categoryService.loadCategories().subscribe({
       next: ({ categories, subcategories }) => {
@@ -84,16 +86,22 @@ export class OffersListComponent implements OnInit {
         this.openModal();
       },
       error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
-    });
+    });    
   }
 
   openModal(): void {
+    if (this.modalOpened) return;
+
+    this.modalOpened = true;
      const modalRef = this.modalService.open(InfoModalComponent, {
             size: 'md',
             centered: true,
           });
           modalRef.componentInstance.header = 'Drodzy Wojownicy!'
       modalRef.componentInstance.message = 'Tymczasowo oferta naszego sklepu jest dostępna tylko stacjonarnie w lokalu Ragnarok przy ul. Dolna Wilda 16A w Poznaniu.'
+      modalRef.result.finally(() => {
+        this.modalOpened = false; // Ustaw na false, kiedy modal zostanie zamknięty
+      });
   }
 
   loadOffers(page: number = this.currentPage()): void {
