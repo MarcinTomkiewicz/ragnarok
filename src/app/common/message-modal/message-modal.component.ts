@@ -11,11 +11,11 @@ import { Subject } from 'rxjs';
   styleUrl: './message-modal.component.scss'
 })
 export class MessageModalComponent {
-  @Input() message: string = ''; // Odbieramy wiadomość z głównego komponentu
+  @Input() message: string = '';
   public activeModal = inject(NgbActiveModal)
-  private fb = inject(FormBuilder);
+  private readonly fb = inject(FormBuilder);
   messageForm: FormGroup;
-  result$: Subject<string> = new Subject<string>(); // Subject jako Observable
+  result$: Subject<string> = new Subject<string>();
 
   constructor() {
     this.messageForm = this.fb.group({
@@ -24,7 +24,7 @@ export class MessageModalComponent {
   }
 
   onSubmit() {
-    this.result$.next(this.messageForm.value.message); // Emitujemy wiadomość do głównego komponentu
-    this.activeModal.close(); // Zamykanie modala
+    this.result$.next(this.messageForm.value.message);
+    this.activeModal.close();
   }
 }

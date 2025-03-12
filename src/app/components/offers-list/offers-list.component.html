@@ -34,24 +34,20 @@
       @if(!filteredOffers.length) {
       <div class="align-self-center">Nie znaleziono pasujących produktów!</div>
       } @else { 
-        <div class="flex-row-start gap-2 w-100">Sortuj
-          <div>
-            <button class="btn btn-plain-light" (click)="sortBy('title')">Tytuł</button>
-            <button class="btn btn-plain-light" (click)="sortOrder()">
-              <i [ngClass]="order() === 'asc' ? 'bi bi-sort-down-alt' : 'bi bi-sort-down'"></i>
-            </button>
-          </div>
-          <div>
-            <button class="btn btn-plain-light" (click)="sortBy('price')">Cena</button>
-            <button class="btn btn-plain-light" (click)="sortOrder()">
-              <i [ngClass]="order() === 'asc' ? 'bi bi-sort-down-alt' : 'bi bi-sort-down'"></i>
-            </button>
-          </div>
-          <div>
-            <button class="btn btn-plain-light" (click)="sortBy('id')">Domyślnie</button>
-            <button class="btn btn-plain-light" (click)="sortOrder()">
-              <i [ngClass]="order() === 'asc' ? 'bi bi-sort-down-alt' : 'bi bi-sort-down'"></i>
-            </button>
+        <div class="flex-row-regular gap-2 w-100">
+        <div>Sortuj</div>
+
+        <div class="flex-row-regular gap-2">
+          @for (field of sortFields; track field) {
+            <div class="flex-row-regular gap-1">
+              <button class="btn btn-plain-light" (click)="sortBy(field)">
+                {{ offerLabels[field] }}
+              </button>
+              <button class="btn btn-plain-light" (click)="sortBy(field)">
+                <i [ngClass]="getSortIcon(field)"></i>
+              </button>
+            </div>
+            }
           </div>
         </div>
         @for (offer of filteredOffers; track offer.title) {

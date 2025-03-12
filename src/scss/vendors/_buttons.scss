@@ -109,6 +109,8 @@
   }
 
   &.btn-plain-light {
+    padding: unset;
+    border: unset;
     color: $text-color;
   }
 

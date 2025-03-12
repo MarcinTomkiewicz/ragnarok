@@ -1,0 +1,13 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.modal-header,
+.modal-body,
+.modal-footer {
+  background-color: $bg-color;
+  color: $text-color;
+}
+
+.modal-header > .btn-close {
+    filter: $icon-filter;
+  }

@@ -1,0 +1,22 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ currentHeader() }}</h4>
+  <button
+    type="button"
+    class="btn-close"
+    aria-label="Close"
+    (click)="activeModal.dismiss()"
+  >
+  </button>
+</div>
+<div class="modal-body">
+    <div>{{ currentMessage() }}</div>
+</div>
+<div class="modal-footer">
+  <button
+    type="button"
+    class="btn btn-primary"
+    (click)="activeModal.dismiss()"
+  >
+    OK
+  </button>
+</div>

@@ -5,7 +5,7 @@ paragraphs.slice(2);
   <h2 class="align-self-center">{{ offer.title }}</h2>
   <div class="flex-column-all-start">
     <div class="flex-row-align-start gap-3 flex-column-start-center-sm w-100">
-      <div class="w-25 my-1">
+      <div class="my-1" [ngClass]="isMobile() ? '' : 'w-25'">
         <img [src]="offer.imageURL" [alt]="offer.title" class="offer-image" />
       </div>
       <div class="flex-column-all-start mt-2 w-100">

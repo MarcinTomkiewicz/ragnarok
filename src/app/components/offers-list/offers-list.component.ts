@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import {
   NgbAccordionModule,
   NgbDropdownModule,
+  NgbModal,
   NgbPaginationModule,
 } from '@ng-bootstrap/ng-bootstrap';
 import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
@@ -17,6 +18,14 @@ import {
 } from '../../core/services/backend/backend.service';
 import { CategoryService } from '../../core/services/category/category.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
+import { InfoModalComponent } from '../../common/info-modal/info-modal.component';
+
+enum OfferKeys {
+  ID = 'id',
+TITLE = 'title',
+PRICE = 'price',
+STOCK = 'stock'
+}
 
 @Component({
   selector: 'app-offers-list',
@@ -35,6 +44,7 @@ import { PlatformService } from '../../core/services/platform/platform.service';
 export class OffersListComponent implements OnInit {
   private readonly backendService = inject(BackendService);
   private readonly platformService = inject(PlatformService);
+  private readonly modalService = inject(NgbModal);
   readonly categoryService = inject(CategoryService);
   readonly CategoryType = CategoryType;
 
@@ -43,13 +53,26 @@ export class OffersListComponent implements OnInit {
   offersList: Offer[] = [];
   filteredOffers: Offer[] = [];
 
-  // Zamieniamy na sygnały
   currentSubcategoryId = signal<number | null>(null);
   currentPage = signal<number>(1);
   pageSize = signal<number>(10);
   totalOffers = signal<number>(0);
 
-  sorting = signal<keyof Offer>('id');
+  offerLabels: Record<OfferKeys, string> = {
+    [OfferKeys.ID]: 'Domyślnie',
+    [OfferKeys.TITLE]: 'Tytuł',
+    [OfferKeys.PRICE]: 'Cena',
+    [OfferKeys.STOCK]: 'Stan',
+  };
+
+  sortOrders = signal(new Map<OfferKeys, 'asc' | 'desc'>([
+    [OfferKeys.TITLE, 'asc'],
+    [OfferKeys.PRICE, 'asc'],
+    [OfferKeys.STOCK, 'asc'],
+    [OfferKeys.ID, 'asc'],
+  ]));
+  
+  currentSorting = signal<OfferKeys>(OfferKeys.ID);
   order = signal<'asc' | 'desc'>('asc');
 
   ngOnInit(): void {
@@ -61,6 +84,16 @@ export class OffersListComponent implements OnInit {
       },
       error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
     });
+    this.openModal();
+  }
+
+  openModal(): void {
+     const modalRef = this.modalService.open(InfoModalComponent, {
+            size: 'md',
+            centered: true,
+          });
+          modalRef.componentInstance.header = 'Drodzy Wojownicy!'
+      modalRef.componentInstance.message = 'Tymczasowo oferta naszego sklepu jest dostępna tylko stacjonarnie w lokalu Ragnarok przy ul. Dolna Wilda 16A w Poznaniu.'
   }
 
   loadOffers(page: number = this.currentPage()): void {
@@ -77,9 +110,12 @@ export class OffersListComponent implements OnInit {
           }
         : undefined,
     };
-
+  
+    const sortingField: OfferKeys = this.currentSorting();
+    const sortingOrder = this.sortOrders().get(sortingField) ?? 'asc';
+  
     this.backendService
-      .getAll<Offer>('offers', this.sorting(), this.order(), pagination)
+      .getAll<Offer>('offers', sortingField, sortingOrder, pagination)
       .subscribe({
         next: (offers) => {
           this.offersList = offers;
@@ -97,6 +133,10 @@ export class OffersListComponent implements OnInit {
       },
       error: (err) => console.error('Błąd podczas liczenia ofert:', err),
     });
+  }
+
+  get sortFields(): OfferKeys[] {
+    return Array.from(this.sortOrders().keys());
   }
 
   onPageChange(page: number): void {
@@ -124,13 +164,21 @@ export class OffersListComponent implements OnInit {
     }
   }
 
-  sortBy(value: string): void {
-    this.sorting.set(value as keyof Offer);
+  sortBy(field: OfferKeys): void {
+    const currentOrder = this.sortOrders().get(field);
+    const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+  
+    this.sortOrders.update(orders => {
+      orders.set(field, newOrder);
+      return new Map(orders);
+    });
+  
+    this.currentSorting.set(field);
     this.loadOffers();
   }
-
-  sortOrder(): void {
-    this.order.update((current) => (current === 'asc' ? 'desc' : 'asc'));
-    this.loadOffers();
+  
+  getSortIcon(field: OfferKeys): string {
+    const order = this.sortOrders().get(field);
+    return order === 'asc' ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-down-alt';
   }
 }

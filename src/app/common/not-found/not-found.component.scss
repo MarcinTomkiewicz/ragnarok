@@ -1,0 +1,17 @@
+    img {
+      margin-top: 2rem;
+      max-width: 100%;
+      height: auto;
+      width: 300px;
+      animation: float 3s ease-in-out infinite;
+    }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  

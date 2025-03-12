@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { AUTH_ROUTES } from './auth/auth.routes';
 import { ADMIN_ROUTES } from './admin/admin-routing';
+import { NotFoundComponent } from './common/not-found/not-found.component';
 
 export const routes: Routes = [
   { path: 'admin', children: ADMIN_ROUTES },
@@ -75,8 +76,5 @@ export const routes: Routes = [
       ),
   },
 
-  {
-    path: '**',
-    redirectTo: '',
-  },
+  { path: '**', component: NotFoundComponent },
 ];
