@@ -4,6 +4,7 @@ import { BackendService } from '../../core/services/backend/backend.service';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { EventsService } from '../../core/services/events/events.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-event-details',
@@ -19,6 +20,7 @@ export class EventDetailsComponent implements OnInit {
   private readonly backendService = inject(BackendService);
   private readonly route = inject(ActivatedRoute);
   private readonly eventsService = inject(EventsService);
+    private readonly seo = inject(SeoService);
 
   ngOnInit(): void {
     const today = new Date().toISOString().split('T')[0]; 
@@ -28,6 +30,7 @@ export class EventDetailsComponent implements OnInit {
         next: (event) => {
           if (event) {
             this.eventData = this.eventsService.processSingleEvent(event, today);
+            this.seo.setTitleAndMeta(`${this.eventData?.name}`);
           } else {
             this.errorMessage = 'Wydarzenie nie zostało znalezione.';
           }

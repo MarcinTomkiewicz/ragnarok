@@ -19,12 +19,13 @@ import {
 import { CategoryService } from '../../core/services/category/category.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { InfoModalComponent } from '../../common/info-modal/info-modal.component';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 enum OfferKeys {
   ID = 'id',
-TITLE = 'title',
-PRICE = 'price',
-STOCK = 'stock'
+  TITLE = 'title',
+  PRICE = 'price',
+  STOCK = 'stock',
 }
 
 @Component({
@@ -46,6 +47,7 @@ export class OffersListComponent implements OnInit {
   private readonly platformService = inject(PlatformService);
   private readonly modalService = inject(NgbModal);
   readonly categoryService = inject(CategoryService);
+  private readonly seo = inject(SeoService);
   readonly CategoryType = CategoryType;
 
   categories: Category[] = [];
@@ -65,13 +67,15 @@ export class OffersListComponent implements OnInit {
     [OfferKeys.STOCK]: 'Stan',
   };
 
-  sortOrders = signal(new Map<OfferKeys, 'asc' | 'desc'>([
-    [OfferKeys.TITLE, 'asc'],
-    [OfferKeys.PRICE, 'asc'],
-    [OfferKeys.STOCK, 'asc'],
-    [OfferKeys.ID, 'asc'],
-  ]));
-  
+  sortOrders = signal(
+    new Map<OfferKeys, 'asc' | 'desc'>([
+      [OfferKeys.TITLE, 'asc'],
+      [OfferKeys.PRICE, 'asc'],
+      [OfferKeys.STOCK, 'asc'],
+      [OfferKeys.ID, 'asc'],
+    ])
+  );
+
   currentSorting = signal<OfferKeys>(OfferKeys.ID);
   order = signal<'asc' | 'desc'>('asc');
 
@@ -83,25 +87,26 @@ export class OffersListComponent implements OnInit {
         this.categories = categories;
         this.subcategories = subcategories;
         this.loadOffers();
-        // this.openModal();
       },
       error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
-    });    
+    });
+    this.seo.setTitleAndMeta('Produkty');
   }
 
   openModal(): void {
     if (this.modalOpened) return;
 
     this.modalOpened = true;
-     const modalRef = this.modalService.open(InfoModalComponent, {
-            size: 'md',
-            centered: true,
-          });
-          modalRef.componentInstance.header = 'Drodzy Wojownicy!'
-      modalRef.componentInstance.message = 'Tymczasowo oferta naszego sklepu jest dostępna tylko stacjonarnie w lokalu Ragnarok przy ul. Dolna Wilda 16A w Poznaniu.'
-      modalRef.result.finally(() => {
-        this.modalOpened = false; // Ustaw na false, kiedy modal zostanie zamknięty
-      });
+    const modalRef = this.modalService.open(InfoModalComponent, {
+      size: 'md',
+      centered: true,
+    });
+    modalRef.componentInstance.header = 'Drodzy Wojownicy!';
+    modalRef.componentInstance.message =
+      'Tymczasowo oferta naszego sklepu jest dostępna tylko stacjonarnie w lokalu Ragnarok przy ul. Dolna Wilda 16A w Poznaniu.';
+    modalRef.result.finally(() => {
+      this.modalOpened = false; // Ustaw na false, kiedy modal zostanie zamknięty
+    });
   }
 
   loadOffers(page: number = this.currentPage()): void {
@@ -118,10 +123,10 @@ export class OffersListComponent implements OnInit {
           }
         : undefined,
     };
-  
+
     const sortingField: OfferKeys = this.currentSorting();
     const sortingOrder = this.sortOrders().get(sortingField) ?? 'asc';
-  
+
     this.backendService
       .getAll<Offer>('offers', sortingField, sortingOrder, pagination)
       .subscribe({
@@ -175,18 +180,20 @@ export class OffersListComponent implements OnInit {
   sortBy(field: OfferKeys): void {
     const currentOrder = this.sortOrders().get(field);
     const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-  
-    this.sortOrders.update(orders => {
+
+    this.sortOrders.update((orders) => {
       orders.set(field, newOrder);
       return new Map(orders);
     });
-  
+
     this.currentSorting.set(field);
     this.loadOffers();
   }
-  
+
   getSortIcon(field: OfferKeys): string {
     const order = this.sortOrders().get(field);
-    return order === 'asc' ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-down-alt';
+    return order === 'asc'
+      ? 'bi bi-sort-alpha-down'
+      : 'bi bi-sort-alpha-down-alt';
   }
 }

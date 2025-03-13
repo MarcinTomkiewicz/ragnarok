@@ -6,6 +6,7 @@ import { Offer } from '../../core/interfaces/i-offers';
 import { CategoryService } from '../../core/services/category/category.service';
 import { CategoryType } from '../../core/enums/categories';
 import { PlatformService } from '../../core/services/platform/platform.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-offer-details',
@@ -19,6 +20,7 @@ export class OfferDetailsComponent implements OnInit {
   private readonly backendService = inject(BackendService);
   readonly categoryService = inject(CategoryService);
   private readonly platformService = inject(PlatformService);
+  private readonly seo = inject(SeoService);
 
   readonly CategoryType = CategoryType;
   offer: Offer | null = null;
@@ -29,7 +31,7 @@ export class OfferDetailsComponent implements OnInit {
       this.backendService.getById<Offer>('offers', offerId).subscribe({
         next: (offer) => {
           this.offer = offer;
-          console.log('Szczegóły oferty:', offer);
+          this.seo.setTitleAndMeta(`${this.offer?.title}`);
         },
         error: (err) => console.error('Błąd podczas pobierania oferty:', err),
       });
@@ -49,5 +51,4 @@ export class OfferDetailsComponent implements OnInit {
   isMobile(): boolean {
     return this.platformService.isBrowser && window.innerWidth < 810;
   }
-
 }

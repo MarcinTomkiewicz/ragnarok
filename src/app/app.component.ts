@@ -41,10 +41,16 @@ export class AppComponent {
   private readonly loaderService = inject(LoaderService);
   private readonly router = inject(Router);
   private readonly platformService = inject(PlatformService);
-  private readonly seo = inject(SeoService)
+  private readonly seo = inject(SeoService);
 
   ngOnInit(): void {
     this.seo.setTitleAndMeta('Strona główna');
+    if (this.platformService.isBrowser) {
+      this.initRouterEvents();
+    }
+  }
+
+  initRouterEvents() {
     this.router.events.subscribe((event: Event) => {
       if (this.platformService.isBrowser) {
         if (
@@ -63,7 +69,6 @@ export class AppComponent {
           this.loaderService.hide();
         }
 
-        // Jeśli trasa została załadowana, wyślij zdarzenie do Facebook Pixel
         if (event instanceof NavigationEnd) {
           this.trackPageView(event.urlAfterRedirects);
         }

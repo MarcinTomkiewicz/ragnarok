@@ -1,42 +1,42 @@
 import { Injectable, inject } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { Router } from '@angular/router'; // Router do pobierania URL
+import { PlatformService } from '../platform/platform.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SeoService {
-  private readonly titleService = inject(Title); // Injectowanie Title
-  private readonly metaService = inject(Meta); // Injectowanie Meta
-  private readonly router = inject(Router); // Injectowanie Router
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
+  private readonly router = inject(Router);
+  private readonly platformService = inject(PlatformService);
 
-  // Domyślne wartości
   private readonly defaultDescription = 'Ragnarok – epickie sesje RPG w klimatycznych salach w Poznaniu. Gry fabularne, wynajem pokoi RPG i niezapomniane przygody. Zbierz drużynę i graj!';
-  private readonly defaultImageUrl = 'ragnarok.webp'; // Obrazek w głównym katalogu public
+  private readonly defaultImageUrl = 'ragnarok.webp';
 
   setTitleAndMeta(pageTitle: string, description: string = this.defaultDescription, imageUrl: string = this.defaultImageUrl): void {
-    // Bazowy tytuł strony
     const baseTitle = 'Ragnarok - Pokoje do sesji RPG w Poznaniu';
     const fullTitle = `${baseTitle} | ${pageTitle}`;
     this.titleService.setTitle(fullTitle);
 
-    // Ustawienia meta tagów
-    const currentUrl = this.router.url;
-    const canonicalUrl = `https://ragnarok-rooms.pl${currentUrl}`;
+    
+    let canonicalUrl = 'https://ragnarok-rooms.pl';
+    if (this.platformService.isBrowser) {
+      const currentUrl = this.router.url;
+      canonicalUrl = `https://ragnarok-rooms.pl${currentUrl}`;
+    }
 
-    // Ustawienie linku kanonicznego
     this.metaService.updateTag({
       name: 'canonical',
       content: canonicalUrl,
     });
 
-    // Ustawienie meta description (domyślne lub dynamiczne)
     this.metaService.updateTag({
       name: 'description',
       content: description,
     });
 
-    // Ustawienia Open Graph
     this.metaService.updateTag({
       property: 'og:title',
       content: fullTitle,
@@ -50,7 +50,6 @@ export class SeoService {
       content: imageUrl,
     });
 
-    // Ustawienia Twitter Card
     this.metaService.updateTag({
       name: 'twitter:title',
       content: fullTitle,

@@ -6,6 +6,7 @@ import { FilterOperator } from '../../core/enums/filterOperator';
 import { EventData } from '../../core/interfaces/i-event';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { EventsService } from '../../core/services/events/events.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-event-calendar',
@@ -19,12 +20,12 @@ export class EventCalendarComponent implements OnInit {
   singleEvents: EventData[] = [];
 
   private readonly backendService = inject(BackendService);
-  private readonly eventsService = inject(EventsService)
+  private readonly eventsService = inject(EventsService);
+  private readonly seo = inject(SeoService);
 
   ngOnInit() {
     const today = new Date().toISOString().split('T')[0];
-  
-    // Filtry dla wydarzeń cyklicznych
+
     const recurringEvents$ = this.backendService.getAll<EventData>(
       'events',
       'eventDate',
@@ -33,11 +34,10 @@ export class EventCalendarComponent implements OnInit {
         filters: {
           isActive: { value: true, operator: FilterOperator.EQ },
           isRecurring: { value: true, operator: FilterOperator.EQ },
-        }
+        },
       }
     );
-  
-    // Filtry dla wydarzeń pojedynczych
+
     const singleEvents$ = this.backendService.getAll<EventData>(
       'events',
       'eventDate',
@@ -47,11 +47,10 @@ export class EventCalendarComponent implements OnInit {
           isActive: { value: true, operator: FilterOperator.EQ },
           isRecurring: { value: false, operator: FilterOperator.EQ },
           eventDate: { value: today, operator: FilterOperator.GTE },
-        }
+        },
       }
     );
-  
-    // Łączenie wyników za pomocą forkJoin
+
     forkJoin({
       recurringEvents: recurringEvents$,
       singleEvents: singleEvents$,
@@ -63,6 +62,6 @@ export class EventCalendarComponent implements OnInit {
       error: (err) => console.error('Błąd podczas pobierania wydarzeń:', err),
       complete: () => console.log('Wszystkie wydarzenia zostały pobrane'),
     });
+    this.seo.setTitleAndMeta('Kalendarz Wydarzeń');
   }
-  
 }

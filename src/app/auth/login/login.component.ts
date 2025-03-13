@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -14,11 +14,11 @@ import { SupabaseService } from '../../core/services/supabase/supabase.service';
 export class LoginComponent {
   loginForm: FormGroup;
   errorMessage: string | null = null;
+  private readonly fb = inject(FormBuilder);
+  private readonly supabaseService = inject(SupabaseService);
+  private readonly router = inject(Router);
 
   constructor(
-    private fb: FormBuilder,
-    private supabaseService: SupabaseService,
-    private router: Router
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
