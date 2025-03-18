@@ -56,7 +56,7 @@ export class EventCalendarComponent implements OnInit {
       singleEvents: singleEvents$,
     }).subscribe({
       next: ({ recurringEvents, singleEvents }) => {
-        this.recurringEvents = recurringEvents;
+        this.recurringEvents = this.eventsService.processRecurringEvents(recurringEvents, today);
         this.singleEvents = singleEvents;
       },
       error: (err) => console.error('Błąd podczas pobierania wydarzeń:', err),
