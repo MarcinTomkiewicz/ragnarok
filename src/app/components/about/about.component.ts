@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-about',
@@ -16,6 +17,17 @@ import { SeoService } from '../../core/services/seo/seo.service';
   standalone: true,
   imports: [CommonModule],
   styleUrls: ['./about.component.scss'],
+  // animations: [
+  //   trigger('slideInAnimation', [
+  //     transition(':enter', [
+  //       style({ transform: 'translateX(-100%)', opacity: 0 }),
+  //       animate(
+  //         '300ms ease-out',
+  //         style({ transform: 'translateX(0)', opacity: 1 })
+  //       ),
+  //     ]),
+  //   ]),
+  // ],
 })
 export class AboutComponent implements AfterViewInit {
   showMore = signal(false);
