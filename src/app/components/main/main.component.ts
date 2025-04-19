@@ -4,12 +4,9 @@ import {
   Component,
   HostListener,
   OnInit,
-  TransferState,
   ViewChild,
   inject,
-  makeStateKey,
   signal,
-  viewChild,
 } from '@angular/core';
 import {
   NgbCarousel,
@@ -17,14 +14,13 @@ import {
   NgbCarouselModule,
 } from '@ng-bootstrap/ng-bootstrap';
 
+import { animate, style, transition, trigger } from '@angular/animations';
 import { INews } from '../../core/interfaces/i-news';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { ConverterService } from '../../core/services/converter/converter.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { Router } from '@angular/router';
 import { NewsCarouselComponent } from '../../common/news-carousel/news-carousel.component';
-
-const NEWS_STATE_KEY = makeStateKey<INews[]>('news');
 
 @Component({
   selector: 'app-main',
@@ -33,6 +29,17 @@ const NEWS_STATE_KEY = makeStateKey<INews[]>('news');
   providers: [NgbCarouselConfig],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
+  // animations: [
+  //   trigger('slideInAnimation', [
+  //     transition(':enter', [
+  //       style({ transform: 'translateX(-100%)', opacity: 0 }),
+  //       animate(
+  //         '300ms ease-out',
+  //         style({ transform: 'translateX(0)', opacity: 1 })
+  //       ),
+  //     ]),
+  //   ]),
+  // ],
 })
 export class MainComponent implements OnInit, AfterViewInit {
   @ViewChild('carousel', { static: false }) carousel: NgbCarousel | undefined;
@@ -46,7 +53,6 @@ export class MainComponent implements OnInit, AfterViewInit {
   private readonly backend = inject(BackendService);
   private readonly converter = inject(ConverterService);
   private readonly platformService = inject(PlatformService);
-  private readonly state = inject(TransferState);
 
   ngOnInit() {
     this.backend.getAll<INews>('news', 'created_at', 'desc').subscribe({
