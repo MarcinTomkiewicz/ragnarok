@@ -1,0 +1,30 @@
+<ngb-carousel
+  [interval]="interval()"
+  [showNavigationArrows]="true"
+  [showNavigationIndicators]="false"
+  class="d-flex w-100"
+>
+  @for (news of newsItems(); track news.id) {
+  <ng-template ngbSlide class="flex-center w-90">
+    <div
+      class="flex-row-regular news-wrapper"
+      [style.backgroundImage]="'url(' + news.imageURL + ')'"
+    >
+      <div class="content text-white">
+        <div class="flex-column-between my-3">
+          <h2>{{ news.header }}</h2>
+          <div class="mx-2">{{ news.description }}</div>
+          @if (news.link) {
+          <button
+            class="btn btn-primary align-self-center mt-2"
+            (click)="navigate(news.link)"
+          >
+            {{ news.linkDescription }}
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  }
+</ngb-carousel>

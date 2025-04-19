@@ -8,52 +8,6 @@
 main {
   @include flex-wrapper(column, center, center);
 }
-.carousel-item {
-  @include flex-wrapper(row, center, center);
-  width: 100%;
-}
-
-.news-wrapper {
-  gap: 1rem;
-  margin: auto;
-  width: 90%;
-  position: relative;
-  min-height: 371px;
-
-  .image-container {
-    width: 597px;
-    height: 371px;
-    position: relative;
-  }
-
-  .content {
-    width: 50%;
-    gap: 10px;
-  }
-
-  &.mobile-background {
-    background-size: cover;
-    background-position: top;
-    border-radius: 5px;
-    height: 400px;
-
-    &::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 1;
-      border-radius: 5px;
-    }
-
-    .content {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      padding: 10px;
-    }
-  }
-}
 
 .skeleton-wrapper {
   gap: 1rem;

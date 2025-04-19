@@ -10,7 +10,13 @@
     </div>
   </div>
   } @if (newsItems.length > 0 && !isLoading()) {
-  <ngb-carousel
+    <app-news-carousel
+    [newsItems]="newsItems"
+    [isMobile]="isMobile"
+    [interval]="000"
+    class="mb-5 w-100"
+  />
+  <!-- <ngb-carousel
     #carousel
     [showNavigationArrows]="true"
     [showNavigationIndicators]="false"
@@ -53,7 +59,7 @@
       </div>
     </ng-template>
     }
-  </ngb-carousel>
+  </ngb-carousel> -->
   }
   <div class="row">
     <div class="mb-4">

@@ -26,6 +26,44 @@
   }
 }
 
+.news-wrapper {
+  gap: 1rem;
+  margin: auto;
+  width: 90%;
+  min-height: 371px;
+  background-size: cover;
+  background-position: center;
+
+  .content {
+    background-color: rgba(55, 47, 59, 0.9);
+    width: 100%;
+    margin: 0 20px;
+  }
+
+  &.mobile-background {
+    background-size: cover;
+    background-position: top;
+    border-radius: 5px;
+    height: 400px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1;
+      border-radius: 5px;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 10px;
+    }
+  }
+}
+
 // ========== Tech Carousel ========== //
 .tech-carousel {
   display: flex;

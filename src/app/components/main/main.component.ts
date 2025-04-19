@@ -22,13 +22,14 @@ import { BackendService } from '../../core/services/backend/backend.service';
 import { ConverterService } from '../../core/services/converter/converter.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { Router } from '@angular/router';
+import { NewsCarouselComponent } from '../../common/news-carousel/news-carousel.component';
 
 const NEWS_STATE_KEY = makeStateKey<INews[]>('news');
 
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule, NgbCarouselModule, NgOptimizedImage],
+  imports: [CommonModule, NgbCarouselModule, NgOptimizedImage, NewsCarouselComponent],
   providers: [NgbCarouselConfig],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
