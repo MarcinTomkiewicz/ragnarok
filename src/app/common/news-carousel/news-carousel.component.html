@@ -10,10 +10,17 @@
       class="flex-row-regular news-wrapper"
       [style.backgroundImage]="'url(' + news.imageURL + ')'"
     >
-      <div class="content text-white">
+      <div class="content text-white align-self-end mb-2">
         <div class="flex-column-between my-3">
-          <h2>{{ news.header }}</h2>
-          <div class="mx-2">{{ news.description }}</div>
+          <h2 class="truncate-one-line">{{ news.header }}</h2>
+          {{ log(news) }}
+          @let authorData = getAuthor(news.author) | async ; @if (authorData) {
+          <div class="flex-row-regular w-100 my-2 font-size-small">
+            <div>Autor: {{ authorData.first_name }}</div>
+            <div>Opublikowano: {{ news.createdAt }}</div>
+          </div>
+          }
+          <div class="mx-2 truncate-two-lines">{{ news.description }}</div>
           @if (news.link) {
           <button
             class="btn btn-primary align-self-center mt-2"

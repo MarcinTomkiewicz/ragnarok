@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, Signal, input, ViewChild, inject } from '@angular/core';
+import { Component, Signal, input, ViewChild, inject, computed } from '@angular/core';
 import { NgbCarousel, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
 import { INews } from '../../core/interfaces/i-news';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { Router } from '@angular/router';
+import { BackendService } from '../../core/services/backend/backend.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-news-carousel',
@@ -19,7 +22,8 @@ export class NewsCarouselComponent {
 
     private readonly platformService = inject(PlatformService);
     private readonly router = inject(Router);
-
+    private readonly backendService = inject(BackendService)
+    
   @ViewChild(NgbCarousel, { static: true }) carousel?: NgbCarousel;
 
   navigate(link: string) {
@@ -30,6 +34,23 @@ export class NewsCarouselComponent {
     } else {
       this.router.navigateByUrl(link); // Zamiast window.location.href
     }
+  }
+
+
+  private authorCache = new Map<string, Observable<any>>();
+
+  getAuthor(authorId: string): Observable<any> {
+    if (!this.authorCache.has(authorId)) {
+      const obs$ = this.backendService.getById('users', authorId).pipe(
+      );
+      this.authorCache.set(authorId, obs$);
+    }
+    return this.authorCache.get(authorId)!;
+  }
+
+  log(data:any): void {
+    console.log(data);
+    
   }
 
   isExternalLink(url: string): boolean {

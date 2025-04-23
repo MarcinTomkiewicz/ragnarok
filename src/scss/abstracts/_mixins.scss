@@ -26,3 +26,11 @@
 @mixin td-width($size) {
   width: $size
 }
+
+@mixin truncate-lines($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

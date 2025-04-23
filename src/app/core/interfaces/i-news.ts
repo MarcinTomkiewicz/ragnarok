@@ -8,4 +8,5 @@ export interface INews {
     createdAt: string | number;
     link: string;
     linkDescription: string;
+    author: string;
 }

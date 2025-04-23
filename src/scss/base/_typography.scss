@@ -57,3 +57,11 @@ a {
   color: $primary-color;
   text-decoration: none;
 }
+
+.truncate-one-line {
+  @include truncate-lines(1);
+}
+
+.truncate-two-lines {
+  @include truncate-lines(2);
+}

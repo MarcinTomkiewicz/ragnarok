@@ -16,50 +16,6 @@
     [interval]="000"
     class="mb-5 w-100"
   />
-  <!-- <ngb-carousel
-    #carousel
-    [showNavigationArrows]="true"
-    [showNavigationIndicators]="false"
-    [interval]="5000"
-    class="d-flex w-100 mb-5"
-  >
-    @for (news of newsItems; track news.id) {
-    <ng-template ngbSlide class="flex-center w-90">
-      <div
-        class="flex-row-regular news-wrapper"
-        [ngClass]="{ 'mobile-background': isMobile() }"
-        [style.backgroundImage]="
-          isMobile() ? 'url(' + news.imageURL + ')' : 'none'
-        "
-      >
-        @if (!isMobile()) {
-        <div class="image-container">
-          <img
-            [ngSrc]="news.imageURL"
-            [alt]="news.header"
-            width="597"
-            height="371"
-            [attr.loading]="newsItems.indexOf(news) === 0 ? 'eager' : 'lazy'"
-            priority
-          />
-        </div>
-        }
-        <div class="flex-column-between content">
-          <h2>{{ news.header }}</h2>
-          <div>{{ news.description }}</div>
-          @if (news.link) {
-          <button
-            class="btn btn-primary align-self-center mt-2"
-            (click)="navigate(news.link)"
-          >
-            {{ news.linkDescription }}
-          </button>
-        }
-        </div>
-      </div>
-    </ng-template>
-    }
-  </ngb-carousel> -->
   }
   <div class="row">
     <div class="mb-4">
