@@ -5,17 +5,19 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { EventsService } from '../../core/services/events/events.service';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { NgbAlertModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgbAlertModule],
   templateUrl: './event-details.component.html',
   styleUrl: './event-details.component.scss',
 })
 export class EventDetailsComponent implements OnInit {
   eventData?: EventData;
   errorMessage: string | null = null;
+  today = new Date().toISOString().split('T')[0]
 
   private readonly backendService = inject(BackendService);
   private readonly route = inject(ActivatedRoute);
@@ -23,13 +25,12 @@ export class EventDetailsComponent implements OnInit {
     private readonly seo = inject(SeoService);
 
   ngOnInit(): void {
-    const today = new Date().toISOString().split('T')[0]; 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.backendService.getById<EventData>('events', id).subscribe({
         next: (event) => {
           if (event) {
-            this.eventData = this.eventsService.processSingleEvent(event, today);
+            this.eventData = event.isRecurring ? this.eventsService.processSingleEvent(event, this.today) : event;
             this.seo.setTitleAndMeta(`${this.eventData?.name}`);
           } else {
             this.errorMessage = 'Wydarzenie nie zostało znalezione.';

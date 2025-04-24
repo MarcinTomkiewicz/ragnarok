@@ -1,11 +1,16 @@
 @if (eventData) {
 <div class="component-container flex-column-center">
   <img
-    class="event-image"
+    class="event-image align-self-center"
     [src]="eventData.image"
     alt="{{ eventData.name }}"
   />
   <div class="event-container w-100">
+    @if (eventData.eventDate && (eventData.eventDate < today)) {
+      <ngb-alert type="danger">
+        UWAGA! Wydarzenie archiwalne!
+      </ngb-alert>
+    }
     <h2 class="text-center">{{ eventData.name }}</h2>
     <div class="event-description">
       @let paragraphs = eventData.longDescription.split('\n'); @for (paragraph
@@ -21,7 +26,7 @@
       <tbody>
         <tr>
           <td>
-            {{ eventData.recurring ? "Następna data:" : "Data spotkania:" }}
+            {{ eventData.isRecurring ? "Następna data:" : "Data spotkania:" }}
           </td>
           <td>{{ eventData.eventDate | date : "dd.MM.yyyy" }}</td>
         </tr>

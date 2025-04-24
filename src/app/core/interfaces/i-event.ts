@@ -6,7 +6,7 @@ export interface EventData {
     shortDescription: string;
     longDescription: string;
     facebookLink: string;
-    recurring: boolean;
+    isRecurring: boolean;
     image: string;
     isActive: boolean;
     interval: number;
