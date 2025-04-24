@@ -55,7 +55,7 @@ export class MainComponent implements OnInit, AfterViewInit {
   private readonly platformService = inject(PlatformService);
 
   ngOnInit() {
-    this.backend.getAll<INews>('news', 'created_at', 'desc').subscribe({
+    this.backend.getAll<INews>('news', 'created_at', 'desc', { page: 1, pageSize: 5 }).subscribe({
       next: (news: INews[]) => {
         this.newsItems = news.map((item) => ({
           ...item,

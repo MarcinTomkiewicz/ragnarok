@@ -40,7 +40,7 @@ export class SeoService {
   }
 
   loadTrackingScripts(): void {
-    if (!this.platformService.isBrowser) return; // Unikamy ładowania w SSR
+    if (!this.platformService.isBrowser) return;
 
     this.loadScript('https://www.googletagmanager.com/gtm.js?id=GTM-P5FPPLDC');
     this.loadScript('https://www.googletagmanager.com/gtag/js?id=AW-16834781429', true);

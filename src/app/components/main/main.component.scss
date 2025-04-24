@@ -1,6 +1,8 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+// === Layout ===
+
 :host {
   @include flex-wrapper(row, center, center);
 }
@@ -9,20 +11,19 @@ main {
   @include flex-wrapper(column, center, center);
 }
 
+// === Skeleton Wrapper ===
+
 .skeleton-wrapper {
   gap: 1rem;
   margin: auto;
-  width: 90%;
-  height: 371px;
   margin-bottom: 3rem;
+  width: 80%;
+  height: 371px;
   @include flex-wrapper(row, space-between, center);
-  @media (max-width: $breakpoint-sm) {
-    width: 95%;
-    height: 400px;
-  }
-  @media (max-width: $breakpoint-xs) {
-    width: 95%;
-    height: 400px;
+
+  @media (max-width: $breakpoint-xl) {
+    width: 90%;
+    // height: 400px;
   }
 }
 
@@ -32,41 +33,76 @@ main {
   width: 50%;
   padding: 10px;
   @include flex-wrapper(column, space-between, center);
+
   @media (max-width: $breakpoint-sm) {
     display: none;
   }
 }
 
+// === Skeleton Base ===
+
 .skeleton {
   background-color: #ccc;
   margin: 10px 0;
   animation: pulse 1.5s infinite ease-in-out;
+
+  &-small {
+    margin: 5px 0;
+  }
+
+  &-content {
+    width: 95%;
+    height: 20px;
+    border-radius: 5px;
+  }
+
+  &-image {
+    width: 597px;
+    height: 371px;
+    border-radius: 10px;
+
+    @media (max-width: $breakpoint-lg) {
+      width: 90%;
+      // max-height: 400px;
+    }
+  }
+
+  // === Skeleton Height Variants ===
+
+  &-h-1 {
+    height: 1rem;
+  }
+
+  &-h-1-5 {
+    height: 1.5rem;
+  }
+
+  &-h-2 {
+    height: 2rem;
+  }
+
+  &-h-2-5 {
+    height: 2.5rem;
+  }
+
+  &-h-3 {
+    height: 3rem;
+  }
 }
 
-.skeleton-image {
-  width: 597px;
-  height: 371px;
-  border-radius: 10px;
-  @media (max-width: $breakpoint-sm) {
-    width: 95%;
-    max-height: 400px;
-  }
-  @media (max-width: $breakpoint-xs) {
-    width: 95%;
-    max-height: 400px;
-  }
-}
-
-.skeleton-content {
-  width: 80%;
-  height: 20px;
+.skeleton-button {
+  @include responsive-width(143.73px, 130px, 116px);
+  height: 2.5rem;
   border-radius: 5px;
-
-  &:first-of-type {
-    height: 40px;
-    margin-bottom: 25px;
-  }
 }
+
+.skeleton-event-button {
+  @include responsive-width(231.89px, 205px, 179.5px);
+  height: 2.5rem;
+  border-radius: 5px;
+}
+
+// === Animation ===
 
 @keyframes pulse {
   0% {
@@ -79,6 +115,8 @@ main {
     background-color: #ccc;
   }
 }
+
+// === Media Queries ===
 
 @media (max-width: $breakpoint-md) {
   .image-container {
@@ -93,6 +131,11 @@ main {
 
   .image-container {
     display: none;
+  }
+
+  .skeleton-button {
+    margin: 0;
+    margin-top: 0.75rem;
   }
 }
 

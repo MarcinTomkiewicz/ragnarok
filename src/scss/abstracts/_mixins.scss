@@ -34,3 +34,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+@mixin responsive-width($default, $lg, $sm) {
+  width: $default;
+
+  @media (max-width: $breakpoint-lg) {
+    width: $lg;
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    width: $sm;
+  }
+}
