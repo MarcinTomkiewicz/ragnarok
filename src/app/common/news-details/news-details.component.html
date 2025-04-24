@@ -1,9 +1,9 @@
 @if (newsData()) {
     <div class="flex-column-between w-100">
-      <h2 class="mt-5">{{ newsData()!.header }}</h2>
-      <div class="news-content">
+      <h2 class="mt-5 text-center">{{ newsData()!.header }}</h2>
+      <div class="news-content flex-column-between-start-xs">
         <img
-          class="news-image float-start me-2 mb-1"
+          class="news-image float-start me-2 mb-1 align-self-center"
           [src]="newsData()!.newsImage"
           alt="{{ newsData()!.header }}"
           width="1080" height="1350"
