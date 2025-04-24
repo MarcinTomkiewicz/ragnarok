@@ -70,7 +70,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           const link = document.createElement('link');
           link.rel = 'preload';
           link.as = 'image';
-          link.href = news[0].imageURL;
+          link.href = news[0].image;
           document.head.appendChild(link);
         }
       },

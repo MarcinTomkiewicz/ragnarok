@@ -1,0 +1,46 @@
+@if (newsData()) {
+    <div class="flex-column-between w-100">
+      <h2 class="mt-5">{{ newsData()!.header }}</h2>
+      <div class="news-content">
+        <img
+          class="news-image float-start me-2 mb-1"
+          [src]="newsData()!.newsImage"
+          alt="{{ newsData()!.header }}"
+          width="1080" height="1350"
+        />
+        @let paragraphs = newsData()!.longDescription.split('\n');
+        @for (paragraph of paragraphs; let index = $index; track index) {
+          <p class="news-paragraph">{{ paragraph }}</p>
+        }
+      </div>
+      <table class="table table-transparent td-light align-middle font-size-small responsive-table">
+        <tbody>
+          <tr>
+            <td>Data publikacji:</td>
+            <td>{{ newsData()!.createdAt }}</td>
+          </tr>
+          <tr>
+            <td>Autor:</td>
+            @let authorData = getAuthor(newsData()!.author) | async ;
+            <td>{{ authorData?.first_name || 'Nieznany' }}</td>
+          </tr>
+          <tr>
+            <td>Powiązane wydarzenie</td>
+            <td>
+              @if (newsData()!.link) {
+                <a [href]="newsData()!.link" target="_blank" rel="noopener noreferrer">
+                  Otwórz wydarzenie
+                </a>
+              } @else {
+                <span>Brak</span>
+              }
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+} @else if (errorMessage()) {
+  <div class="component-container flex-center">
+    <p class="text-danger">{{ errorMessage() }}</p>
+  </div>
+}

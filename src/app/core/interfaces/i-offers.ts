@@ -4,7 +4,7 @@ export interface Offer {
     description: string;
     price: number;
     stock: number;
-    imageURL: string;
+    image: string;
     buyNowLink: string;
     categoryId: number;
     subcategoryId: number;

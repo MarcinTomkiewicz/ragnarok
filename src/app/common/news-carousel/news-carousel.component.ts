@@ -48,10 +48,6 @@ export class NewsCarouselComponent {
     return this.authorCache.get(authorId)!;
   }
 
-  log(data:any): void {
-    console.log(data);
-    
-  }
 
   isExternalLink(url: string): boolean {
     try {

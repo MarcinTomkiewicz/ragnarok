@@ -55,14 +55,14 @@
         class="card card-dark card-350"
         [ngClass]="{ 'mobile-background': isMobile(), 'w-100': !isMobile() }"
         [style.backgroundImage]="
-          isMobile() ? 'url(' + offer.imageURL + ')' : 'none'
+          isMobile() ? 'url(' + offer.image + ')' : 'none'
         "
       >
         <div class="card-body flex-row w-100">
           @if (!isMobile()) {
           <div>
             <img
-              [src]="offer.imageURL"
+              [src]="offer.image"
               [alt]="offer.title"
               width="260"
               height="326"

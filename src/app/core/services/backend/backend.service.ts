@@ -21,8 +21,6 @@ interface ImageConfig {
   height?: number;
 }
 
-type WithImage<T> = T & { image?: string; imageURL?: string };
-
 @Injectable({
   providedIn: 'root',
 })
@@ -68,17 +66,14 @@ export class BackendService {
           throw new Error(response.error.message);
         }
   
+        // Przetwarzanie wszystkich danych, które mogą zawierać obrazki
         return (response.data || []).map((item) => {
-          // Sprawdzanie, czy element jest typu z obrazkiem
-          if ('image' in item || 'imageURL' in item) {
-            // TypeScript teraz wie, że mamy do czynienia z obiektem, który zawiera te pola
-            return this.processImage(item as WithImage<T>, imageConfig?.width, imageConfig?.height);
-          }
-          return item; // Zwrócenie elementu bez zmian, jeśli nie ma image/imageURL
+          return this.processImage(item, imageConfig?.width, imageConfig?.height);
         });
       })
     );
   }
+  
   
   getCount<T extends object>(table: string, filters?: { [key: string]: any }): Observable<number> {
     let query = this.supabase.from(table).select('*', { count: 'exact', head: true });
@@ -182,22 +177,55 @@ export class BackendService {
    * @param item - Obiekt z polem `image`
    * @returns Przetworzony obiekt z dodanym polem `imageUrl`
    */
-  private processImage<T extends { image?: string; imageURL?: string }>(
+  // private processImage<T extends { image?: string; imageURL?: string }>(
+  //   item: T,
+  //   width: number = 600,
+  //   height: number = 400
+  // ): T {
+  //   if (item.image) {
+  //     const { data } = this.supabase.storage
+  //       .from('images')
+  //       .getPublicUrl(item.image);
+
+  //     item.imageURL =
+  //       this.getOptimizedImageUrl(data.publicUrl, width, height) || '';
+  //   }
+
+  //   return item;
+  // }
+  private processImage<T extends { [key: string]: any }>(
     item: T,
     width: number = 600,
     height: number = 400
   ): T {
-    if (item.image) {
-      const { data } = this.supabase.storage
-        .from('images')
-        .getPublicUrl(item.image);
-
-      item.imageURL =
-        this.getOptimizedImageUrl(data.publicUrl, width, height) || '';
+    // Iteracja po kluczach obiektu
+    for (const key in item) {
+      if (item.hasOwnProperty(key)) {
+        // Sprawdzamy, czy klucz kończy się na 'image' i czy wartość jest typu string
+        if (key.toLowerCase().endsWith('image') && typeof item[key] === 'string') {
+          const imageUrl = item[key]; // Pobieramy URL obrazka
+  
+          // Sprawdzamy, czy rzeczywiście mamy URL
+          if (imageUrl) {
+            const { data } = this.supabase.storage.from('images').getPublicUrl(imageUrl);
+  
+            // Generujemy zoptymalizowany URL
+            const optimizedImageUrl = this.getOptimizedImageUrl(data.publicUrl, width, height);
+  
+            // Nadpisujemy wartość pola w obiekcie
+            item[key] = optimizedImageUrl as T[Extract<keyof T, string>]; // Bezpieczne przypisanie
+          }
+        }
+      }
     }
-
+  
     return item;
   }
+  
+  
+  
+  
+  
 
   /**
    * Optymalizuje URL obrazu, zmieniając jego rozmiar i jakość w locie.

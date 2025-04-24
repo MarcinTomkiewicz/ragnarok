@@ -1,6 +1,6 @@
 <main>
   <div class="flex-column-start mb-5 w-100">
-    @if (true || isLoading() && newsItems.length <= 0) {
+    @if (isLoading() && newsItems.length <= 0) {
     <div class="flex-row-regular skeleton skeleton-wrapper news-wrapper">
       <div class="content text-white align-self-end mb-2">
         <div class="flex-column-between mt-2 mb-3">
@@ -38,6 +38,7 @@
       [newsItems]="newsItems"
       [isMobile]="isMobile"
       [interval]="000"
+      class="w-100"
     />
     }
   </div>

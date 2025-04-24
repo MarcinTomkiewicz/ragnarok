@@ -62,6 +62,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'news/:id',
+    loadComponent: () =>
+      import('./common/news-details/news-details.component').then(
+        (m) => m.NewsDetailsComponent
+      ),
+  },
+  {
     path: 'offers-list',
     loadComponent: () =>
       import('./components/offers-list/offers-list.component').then(

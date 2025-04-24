@@ -8,12 +8,11 @@
   <ng-template ngbSlide class="flex-center w-90">
     <div
       class="flex-row-regular news-wrapper"
-      [style.backgroundImage]="'url(' + news.imageURL + ')'"
+      [style.backgroundImage]="'url(' + news.image + ')'"
     >
       <div class="content text-white align-self-end mb-2">
         <div class="flex-column-between my-3">
           <h2 class="truncate-two-lines text-center">{{ news.header }}</h2>
-          {{ log(news) }}
           @let authorData = getAuthor(news.author) | async ; @if (authorData) {
           <div class="flex-row-regular w-100 my-2 font-size-small">
             <div class="ms-2">Autor: {{ authorData.first_name }}</div>
@@ -26,18 +25,17 @@
             <button
               [disabled]="!news.longDescription"
               (click)="navigate(newsLink)"
-              class="btn btn-secondary mt-2"
+              class="btn btn-primary mt-2"
             >
               Czytaj dalej
             </button>
-            @if (news.link) {
             <button
+              [disabled]="!news.link"
               class="btn btn-primary mt-2"
               (click)="navigate(news.link)"
             >
               Przejdź do wydarzenia
             </button>
-            }
           </div>
         </div>
       </div>
