@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { Component, Signal, input, ViewChild, inject, computed } from '@angular/core';
 import { NgbCarousel, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
 import { INews } from '../../core/interfaces/i-news';
@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'app-news-carousel',
   standalone: true,
-  imports: [CommonModule, NgbCarouselModule],
+  imports: [CommonModule, NgbCarouselModule, NgOptimizedImage],
   templateUrl: './news-carousel.component.html',
   styleUrl: './news-carousel.component.scss',
 })
@@ -36,6 +36,9 @@ export class NewsCarouselComponent {
     }
   }
 
+  log(data: any) {
+    console.log(data);
+  } 
 
   private authorCache = new Map<string, Observable<any>>();
 

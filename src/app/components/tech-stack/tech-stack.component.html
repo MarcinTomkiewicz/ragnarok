@@ -9,7 +9,9 @@
     niezapomnianych przygód.
   </div>
   <div class="image-banner-container">
-    <img src="Vampire.webp" alt="Banner for services" class="image-banner" />
+    <img src="strip.avif" alt="Banner for services" class="image-banner" />
   </div>
-  <app-carousel *ngIf="!isLoading()" [items]="techStack()"></app-carousel>
+  @if (!isLoading()) {
+  <app-carousel [items]="techStack()"></app-carousel>
+  }
 </div>

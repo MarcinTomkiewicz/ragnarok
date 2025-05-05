@@ -1,0 +1,19 @@
+.published-info {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  
+    .label,
+    .date {
+      white-space: nowrap;
+    }
+  
+    @media (max-width: 550px) {
+      .label {
+        width: 100%;
+      }
+      .date {
+        width: 100%;
+      }
+    }
+  }

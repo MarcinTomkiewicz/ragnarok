@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { NgbCarousel, NgbCarouselConfig, NgbCarouselModule } from '@ng-bootstrap/ng-bootstrap';
 import { TechStack } from '../../core/interfaces/i-techStack';
 import { PlatformService } from '../../core/services/platform/platform.service';
+import { IRooms } from '../../core/interfaces/i-rooms';
 
 @Component({
   selector: 'app-carousel',
@@ -17,7 +18,7 @@ import { PlatformService } from '../../core/services/platform/platform.service';
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CarouselComponent implements OnInit {
-  items = input<TechStack[]>([]);
+  items = input<TechStack[] | IRooms[]>([]);
   itemTemplate = input<TemplateRef<any> | null>(null);
 
   carousel = viewChild(NgbCarousel);
@@ -30,7 +31,7 @@ export class CarouselComponent implements OnInit {
   screenWidth = signal(0);
 
   /** Zgrupowane elementy na podstawie szerokości */
-  groupedItems = signal<TechStack[][]>([]);
+  groupedItems = signal<TechStack[][] | IRooms[][]>([]);
 
   /** Czy pokazywać nawigację */
   showNavigation = computed(() => 
@@ -66,7 +67,7 @@ export class CarouselComponent implements OnInit {
   }
 
   /** Podział elementów na grupy */
-  private chunkArray(array: TechStack[], chunkSize: number): TechStack[][] {
+  private chunkArray(array: TechStack[] | IRooms[], chunkSize: number): TechStack[][]  | IRooms[][]{
     return Array.from({ length: Math.ceil(array.length / chunkSize) }, (_, i) =>
       array.slice(i * chunkSize, i * chunkSize + chunkSize)
     );

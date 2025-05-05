@@ -3,6 +3,7 @@ import { CarouselComponent } from '../../common/carousel/carousel.component';
 import { CommonModule } from '@angular/common';
 import { TechStack } from '../../core/interfaces/i-techStack';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { IRooms } from '../../core/interfaces/i-rooms';
 
 @Component({
   selector: 'app-our-rooms',
@@ -19,7 +20,7 @@ ngOnInit() {
 }
 
 
-  ourRoomsDetails: TechStack[] = [
+  ourRoomsDetails: IRooms[] = [
       {
         id: 1,
         name: 'Salka Midgard',

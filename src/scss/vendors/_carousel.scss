@@ -27,12 +27,19 @@
 }
 
 .news-wrapper {
+  position: relative;
   gap: 1rem;
   margin: auto;
   width: 90%;
-  min-height: 371px;
-  background-size: cover;
-  background-position: center;
+  height: 371px;
+
+  .slide-image {
+    position: absolute;
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+  }
 
   .content {
     background-color: rgba(55, 47, 59, 0.9);

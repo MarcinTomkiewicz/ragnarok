@@ -31,10 +31,9 @@ p, .h2-contact, .form-label {
 
 .image-banner {
   width: 100%;
-  height: auto; 
-  aspect-ratio: 1 / 1;
+  max-height: 250px;
   object-fit: cover;
-  object-position: 0 38%;
+  object-position: 0 50%;
 }
 
 .map-container {

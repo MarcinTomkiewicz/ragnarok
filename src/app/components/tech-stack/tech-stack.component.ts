@@ -43,8 +43,14 @@ export class TechStackComponent implements OnInit {
     this.loaderService.show();
     this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc', undefined, {width: 234, height: 234}).subscribe({
       next: (data) => {
-        this.techStack.set(data);
+        const dataToShow = data.filter((item) => item.isActive);
+        if (dataToShow.length === 0) {
+          this.error.set('Nie znaleziono żadnych aktywnych członków zespołu.');
+          this.isLoading.set(false);
+        } else {
+        this.techStack.set(dataToShow);
         this.isLoading.set(false);
+        }
       },
       error: (err) => {
         console.error('Błąd podczas pobierania danych:', err);

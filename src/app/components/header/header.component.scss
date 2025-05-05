@@ -46,12 +46,15 @@ a {
   a {
     @include responsive-font-size(20px);
     padding: 0.5rem;
+    display: inline-block; // konieczne, aby transform działał poprawnie
+    transition: transform 0.6s ease, color 0.3s ease, border 0.3s ease;
 
     &:hover {
-      border: 1px solid $secondary-text-color;
-      border-radius: 5px;
+      // border: 1px solid $secondary-text-color;
+      // border-radius: 5px;
       box-sizing: border-box;
       color: $secondary-text-color;
+      transform: rotate(360deg);
     }
 
     @media (max-width: $breakpoint-sm) {

@@ -4,42 +4,55 @@
   [showNavigationIndicators]="false"
   class="d-flex w-100"
 >
-  @for (news of newsItems(); track news.id) {
-  <ng-template ngbSlide class="flex-center w-90">
-    <div
-      class="flex-row-regular news-wrapper"
-      [style.backgroundImage]="'url(' + news.image + ')'"
-    >
-      <div class="content text-white align-self-end mb-2">
-        <div class="flex-column-between my-3">
-          <h2 class="truncate-two-lines text-center">{{ news.header }}</h2>
-          @let authorData = getAuthor(news.author) | async ; @if (authorData) {
-          <div class="flex-row-regular w-100 my-2 font-size-small">
-            <div class="ms-2">Autor: {{ authorData.first_name }}</div>
-            <div class="me-2">Opublikowano: {{ news.createdAt }}</div>
-          </div>
-          }
-          <div class="mx-2 truncate-two-lines">{{ news.description }}</div>
-          <div class="flex-row-space-evenly flex-column-center-sm w-100 my-2">
-            @let newsLink = 'news/' + news.id;
-            <button
-              [disabled]="!news.longDescription"
-              (click)="navigate(newsLink)"
-              class="btn btn-primary mt-2"
-            >
-              Czytaj dalej
-            </button>
-            <button
-              [disabled]="!news.link"
-              class="btn btn-primary mt-2"
-              (click)="navigate(news.link)"
-            >
-              Przejdź do wydarzenia
-            </button>
+  @for (news of newsItems(); let i = $index; track news.id) {
+    <ng-template ngbSlide>
+      <div class="flex-row-regular news-wrapper">
+        <img
+          [ngSrc]="news.image"
+          fill
+          priority
+          alt="{{ news.header }}"
+          class="slide-image"
+          decoding="async"
+        />
+
+        <div class="content text-white align-self-end mb-2">
+          <div class="flex-column-between my-3">
+            <h2 class="truncate-two-lines text-center">{{ news.header }}</h2>
+
+            @let authorData = getAuthor(news.author) | async;
+            @if (authorData) {
+              <div class="flex-row-regular w-100 my-2 font-size-small">
+                <div class="ms-2 w-50">Autor: {{ authorData.first_name }}</div>
+                <div class="me-2 published-info">
+                  <span class="label">Opublikowano:</span>
+                  <span class="date">{{ news.createdAt }}</span>
+                </div>
+              </div>
+            }
+
+            <div class="mx-2 truncate-two-lines">{{ news.description }}</div>
+
+            <div class="flex-row-space-evenly flex-column-center-sm w-100 my-2">
+              @let newsLink = 'news/' + news.id;
+              <button
+                [disabled]="!news.longDescription"
+                (click)="navigate(newsLink)"
+                class="btn btn-primary mt-2"
+              >
+                Czytaj dalej
+              </button>
+              <button
+                [disabled]="!news.link"
+                class="btn btn-primary mt-2"
+                (click)="navigate(news.link)"
+              >
+                Przejdź do wydarzenia
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </ng-template>
+    </ng-template>
   }
 </ngb-carousel>
