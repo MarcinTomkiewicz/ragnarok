@@ -53,22 +53,20 @@
     }
 
     li {
-      margin-right: 2rem;
+      margin-right: 1rem;
       @media (max-width: $breakpoint-sm) {
         margin-right: 0%;
       }
       a {
-        text-decoration: none;
         color: $bg-color;
         @include responsive-font-size(11px);
-
+      
         @media (max-width: $breakpoint-sm) {
           text-align: center;
         }
+      
         &:hover {
-          border: 1px solid $bg-color;
-          border-radius: 5px;
-          box-sizing: border-box;
+          border-color: $bg-color;
         }
       }
     }

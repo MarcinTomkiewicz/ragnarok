@@ -6,17 +6,23 @@
       <a [routerLink]="link.path">{{ link.label }}</a>
     </li>
     }
+    <li>
+      <app-user-menu></app-user-menu>
+    </li>
   </ul>
 
-  <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
-    <img
-      ngSrc="icons/d20.svg"
-      width="40"
-      height="40"
-      alt="Kostka k20"
-      class="icon-filter-dark d20-icon"
-    />
-  </button>
+  <div class="flex-row-end small-screens">
+    <a class="mt-1"><app-user-menu></app-user-menu></a>
+    <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
+      <img
+        ngSrc="icons/d20.svg"
+        width="40"
+        height="40"
+        alt="Kostka k20"
+        class="icon-filter-dark d20-icon"
+      />
+    </button>
+  </div>
 </nav>
 
 <ng-template #offcanvas let-close="close">

@@ -1,0 +1,46 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+.icon {
+    filter: $icon-filter-dark;
+    cursor: pointer;
+}
+
+.user-menu {
+    position: relative;
+    display: inline-block;
+  
+    i {
+      font-size: 1.5rem;
+      transition: transform 0.3s ease;
+
+    }
+  
+    &.open i {
+      transform: rotate(180deg);
+    }
+  
+    .submenu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: $bg-color;
+      border-radius: 0.5rem;
+      min-width: 250px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      animation: fadeInDown 0.3s ease;
+  
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+  

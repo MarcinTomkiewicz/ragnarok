@@ -1,0 +1,10 @@
+<div class="user-menu" (click)="toggleMenu()" [class.open]="isOpen">
+    <span class="icon"><i class="bi bi-person-badge"></i></span>
+
+  
+    @if (isOpen) {
+      <div class="submenu" (click)="$event.stopPropagation()">
+          <app-login></app-login>
+        </div>
+    }
+  </div>

@@ -38,50 +38,57 @@ export class BackendService {
    * @returns Observable z listą rekordów
    */
 
-  
   getAll<T extends object>(
     table: string,
     sortBy?: keyof T,
     sortOrder: 'asc' | 'desc' = 'asc',
     pagination?: IPagination,
-    imageConfig?: ImageConfig,
+    imageConfig?: ImageConfig
   ): Observable<T[]> {
     let query = this.supabase.from(table).select('*');
-  
+
     query = this.applyFilters(query, pagination?.filters);
-  
+
     if (sortBy) {
       query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
     }
-  
+
     if (pagination?.page !== undefined && pagination?.pageSize !== undefined) {
       const from = (pagination.page - 1) * pagination.pageSize;
       const to = from + pagination.pageSize - 1;
       query = query.range(from, to);
     }
-  
+
     return from(query).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
-  
+
         // Przetwarzanie wszystkich danych, które mogą zawierać obrazki
         return (response.data || []).map((item) => {
-          return this.processImage(item, imageConfig?.width, imageConfig?.height);
+          return this.processImage(
+            item,
+            imageConfig?.width,
+            imageConfig?.height
+          );
         });
       })
     );
   }
-  
-  
-  getCount<T extends object>(table: string, filters?: { [key: string]: any }): Observable<number> {
-    let query = this.supabase.from(table).select('*', { count: 'exact', head: true });
-  
+
+  getCount<T extends object>(
+    table: string,
+    filters?: { [key: string]: any }
+  ): Observable<number> {
+    let query = this.supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true });
+
     if (filters) {
       query = this.applyFilters(query, filters);
     }
-  
+
     return from(query).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) {
@@ -91,7 +98,6 @@ export class BackendService {
       })
     );
   }
-  
 
   /**
    * Pobiera rekord według identyfikatora.
@@ -171,28 +177,6 @@ export class BackendService {
     );
   }
 
-  /**
-   * Metoda pomocnicza do przetwarzania obrazu.
-   * Jeśli obiekt zawiera pole `image`, to pobiera publiczny URL z bucketu "images".
-   * @param item - Obiekt z polem `image`
-   * @returns Przetworzony obiekt z dodanym polem `imageUrl`
-   */
-  // private processImage<T extends { image?: string; imageURL?: string }>(
-  //   item: T,
-  //   width: number = 600,
-  //   height: number = 400
-  // ): T {
-  //   if (item.image) {
-  //     const { data } = this.supabase.storage
-  //       .from('images')
-  //       .getPublicUrl(item.image);
-
-  //     item.imageURL =
-  //       this.getOptimizedImageUrl(data.publicUrl, width, height) || '';
-  //   }
-
-  //   return item;
-  // }
   private processImage<T extends { [key: string]: any }>(
     item: T,
     width: number = 600,
@@ -202,30 +186,34 @@ export class BackendService {
     for (const key in item) {
       if (item.hasOwnProperty(key)) {
         // Sprawdzamy, czy klucz kończy się na 'image' i czy wartość jest typu string
-        if (key.toLowerCase().endsWith('image') && typeof item[key] === 'string') {
+        if (
+          key.toLowerCase().endsWith('image') &&
+          typeof item[key] === 'string'
+        ) {
           const imageUrl = item[key]; // Pobieramy URL obrazka
-  
+
           // Sprawdzamy, czy rzeczywiście mamy URL
           if (imageUrl) {
-            const { data } = this.supabase.storage.from('images').getPublicUrl(imageUrl);
-  
+            const { data } = this.supabase.storage
+              .from('images')
+              .getPublicUrl(imageUrl);
+
             // Generujemy zoptymalizowany URL
-            const optimizedImageUrl = this.getOptimizedImageUrl(data.publicUrl, width, height);
-  
+            const optimizedImageUrl = this.getOptimizedImageUrl(
+              data.publicUrl,
+              width,
+              height
+            );
+
             // Nadpisujemy wartość pola w obiekcie
             item[key] = optimizedImageUrl as T[Extract<keyof T, string>]; // Bezpieczne przypisanie
           }
         }
       }
     }
-  
+
     return item;
   }
-  
-  
-  
-  
-  
 
   /**
    * Optymalizuje URL obrazu, zmieniając jego rozmiar i jakość w locie.

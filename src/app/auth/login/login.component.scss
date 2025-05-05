@@ -7,7 +7,7 @@
   align-items: start;
   justify-content: center;
   gap: 10px;
-  margin: 50px;
+  margin: 10px;
 
   @media (orientation: landscape) and (max-width: $breakpoint-md) {
     min-height: unset;
