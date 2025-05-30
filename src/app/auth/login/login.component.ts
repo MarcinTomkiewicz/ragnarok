@@ -3,6 +3,8 @@ import { FormBuilder, ReactiveFormsModule, FormGroup, Validators } from '@angula
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../core/services/supabase/supabase.service';
+import { AuthService } from '../../core/services/auth/auth.service';
+import { LoaderService } from '../../core/services/loader/loader.service';
 
 @Component({
   selector: 'app-login',
@@ -15,8 +17,9 @@ export class LoginComponent {
   loginForm: FormGroup;
   errorMessage: string | null = null;
   private readonly fb = inject(FormBuilder);
-  private readonly supabaseService = inject(SupabaseService);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly loaderService = inject(LoaderService)
 
   constructor(
   ) {
@@ -26,20 +29,17 @@ export class LoginComponent {
     });
   }
 
-  async login() {
-    this.errorMessage = null;
-    if (this.loginForm.invalid) return;
-
-    const { email, password } = this.loginForm.value;
-
-    const { error } = await this.supabaseService
-      .getClient()
-      .auth.signInWithPassword({ email, password });
-
-    if (error) {
-      this.errorMessage = error.message;
-    } else {
-      this.router.navigate(['/']);
-    }
+  login() {
+    this.loaderService.show();
+    this.authService.login(this.loginForm.value.email, this.loginForm.value.password).subscribe({
+      next: (response) => {
+        console.log(response);
+        if (response) {
+          this.loaderService.hide();
+          ;
+          this.router.navigate(['/']);
+        }
+      }
+    });
   }
 }

@@ -7,40 +7,43 @@
 }
 
 .user-menu {
-    position: relative;
-    display: inline-block;
-  
-    i {
-      font-size: 1.5rem;
-      transition: transform 0.3s ease;
+  position: relative;
+  display: inline-block;
 
-    }
-  
-    &.open i {
-      transform: rotate(180deg);
-    }
-  
-    .submenu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background-color: $bg-color;
-      border-radius: 0.5rem;
-      min-width: 250px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-      animation: fadeInDown 0.3s ease;
-  
-      @keyframes fadeInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+  i {
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+  }
+
+  &.open i {
+    transform: rotate(180deg);
+  }
+
+  .submenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: $bg-color;
+    border-radius: 0.5rem;
+    min-width: 250px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    animation: slideDown 1500ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    overflow: hidden;
+
+    @keyframes slideDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 1000px;
       }
     }
   }
+}
+
   
