@@ -25,6 +25,7 @@ import { AudienceSectionComponent } from '../audience-section/audience-section.c
 import { HowItWorksComponent } from '../how-it-works/how-it-works.component';
 import { UpcomingEventsComponent } from '../upcoming-events/upcoming-events.component';
 import { MeetTheTeamComponent } from '../meet-the-team/meet-the-team.component';
+import { TestimonialComponent } from '../testimonial/testimonial.component';
 
 @Component({
   selector: 'app-main',
@@ -36,7 +37,8 @@ import { MeetTheTeamComponent } from '../meet-the-team/meet-the-team.component';
     AudienceSectionComponent,
     HowItWorksComponent,
     UpcomingEventsComponent,
-    MeetTheTeamComponent
+    MeetTheTeamComponent,
+    TestimonialComponent
   ],
   providers: [NgbCarouselConfig],
   templateUrl: './main.component.html',
