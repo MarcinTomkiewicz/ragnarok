@@ -1,24 +1,13 @@
+@import "abstracts/variables";
 @import "abstracts/mixins";
 
-.td-10 {
-  @include td-width(10%);
-}
-
-.td-15 {
-  @include td-width(15%);
-}
-
-.td-20 {
-  @include td-width(20%);
-}
-
-.td-40 {
-  @include td-width(40%);
-}
-
-.td-60 {
-  @include td-width(60%);
-}
+// Istniejące klasy
+.td-10 { @include td-width(10%); }
+.td-15 { @include td-width(15%); }
+.td-20 { @include td-width(20%); }
+.td-25 { @include td-width(25%); }
+.td-40 { @include td-width(40%); }
+.td-60 { @include td-width(60%); }
 
 @media (max-width: $breakpoint-lg) {
   th.large-screens,
@@ -28,5 +17,67 @@
 }
 
 .table.td-light > :not(caption) > * > * {
-    color: $text-color;
+  color: $bg-color;
+}
+
+// Nowe stylowanie tabel usług
+.table {
+  background-color: $bg-color;
+  color: $text-color;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: $font-family-base;
+  font-size: $font-size-sm;
+
+  thead {
+    background-color: $bg-color-light;
+    border-bottom: 2px solid $border-color;
+
+    th {
+      padding: 1rem 0.75rem;
+      color: $secondary-text-color;
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: $font-size-xs;
+      border-bottom: 1px solid $border-color;
+    }
   }
+
+  tbody {
+    tr {
+      transition: background-color $transition-fast;
+
+      &:hover {
+        background-color: rgba($primary-color, 0.05);
+      }
+
+      td {
+        padding: 0.75rem;
+        border-top: 1px solid $border-color;
+        vertical-align: middle;
+
+        i {
+          color: $primary-color;
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+
+  .table-group-divider {
+    border-top: 2px solid $border-color;
+  }
+
+  .tooltip {
+    background-color: $bg-color-light;
+    border: 1px solid $border-color;
+    color: $text-color;
+    font-size: $font-size-xs;
+  }
+
+  .table-light {
+  --bs-table-color: #{$text-color};
+  --bs-table-bg: #{$bg-color-light}; // lub inny ciemniejszy
+}
+
+}
