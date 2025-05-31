@@ -13,18 +13,18 @@
 
 @mixin responsive-font-size($size) {
   font-size: $size;
-  
+
   @media (min-width: $breakpoint-sm) {
-      font-size: $size * 1.2;
+    font-size: $size * 1.2;
   }
-  
+
   @media (min-width: $breakpoint-lg) {
-      font-size: $size * 1.4;
+    font-size: $size * 1.4;
   }
 }
 
 @mixin td-width($size) {
-  width: $size
+  width: $size;
 }
 
 @mixin truncate-lines($lines) {
@@ -45,4 +45,10 @@
   @media (max-width: $breakpoint-sm) {
     width: $sm;
   }
+}
+
+@mixin gold-gradient-text {
+  background: linear-gradient(90deg,rgba(232, 188, 90, 1) 0%, rgba(123, 79, 34, 1) 64%, rgba(158, 113, 48, 1) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

@@ -4,90 +4,86 @@
 .nav-bar {
   width: 100%;
   height: $navbar-height;
-  z-index: 999;
-  background-color: $primary-color;
-  @include flex-wrapper(row, space-between, center);
-  gap: 15px;
-
-  // Ustawienie dla breakpointu $breakpoint-sm
-  @media (max-width: $breakpoint-sm) {
-    position: fixed!important;   // Przyspawanie navbaru do góry
-    top: 0;           // Górna krawędź
-    left: 0;
-    width: 100%;
-    z-index: 999;
-    background-color: $primary-color;
-    flex-wrap: nowrap;
-  }
+  padding: 0 2rem;
+  background-color: $bg-color;
+  color: $text-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 0 10px rgba($secondary-color, 0.2);
+  position: fixed;
+  top: 0;
 
   .navbar-brand {
-    @include responsive-font-size(18px);
+    font-family: $font-family-base;
+    font-size: $font-size-lg;
     font-weight: bold;
-    padding: 0;
-    padding-left: 10px;
-    color: $bg-color;
-    &:hover {
-      border: unset;
-    }
+    // color: $primary-color;
+        @include gold-gradient-text;
 
-    // Zmiana ustawienia dla mniejszych ekranów
-    @media (max-width: $breakpoint-sm) {
-      position: sticky!important;
-    }
+    // &:hover {
+    //   color: $hover-color;
+    // }
   }
 
-  // Standardowe menu nawigacyjne
   .nav-bar-nav {
+    display: flex;
+    gap: 2rem;
     list-style: none;
-    text-align: center;
     margin: 0;
+    padding: 0;
+    align-items: center;
+
+    li a {
+      font-size: $font-size-xs;
+      font-weight: 600;
+      font-family: $font-family-base;
+    }
 
     @media (max-width: $breakpoint-mid) {
-      flex-wrap: wrap;
-      height: 100%;
-    }
-
-    @media (max-width: $breakpoint-sm) {
-      justify-content: space-around;
-      width: 100%;
-    }
-
-    li {
-      margin-right: 1rem;
-      @media (max-width: $breakpoint-sm) {
-        margin-right: 0%;
-      }
-      a {
-        color: $bg-color;
-        @include responsive-font-size(11px);
-      
-        @media (max-width: $breakpoint-sm) {
-          text-align: center;
-        }
-      
-        &:hover {
-          border-color: $bg-color;
-        }
-      }
-    }
-  }
-
-  // Ukrycie menu dla mobilnych
-  @media (max-width: $breakpoint-sm) {
-    .nav-bar-nav {
-      display: none;
+      display: none; // mobilka = offcanvas
     }
   }
 
   .offcanvas-toggle {
-    background: none;
-    border: none;
-    color: $bg-color;
-    cursor: pointer;
-    padding-right: 10px;
+    display: none;
 
-    @media (min-width: $breakpoint-sm) {
-      display: none;
+    @media (max-width: $breakpoint-mid) {
+      display: block;
+      background: none;
+      border: none;
+      cursor: pointer;
+
+      img {
+        width: 32px;
+        height: 32px;
+        filter: $icon-filter;
+        transition: transform $transition-fast;
+
+        &:hover {
+          transform: rotate(20deg);
+        }
+      }
     }
+  }
+
+  @keyframes spin-d20 {
+    0% {
+      transform: rotateY(0deg);
+    }
+    100% {
+      transform: rotateY(360deg);
+    }
+  }
+
+  .d20-icon {
+    display: inline-block;
+    transition: transform 1s ease-in-out;
+    will-change: transform;
+  }
+
+  .d20-icon.spin {
+    animation: spin-d20 0.2s ease-in-out;
   }
 }

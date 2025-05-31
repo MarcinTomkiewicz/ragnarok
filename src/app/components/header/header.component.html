@@ -1,74 +1,19 @@
-<header>
-  <div>
-    <a routerLink="/" aria-label="Przejdź do strony głównej" rel="home">
-      <img
-        ngSrc="ragnarok.avif"
-        class="logo"
-        alt="Ragnarok | Centrum Gier Fabularnych"
-        width="200"
-        height="200"
-        priority
-        decoding="async"
-    /></a>
-  </div>
-  <div class="flex-column-between display-on-large text-center mb-3">
-    <h1>Centrum Gier Fabularnych</h1>
-    <h2>Sklep z grami fabularnymi</h2>
-    <h2>Wynajem pokojów na sesje RPG</h2>
-  </div>
-  <div>
-    <div class="flex-column-center display-on-large pb-4">
-      <h2>Gdzie legendy pisze się kostkami</h2>
-    </div>
-    <div class="flex-column-center">
-      <h5 class="flex-row-center">
-        <img
-          src="icons/1.svg"
-          alt="Ikona rogu"
-          class="icon"
-          width="1em"
-          height="1em"
-        />
-        Rezerwacje:
-        <a href="tel:+48533616491" class="phone">&nbsp;+48 533 616 491</a>
-      </h5>
-      <div class="flex-row-center social-icons">
-        <a
-          href="https://facebook.com/ragnarokrooms"
-          target="_blank"
-          rel="noopener"
-          aria-label="Facebook"
-        >
-          <i class="bi bi-facebook"></i>
-        </a>
-        <a
-          href="https://instagram.com/ragnarokrooms"
-          target="_blank"
-          rel="noopener"
-          aria-label="Instagram"
-        >
-          <i class="bi bi-instagram"></i>
-        </a>
-        <a
-          href="https://tiktok.com/@ragnarokrooms"
-          target="_blank"
-          rel="noopener"
-          aria-label="Tik Tok"
-        >
-          <i class="bi bi-tiktok"></i>
-        </a>
-        <a
-          href="https://www.youtube.com/@CentrumRPG"
-          target="_blank"
-          rel="noopener"
-          aria-label="Youtube"
-        >
-          <i class="bi bi-youtube"></i>
-        </a>
-        <a href="mailto:ragnarok.rooms@gmail.com" aria-label="Email">
-          <i class="bi bi-envelope"></i>
-        </a>
-      </div>
-    </div>
+<header class="hero-header">
+  <video class="desktop-video" autoplay muted loop playsinline>
+    <source src="/videos/ragnarok.webm" type="video/webm" />
+    <source src="/videos/ragnarok.mp4" type="video/mp4" />
+  </video>
+
+  <video class="mobile-video" autoplay muted loop playsinline>
+    <source src="/videos/ragnarok-mobile.webm" type="video/webm" />
+    <source src="/videos/ragnarok-mobile.mp4" type="video/mp4" />
+  </video>
+
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <h1 class="hero-title">{{ title() }}</h1>
+    <p class="hero-subtitle">{{ subtitle() }}</p>
+    <button class="hero-cta">{{ ctaText() }}</button>
   </div>
 </header>

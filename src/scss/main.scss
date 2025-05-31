@@ -10,6 +10,10 @@
 
 // Components
 @import "components/navbar";
+@import "components/audience-section";
+@import "components/how-it-works";
+@import "components/upcoming-events";
+@import "components/meet-the-team";
 
 // Layouts
 @import "layouts/header";
@@ -34,6 +38,7 @@
 @import "vendors/modals";
 
 @import "@fontsource/modern-antiqua/index.css";
+@import "@fontsource/cinzel/index.css";
 @import "@fontsource/material-icons/index.css";
 @import "@fontsource/material-icons-outlined/index.css";
 @import "@fontsource/material-icons-sharp";

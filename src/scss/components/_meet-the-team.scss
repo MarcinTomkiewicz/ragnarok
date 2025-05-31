@@ -1,0 +1,94 @@
+.team-section {
+  color: $text-color;
+  padding: 3rem 2rem;
+  text-align: center;
+  
+
+  .section-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    @include gold-gradient-text;
+  }
+
+  .section-subtitle {
+    font-size: 1.125rem;
+    color: $secondary-text-color;
+    margin-bottom: 3rem;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    width: 100%;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .team-card {
+    background-color: $bg-color;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid $border-color;
+    box-shadow: $card-shadow;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform $transition-fast, box-shadow $transition-fast;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px rgba($primary-color, 0.3);
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1rem;
+      border-radius: 50%;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .role {
+      font-size: 0.9rem;
+      color: $secondary-text-color;
+      margin-bottom: 1rem;
+    }
+
+    .bio {
+      font-size: 1rem;
+      color: $secondary-text-color;
+    }
+  }
+
+  .team-button {
+    margin-top: 3rem;
+
+    a {
+      @extend .btn;
+      @extend .btn-outline;
+    }
+  }
+}

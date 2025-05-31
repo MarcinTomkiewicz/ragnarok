@@ -1,6 +1,7 @@
 main {
   padding: 2rem;
   color: $secondary-text-color; 
+  width: 100%;
   
   h1 {
     text-align: center;
@@ -25,5 +26,55 @@ main {
   main {
     min-height: unset;
     height: auto;
+  }
+}
+
+.rich-text-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+
+  @media (min-width: $breakpoint-md) {
+    .column {
+      flex: 1 1 48%;
+    }
+  }
+
+  @media (max-width: $breakpoint-md) {
+    .column {
+      width: 100%;
+    }
+  }
+
+  h3 {
+    font-size: $font-size-lg;
+    margin-bottom: 1rem;
+    color: $primary-color;
+  }
+
+  div {
+    font-size: $font-size-md;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+
+  ul {
+    padding-left: 1.25rem;
+    margin: 1rem 0;
+
+    li {
+      margin-bottom: 0.5rem;
+      list-style: disc;
+    }
+  }
+
+  a {
+    font-weight: 600;
+    text-decoration: underline;
+    color: $link-color;
+
+    &:hover {
+      color: $link-hover-color;
+    }
   }
 }

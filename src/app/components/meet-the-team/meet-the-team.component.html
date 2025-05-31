@@ -1,0 +1,25 @@
+<section class="team-section">
+  <!-- <div class="container"> -->
+    <h2 class="section-title">Poznaj nasz zespół</h2>
+    <p class="section-subtitle">
+      Nasi Mistrzowie Gry i pracownicy z pasją tworzą niezapomniane przygody.
+    </p>
+
+    <div class="team-grid">
+      @for (member of team; track member.id) {
+        <div class="team-card">
+          <div class="avatar">
+            <img [src]="member.image" [alt]="member.name" />
+          </div>
+          <h3>{{ member.name }}</h3>
+          <p class="role">{{ member.roleDisplay }}</p>
+          <p class="bio">{{ member.description }}</p>
+        </div>
+      }
+    </div>
+
+    <div class="team-button">
+      <a routerLink="/tech-stack" class="btn btn-outline">Poznaj wszystkich</a>
+    </div>
+  <!-- </div> -->
+</section>

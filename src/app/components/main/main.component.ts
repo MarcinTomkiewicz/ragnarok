@@ -21,11 +21,23 @@ import { ConverterService } from '../../core/services/converter/converter.servic
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { Router } from '@angular/router';
 import { NewsCarouselComponent } from '../../common/news-carousel/news-carousel.component';
+import { AudienceSectionComponent } from '../audience-section/audience-section.component';
+import { HowItWorksComponent } from '../how-it-works/how-it-works.component';
+import { UpcomingEventsComponent } from '../upcoming-events/upcoming-events.component';
+import { MeetTheTeamComponent } from '../meet-the-team/meet-the-team.component';
 
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule, NgbCarouselModule, NgOptimizedImage, NewsCarouselComponent],
+  imports: [
+    CommonModule,
+    NgbCarouselModule,
+    NewsCarouselComponent,
+    AudienceSectionComponent,
+    HowItWorksComponent,
+    UpcomingEventsComponent,
+    MeetTheTeamComponent
+  ],
   providers: [NgbCarouselConfig],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
@@ -55,32 +67,34 @@ export class MainComponent implements OnInit, AfterViewInit {
   private readonly platformService = inject(PlatformService);
 
   ngOnInit() {
-    this.backend.getAll<INews>('news', 'created_at', 'desc', { page: 1, pageSize: 5 }).subscribe({
-      next: (news: INews[]) => {
-        this.newsItems = news.map((item) => ({
-          ...item,
-          createdAt: this.converter.convert(
-            item.created_at,
-            'date',
-            'dd-MM-yyyy HH:mm'
-          ),
-        }));
+    this.backend
+      .getAll<INews>('news', 'created_at', 'desc', { page: 1, pageSize: 5 })
+      .subscribe({
+        next: (news: INews[]) => {
+          this.newsItems = news.map((item) => ({
+            ...item,
+            createdAt: this.converter.convert(
+              item.created_at,
+              'date',
+              'dd-MM-yyyy HH:mm'
+            ),
+          }));
 
-        if (news.length > 0) {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = 'image';
-          link.href = news[0].image;
-          document.head.appendChild(link);
-        }
-      },
-      error: (err) => console.error('Błąd pobierania newsów:', err),
-      complete: () => {
-        if (this.platformService.isBrowser) {
-          this.isLoading.set(false);
-        }
-      },
-    });
+          if (news.length > 0) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = news[0].image;
+            document.head.appendChild(link);
+          }
+        },
+        error: (err) => console.error('Błąd pobierania newsów:', err),
+        complete: () => {
+          if (this.platformService.isBrowser) {
+            this.isLoading.set(false);
+          }
+        },
+      });
     if (this.platformService.isBrowser) {
       this.isMobile.set(window.innerWidth <= 768);
     }

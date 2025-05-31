@@ -1,61 +1,65 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   color: $text-color;
+  font-family: $font-family-base;
   font-weight: 700;
-}
-
-h5 {
-  @include responsive-font-size(14px);
-}
-
-h4 {
-  @include responsive-font-size(16px);
-}
-
-h3 {
-  @include responsive-font-size(18px);
-}
-
-h2 {
-  @include responsive-font-size(20px);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.2;
 }
 
 h1 {
-  @include responsive-font-size(26px);
+  font-size: $font-size-hero; // 3rem
+}
+
+h2 {
+  font-size: $font-size-xxl;
+}
+
+h3 {
+  font-size: $font-size-xl;
+}
+
+h4 {
+  font-size: $font-size-lg;
+}
+
+h5 {
+  font-size: $font-size-md;
 }
 
 h6 {
-  @include responsive-font-size(12px);
-}
-
-.font-size-small {
-  @include responsive-font-size(12px)
-}
-
-.font-size-medium {
-  @include responsive-font-size(14px)
-}
-
-.font-size-large {
-  @include responsive-font-size(18px)
+  font-size: $font-size-sm;
 }
 
 p {
-  margin-bottom: 1.5rem;
-  color: $text-color;
   font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $secondary-text-color;
+  margin-bottom: 1rem;
 }
 
 a {
-  color: $primary-color;
+  color: $link-color;
   text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $link-hover-color;
+  }
+}
+
+.font-size-small {
+  font-size: $font-size-sm;
+}
+
+.font-size-medium {
+  font-size: $font-size-md;
+}
+
+.font-size-large {
+  font-size: $font-size-lg;
 }
 
 .truncate-one-line {

@@ -1,0 +1,24 @@
+<section class="how-it-works-section">
+  <div class="container">
+    <h2 class="section-title">Jak to działa?</h2>
+    <p class="section-subtitle">
+      Twoja przygoda z Ragnarokiem to tylko kilka prostych kroków.
+    </p>
+
+    <div class="steps-grid">
+      @for (step of steps; track step.id) {
+      <div class="step-card" [class.optional]="step.optional">
+        @if (step.optional) {
+        <span class="optional-label">Opcjonalnie</span>
+        }
+        <div class="step-icon">
+          <img [src]="step.icon" [alt]="step.title" />
+        </div>
+        <div class="step-number">{{ step.id }}</div>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.description }}</p>
+      </div>
+      }
+    </div>
+  </div>
+</section>

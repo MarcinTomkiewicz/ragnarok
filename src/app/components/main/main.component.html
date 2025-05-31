@@ -1,15 +1,17 @@
 <main>
-  <div class="flex-column-start mb-5 w-100">
+  <app-audience-section></app-audience-section>
+  <app-how-it-works></app-how-it-works>
+  <app-upcoming-events></app-upcoming-events>
+  <app-meet-the-team></app-meet-the-team>
+  <!-- <div class="flex-column-start mb-5 w-100">
     @if (isLoading() && newsItems.length <= 0) {
     <div class="flex-row-regular skeleton skeleton-wrapper news-wrapper">
       <div class="content text-white align-self-end mb-2">
         <div class="flex-column-between mt-2 mb-3">
-          <!-- Header skeleton -->
           <div
             class="skeleton skeleton-content skeleton-h-3 w-50 mx-auto mb-2"
           ></div>
 
-          <!-- Author and date -->
           <div class="flex-row-regular w-100 my-1 px-2 font-size-small">
             <div
               class="skeleton skeleton-small skeleton-content skeleton-h-1 w-25 me-2"
@@ -19,10 +21,8 @@
             ></div>
           </div>
 
-          <!-- Description -->
           <div class="skeleton skeleton-content skeleton-h-3 mb-2"></div>
 
-          <!-- Buttons -->
           <div class="flex-row-space-evenly flex-column-center-sm w-100">
             <div class="skeleton skeleton-button skeleton-h-2-5"></div>
             <div class="skeleton skeleton-event-button skeleton-h-2-5"></div>
@@ -39,123 +39,131 @@
       class="w-100"
     />
     }
-  </div>
-  <div class="row">
-    <div class="mb-4">
-      <h3>Gry fabularne – świat wyobraźni na wyciągnięcie ręki</h3>
-      <div>
-        Gry fabularne (<em>RPG</em>) to wyjątkowy sposób na spędzanie wolnego
-        czasu. Pozwalają wcielić się w bohaterów i przeżywać niezwykłe przygody
-        w światach fantasy, science fiction, horroru czy innych. Każda sesja RPG
-        to interaktywna opowieść, w której gracze podejmują decyzje kształtujące
-        historię. Popularność gier fabularnych rośnie, a w Poznaniu coraz więcej
-        osób szuka miejsc, gdzie mogą spotkać się na sesję — na przykład w
-        <a href="/our-rooms">dedykowanych salach RPG</a>.
+  </div> -->
+  <div class="row rich-text-columns">
+    <div class="column">
+      <div class="mb-4">
+        <h3>Gry fabularne – świat wyobraźni na wyciągnięcie ręki</h3>
+        <div>
+          Gry fabularne (<em>RPG</em>) to wyjątkowy sposób na spędzanie wolnego
+          czasu. Pozwalają wcielić się w bohaterów i przeżywać niezwykłe
+          przygody w światach fantasy, science fiction, horroru czy innych.
+          Każda sesja RPG to interaktywna opowieść, w której gracze podejmują
+          decyzje kształtujące historię. Popularność gier fabularnych rośnie, a
+          w Poznaniu coraz więcej osób szuka miejsc, gdzie mogą spotkać się na
+          sesję — na przykład w
+          <a href="/our-rooms">dedykowanych salach RPG</a>.
+        </div>
+        <div class="mt-3">
+          Kluczową rolę w grach fabularnych odgrywa Mistrz Gry — osoba, która
+          prowadzi sesję, tworzy świat i wciela się w postacie niezależne.
+          Gracze natomiast budują własnych bohaterów i uczestniczą w opowieści.
+          Wspólne przeżywanie historii, rozwijanie postaci i podejmowanie
+          decyzji sprawiają, że RPG to angażująca forma rozrywki, rozwijająca
+          wyobraźnię oraz umiejętności interpersonalne.
+        </div>
       </div>
-      <div class="mt-3">
-        Kluczową rolę w grach fabularnych odgrywa Mistrz Gry — osoba, która
-        prowadzi sesję, tworzy świat i wciela się w postacie niezależne. Gracze
-        natomiast budują własnych bohaterów i uczestniczą w opowieści. Wspólne
-        przeżywanie historii, rozwijanie postaci i podejmowanie decyzji
-        sprawiają, że RPG to angażująca forma rozrywki, rozwijająca wyobraźnię
-        oraz umiejętności interpersonalne.
+
+      <div class="mb-4">
+        <h3>Ragnarok – idealne miejsce na sesje RPG w Poznaniu</h3>
+        <div>
+          Wiele osób gra w RPG w domowym zaciszu, ale często brakuje im
+          odpowiednich warunków — przestrzeni, ciszy czy klimatu. Dlatego
+          powstał
+          <a href="/about">Ragnarok</a> — miejsce stworzone specjalnie dla fanów
+          gier fabularnych. U nas możesz
+          <a href="/our-rooms">wynająć salę na sesję RPG</a>, spotkać innych
+          miłośników tego hobby i cieszyć się niczym niezakłóconą immersją.
+        </div>
+        <div class="mt-3">
+          Nasze pomieszczenia są dostosowane do potrzeb graczy: wygodne miejsca
+          do siedzenia, duże stoły na podręczniki i kostki oraz odpowiednie
+          oświetlenie sprzyjające długim sesjom. Wynajem sali w
+          <em>Ragnaroku</em> to świetna opcja dla drużyn, które szukają
+          komfortowej przestrzeni do gry — sprawdź szczegóły w
+          <a href="/services">cenniku</a>.
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <h3>Komfort i klimat sprzyjający grze</h3>
+        <div>
+          Wiemy, jak ważna jest atmosfera podczas sesji RPG. Dlatego nasze sale
+          są zaprojektowane tak, aby tworzyć klimat sprzyjający wcielaniu się w
+          postacie i przeżywaniu przygód. Ciepłe oświetlenie, wygodne meble i
+          odpowiednia akustyka pomagają w pełni zanurzyć się w rozgrywce.
+          Dodatkowo każda sala zapewnia przestrzeń na rozłożenie map,
+          podręczników i innych niezbędnych akcesoriów.
+        </div>
+        <div class="mt-3">
+          W <em>Ragnaroku</em> możesz wynająć salę na godziny, dopasowując czas
+          gry do potrzeb swojej drużyny. Wynajem jest liczony na osobę, za
+          godzinę — płacisz tylko za czas, który wykorzystasz. Nie musisz
+          martwić się o hałas czy rozpraszające czynniki — tutaj liczy się tylko
+          sesja i dobra zabawa. To idealne miejsce zarówno dla doświadczonych
+          graczy, jak i osób, które dopiero zaczynają swoją przygodę z RPG.
+        </div>
       </div>
     </div>
 
-    <div class="mb-4">
-      <h3>Ragnarok – idealne miejsce na sesje RPG w Poznaniu</h3>
-      <div>
-        Wiele osób gra w RPG w domowym zaciszu, ale często brakuje im
-        odpowiednich warunków — przestrzeni, ciszy czy klimatu. Dlatego powstał
-        <a href="/about">Ragnarok</a> — miejsce stworzone specjalnie dla fanów
-        gier fabularnych. U nas możesz
-        <a href="/our-rooms">wynająć salę na sesję RPG</a>, spotkać innych
-        miłośników tego hobby i cieszyć się niczym niezakłóconą immersją.
+    <div class="column">
+      <div class="mb-4">
+        <h3>Sesje RPG dla każdego – niezależnie od doświadczenia</h3>
+        <div>
+          Wiele osób chciałoby spróbować gier fabularnych, ale nie wie, od czego
+          zacząć. W <em>Ragnaroku</em> pomagamy również nowicjuszom — możemy
+          pomóc Ci znaleźć grupę lub doświadczonego Mistrza Gry. Regularnie
+          organizujemy <a href="/events">wydarzenia i otwarte sesje</a>, podczas
+          których można poznać nowych ludzi i różne systemy RPG.
+        </div>
+        <div class="mt-3">
+          Doświadczeni Mistrzowie Gry mogą wynająć salę na prowadzenie sesji dla
+          nowych graczy lub testowanie własnych scenariuszy. Oferujemy możliwość
+          poznania różnych systemów — od klasycznego
+          <em>Dungeons & Dragons</em>, <em>Warhammera</em>,
+          <em>Zewu Cthulhu</em>, <em>Wampira: Maskarady</em> czy
+          <em>Jedynego Pierścienia</em>, po mniej znane, ale równie ciekawe gry
+          fabularne.
+        </div>
       </div>
-      <div class="mt-3">
-        Nasze pomieszczenia są dostosowane do potrzeb graczy: wygodne miejsca do
-        siedzenia, duże stoły na podręczniki i kostki oraz odpowiednie
-        oświetlenie sprzyjające długim sesjom. Wynajem sali w
-        <em>Ragnaroku</em> to świetna opcja dla drużyn, które szukają
-        komfortowej przestrzeni do gry — sprawdź szczegóły w
-        <a href="/services">cenniku</a>.
-      </div>
-    </div>
 
-    <div class="mb-4">
-      <h3>Komfort i klimat sprzyjający grze</h3>
-      <div>
-        Wiemy, jak ważna jest atmosfera podczas sesji RPG. Dlatego nasze sale są
-        zaprojektowane tak, aby tworzyć klimat sprzyjający wcielaniu się w
-        postacie i przeżywaniu przygód. Ciepłe oświetlenie, wygodne meble i
-        odpowiednia akustyka pomagają w pełni zanurzyć się w rozgrywce.
-        Dodatkowo każda sala zapewnia przestrzeń na rozłożenie map, podręczników
-        i innych niezbędnych akcesoriów.
-      </div>
-      <div class="mt-3">
-        W <em>Ragnaroku</em> możesz wynająć salę na godziny, dopasowując czas
-        gry do potrzeb swojej drużyny. Wynajem jest liczony na osobę, za godzinę
-        — płacisz tylko za czas, który wykorzystasz. Nie musisz martwić się o
-        hałas czy rozpraszające czynniki — tutaj liczy się tylko sesja i dobra
-        zabawa. To idealne miejsce zarówno dla doświadczonych graczy, jak i
-        osób, które dopiero zaczynają swoją przygodę z RPG.
-      </div>
-    </div>
-
-    <div class="mb-4">
-      <h3>Sesje RPG dla każdego – niezależnie od doświadczenia</h3>
-      <div>
-        Wiele osób chciałoby spróbować gier fabularnych, ale nie wie, od czego
-        zacząć. W <em>Ragnaroku</em> pomagamy również nowicjuszom — możemy pomóc
-        Ci znaleźć grupę lub doświadczonego Mistrza Gry. Regularnie organizujemy
-        <a href="/events">wydarzenia i otwarte sesje</a>, podczas których można
-        poznać nowych ludzi i różne systemy RPG.
-      </div>
-      <div class="mt-3">
-        Doświadczeni Mistrzowie Gry mogą wynająć salę na prowadzenie sesji dla
-        nowych graczy lub testowanie własnych scenariuszy. Oferujemy możliwość
-        poznania różnych systemów — od klasycznego <em>Dungeons & Dragons</em>,
-        <em>Warhammera</em>, <em>Zewu Cthulhu</em>,
-        <em>Wampira: Maskarady</em> czy <em>Jedynego Pierścienia</em>, po mniej
-        znane, ale równie ciekawe gry fabularne.
-      </div>
-    </div>
-
-    <div class="mb-4">
-      <h3>Dlaczego warto wybrać Ragnarok?</h3>
-      <div>
-        <em>Ragnarok</em> to nie tylko przestrzeń do gry, ale również miejsce,
-        które wspiera społeczność RPG w Poznaniu. Oferujemy:
-        <ul>
-          <li>
-            <a href="/our-rooms">Wygodne sale do sesji RPG</a> – dostosowane do
-            różnych potrzeb i liczby graczy.
-          </li>
-          <li>
-            Rezerwację na godziny – wynajem jest liczony na osobę, za godzinę,
-            płacisz tylko za czas, który wykorzystasz.
-          </li>
-          <li>
-            Klimatyczne wyposażenie – sprzyjające budowaniu atmosfery sesji.
-          </li>
-          <li>
-            Wsparcie dla początkujących – pomagamy znaleźć grupę lub Mistrza
-            Gry.
-          </li>
-          <li>
-            <strong>Bibliotekę gier</strong> – ponad 20 tytułów dostępnych na
-            miejscu, zarówno do przetestowania podczas sesji, jak i do
-            poczytania w naszej <a href="/our-rooms">strefie wspólnej</a>, która
-            oferuje wygodne miejsca do relaksu: stół, krzesła i narożną sofę.
-          </li>
-        </ul>
-      </div>
-      <div class="mt-3">
-        Jeśli szukasz miejsca, gdzie możesz regularnie spotykać się ze swoją
-        drużyną, prowadzić kampanie i cieszyć się grami fabularnymi w
-        komfortowych warunkach — <em>Ragnarok</em> jest dla Ciebie. Zapraszamy
-        także do <a href="/contact">kontaktu</a> — chętnie odpowiemy na pytania
-        i pomożemy zarezerwować salę.
+      <div class="mb-4">
+        <h3>Dlaczego warto wybrać Ragnarok?</h3>
+        <div>
+          <em>Ragnarok</em> to nie tylko przestrzeń do gry, ale również miejsce,
+          które wspiera społeczność RPG w Poznaniu. Oferujemy:
+          <ul>
+            <li>
+              <a href="/our-rooms">Wygodne sale do sesji RPG</a> – dostosowane
+              do różnych potrzeb i liczby graczy.
+            </li>
+            <li>
+              Rezerwację na godziny – wynajem jest liczony na osobę, za godzinę,
+              płacisz tylko za czas, który wykorzystasz.
+            </li>
+            <li>
+              Klimatyczne wyposażenie – sprzyjające budowaniu atmosfery sesji.
+            </li>
+            <li>
+              Wsparcie dla początkujących – pomagamy znaleźć grupę lub Mistrza
+              Gry.
+            </li>
+            <li>
+              <strong>Bibliotekę gier</strong> – ponad 20 tytułów dostępnych na
+              miejscu, zarówno do przetestowania podczas sesji, jak i do
+              poczytania w naszej <a href="/our-rooms">strefie wspólnej</a>,
+              która oferuje wygodne miejsca do relaksu: stół, krzesła i narożną
+              sofę.
+            </li>
+          </ul>
+        </div>
+        <div class="mt-3">
+          Jeśli szukasz miejsca, gdzie możesz regularnie spotykać się ze swoją
+          drużyną, prowadzić kampanie i cieszyć się grami fabularnymi w
+          komfortowych warunkach — <em>Ragnarok</em> jest dla Ciebie. Zapraszamy
+          także do <a href="/contact">kontaktu</a> — chętnie odpowiemy na
+          pytania i pomożemy zarezerwować salę.
+        </div>
       </div>
     </div>
   </div>
