@@ -69,3 +69,7 @@ a {
 .truncate-two-lines {
   @include truncate-lines(2);
 }
+
+.truncate-three-lines {
+  @include truncate-lines(3);
+}

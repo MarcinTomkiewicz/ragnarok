@@ -1,0 +1,102 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.tech-stack-section {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 3rem 2rem;
+
+  @media screen and (max-width: $breakpoint-md) {
+    padding: 2rem 0;
+  }
+
+  .container {
+    max-width: $container-width-lg;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    text-align: center;
+    margin-bottom: 1rem;
+    @include gold-gradient-text;
+  }
+
+  .section-subtitle {
+    font-size: $font-size-md;
+    color: $secondary-text-color;
+    margin-bottom: 3rem;
+    max-width: $container-width-md;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .mg-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+
+    @media (max-width: $breakpoint-lg) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .loader-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+
+    app-loader {
+      width: 100%;
+      height: 100%;
+      min-height: 340px; // tyle ile karta
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .mg-card {
+    background-color: $bg-color-light;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 6px rgba($text-color, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .mg-avatar {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+    }
+
+    .mg-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+
+    .mg-role {
+      font-style: italic;
+      font-size: 0.9rem;
+      color: $secondary-text-color;
+      margin-bottom: 0.5rem;
+    }
+
+    .mg-description {
+      font-size: 0.85rem;
+    }
+  }
+}

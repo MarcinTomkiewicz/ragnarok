@@ -1,19 +1,19 @@
-<!-- <div *ngFor="let regulation of regulations" class="regulation"> -->
 <div class="modal-header">
-  <h1>{{ regulation.title }}</h1>
+  <h1 class="regulations-title">{{ regulation.title }}</h1>
   <button
-  type="button"
-  class="btn-close"
-  aria-label="Close"
-  (click)="close()"
-></button>
+    type="button"
+    class="btn-close"
+    aria-label="Zamknij"
+    (click)="close()"
+  ></button>
 </div>
-<div class="modal-body">
-  <div *ngFor="let section of regulation.sections; let i = index" class="section">
-    <h2>{{ section.title }}</h2>
-    <div *ngFor="let paragraph of section.content" class="paragraph">
+
+<div class="modal-body regulations-body">
+  <div *ngFor="let section of regulation.sections; let i = index" class="regulation-section">
+    <h2 class="section-title">{{ section.title }}</h2>
+    <div *ngFor="let paragraph of section.content" class="section-paragraph">
       <p>{{ paragraph }}</p>
     </div>
-    <hr class="separator" />
+    <hr class="section-separator" *ngIf="i < regulation.sections.length - 1" />
   </div>
 </div>

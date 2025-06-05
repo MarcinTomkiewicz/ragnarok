@@ -1,0 +1,99 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.our-rooms-section {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 3rem 2rem;
+
+  @media screen and (max-width: $breakpoint-md) {
+    padding: 2rem 0;
+  }
+
+  .container {
+    max-width: $container-width-lg;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    text-align: center;
+    margin-bottom: 1rem;
+    @include gold-gradient-text;
+  }
+
+  .section-subtitle {
+    font-size: $font-size-md;
+    color: $secondary-text-color;
+    margin-bottom: 3rem;
+    max-width: $container-width-md;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .image-banner-container {
+    margin-top: 2rem;
+
+    .image-banner {
+      width: 100%;
+      height: auto;
+      border-radius: $border-radius;
+      object-fit: cover;
+    }
+  }
+
+  .mg-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); // 2x2 układ na desktopie
+    gap: 2rem;
+    margin-top: 2rem;
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr; // 1x4 układ na mobilkach
+    }
+  }
+
+  .mg-card {
+    background-color: $bg-color-light;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 6px rgba($text-color, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+    height: auto; // zapobiega rozciągnięciu
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-img-top {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: $border-radius;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+
+    .card-text {
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      padding-top: 1rem;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+}

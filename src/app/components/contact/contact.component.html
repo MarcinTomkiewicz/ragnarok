@@ -1,84 +1,74 @@
-<div class="component-container">
-  <h2 class="h2-contact">Kontakt</h2>
-  <div class="image-banner-container">
-    <img 
-  src="strip.avif" 
-  alt="Banner for services" 
-  class="image-banner"
-/>
+<section class="contact-section">
+  <div class="container">
+    <h2 class="section-title">Kontakt</h2>
+    <p class="section-subtitle">
+      Skontaktuj się z nami w sprawie rezerwacji, współpracy lub organizacji wydarzeń.
+      Jesteśmy tu, by odpowiedzieć na każde Twoje pytanie!
+    </p>
 
-  </div>
-  <div class="divide-et-impera">
-    <div>
-      <h2 class="h2-contact">
-        <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Kontakt
-        ogólny
-      </h2>
-      <p>
-        <img src="icons/1.svg" alt="Ikona rogu" class="icon" />
-        <strong>Telefon:</strong>
-        <a href="tel:+48533616491">&nbsp;+48 533 616 491</a>
-      </p>
-      <p>
-        <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
-        <strong>E-mail:</strong>
-        <a href="mailto:ragnarok@ragnarok-rooms.pl"
-          >&nbsp;ragnarok&#64;ragnarok-rooms.pl</a
-        >
-      </p>
-      <h2 class="h2-contact">
-        <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Rezerwacje
-      </h2>
-      <p>
-        <img src="icons/1.svg" alt="Ikona rogu" class="icon" />
-        <strong>Telefon:</strong>
-        <a href="tel:+48533616491">&nbsp;+48 533 616 491</a>
-      </p>
-      <p>
-        <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
-        <strong>E-mail:</strong>
-        <a href="mailto:recepcja@ragnarok-rooms.pl"
-          >&nbsp;recepcja&#64;ragnarok-rooms.pl</a
-        >
-      </p>
-    </div>
-    <img src="icons/separator.svg" alt="Separator" class="separator" />
-    <div>
-      <h2 class="h2-contact">
-        <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Współpraca i
-        organizacja eventów
-      </h2>
-      <p>
-        <img src="icons/1.svg" alt="Ikona rogu" class="icon" /><strong
-          >Telefon:</strong
-        >
-        <a href="tel:+48792314240">&nbsp;+48 792 314 240</a>
-      </p>
-      <p>
-        <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
-        <strong>E-mail:</strong>
-        <a href="mailto:eventy@ragnarok-rooms.pl"
-          >&nbsp;eventy&#64;ragnarok-rooms.pl</a
-        >
-      </p>
+    <div class="contact-grid">
+      <div class="contact-box">
+        <h3 class="contact-title">
+          <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Kontakt ogólny
+        </h3>
+        <p>
+          <img src="icons/1.svg" alt="Ikona rogu" class="icon" />
+          <strong>Telefon:</strong>
+          <a href="tel:+48533616491">+48 533 616 491</a>
+        </p>
+        <p>
+          <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
+          <strong>E-mail:</strong>
+          <a href="mailto:ragnarok@ragnarok-rooms.pl">ragnarok&#64;ragnarok-rooms.pl</a>
+        </p>
 
-      <div class="w-100">
-        <h2 class="h2-contact">
+        <h3 class="contact-title">
+          <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Rezerwacje
+        </h3>
+        <p>
+          <img src="icons/1.svg" alt="Ikona rogu" class="icon" />
+          <strong>Telefon:</strong>
+          <a href="tel:+48533616491">+48 533 616 491</a>
+        </p>
+        <p>
+          <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
+          <strong>E-mail:</strong>
+          <a href="mailto:recepcja@ragnarok-rooms.pl">recepcja&#64;ragnarok-rooms.pl</a>
+        </p>
+      </div>
+
+      <div class="contact-box">
+        <h3 class="contact-title">
+          <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" />
+          Współpraca i organizacja eventów
+        </h3>
+        <p>
+          <img src="icons/1.svg" alt="Ikona rogu" class="icon" />
+          <strong>Telefon:</strong>
+          <a href="tel:+48792314240">+48 792 314 240</a>
+        </p>
+        <p>
+          <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
+          <strong>E-mail:</strong>
+          <a href="mailto:eventy@ragnarok-rooms.pl">eventy&#64;ragnarok-rooms.pl</a>
+        </p>
+
+        <h3 class="contact-title">
           <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Adres
-        </h2>
+        </h3>
         <p><strong>Ragnarok | Pokoje do sesji RPG</strong></p>
         <p>ul. Dolna Wilda 16A</p>
         <p>61-530 Poznań</p>
       </div>
     </div>
+
+    <div class="map-wrapper">
+      <h3 class="contact-title">
+        <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Znajdź nas na mapie
+      </h3>
+      <google-map width="100%" height="300" [options]="options">
+        <map-advanced-marker [options]="markerOptions"></map-advanced-marker>
+      </google-map>
+    </div>
   </div>
-  <div class="map-container">
-    <h2 class="h2-contact">
-      <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Znajdź nas na
-      mapie
-    </h2>
-    <google-map width="100%" height="300" [options]="options">
-      <map-advanced-marker [options]="markerOptions"></map-advanced-marker>
-    </google-map>
-  </div>
-</div>
+</section>

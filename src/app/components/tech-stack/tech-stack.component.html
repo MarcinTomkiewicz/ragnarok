@@ -1,17 +1,37 @@
-<div class="component-container">
-  <h2 class="section-title">Poznaj nasz zespół</h2>
-  <div class="description">
-    Zespół Ragnaroku to grupa kreatywnych osób, których pasja i zaangażowanie
-    sprawiają, że każda sesja RPG w Ragnaroku staje się wyjątkowym przeżyciem.
-    Każdy detal w Ragnaroku jest efektem współpracy, której celem jest
-    zapewnienie graczom wyjątkowego doświadczenia. Dzięki naszej wspólnej pracy
-    i zaangażowaniu, Ragnarok oferuje przestrzeń, która inspiruje do
-    niezapomnianych przygód.
+<section class="tech-stack-section">
+  <div class="container">
+    <h2 class="section-title">Poznaj naszych Mistrzów Gry</h2>
+    <p class="section-subtitle">
+      Zespół Ragnaroku to grupa kreatywnych osób, których pasja i zaangażowanie
+      sprawiają, że każda sesja RPG w Ragnaroku staje się wyjątkowym przeżyciem.
+    </p>
+
+    @if (error()) {
+    <p class="text-danger text-center">{{ error() }}</p>
+    } @else if (isLoading()) {
+  <div class="mg-grid loader-wrapper">
+    <app-loader></app-loader>
   </div>
-  <div class="image-banner-container">
-    <img src="strip.avif" alt="Banner for services" class="image-banner" />
+    } @else {
+    <div class="mg-grid">
+      @for (person of visibleTechStack(); track person.id) {
+      <div class="mg-card">
+        <img [src]="person.image" [alt]="person.name" class="mg-avatar" />
+        <h3 class="mg-name">{{ person.name }}</h3>
+        <p class="mg-role">{{ person.roleDisplay }}</p>
+        <p class="mg-description truncate-three-lines">
+          {{ person.description }}
+        </p>
+      </div>
+      }
+    </div>
+
+    @if (!showAll()) {
+    <div class="mt-4 text-center">
+      <button class="btn btn-outline" (click)="showAll.set(true)">
+        Pokaż więcej
+      </button>
+    </div>
+    } }
   </div>
-  @if (!isLoading()) {
-  <app-carousel [items]="techStack()"></app-carousel>
-  }
-</div>
+</section>

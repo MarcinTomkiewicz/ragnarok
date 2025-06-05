@@ -1,22 +1,17 @@
-<div class="modal-header">
+<div class="modal-header custom-modal-header">
   <h4 class="modal-title">{{ currentHeader() }}</h4>
   <button
     type="button"
     class="btn-close"
     aria-label="Close"
     (click)="close()"
-  >
-  </button>
+  ></button>
 </div>
-<div class="modal-body">
-    <div>{{ currentMessage() }}</div>
+
+<div class="modal-body custom-modal-body">
+  <p>{{ currentMessage() }}</p>
 </div>
-<div class="modal-footer">
-  <button
-    type="button"
-    class="btn btn-primary"
-    (click)="close()"
-  >
-    OK
-  </button>
+
+<div class="modal-footer custom-modal-footer">
+  <button type="button" class="btn btn-primary w-100" (click)="close()">OK</button>
 </div>

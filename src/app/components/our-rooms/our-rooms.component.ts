@@ -10,45 +10,55 @@ import { IRooms } from '../../core/interfaces/i-rooms';
   standalone: true,
   imports: [CarouselComponent, CommonModule],
   templateUrl: './our-rooms.component.html',
-  styleUrl: './our-rooms.component.scss'
+  styleUrl: './our-rooms.component.scss',
 })
 export class OurRoomsComponent {
-private readonly seo = inject(SeoService);
+  private readonly seo = inject(SeoService);
 
-ngOnInit() {
-  this.seo.setTitleAndMeta('Nasze pomieszczenia')
-}
-
+  ngOnInit() {
+    this.seo.setTitleAndMeta('Nasze pomieszczenia');
+  }
 
   ourRoomsDetails: IRooms[] = [
-      {
-        id: 1,
-        name: 'Salka Midgard',
-        image: 'rooms/midgard.avif',
-        description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
-        longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
-      },
-      {
-        id: 2,
-        name: 'Salka Asgard',
-        image: 'rooms/asgard.avif',
-        description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
-        longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
-      },
-      {
-        id: 3,
-        name: 'Salka Alfheim',
-        image: 'rooms/alfheim.avif',
-        description: 'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
-        longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.'
-      },
-      {
-        id: 4,
-        name: 'Salka Jotunheim',
-        image: 'rooms/jotunheim.avif',
-        description: 'Salka VIP, wyposażona w 6 wygodnych foteli, funkcjonalne podręczne stoliki oraz Chromebooka podłączonego do soundbara.',
-        longDescription: 'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na długie posiedzenia z RPG.'
-      },
-    ]
+    {
+      id: 1,
+      name: 'Salka Midgard',
+      image: 'rooms/midgard.avif',
+      description:
+        'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
+      longDescription:
+        'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.',
+    },
+    {
+      id: 2,
+      name: 'Salka Asgard',
+      image: 'rooms/asgard.avif',
+      description:
+        'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
+      longDescription:
+        'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.',
+    },
+    {
+      id: 3,
+      name: 'Salka Alfheim',
+      image: 'rooms/alfheim.avif',
+      description:
+        'Salka zwykła, wyposażona w stół, 6 krzeseł, Chromebooka podłączonego do soundbara.',
+      longDescription:
+        'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na sesje RPG.',
+    },
+    {
+      id: 4,
+      name: 'Salka Jotunheim',
+      image: 'rooms/jotunheim.avif',
+      description:
+        'Salka VIP, wyposażona w 6 wygodnych foteli, funkcjonalne podręczne stoliki oraz Chromebooka podłączonego do soundbara.',
+      longDescription:
+        'Wszystko uzupełnia niezwykle klimatyczne oświetlenie, tworzące miejsce idealne na długie posiedzenia z RPG.',
+    },
+  ];
 
+  goToRoom(roomId: number) {
+    return;
+  }
 }

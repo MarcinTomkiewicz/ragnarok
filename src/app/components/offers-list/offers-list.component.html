@@ -1,129 +1,154 @@
-<div class="component-container">
-  <div class="flex-row-align-start flex-column-start-mid gap-2 w-100">
-    <div class="card card-dark mid-screens w-25">
-      <h2 class="card-header header-dark w-100 text-center">Kategorie</h2>
-      <app-category-list
-        [categories]="categories"
-        [subcategories]="subcategories"
-        (subcategorySelected)="onSubcategoryClick($event)"
-      ></app-category-list>
-    </div>
+<section class="offers-section">
+  <div class="container">
+    <h2 class="section-title">Sklep Ragnarok</h2>
+    <p class="section-subtitle">
+      Znajdziesz tu unikatowe gadżety, akcesoria RPG i wyjątkowe przedmioty od
+      naszej społeczności.
+    </p>
 
-    <div ngbDropdown class="medium-screens w-100">
-      <button
-        type="button"
-        class="btn btn-outline w-100"
-        id="categories"
-        ngbDropdownToggle
-      >
-        Kategorie
-      </button>
-      <div ngbDropdownMenu aria-labelledby="categories" class="w-100">
+    <div class="offers-wrapper">
+      <!-- Sidebar dla desktopów -->
+      <aside class="category-sidebar">
+        <h3 class="sidebar-title">Kategorie</h3>
         <app-category-list
-        [categories]="categories"
-        [subcategories]="subcategories"
-        (subcategorySelected)="onSubcategoryClick($event)"
-      ></app-category-list>
+          [categories]="categories"
+          [subcategories]="subcategories"
+          (subcategorySelected)="onSubcategoryClick($event)"
+        >
+        </app-category-list>
+      </aside>
+
+      <!-- Dropdown na mobile -->
+      <div class="category-dropdown" ngbDropdown>
+        <button class="btn btn-outline w-100" id="categories" ngbDropdownToggle>
+          Kategorie
+        </button>
+        <div ngbDropdownMenu aria-labelledby="categories" class="w-100">
+          <app-category-list
+            [categories]="categories"
+            [subcategories]="subcategories"
+            (subcategorySelected)="onSubcategoryClick($event)"
+          >
+          </app-category-list>
+        </div>
       </div>
-    </div>
 
-    <div
-      class="flex-column-all-start gap-3 h-100"
-      [ngClass]="{ 'w-100': !isMobile() }"
-    >
-      @if(!filteredOffers.length) {
-      <div class="align-self-center">Nie znaleziono pasujących produktów!</div>
-      } @else { 
-        <div class="flex-row-regular gap-2 w-100">
-        <div>Sortuj</div>
-
-        <div class="flex-row-regular gap-2">
-          @for (field of sortFields; track field) {
-            <div class="flex-row-regular gap-1">
-              <button class="btn btn-plain-light" (click)="sortBy(field)">
-                {{ offerLabels[field] }}
-              </button>
-              <button class="btn btn-plain-light" (click)="sortBy(field)">
-                <i [ngClass]="getSortIcon(field)"></i>
-              </button>
-            </div>
+      <!-- Główna część z listą ofert -->
+      <div class="offers-list">
+        @if (!filteredOffers.length) {
+        <div class="no-offers">Nie znaleziono pasujących produktów!</div>
+        } @else {
+        <!-- Sortowanie -->
+        <div class="sort-section">
+          <span class="sort-label">Sortuj</span>
+          <div class="flex-row-regular gap-2">
+            @for (field of sortFields; track field) {
+            <button
+              class="btn btn-plain-light sort-button"
+              (click)="sortBy(field)"
+            >
+              {{ offerLabels[field] }}
+              <i [ngClass]="getSortIcon(field)"></i>
+            </button>
             }
           </div>
         </div>
-        @for (offer of filteredOffers; track offer.title) {
-      <div
-        class="card card-dark card-350"
-        [ngClass]="{ 'mobile-background': isMobile(), 'w-100': !isMobile() }"
-        [style.backgroundImage]="
-          isMobile() ? 'url(' + offer.image + ')' : 'none'
-        "
-      >
-        <div class="card-body flex-row w-100">
-          @if (!isMobile()) {
-          <div>
-            <img
-              [src]="offer.image"
-              [alt]="offer.title"
-              width="260"
-              height="326"
-            />
-          </div>
-          }
-          <div
-            class="flex-column-align-end w-100 h-100 flex-column-space-around-xs"
-          >
-            <h3 class="card-title title-dark">{{ offer.title }}</h3>
-            <div class="card-text card-text-dark">
-              Kategorie:
-              {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
-              {{
-                getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY)
-              }}
+
+        <!-- Lista kart -->
+        <div class="offers-grid">
+          @for (offer of filteredOffers; track offer.title) { @if (!isMobile())
+          {
+          <article class="offer-card">
+            <div class="card-img">
+              <img [src]="offer.image" [alt]="offer.title" />
             </div>
-            <div
-              class="flex-column-align-end gap-2 flex-column-between-center-xs"
-            >
-              <div class="card-text card-text-dark large">
-                <strong>Cena:</strong> {{ offer.price }} PLN
-              </div>
-              <div class="card-text card-text-dark">
+
+            <div class="offer-content">
+              <h3>{{ offer.title }}</h3>
+              <p>
+                Kategorie:
+                {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
+                {{
+                  getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY)
+                }}
+              </p>
+              <p><strong>Cena:</strong> {{ offer.price }} PLN</p>
+              <p>
                 @if (offer.stock > 0) {
                 <strong>Sztuk na stanie:</strong> {{ offer.stock }}
                 } @else {
                 <strong class="text-danger">Produkt niedostępny</strong>
                 }
+              </p>
+              <div class="buttons">
+                <button
+                  class="btn btn-primary"
+                  [routerLink]="['/offer', offer.id]"
+                >
+                  Szczegóły
+                </button>
+                <button
+                  class="btn btn-warning"
+                  [disabled]="!offer.buyNowLink || !offer.stock"
+                  (click)="buyNow(offer.buyNowLink)"
+                >
+                  Kup Teraz
+                </button>
               </div>
-              <button
-                class="btn btn-primary w-75"
-                [routerLink]="['/offer', offer.id]"
-              >
-                Szczegóły
-              </button>
-
-              <button
-                class="btn btn-warning w-75"
-                [disabled]="!offer.buyNowLink || !offer.stock"
-                (click)="buyNow(offer.buyNowLink)"
-              >
-                Kup Teraz
-              </button>
             </div>
-          </div>
+          </article>
+          } @else {
+          <article class="product-card-mobile card card-dark">
+            <img
+              class="product-image"
+              [src]="offer.image"
+              [alt]="offer.title"
+            />
+            <div class="card-body">
+              <h3 class="card-title">{{ offer.title }}</h3>
+              <p class="card-text">Cena: {{ offer.price }} PLN</p>
+              <p class="card-text">
+                @if (offer.stock > 0) {
+                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                } @else {
+                <strong class="text-danger">Produkt niedostępny</strong>
+                }
+              </p>
+              <div class="btn-group w-100 flex-column gap-2 mt-2">
+                <button
+                  class="btn btn-primary"
+                  [routerLink]="['/offer', offer.id]"
+                >
+                  Szczegóły
+                </button>
+                <button
+                  class="btn btn-warning"
+                  [disabled]="!offer.buyNowLink || !offer.stock"
+                  (click)="buyNow(offer.buyNowLink)"
+                >
+                  Kup Teraz
+                </button>
+              </div>
+            </div>
+          </article>
+          } }
         </div>
+
+        <!-- Paginacja -->
+        @if (totalOffers() > pageSize()) {
+        <ngb-pagination
+          [collectionSize]="totalOffers()"
+          [(page)]="currentPage"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+          [boundaryLinks]="true"
+          [maxSize]="3"
+          size="sm"
+          class="pagination-wrapper"
+        >
+        </ngb-pagination>
+        } }
       </div>
-      } } @if (totalOffers() > pageSize()) {
-      <ngb-pagination
-        [collectionSize]="totalOffers()"
-        [(page)]="currentPage"
-        [pageSize]="pageSize()"
-        (pageChange)="onPageChange($event)"
-        [boundaryLinks]="true"
-        [maxSize]="3"
-        size="sm"
-        class="d-flex justify-content-center w-100"
-      >
-      </ngb-pagination>
-      }
     </div>
   </div>
-</div>
+</section>

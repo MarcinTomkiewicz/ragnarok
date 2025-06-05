@@ -1,0 +1,64 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.event-calendar-section {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 3rem 2rem;
+
+  @media screen and (max-width: $breakpoint-md) {
+    padding: 3rem 0;
+  }
+
+  .container {
+    max-width: $container-width-lg;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    text-align: center;
+    margin-bottom: 1rem;
+    @include gold-gradient-text;
+  }
+
+  .section-subtitle {
+    font-size: $font-size-md;
+    color: $secondary-text-color;
+    margin-bottom: 3rem;
+    max-width: $container-width-md;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .calendar-description {
+    font-size: $font-size-sm;
+    margin-bottom: 2rem;
+    text-align: justify;
+    opacity: 0.9;
+  }
+
+  .image-banner-container {
+    margin: 2rem 0;
+
+    .image-banner {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: $card-shadow;
+    }
+  }
+
+  .event-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .event-header {
+    font-size: $font-size-xl;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid $border-color;
+    padding-bottom: 0.5rem;
+  }
+}

@@ -20,7 +20,7 @@
     font-size: $font-size-lg;
     font-weight: bold;
     // color: $primary-color;
-        @include gold-gradient-text;
+    @include gold-gradient-text;
 
     // &:hover {
     //   color: $hover-color;
@@ -85,5 +85,43 @@
 
   .d20-icon.spin {
     animation: spin-d20 0.2s ease-in-out;
+  }
+}
+
+.offcanvas-menu {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 2rem;
+  height: 100%;
+  width: 100%;
+
+  .menu-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    color: $text-color;
+  }
+
+  .offcanvas-links {
+    list-style: none;
+    padding: 0;
+
+    li {
+      margin-bottom: 1rem;
+
+      a {
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: $font-family-base;
+        color: $text-color;
+        text-decoration: none;
+        display: block;
+        padding: 0.5rem 0;
+
+        &:hover {
+          color: $primary-color;
+        }
+      }
+    }
   }
 }

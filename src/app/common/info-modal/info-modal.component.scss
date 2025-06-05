@@ -1,0 +1,36 @@
+@import "abstracts/variables";
+
+.custom-modal-header,
+.custom-modal-body,
+.custom-modal-footer {
+  background-color: $bg-color;
+  color: $text-color;
+  border: none;
+}
+
+.modal-header {
+  border-bottom: 1px solid $border-color;
+
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+
+  .btn-close {
+    filter: invert(1); // dla jasnego X na ciemnym tle
+  }
+}
+
+.modal-body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  border-top: 1px solid $border-color;
+
+  .btn {
+    font-weight: 600;
+    padding: 0.5rem 1.25rem;
+  }
+}

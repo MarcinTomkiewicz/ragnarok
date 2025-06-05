@@ -18,6 +18,11 @@
 @import "components/testimonial";
 @import "components/about";
 @import "components/services";
+@import "components/offers-list";
+@import "components/event-calendar";
+@import "components/tech-stack";
+@import "components/our-rooms";
+@import "components/contact";
 
 // Layouts
 @import "layouts/header";
@@ -29,7 +34,7 @@
 
 // Vendors (Bootstrap)
 @import "bootstrap/scss/bootstrap";
-@import "bootstrap-icons/font/bootstrap-icons"; // Import Bootstrap SCSS
+@import "bootstrap-icons/font/bootstrap-icons";
 @import "vendors/bootstrap";
 @import "vendors/carousel";
 @import "vendors/offcanvas";

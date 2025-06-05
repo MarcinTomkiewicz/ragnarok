@@ -1,87 +1,78 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-:host {
-  display: block;
-}
+.event-details-section {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 3rem 2rem;
 
-.component-container {
-  background-color: $primary-color;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  height: 100%;
-  width: 100%;  /* Zajmuje całą szerokość */
-  gap: 10px;
-
-  /* Usunięcie flex-direction z tego miejsca, bo teraz jest to kontrolowane w HTML */
-  
   @media (max-width: $breakpoint-md) {
-    padding: 1rem;
+    padding: 2rem 1rem;
   }
 
-  @media (max-width: $breakpoint-sm) {
-    padding: 0.5rem;
-    gap: 10px;
+  .container {
+    max-width: $container-width-lg;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-}
 
-.event-image {
-  width: 591px;
-  height: 371px;
-  object-fit: cover;
-  border-radius: 8px;
-  display: block;
+  .event-image-wrapper {
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: $card-shadow;
+  }
 
-  @media (max-width: $breakpoint-sm) {
+  .event-image {
     width: 100%;
     height: auto;
-  }
-}
-
-.event-container {
-  flex: 1;
-  max-width: 100%;
-  line-height: 1.6;
-  transition: all 0.3s ease;
-
-  h2 {
-    color: $bg-color;
+    display: block;
+    object-fit: cover;
   }
 
-  .event-paragraph {
-    color: $bg-color;
-    // margin-bottom: 1rem;
-    opacity: 0;
-    animation: fadeIn 0.5s forwards;
-
-    /* Animacja z dynamicznym opóźnieniem */
-    &:nth-of-type(n) {
-      animation-delay: calc(0.3s * (n));
-    }
-
-    &:first-of-type::first-letter {
-      font-size: 4rem;
-      font-weight: bold;
-      color: $secondary-color;
-      float: left;
-      margin-right: 10px;
-      line-height: 1;
-    }
-  }
-}
-
-.responsive-table {
-  width: 50%;
-  @media (max-width: $breakpoint-md) {
+  .event-description {
     width: 100%;
-  }
-}
+    margin-top: 2rem;
+    text-align: left;
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
+    p {
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
   }
-  to {
-    opacity: 1;
+
+  .event-table {
+    width: 100%;
+    margin-top: 2rem;
+    color: $text-color;
+
+    th {
+      width: 30%;
+      font-weight: bold;
+      vertical-align: top;
+    }
+
+    td {
+      width: 70%;
+    }
+
+    tr {
+      border-bottom: 1px solid $border-color;
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      th,
+      td {
+        display: block;
+        width: 100%;
+      }
+
+      th {
+        margin-top: 1rem;
+      }
+    }
   }
 }

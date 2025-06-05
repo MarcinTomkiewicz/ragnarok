@@ -37,6 +37,8 @@ export class CategoryService {
   }
 
   getCategoryName(id: number, category: CategoryType): string {
+    console.log(this.categories$.value, this.subcategories$.value);
+    
     const source = category === CategoryType.CATEGORY ? this.categories$.value : this.subcategories$.value;
     const name = source.find(item => item.id === id)?.name;
     return name ?? '';

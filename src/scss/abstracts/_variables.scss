@@ -3,14 +3,14 @@
 // ---------------------------------------------
 
 // Kolory podstawowe
-$primary-color: #E8BC58;        // Główne złoto z logo (tekst, border, linki)
-$secondary-color: #684220;      // Jasne złoto – tło przycisków, dodatkowe elementy
-$hover-color: #d4b373;          // Hover na CTA/linkach
+$primary-color: #e8bc58; // Główne złoto z logo (tekst, border, linki)
+$secondary-color: #684220; // Jasne złoto – tło przycisków, dodatkowe elementy
+$hover-color: #d4b373; // Hover na CTA/linkach
 
 // Tła
-$bg-color: #16140f;             // Tło główne (ciemny brąz)
-$bg-color-light: #1f1c17;       // Jaśniejszy brąz (sekcje, przyciski)
-$border-color: #3a372e;         // Ramki, separator
+$bg-color: #16140f; // Tło główne (ciemny brąz)
+$bg-color-light: #1f1c17; // Jaśniejszy brąz (sekcje, przyciski)
+$border-color: #3a372e; // Ramki, separator
 $bg-hero-overlay: rgba(0, 0, 0, 0.6); // Do hero-section z tłem video
 
 // Tekst
@@ -20,26 +20,31 @@ $link-color: $secondary-color;
 $link-hover-color: lighten($secondary-color, 10%);
 
 // Przyciski
-$button-color: #d4b373;               // Ciepłe złoto z projektu
-$button-hover-color: #b59554;         // Hover CTA
-$secondary-button-color: #3a372e;     // Przyciski neutralne
+$button-color: #d4b373; // Ciepłe złoto z projektu
+$button-hover-color: #b59554; // Hover CTA
+$secondary-button-color: #3a372e; // Przyciski neutralne
 $secondary-button-hover-color: lighten(#3a372e, 5%);
 $button-text-color: #16140f;
 
 // Ikony
-$icon-filter: brightness(0) saturate(100%) invert(88%) sepia(76%) saturate(5302%) hue-rotate(315deg) brightness(98%) contrast(86%);
-$icon-filter-dark: brightness(0) invert(20%) sepia(30%) saturate(800%) hue-rotate(20deg) brightness(90%) contrast(85%);
+$icon-filter: brightness(0) saturate(100%) invert(88%) sepia(76%)
+  saturate(5302%) hue-rotate(315deg) brightness(98%) contrast(86%);
+$icon-filter-dark: brightness(0) invert(20%) sepia(30%) saturate(800%)
+  hue-rotate(20deg) brightness(90%) contrast(85%);
 
 // Informacje (opcjonalne kolory semantyczne)
-$info-color: #0DCAF0;
+$info-color: #0dcaf0;
 $danger-color: #dc3545;
 $success-color: #198754;
+
+$border-radius: 10px; // Zaokrąglenie rogów
+$box-shadow: 0 0 20px rgba($secondary-color, 0.4);
 
 // ---------------------------------------------
 // TYPOGRAFIA
 // ---------------------------------------------
 
-$font-family-base: 'Cinzel', serif;
+$font-family-base: "Cinzel", serif;
 $font-size-base: 1rem;
 $line-height-base: 1.2;
 

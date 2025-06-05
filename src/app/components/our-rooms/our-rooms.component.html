@@ -1,15 +1,36 @@
-<div class="component-container">
+<section class="our-rooms-section">
+  <div class="container">
     <h2 class="section-title">Nasze salki</h2>
-    <div class="description">
-      Zespół Ragnaroku to grupa kreatywnych osób, których pasja i zaangażowanie
-      sprawiają, że każda sesja RPG w Ragnaroku staje się wyjątkowym przeżyciem.
-      Każdy detal w Ragnaroku jest efektem współpracy, której celem jest
-      zapewnienie graczom wyjątkowego doświadczenia. Dzięki naszej wspólnej pracy
-      i zaangażowaniu, Ragnarok oferuje przestrzeń, która inspiruje do
-      niezapomnianych przygód.
+    <p class="section-subtitle">
+      W Ragnaroku każda salka została zaprojektowana z myślą o graczach RPG —
+      niezależnie od tego, czy jesteś początkującym poszukiwaczem przygód, czy
+      doświadczonym Mistrzem Gry. Nasze pokoje to klimatyczne przestrzenie pełne
+      detali, które sprzyjają narracji, immersji i wspólnemu tworzeniu
+      opowieści. Znajdziesz tu wygodne miejsca do gry, odpowiednie oświetlenie i
+      atmosferę sprzyjającą fantastycznym sesjom. Każda salka pozwala na
+      przeżycie niezapomnianych przygód — wybierz tę, która najlepiej pasuje do
+      Twojej kampanii!
+    </p>
+
+    <div class="mg-grid">
+      @for (room of ourRoomsDetails; track room.id) {
+      <div class="card card-dark mg-card">
+        <img [src]="room.image" [alt]="room.name" class="card-img-top" />
+
+        <div class="card-body">
+          <h3 class="card-title title-dark text-center">{{ room.name }}</h3>
+          <p class="card-text card-text-dark">
+            {{ room.description }}
+          </p>
+        </div>
+
+        <div class="card-footer">
+          <button class="btn btn-outline w-100" (click)="goToRoom(room.id)">
+            Szczegóły
+          </button>
+        </div>
+      </div>
+      }
     </div>
-    <div class="image-banner-container">
-      <img src="strip.avif" alt="Banner for services" class="image-banner" />
-    </div>
-    <app-carousel [items]="ourRoomsDetails"></app-carousel>
   </div>
+</section>

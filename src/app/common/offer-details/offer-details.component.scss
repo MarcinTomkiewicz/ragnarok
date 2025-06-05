@@ -1,14 +1,88 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-:host {
-    display: block;
-    min-height: 100vh;
-    height: auto;
-  
+.offer-details-section {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 3rem 2rem;
+
+  .container {
+    max-width: $container-width-lg;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-size: $font-size-xl;
+    margin-bottom: 2rem;
+  }
+
+  .offer-details-layout {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+
     @media (max-width: $breakpoint-md) {
-      @media (orientation: landscape) {
-        height: auto;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  .offer-image-wrapper {
+    flex: 1 1 300px;
+    max-width: 300px;
+
+    .offer-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: $card-shadow;
+    }
+  }
+
+  .offer-meta {
+    flex: 2 1 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .meta-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+
+      .meta-label {
+        font-weight: bold;
+        color: $secondary-text-color;
+        min-width: 130px;
+      }
+
+      .meta-value {
+        flex: 1;
+      }
+    }
+
+    .short-description {
+      margin-top: 1rem;
+
+      p {
+        margin-bottom: 0.5rem;
       }
     }
   }
+
+  .offer-description {
+    margin-top: 2rem;
+
+    p {
+      margin-bottom: 0.75rem;
+    }
+  }
+}

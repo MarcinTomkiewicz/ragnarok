@@ -102,7 +102,8 @@ export class ContactComponent implements OnDestroy {
     if (!this.platformService.isBrowser) return null;
 
     const img = document.createElement('img');
-    img.src = 'favicon.svg';
+    img.src = 'ragnarok.avif';
+    img.style.backgroundColor = '#16140f';
     img.style.width = '50px';
     img.style.height = '50px';
     img.style.borderRadius = '100%';

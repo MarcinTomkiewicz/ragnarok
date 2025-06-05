@@ -23,13 +23,16 @@
 
 
 <ng-template #offcanvas let-close="close">
-  <button class="close-btn" (click)="close()">✖</button>
-  <h2>Menu</h2>
-  <ul>
-    @for (link of menuLinks; track link.path) {
-    <li>
-      <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
-    </li>
-    }
-  </ul>
+  <div class="offcanvas-menu">
+    <button class="close-btn" (click)="close()">✖</button>
+    <h2 class="menu-title">Menu</h2>
+    <ul class="offcanvas-links">
+      @for (link of menuLinks; track link.path) {
+        <li>
+          <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
+        </li>
+      }
+    </ul>
+  </div>
 </ng-template>
+

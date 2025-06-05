@@ -1,15 +1,17 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, input, inject, DestroyRef } from '@angular/core';
 import { EventData } from '../../core/interfaces/i-event';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PlatformService } from '../../core/services/platform/platform.service';
+import { fromEvent, takeUntil } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-event-list',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './event-list.component.html',
-  styleUrl: './event-list.component.scss'
+  styleUrl: './event-list.component.scss',
 })
 export class EventListComponent {
   events = input<EventData[]>([]);
@@ -17,6 +19,23 @@ export class EventListComponent {
 
   private readonly platformService = inject(PlatformService);
   private readonly router = inject(Router);
+  destroyRef?: DestroyRef;
+  public isMobile = false;
+
+  ngOnInit() {
+    this.updateScreenState();
+    if (this.platformService.isBrowser) {
+      fromEvent(window, 'resize')
+        // .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.updateScreenState());
+    }
+  }
+
+  updateScreenState() {
+    this.isMobile = window.innerWidth < 600;
+    console.log(`Screen width: ${window.innerWidth}, isMobile: ${this.isMobile}`);
+    
+  }
 
   openFacebook(link: string) {
     if (this.platformService.isBrowser) {
@@ -32,5 +51,5 @@ export class EventListComponent {
 
   checkScreenWidth(minWidth: number = 370): boolean {
     return this.platformService.isBrowser && window.innerWidth >= minWidth;
-  }  
+  }
 }

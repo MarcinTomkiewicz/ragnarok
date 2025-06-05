@@ -17,9 +17,7 @@ export class MeetTheTeamComponent implements OnInit {
   ngOnInit() {
     this.teamService.getCoreTeam().subscribe({
       next: (members) => {
-        this.team = members.slice(0, 4);
-        console.log(members);
-        
+        this.team = members.slice(0, 4);        
       },
       error: (err) => console.error('Błąd ładowania zespołu:', err),
     });
