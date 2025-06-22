@@ -11,4 +11,5 @@ export interface EventData {
     isActive: boolean;
     interval: number;
     cost?: number;
+    isForBeginners?: boolean;
   }

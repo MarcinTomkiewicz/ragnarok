@@ -1,0 +1,96 @@
+@let special = offer();
+
+<section class="special-offer-section">
+  <div class="container">
+    @if (!special) {
+    <p class="error-message">Nie znaleziono oferty specjalnej.</p>
+    } @else {
+    <h1 class="section-title">{{ special.title }}</h1>
+
+    @if (special.image) {
+    <div class="special-offer-image">
+      <img [src]="special.image" [alt]="sanitize(special.title)" />
+    </div>
+    }
+
+    <div class="content-blocks">
+      @for (block of special.contentBlocks; track block) { @if (block.type ===
+      'heading') { @if (block.level === 2) {
+      <h2 class="block-heading">{{ block.text }}</h2>
+      } @else if (block.level === 3) {
+      <h3 class="block-heading">{{ block.text }}</h3>
+      } @else {
+      <h4 class="block-heading">{{ block.text }}</h4>
+      } } @else if (block.type === 'paragraph') { @for (para of
+      block.paragraphs; track para) {
+      <p class="block-paragraph">{{ para }}</p>
+      } } @else if (block.type === 'image') {
+      <div class="block-image">
+        <img [src]="sanitize(block.url)" [alt]="block.alt || ''" />
+      </div>
+      } @else if (block.type === 'list') { @if (block.ordered) {
+      <ol class="block-list">
+        @for (item of block.items; track item) {
+        <li>
+          @if (item.type === 'list') {
+          <!-- Rekurencyjne wywołanie dla zagnieżdżonej listy -->
+          <ul class="block-list">
+            @for (subitem of item.items; track subitem) {
+            <li>
+              @if (subitem.type === 'paragraph') { @for (para of
+              subitem.paragraphs; track para) {
+              <p class="block-paragraph">{{ para }}</p>
+              } } @else {
+              <p class="block-paragraph">{{ subitem }}</p>
+              }
+            </li>
+            }
+          </ul>
+          } @else if (item.type === 'paragraph') { @for (para of
+          item.paragraphs; track para) {
+          <p class="block-paragraph">{{ para }}</p>
+          } } @else {
+          <p class="block-paragraph">{{ item }}</p>
+          }
+        </li>
+        }
+      </ol>
+      } @else {
+      <ul class="block-list">
+        @for (item of block.items; track item) {
+        <li>
+          @if (item.type === 'list') {
+          <!-- Rekurencyjne wywołanie dla zagnieżdżonej listy -->
+          <ul class="block-list">
+            @for (subitem of item.items; track subitem) {
+            <li>
+              @if (subitem.type === 'paragraph') { @for (para of
+              subitem.paragraphs; track para) {
+              <p class="block-paragraph">{{ para }}</p>
+              } } @else {
+              <p class="block-paragraph">{{ subitem }}</p>
+              }
+            </li>
+            }
+          </ul>
+          } @else if (item.type === 'paragraph') { @for (para of
+          item.paragraphs; track para) {
+          <p class="block-paragraph">{{ para }}</p>
+          } } @else {
+          <p class="block-paragraph">{{ item }}</p>
+          }
+        </li>
+        }
+      </ul>
+      } } }
+    </div>
+    @if (offer()?.hasRegulations) {
+    <h3>
+      Przed skorzystaniem z oferty, przeczytaj
+      <button class="btn btn-plain" (click)="openRules('special')">
+        Regulamin Oferty
+      </button>
+    </h3>
+    } }
+  </div>
+</section>

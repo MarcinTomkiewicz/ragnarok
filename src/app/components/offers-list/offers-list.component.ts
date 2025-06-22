@@ -1,11 +1,12 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, JsonPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import {
   NgbAccordionModule,
   NgbDropdownModule,
   NgbModal,
   NgbPaginationModule,
+  NgbTypeaheadModule,
 } from '@ng-bootstrap/ng-bootstrap';
 import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
 import { CategoryType } from '../../core/enums/categories';
@@ -20,6 +21,17 @@ import { CategoryService } from '../../core/services/category/category.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { InfoModalComponent } from '../../common/info-modal/info-modal.component';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { FormsModule } from '@angular/forms';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  Observable,
+  of,
+  OperatorFunction,
+  switchMap,
+  tap,
+} from 'rxjs';
 
 enum OfferKeys {
   ID = 'id',
@@ -38,6 +50,9 @@ enum OfferKeys {
     RouterModule,
     CategoryListComponent,
     NgbPaginationModule,
+    NgbTypeaheadModule,
+    FormsModule,
+    JsonPipe,
   ],
   templateUrl: './offers-list.component.html',
   styleUrl: './offers-list.component.scss',
@@ -46,6 +61,7 @@ export class OffersListComponent implements OnInit {
   private readonly backendService = inject(BackendService);
   private readonly platformService = inject(PlatformService);
   private readonly modalService = inject(NgbModal);
+  private readonly router = inject(Router);
   readonly categoryService = inject(CategoryService);
   private readonly seo = inject(SeoService);
   readonly CategoryType = CategoryType;
@@ -54,6 +70,8 @@ export class OffersListComponent implements OnInit {
   subcategories: Subcategory[] = [];
   offersList: Offer[] = [];
   filteredOffers: Offer[] = [];
+  private offersFetched = false;
+  allOffers: Offer[] = [];
 
   currentSubcategoryId = signal<number | null>(null);
   currentPage = signal<number>(1);
@@ -195,5 +213,43 @@ export class OffersListComponent implements OnInit {
     return order === 'asc'
       ? 'bi bi-sort-alpha-down'
       : 'bi bi-sort-alpha-down-alt';
+  }
+
+search: OperatorFunction<string, Offer[]> = (text$: Observable<string>) =>
+  text$.pipe(
+    debounceTime(300),
+    distinctUntilChanged(),
+    switchMap((term: string) => {
+      if (term.length < 3) return of([]);
+
+      if (this.offersFetched) {
+        return of(this.filterOffers(term));
+      }
+
+      return this.backendService.getAll<Offer>('offers', 'title', 'asc').pipe(
+        tap((offers) => {
+          this.allOffers = offers;
+          this.offersFetched = true;
+        }),
+        map(() => this.filterOffers(term))
+      );
+    })
+  );
+
+private filterOffers(term: string): Offer[] {
+  return this.allOffers.filter((offer) =>
+    offer.title.toLowerCase().includes(term.toLowerCase())
+  );
+}
+
+  // formatowanie w dropdownie
+  resultFormatter = (offer: Offer) => offer.title;
+  inputFormatter = (offer: Offer) =>
+    typeof offer === 'string' ? offer : offer.title;
+
+  // akcja po kliknięciu
+  onSelectOffer(event: any): void {
+    const selectedOffer: Offer = event.item;
+    this.router.navigate(['/offer', selectedOffer.id]);
   }
 }

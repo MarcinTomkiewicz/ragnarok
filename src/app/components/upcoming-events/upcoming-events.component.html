@@ -7,22 +7,27 @@
 
     <div class="events-grid">
       @for (event of upcomingEvents; track event.id) {
-        <div class="event-card">
-          <div class="image-wrapper">
-            <img [src]="event.image" [alt]="event.name" />
+      <div class="event-card">
+        <div class="image-wrapper">
+          <img [src]="event.image" [alt]="event.name" />
+          @if (event.isForBeginners) {
+          <span class="beginner-label">Dla początkujących</span>
+          }
+        </div>
+        <div class="event-content">
+          <h3>{{ event.name }}</h3>
+          <div class="event-date">
+            <img src="/icons/calendar.svg" alt="calendar" />
+            <span>{{ event.eventDate }}</span>
           </div>
-          <div class="event-content">
-            <h3>{{ event.name }}</h3>
-            <div class="event-date">
-              <img src="/icons/calendar.svg" alt="calendar" />
-              <span>{{ event.eventDate }}</span>
-            </div>
-            <p>{{ event.shortDescription }}</p>
-            <div class="event-actions">
-              <a [routerLink]="['/event', event.id]" class="btn btn-outline">Szczegóły</a>
-            </div>
+          <p>{{ event.shortDescription }}</p>
+          <div class="event-actions">
+            <a [routerLink]="['/event', event.id]" class="btn btn-outline"
+              >Szczegóły</a
+            >
           </div>
         </div>
+      </div>
       }
     </div>
   </div>

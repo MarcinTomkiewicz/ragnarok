@@ -1,46 +1,20 @@
 <main>
+  <section class="for-beginners-section">
+  <div class="container">
+    <app-highlight
+    [heading]="highlightData.heading"
+    [text]="highlightData.text"
+    [link]="highlightData.link"
+    [linkText]="highlightData.linkText"
+    [icon]="highlightData.icon"
+  ></app-highlight>
+  </div>
+  </section>
   <app-audience-section></app-audience-section>
   <app-how-it-works></app-how-it-works>
   <app-upcoming-events></app-upcoming-events>
   <app-testimonial></app-testimonial>
   <app-meet-the-team></app-meet-the-team>
-  <!-- <div class="flex-column-start mb-5 w-100">
-    @if (isLoading() && newsItems.length <= 0) {
-    <div class="flex-row-regular skeleton skeleton-wrapper news-wrapper">
-      <div class="content text-white align-self-end mb-2">
-        <div class="flex-column-between mt-2 mb-3">
-          <div
-            class="skeleton skeleton-content skeleton-h-3 w-50 mx-auto mb-2"
-          ></div>
-
-          <div class="flex-row-regular w-100 my-1 px-2 font-size-small">
-            <div
-              class="skeleton skeleton-small skeleton-content skeleton-h-1 w-25 me-2"
-            ></div>
-            <div
-              class="skeleton skeleton-small skeleton-content skeleton-h-1 w-25 ms-2"
-            ></div>
-          </div>
-
-          <div class="skeleton skeleton-content skeleton-h-3 mb-2"></div>
-
-          <div class="flex-row-space-evenly flex-column-center-sm w-100">
-            <div class="skeleton skeleton-button skeleton-h-2-5"></div>
-            <div class="skeleton skeleton-event-button skeleton-h-2-5"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    } @if (newsItems.length > 0 && !isLoading()) {
-    <app-news-carousel
-      [newsItems]="newsItems"
-      [isMobile]="isMobile"
-      [interval]="000"
-      class="w-100"
-    />
-    }
-  </div> -->
   <div class="row rich-text-columns">
     <div class="column">
       <div class="mb-4">

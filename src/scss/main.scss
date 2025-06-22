@@ -1,6 +1,7 @@
 // Abstracts
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/components";
 
 // Base
 @import "base/reset";
@@ -23,6 +24,7 @@
 @import "components/tech-stack";
 @import "components/our-rooms";
 @import "components/contact";
+@import "components/for-beginners";
 
 // Layouts
 @import "layouts/header";
@@ -44,7 +46,8 @@
 @import "vendors/dropdown-menu";
 @import "vendors/table";
 @import "vendors/pagination";
-@import "vendors/modals";
+@import "vendors/modals"; 
+@import "vendors/typeahead";
 
 @import "@fontsource/modern-antiqua/index.css";
 @import "@fontsource/cinzel/index.css";

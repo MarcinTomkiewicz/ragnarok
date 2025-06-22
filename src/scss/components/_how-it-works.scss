@@ -2,25 +2,7 @@
 @import "abstracts/mixins";
 
 .how-it-works-section {
-  background-color: $bg-color-light;
-  padding: 3rem 2rem;
-  color: $text-color;
-  text-align: center;
-
-  .section-title {
-    font-size: $font-size-xxl;
-    margin-bottom: 1rem;
-    @include gold-gradient-text;
-  }
-
-  .section-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    max-width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+    @include section-wrapper;
 
   .steps-grid {
     display: grid;

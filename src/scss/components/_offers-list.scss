@@ -1,38 +1,9 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/components";
 
 .offers-section {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 3rem 2rem;
-
-  @media screen and (max-width: $breakpoint-md) {
-    padding: 2rem 1rem;
-  }
-
-  .container {
-    max-width: $container-width-lg;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
-  .section-title {
-    text-align: center;
-    margin-bottom: 1rem;
-    @include gold-gradient-text;
-  }
-
-  .section-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    max-width: $container-width-md;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
+  @include section-wrapper;
 
   .offers-wrapper {
     display: flex;
@@ -70,12 +41,11 @@
     }
   }
 
-  // W SCSS
   .sort-section {
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 1rem;
 
     @media (max-width: $breakpoint-md) {
       justify-content: center;
@@ -92,20 +62,6 @@
         gap: 0.25rem;
       }
     }
-  }
-
-  .offers-list {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
-  .sort-section {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
 
     span {
       font-weight: bold;
@@ -118,10 +74,16 @@
     }
   }
 
+  .offers-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
   .offers-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-
     gap: 2rem;
   }
 
@@ -138,34 +100,19 @@
 
     .card-img {
       width: 100%;
-      aspect-ratio: 4 / 5; // lub użyj height: 326px; jeśli chcesz konkretny wymiar
+      aspect-ratio: 4 / 5;
       background-color: lighten($bg-color-light, 5%);
-      position: relative;
       overflow: hidden;
 
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
       }
     }
 
     &:hover {
       transform: translateY(-4px);
-    }
-
-    &.mobile-bg {
-      background-size: cover;
-      background-position: center;
-      color: $bg-color;
-    }
-
-    .offer-image {
-      width: 100%;
-      height: auto;
-      object-fit: cover;
-      border-radius: 4px;
     }
 
     .offer-content {
@@ -212,41 +159,40 @@
     justify-content: center;
     margin-top: 2rem;
   }
-}
 
-// SCSS — tylko mobile
-@media (max-width: $breakpoint-md) {
-  .product-card-mobile {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: $bg-color-light;
-    border: 1px solid $border-color;
-    border-radius: 6px;
-    overflow: hidden;
+  @media (max-width: $breakpoint-md) {
+    .product-card-mobile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: $bg-color-light;
+      border: 1px solid $border-color;
+      border-radius: 6px;
+      overflow: hidden;
 
-    .product-image {
-      width: 100%;
-      height: auto;
-      object-fit: cover;
-      aspect-ratio: 4 / 5;
-      background-color: $bg-color;
-    }
+      .product-image {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+        aspect-ratio: 4 / 5;
+        background-color: $bg-color;
+      }
 
-    .card-body {
-      padding: 1rem;
-      width: 100%;
-      text-align: center;
-    }
+      .card-body {
+        padding: 1rem;
+        width: 100%;
+        text-align: center;
+      }
 
-    .card-text {
-      font-size: $font-size-md;
-      color: $text-color;
-      margin-bottom: 0.5rem;
-    }
+      .card-text {
+        font-size: $font-size-md;
+        color: $text-color;
+        margin-bottom: 0.5rem;
+      }
 
-    .btn-group {
-      width: 100%;
+      .btn-group {
+        width: 100%;
+      }
     }
   }
 }

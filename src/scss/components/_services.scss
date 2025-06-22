@@ -1,37 +1,9 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/components";
 
 .services-section {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 3rem 2rem;
-  @media screen and (max-width: $breakpoint-md) {
-    max-width: $container-width-full;
-    padding: 3rem 0;
-  }
-
-  .container {
-    max-width: $container-width-lg;
-    margin: 0 auto;
-  }
-
-  .section-title {
-    font-size: $font-size-xxl;
-    margin-bottom: 1rem;
-    text-align: center;
-    @include gold-gradient-text;
-  }
-
-  .section-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    text-align: center;
-    line-height: 1.6;
-    max-width: $container-width-md;
-    margin-left: auto;
-    margin-right: auto;
-  }
+   @include section-wrapper;
 
   .price-category {
     margin-bottom: 3rem;

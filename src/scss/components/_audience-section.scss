@@ -2,31 +2,7 @@
 @import "abstracts/mixins";
 
 .audience-section {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 3rem 2rem;
-
-  .audience-container {
-    max-width: $container-width-lg;
-    margin: 0 auto;
-    text-align: center;
-  }
-
-  .audience-title {
-    font-size: $font-size-xxl;
-    margin-bottom: 2.5rem;
-    @include gold-gradient-text;
-  }
-
-  .audience-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    max-width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: $line-height-base;
-  }
+@include section-wrapper;
 
   .audience-cards {
     display: grid;

@@ -2,48 +2,10 @@
 @import "abstracts/mixins";
 
 .tech-stack-section {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 3rem 2rem;
-
-  @media screen and (max-width: $breakpoint-md) {
-    padding: 2rem 0;
-  }
-
-  .container {
-    max-width: $container-width-lg;
-    margin: 0 auto;
-  }
-
-  .section-title {
-    text-align: center;
-    margin-bottom: 1rem;
-    @include gold-gradient-text;
-  }
-
-  .section-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    max-width: $container-width-md;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
+  @include section-wrapper;
 
   .mg-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
-    margin-top: 2rem;
-
-    @media (max-width: $breakpoint-lg) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: $breakpoint-sm) {
-      grid-template-columns: 1fr;
-    }
+    @include mg-grid(4);
   }
 
   .loader-wrapper {

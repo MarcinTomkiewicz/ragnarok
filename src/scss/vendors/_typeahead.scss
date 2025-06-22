@@ -1,0 +1,56 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+input[type="search"] {
+  background-color: $bg-color-light;
+  border: 1px solid $border-color;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: $text-color;
+  font-size: $font-size-base;
+  width: 100%;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: inset 0 0 0.25rem rgba($primary-color, 0.5);
+    outline: none;
+    background-color: $bg-color-light;
+    color: $text-color;
+  }
+}
+
+.form-control {
+  &::placeholder {
+    color: $primary-color;
+    opacity: 0.6;
+  }
+}
+
+ngb-typeahead-window {
+  background: $bg-color-light;
+  color: $text-color;
+  border: 1px solid $primary-color!important;
+  box-shadow: inset 0 0 0.25rem rgba($primary-color, 0.5);
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  .dropdown-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    color: $primary-color;
+    background-color: $bg-color;
+    --bs-dropdown-link-color: #{$primary-color};
+
+    &:hover {
+      background-color: $primary-color;
+      color: $bg-color;
+    }
+  }
+
+  .dropdown-item.active,
+  .dropdown-item:active {
+    background-color: $primary-color !important;
+    color: $bg-color !important;
+  }
+}

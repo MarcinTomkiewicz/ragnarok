@@ -2,26 +2,7 @@
 @import "abstracts/mixins";
 
 .testimonials-section {
-  background-color: $bg-color-light;
-  color: $text-color;
-  padding: 4rem 2rem;
-  text-align: center;
-
-  .section-title {
-    font-size: $font-size-xxl;
-    margin-bottom: 1rem;
-    @include gold-gradient-text;
-  }
-
-  .section-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    max-width: $container-width-md;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
+  @include section-wrapper;
 
   .testimonials-grid {
     display: grid;

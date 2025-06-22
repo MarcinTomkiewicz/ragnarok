@@ -52,3 +52,19 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+// Mixin dla siatki kart
+@mixin mg-grid($columns: 3) {
+  display: grid;
+  grid-template-columns: repeat($columns, 1fr);
+  gap: 2rem;
+  margin-top: 2rem;
+
+  @media (max-width: $breakpoint-lg) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}

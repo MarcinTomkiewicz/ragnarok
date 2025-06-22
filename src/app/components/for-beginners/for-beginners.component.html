@@ -1,0 +1,50 @@
+<section class="for-beginners-section">
+  <div class="container">
+    <h2 class="section-title">Dopiero zaczynasz?</h2>
+    <p class="section-subtitle">
+      W Ragnaroku wspieramy początkujących graczy, bo wiemy, że każdy bohater
+      kiedyś stawiał pierwszy krok. Tworzymy przestrzeń i wydarzenia, które
+      pomogą Ci wejść do świata RPG bez stresu – z pomocą doświadczonych MG oraz
+      społeczności.
+    </p>
+
+<app-highlight
+  [heading]="courseHighlightData.heading"
+  [text]="courseHighlightData.text"
+  [link]="courseHighlightData.link"
+  [linkText]="courseHighlightData.linkText"
+  [icon]="courseHighlightData.icon">
+</app-highlight>
+    <h3 class="text-center mt-5 mb-3">Nasze wydarzenia dla początkujących</h3>
+    <div class="mg-grid">
+      @for (event of eventsForBeginners(); track event.id) {
+      <div class="event-card">
+        <div class="image-wrapper">
+          <img [src]="event.image" [alt]="event.name" />
+        </div>
+        <div class="event-content">
+          <h3>{{ event.name }}</h3>
+          <div class="event-date">
+            <img src="/icons/calendar.svg" alt="calendar" />
+            <span>{{ event.eventDate }}</span>
+          </div>
+          <p>{{ event.shortDescription }}</p>
+          <div class="event-actions">
+            <a [routerLink]="['/event', event.id]" class="btn btn-outline"
+              >Szczegóły</a
+            >
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+<app-highlight
+  [heading]="studentsHighlightData.heading"
+  [text]="studentsHighlightData.text"
+  [link]="studentsHighlightData.link"
+  [linkText]="studentsHighlightData.linkText"
+  [icon]="studentsHighlightData.icon">
+</app-highlight>
+  </div>
+</section>

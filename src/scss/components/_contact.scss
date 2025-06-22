@@ -1,35 +1,9 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/components";
 
 .contact-section {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 3rem 2rem;
-
-  @media (max-width: $breakpoint-md) {
-    padding: 2rem 1rem;
-  }
-
-  .container {
-    max-width: $container-width-lg;
-    margin: 0 auto;
-  }
-
-  .section-title {
-    text-align: center;
-    margin-bottom: 1rem;
-    @include gold-gradient-text;
-  }
-
-  .section-subtitle {
-    font-size: $font-size-md;
-    color: $secondary-text-color;
-    margin-bottom: 3rem;
-    max-width: $container-width-md;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
+  @include section-wrapper;
 
   .contact-grid {
     display: grid;
@@ -45,6 +19,7 @@
       padding: 2rem;
       border-radius: $border-radius;
       box-shadow: 0 2px 8px rgba($text-color, 0.1);
+      text-align: left;
 
       h3.contact-title {
         font-size: 1.1rem;

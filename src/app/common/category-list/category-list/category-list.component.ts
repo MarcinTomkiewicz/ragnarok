@@ -25,7 +25,7 @@ export class CategoryListComponent {
   onSubcategoryClick(subcategoryId: number | null): void {
     this.subcategorySelected.next(subcategoryId);
   }
-
+  
   showAll(accordion: any): void {
     accordion.collapseAll();
     this.subcategorySelected.next(null);

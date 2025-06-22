@@ -47,6 +47,13 @@ export const routes: Routes = [
         (m) => m.TechStackComponent
       ),
   },
+    {
+    path: 'for-beginners',
+    loadComponent: () =>
+      import('./components/for-beginners/for-beginners.component').then(
+        (m) => m.ForBeginnersComponent
+      ),
+  },
   {
     path: 'events',
     loadComponent: () =>
@@ -82,6 +89,13 @@ export const routes: Routes = [
         (m) => m.OfferDetailsComponent
       ),
   },
+  {
+  path: 'special/:id',
+  loadComponent: () =>
+    import('./common/special-offer-details/special-offer-details.component').then(
+      (m) => m.SpecialOfferDetailsComponent
+    ),
+},
 
   { path: '**', component: NotFoundComponent },
 ];

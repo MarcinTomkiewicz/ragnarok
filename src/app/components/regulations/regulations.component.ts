@@ -11,7 +11,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrl: './regulations.component.scss'
 })
 export class RegulationsComponent implements OnInit {
-  @Input() type: 'pass' | 'rent' | 'loyalty' | 'voucher' = 'pass';
+  @Input() type: 'pass' | 'rent' | 'loyalty' | 'voucher' | 'special' = 'pass';
 
   private readonly activeModal = inject(NgbActiveModal)
 
@@ -23,6 +23,8 @@ export class RegulationsComponent implements OnInit {
   ngOnInit() {
     this.setRegulationNumber()
     this.regulation = this.regulations[this.regulationNumber]
+    console.log('Regulamin:', this.regulations, this.type, this.regulationNumber);
+    
   }
 
   setRegulationNumber() {
@@ -38,6 +40,9 @@ export class RegulationsComponent implements OnInit {
         break;
         case 'loyalty':
         this.regulationNumber = 3
+        break;
+        case 'special':
+        this.regulationNumber = 4
         break;
       default:
         this.regulationNumber = 1

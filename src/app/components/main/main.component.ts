@@ -26,6 +26,7 @@ import { HowItWorksComponent } from '../how-it-works/how-it-works.component';
 import { UpcomingEventsComponent } from '../upcoming-events/upcoming-events.component';
 import { MeetTheTeamComponent } from '../meet-the-team/meet-the-team.component';
 import { TestimonialComponent } from '../testimonial/testimonial.component';
+import { HighlightComponent } from '../../common/highlight/highlight.component';
 
 @Component({
   selector: 'app-main',
@@ -33,27 +34,16 @@ import { TestimonialComponent } from '../testimonial/testimonial.component';
   imports: [
     CommonModule,
     NgbCarouselModule,
-    NewsCarouselComponent,
     AudienceSectionComponent,
     HowItWorksComponent,
     UpcomingEventsComponent,
     MeetTheTeamComponent,
-    TestimonialComponent
+    TestimonialComponent,
+    HighlightComponent,
   ],
   providers: [NgbCarouselConfig],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
-  // animations: [
-  //   trigger('slideInAnimation', [
-  //     transition(':enter', [
-  //       style({ transform: 'translateX(-100%)', opacity: 0 }),
-  //       animate(
-  //         '300ms ease-out',
-  //         style({ transform: 'translateX(0)', opacity: 1 })
-  //       ),
-  //     ]),
-  //   ]),
-  // ],
 })
 export class MainComponent implements OnInit, AfterViewInit {
   @ViewChild('carousel', { static: false }) carousel: NgbCarousel | undefined;
@@ -67,6 +57,14 @@ export class MainComponent implements OnInit, AfterViewInit {
   private readonly backend = inject(BackendService);
   private readonly converter = inject(ConverterService);
   private readonly platformService = inject(PlatformService);
+
+  highlightData = {
+    heading: 'Graj w RPG bez ograniczeń!',
+    text: 'Szukasz sposobu na wakacje pełne RPG? Złoty Bilet do Valhalli to miesięczny dostęp do gry w salce RPG bez limitu godzinowego – dla Ciebie i Twojej ekipy. Zniżki na Mistrza Gry, darmowe wydarzenia i rabaty obowiązujące do końca 2025 roku. Tylko 30 miejsc – zdobądź swój bilet już dziś, zanim znikną.',
+    link: '/special/2',
+    linkText: 'Zdobądź swój bilet',
+    icon: 'bi bi-ticket-detailed',
+  };
 
   ngOnInit() {
     this.backend
