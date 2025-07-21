@@ -2,11 +2,31 @@
 @import "abstracts/mixins";
 
 .dropdown-menu {
-    background-color: $bg-color;
+  background-color: $bg-color;
+  border: none;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: 0.5rem 0;
+
+  .dropdown-item {
+    font-size: $font-size-sm;
+    font-family: $font-family-base;
+    font-weight: 600;
+    color: $primary-color;
+    padding: 0.5rem 1.25rem;
+    background: none;
+    transition: background $transition-fast, color $transition-fast;
+
+    &:hover,
+    &:focus {
+      background-color: $hover-color;
+      color: $bg-color;
+    }
+  }
 }
 
 .dropdown-item-active,
 .dropdown-item:active {
-    --bs-dropdown-link-active-color: #{$primary-color};
-    --bs-dropdown-link-active-bg: #{$bg-color};
+  --bs-dropdown-link-active-color: #{$primary-color};
+  --bs-dropdown-link-active-bg: #{$bg-color};
 }

@@ -81,11 +81,7 @@ export class MainComponent implements OnInit, AfterViewInit {
           }));
 
           if (news.length > 0) {
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'image';
-            link.href = news[0].image;
-            document.head.appendChild(link);
+            this.platformService.preloadImage(news[0].image);
           }
         },
         error: (err) => console.error('Błąd pobierania newsów:', err),
@@ -95,15 +91,18 @@ export class MainComponent implements OnInit, AfterViewInit {
           }
         },
       });
-    if (this.platformService.isBrowser) {
-      this.isMobile.set(window.innerWidth <= 768);
+
+    const win = this.platformService.getWindow();
+    if (win) {
+      this.isMobile.set(win.innerWidth <= 768);
     }
   }
 
   ngAfterViewInit() {
-    if (this.platformService.isBrowser) {
-      this.addResizeListener();
-    }
+    this.platformService.listenToWindowEvent(
+      'resize',
+      this.onResize.bind(this)
+    );
   }
 
   addResizeListener() {
@@ -111,7 +110,10 @@ export class MainComponent implements OnInit, AfterViewInit {
   }
 
   onResize() {
-    this.isMobile.set(window.innerWidth <= 768);
+    const win = this.platformService.getWindow();
+    if (win) {
+      this.isMobile.set(win.innerWidth <= 768);
+    }
   }
 
   @HostListener('touchstart', ['$event'])
@@ -138,17 +140,20 @@ export class MainComponent implements OnInit, AfterViewInit {
     if (!this.platformService.isBrowser) return;
 
     if (this.isExternalLink(link)) {
-      window.open(link, '_blank');
+      this.platformService.openNewTab(link);
     } else {
-      this.router.navigateByUrl(link); // Zamiast window.location.href
+      this.router.navigateByUrl(link);
     }
   }
 
   isExternalLink(url: string): boolean {
+    const loc = this.platformService.getLocation();
+    if (!loc) return false;
+
     try {
-      const link = new URL(url, window.location.href);
-      return link.hostname !== window.location.hostname;
-    } catch (e) {
+      const linkUrl = new URL(url, loc.href);
+      return linkUrl.hostname !== loc.hostname;
+    } catch {
       return false;
     }
   }

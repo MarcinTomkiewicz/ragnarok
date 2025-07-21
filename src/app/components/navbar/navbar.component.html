@@ -1,14 +1,36 @@
 <nav class="nav-bar">
   <a routerLink="/" class="navbar-brand">Ragnarok</a>
 
-  <ul class="nav-bar-nav">
-    @for (link of menuLinks; track link.path) {
-      <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+  <ul class="nav-bar-nav d-none d-lg-flex">
+    @for (link of menuLinks; track link.label) {
+      @if (!link.children) {
+        <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+      } @else {
+        <li ngbDropdown class="dropdown">
+          <a ngbDropdownToggle class="dropdown-toggle" role="button">
+            {{ link.label }}
+          </a>
+          <ul ngbDropdownMenu>
+            @for (child of link.children; track child.label) {
+              <li>
+                <a
+                  [routerLink]="child.path"
+                  [target]="child.target"
+                  [rel]="child.target === '_blank' ? 'noopener noreferrer' : null"
+                  class="dropdown-item"
+                >
+                  {{ child.label }}
+                </a>
+              </li>
+            }
+          </ul>
+        </li>
+      }
     }
     <li><app-user-menu></app-user-menu></li>
   </ul>
 
-  <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
+  <button class="offcanvas-toggle d-lg-none" (click)="openOffcanvas(offcanvas)">
     <img
       ngSrc="icons/d20.svg"
       alt="Kostka k20"
@@ -19,20 +41,44 @@
   </button>
 </nav>
 
-<!-- Offcanvas menu jako ng-template zostaje, jak było -->
-
-
 <ng-template #offcanvas let-close="close">
   <div class="offcanvas-menu">
     <button class="close-btn" (click)="close()">✖</button>
     <h2 class="menu-title">Menu</h2>
     <ul class="offcanvas-links">
-      @for (link of menuLinks; track link.path) {
-        <li>
-          <a [routerLink]="link.path" (click)="close()">{{ link.label }}</a>
-        </li>
+      @for (link of menuLinks; track link.label) {
+        @if (!link.children) {
+          <li>
+            <a [routerLink]="link.path" (click)="close()">
+              {{ link.label }}
+            </a>
+          </li>
+        } @else {
+          <li>
+            <button
+              class="offcanvas-toggle-submenu"
+              (click)="toggleMobileSection(link.label)"
+            >
+              {{ link.label }}
+              <span [class.expanded]="mobileExpanded.get(link.label)">▾</span>
+            </button>
+            <ul
+              class="offcanvas-submenu"
+              [class.open]="mobileExpanded.get(link.label)"
+            >
+              @for (child of link.children; track child.label) {
+                <li>
+                  <a
+                    [routerLink]="child.path"
+                    (click)="close()"
+                    >{{ child.label }}</a
+                  >
+                </li>
+              }
+            </ul>
+          </li>
+        }
       }
     </ul>
   </div>
 </ng-template>
-

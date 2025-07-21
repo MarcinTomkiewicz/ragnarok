@@ -110,7 +110,7 @@
       margin-bottom: 1rem;
 
       a {
-        font-size: 1rem;
+        font-size: $font-size-sm;
         font-weight: 600;
         font-family: $font-family-base;
         color: $text-color;
@@ -120,6 +120,48 @@
 
         &:hover {
           color: $primary-color;
+        }
+      }
+
+      .offcanvas-toggle-submenu {
+        background: none;
+        border: none;
+        font-size: $font-size-sm;
+        font-weight: 600;
+        font-family: $font-family-base;
+        color: $text-color;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        padding: 0.5rem 0;
+        cursor: pointer;
+
+        &:hover {
+          color: $primary-color;
+        }
+
+        span {
+          transition: transform $transition-fast;
+
+          &.expanded {
+            transform: rotate(180deg);
+          }
+        }
+      }
+
+      .offcanvas-submenu {
+        list-style: none;
+        padding-left: 1rem;
+        margin-top: 0.25rem;
+        display: none;
+
+        &.open {
+          display: block;
+        }
+
+        li a {
+          font-size: $font-size-xs;
+          padding: 0.3rem 0;
         }
       }
     }
