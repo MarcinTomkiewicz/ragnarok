@@ -1,4 +1,4 @@
-export interface IServices {
+export interface IOfferDetails {
   id: number;
   name: string;
   price: number;

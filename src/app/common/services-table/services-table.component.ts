@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, ViewEncapsulation } from '@angular/core';
-import { IServices } from '../../core/interfaces/i-services';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { IOfferDetails } from '../../core/interfaces/i-offer-details';
 
 @Component({
   selector: 'app-services-table',
@@ -12,6 +12,6 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
   encapsulation: ViewEncapsulation.None,
 })
 export class ServicesTableComponent {
-  services = input<IServices[]>([])
+  services = input<IOfferDetails[]>([])
   isServiceByHour = input<boolean>(true);
 }

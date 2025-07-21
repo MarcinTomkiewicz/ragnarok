@@ -1,5 +1,5 @@
 import { Component, ViewEncapsulation, inject } from '@angular/core';
-import { IServices } from '../../core/interfaces/i-services';
+import { IOfferDetails } from '../../core/interfaces/i-offer-details';
 import { CommonModule } from '@angular/common';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ServicesTableComponent } from '../../common/services-table/services-table.component';
@@ -21,7 +21,7 @@ export class ServicesComponent {
     this.seo.setTitleAndMeta('Cennik');
   }
 
-  standardRooms: IServices[] = [
+  standardRooms: IOfferDetails[] = [
     {
       id: 1,
       name: '1-2 godziny',
@@ -64,7 +64,7 @@ export class ServicesComponent {
     },
   ];
 
-  vipRooms: IServices[] = [
+  vipRooms: IOfferDetails[] = [
     {
       id: 1,
       name: '1-2 godziny',
@@ -106,7 +106,7 @@ export class ServicesComponent {
         'Salka Jotunheim (VIP) wyposażona jest w laptopa, nagłośnienie oraz wygodne fotele i funkcjonalne stoliki podręczne.',
     },
   ];
-  passes: IServices[] = [
+  passes: IOfferDetails[] = [
     {
       id: 1,
       name: 'Karnet Legendy Ragnarok',
@@ -149,7 +149,7 @@ export class ServicesComponent {
     },
   ];
 
-  additionalServices: IServices[] = [
+  additionalServices: IOfferDetails[] = [
     {
       id: 1,
       name: 'Mistrz Gry na życzenie',
@@ -161,7 +161,7 @@ export class ServicesComponent {
         'Koszt obejmuje jedną godzinę sesji z naszym Mistrzem Gry w wybrany przez Ciebie system. W cenie jest przygotowanie sesji, fabuły, dodatków itp. Na życzenie Mistrz Gry stworzy postacie samodzielnie, albo w ramach wykupionego czasu, stworzycie je wspólnie.',
     },
   ];
-  // passes: IServices[] = [
+  // passes: IOfferDetails[] = [
   //   {
   //     name: 'Karnet Legendy Ragnarok',
   //     price: 260,
@@ -200,7 +200,7 @@ export class ServicesComponent {
   //   },
   // ];
 
-  // additionalServices: IServices[] = [
+  // additionalServices: IOfferDetails[] = [
   //   {
   //     name: 'Mistrz Gry na życzenie',
   //     price: 50,

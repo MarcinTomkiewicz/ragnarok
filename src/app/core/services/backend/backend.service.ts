@@ -124,6 +124,17 @@ export class BackendService {
     );
   }
 
+  getBySlug<T>(table: string, slug: string): Observable<T | null> {
+    return from(
+      this.supabase.from(table).select('*').eq('slug', slug).single()
+    ).pipe(
+      map((response: PostgrestSingleResponse<T>) => {
+        if (response.error) throw new Error(response.error.message);
+        return response.data ? this.processImage(response.data) : null;
+      })
+    );
+  }
+
   /**
    * Tworzy nowy rekord w wybranej tabeli.
    * @param table - Nazwa tabeli w Supabase
