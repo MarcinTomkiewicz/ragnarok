@@ -67,31 +67,6 @@ export class MainComponent implements OnInit, AfterViewInit {
   };
 
   ngOnInit() {
-    this.backend
-      .getAll<INews>('news', 'created_at', 'desc', { page: 1, pageSize: 5 })
-      .subscribe({
-        next: (news: INews[]) => {
-          this.newsItems = news.map((item) => ({
-            ...item,
-            createdAt: this.converter.convert(
-              item.created_at,
-              'date',
-              'dd-MM-yyyy HH:mm'
-            ),
-          }));
-
-          if (news.length > 0) {
-            this.platformService.preloadImage(news[0].image);
-          }
-        },
-        error: (err) => console.error('Błąd pobierania newsów:', err),
-        complete: () => {
-          if (this.platformService.isBrowser) {
-            this.isLoading.set(false);
-          }
-        },
-      });
-
     const win = this.platformService.getWindow();
     if (win) {
       this.isMobile.set(win.innerWidth <= 768);
