@@ -29,18 +29,22 @@ export class EventCalendarComponent implements OnInit {
 
     this.eventsService.getRecurringEvents().subscribe({
       next: (recurring) => {
-        console.log('Pobrano cykliczne wydarzenia:', recurring);
-        
-        this.recurringEvents = this.eventsService.processRecurringEvents(recurring, today, 1);
+        this.recurringEvents = this.eventsService.processRecurringEvents(
+          recurring,
+          today,
+          1
+        );
       },
-      error: (err) => console.error('Błąd podczas pobierania cyklicznych wydarzeń:', err),
+      error: (err) =>
+        console.error('Błąd podczas pobierania cyklicznych wydarzeń:', err),
     });
 
     this.eventsService.getSingleEvents().subscribe({
       next: (single) => {
-        this.singleEvents = single.filter(e => e.eventDate >= today);
+        this.singleEvents = single.filter((e) => e.eventDate >= today);
       },
-      error: (err) => console.error('Błąd podczas pobierania jednorazowych wydarzeń:', err),
+      error: (err) =>
+        console.error('Błąd podczas pobierania jednorazowych wydarzeń:', err),
     });
   }
 }

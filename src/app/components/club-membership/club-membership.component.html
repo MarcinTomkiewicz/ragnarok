@@ -8,7 +8,6 @@
 
     <div class="memberships-grid">
       @for (membership of memberships(); track membership.id) {
-      {{ log(membership) }}
       <div class="membership-card">
         <h2>{{ membership.name }}</h2>
         <p class="description">{{ membership.description }}</p>

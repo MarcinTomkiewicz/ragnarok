@@ -22,6 +22,5 @@ export class HighlightComponent implements OnInit {
   ngOnInit() {
     
     this.iconClass.set(this.icon() || 'bi bi-star-fill');
-    console.log(this.icon(), this.iconClass() );
   }
 }

@@ -7,7 +7,6 @@ import { ISpecial } from '../../core/interfaces/i-special';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { RegulationsComponent } from '../../components/regulations/regulations.component';
 
-
 @Component({
   selector: 'app-special-offer-details',
   standalone: true,
@@ -19,7 +18,7 @@ export class SpecialOfferDetailsComponent implements OnInit {
   private backend = inject(BackendService);
   private route = inject(ActivatedRoute);
   private sanitizer = inject(DomSanitizer);
-    private readonly modalService = inject(NgbModal);
+  private readonly modalService = inject(NgbModal);
 
   offer = signal<ISpecial | null>(null);
 
@@ -29,9 +28,8 @@ export class SpecialOfferDetailsComponent implements OnInit {
 
     this.backend.getById<ISpecial>('specials', id).subscribe({
       next: (data) => {
-        this.offer.set(data)
-      console.log('Oferta specjalna załadowana:', data);
-    },
+        this.offer.set(data);
+      },
       error: (err) => console.error('Błąd podczas ładowania oferty:', err),
     });
   }
@@ -41,12 +39,13 @@ export class SpecialOfferDetailsComponent implements OnInit {
   }
 
   sanitizeMultiline(text: string): string {
-  return text.replace(/\n/g, '<br />');
-}
+    return text.replace(/\n/g, '<br />');
+  }
 
-    openRules(type: 'loyalty' | 'voucher' | 'special') {
-      const modalRef = this.modalService.open(RegulationsComponent, { size: 'lg' });
-      modalRef.componentInstance.type = type;
-    }
-
+  openRules(type: 'loyalty' | 'voucher' | 'special') {
+    const modalRef = this.modalService.open(RegulationsComponent, {
+      size: 'lg',
+    });
+    modalRef.componentInstance.type = type;
+  }
 }

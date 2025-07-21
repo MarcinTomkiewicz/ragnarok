@@ -35,8 +35,4 @@ export class ClubMembershipComponent {
       'Dołącz do naszego Klubu Gier Fabularnych i korzystaj z wyjątkowych przywilejów!'
     );
   }
-
-  log(data: any) {
-    console.log(data);
-  } 
 }

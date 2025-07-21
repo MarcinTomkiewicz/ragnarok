@@ -38,9 +38,6 @@ export class ServicesTableComponent {
 
   updateScreenState() {
     this.isMobile = window.innerWidth < 600;
-    console.log(
-      `Screen width: ${window.innerWidth}, isMobile: ${this.isMobile}`
-    );
   }
 
   hasDetails(): boolean {

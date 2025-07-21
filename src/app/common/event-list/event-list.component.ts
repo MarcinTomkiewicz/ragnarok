@@ -31,9 +31,7 @@ export class EventListComponent {
   }
 
   updateScreenState() {
-    this.isMobile = window.innerWidth < 600;
-    console.log(`Screen width: ${window.innerWidth}, isMobile: ${this.isMobile}`);
-    
+    this.isMobile = window.innerWidth < 600;    
   }
 
   openFacebook(link: string) {

@@ -22,9 +22,7 @@ export class RegulationsComponent implements OnInit {
 
   ngOnInit() {
     this.setRegulationNumber()
-    this.regulation = this.regulations[this.regulationNumber]
-    console.log('Regulamin:', this.regulations, this.type, this.regulationNumber);
-    
+    this.regulation = this.regulations[this.regulationNumber]    
   }
 
   setRegulationNumber() {
