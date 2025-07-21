@@ -6,7 +6,7 @@
     </p>
 
     <div class="events-grid">
-      @for (event of upcomingEvents; track event.id) {
+      @for (event of upcomingEvents; track event.eventDate) {
       <div class="event-card">
         <div class="image-wrapper">
           <img [src]="event.image" [alt]="event.name" />

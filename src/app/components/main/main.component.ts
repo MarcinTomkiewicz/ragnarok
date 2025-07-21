@@ -59,11 +59,11 @@ export class MainComponent implements OnInit, AfterViewInit {
   private readonly platformService = inject(PlatformService);
 
   highlightData = {
-    heading: 'Graj w RPG bez ograniczeń!',
-    text: 'Szukasz sposobu na wakacje pełne RPG? Złoty Bilet do Valhalli to miesięczny dostęp do gry w salce RPG bez limitu godzinowego – dla Ciebie i Twojej ekipy. Zniżki na Mistrza Gry, darmowe wydarzenia i rabaty obowiązujące do końca 2025 roku. Tylko 30 miejsc – zdobądź swój bilet już dziś, zanim znikną.',
-    link: '/special/2',
-    linkText: 'Zdobądź swój bilet',
-    icon: 'bi bi-ticket-detailed',
+    heading: 'Dołącz do Klubu Gier Fabularnych w Ragnaroku',
+    text: 'Poznaj świat RPG z Członkostwem Klubu Gier Fabularnych Ragnaroku lub zdobądź Złoty Bilet do Valhalli – zawierający nielimitowane granie, dostęp do salki VIP i zniżek. Darmowe rezerwacje, rabaty, napoje, MG na życzenie i dostęp do klubowej społeczności. Dla tych, którzy chcą grać częściej, lepiej i taniej.',
+    link: '/memberships',
+    linkText: 'Poznaj korzyści członkostwa',
+    icon: 'bi bi-shield-check',
   };
 
   ngOnInit() {

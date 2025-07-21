@@ -19,49 +19,28 @@ export class EventCalendarComponent implements OnInit {
   recurringEvents: EventData[] = [];
   singleEvents: EventData[] = [];
 
-  private readonly backendService = inject(BackendService);
   private readonly eventsService = inject(EventsService);
   private readonly seo = inject(SeoService);
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.seo.setTitleAndMeta('Kalendarz Wydarzeń');
+
     const today = new Date().toISOString().split('T')[0];
 
-    const recurringEvents$ = this.backendService.getAll<EventData>(
-      'events',
-      'eventDate',
-      'asc',
-      {
-        filters: {
-          isActive: { value: true, operator: FilterOperator.EQ },
-          isRecurring: { value: true, operator: FilterOperator.EQ },
-        },
-      }
-    );
-
-    const singleEvents$ = this.backendService.getAll<EventData>(
-      'events',
-      'eventDate',
-      'asc',
-      {
-        filters: {
-          isActive: { value: true, operator: FilterOperator.EQ },
-          isRecurring: { value: false, operator: FilterOperator.EQ },
-          eventDate: { value: today, operator: FilterOperator.GTE },
-        },
-      }
-    );
-
-    forkJoin({
-      recurringEvents: recurringEvents$,
-      singleEvents: singleEvents$,
-    }).subscribe({
-      next: ({ recurringEvents, singleEvents }) => {
-        this.recurringEvents = this.eventsService.processRecurringEvents(recurringEvents, today);
-        this.singleEvents = singleEvents;
+    this.eventsService.getRecurringEvents().subscribe({
+      next: (recurring) => {
+        console.log('Pobrano cykliczne wydarzenia:', recurring);
+        
+        this.recurringEvents = this.eventsService.processRecurringEvents(recurring, today, 1);
       },
-      error: (err) => console.error('Błąd podczas pobierania wydarzeń:', err),
-      complete: () => console.log('Wszystkie wydarzenia zostały pobrane'),
+      error: (err) => console.error('Błąd podczas pobierania cyklicznych wydarzeń:', err),
     });
-    this.seo.setTitleAndMeta('Kalendarz Wydarzeń');
+
+    this.eventsService.getSingleEvents().subscribe({
+      next: (single) => {
+        this.singleEvents = single.filter(e => e.eventDate >= today);
+      },
+      error: (err) => console.error('Błąd podczas pobierania jednorazowych wydarzeń:', err),
+    });
   }
 }
