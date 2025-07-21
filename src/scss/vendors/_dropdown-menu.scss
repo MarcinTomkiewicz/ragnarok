@@ -2,5 +2,11 @@
 @import "abstracts/mixins";
 
 .dropdown-menu {
-    background-color: $text-color;
+    background-color: $bg-color;
+}
+
+.dropdown-item-active,
+.dropdown-item:active {
+    --bs-dropdown-link-active-color: #{$primary-color};
+    --bs-dropdown-link-active-bg: #{$bg-color};
 }

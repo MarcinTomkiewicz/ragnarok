@@ -21,25 +21,29 @@ import { ConverterService } from '../../core/services/converter/converter.servic
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { Router } from '@angular/router';
 import { NewsCarouselComponent } from '../../common/news-carousel/news-carousel.component';
+import { AudienceSectionComponent } from '../audience-section/audience-section.component';
+import { HowItWorksComponent } from '../how-it-works/how-it-works.component';
+import { UpcomingEventsComponent } from '../upcoming-events/upcoming-events.component';
+import { MeetTheTeamComponent } from '../meet-the-team/meet-the-team.component';
+import { TestimonialComponent } from '../testimonial/testimonial.component';
+import { HighlightComponent } from '../../common/highlight/highlight.component';
 
 @Component({
   selector: 'app-main',
   standalone: true,
-  imports: [CommonModule, NgbCarouselModule, NgOptimizedImage, NewsCarouselComponent],
+  imports: [
+    CommonModule,
+    NgbCarouselModule,
+    AudienceSectionComponent,
+    HowItWorksComponent,
+    UpcomingEventsComponent,
+    MeetTheTeamComponent,
+    TestimonialComponent,
+    HighlightComponent,
+  ],
   providers: [NgbCarouselConfig],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
-  // animations: [
-  //   trigger('slideInAnimation', [
-  //     transition(':enter', [
-  //       style({ transform: 'translateX(-100%)', opacity: 0 }),
-  //       animate(
-  //         '300ms ease-out',
-  //         style({ transform: 'translateX(0)', opacity: 1 })
-  //       ),
-  //     ]),
-  //   ]),
-  // ],
 })
 export class MainComponent implements OnInit, AfterViewInit {
   @ViewChild('carousel', { static: false }) carousel: NgbCarousel | undefined;
@@ -54,33 +58,43 @@ export class MainComponent implements OnInit, AfterViewInit {
   private readonly converter = inject(ConverterService);
   private readonly platformService = inject(PlatformService);
 
-  ngOnInit() {
-    this.backend.getAll<INews>('news', 'created_at', 'desc', { page: 1, pageSize: 5 }).subscribe({
-      next: (news: INews[]) => {
-        this.newsItems = news.map((item) => ({
-          ...item,
-          createdAt: this.converter.convert(
-            item.created_at,
-            'date',
-            'dd-MM-yyyy HH:mm'
-          ),
-        }));
+  highlightData = {
+    heading: 'Graj w RPG bez ograniczeń!',
+    text: 'Szukasz sposobu na wakacje pełne RPG? Złoty Bilet do Valhalli to miesięczny dostęp do gry w salce RPG bez limitu godzinowego – dla Ciebie i Twojej ekipy. Zniżki na Mistrza Gry, darmowe wydarzenia i rabaty obowiązujące do końca 2025 roku. Tylko 30 miejsc – zdobądź swój bilet już dziś, zanim znikną.',
+    link: '/special/2',
+    linkText: 'Zdobądź swój bilet',
+    icon: 'bi bi-ticket-detailed',
+  };
 
-        if (news.length > 0) {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = 'image';
-          link.href = news[0].image;
-          document.head.appendChild(link);
-        }
-      },
-      error: (err) => console.error('Błąd pobierania newsów:', err),
-      complete: () => {
-        if (this.platformService.isBrowser) {
-          this.isLoading.set(false);
-        }
-      },
-    });
+  ngOnInit() {
+    this.backend
+      .getAll<INews>('news', 'created_at', 'desc', { page: 1, pageSize: 5 })
+      .subscribe({
+        next: (news: INews[]) => {
+          this.newsItems = news.map((item) => ({
+            ...item,
+            createdAt: this.converter.convert(
+              item.created_at,
+              'date',
+              'dd-MM-yyyy HH:mm'
+            ),
+          }));
+
+          if (news.length > 0) {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = news[0].image;
+            document.head.appendChild(link);
+          }
+        },
+        error: (err) => console.error('Błąd pobierania newsów:', err),
+        complete: () => {
+          if (this.platformService.isBrowser) {
+            this.isLoading.set(false);
+          }
+        },
+      });
     if (this.platformService.isBrowser) {
       this.isMobile.set(window.innerWidth <= 768);
     }

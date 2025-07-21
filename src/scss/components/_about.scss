@@ -1,0 +1,23 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.about-section {
+  @include section-wrapper;
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    text-align: left;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+
+    .about-paragraph {
+      font-size: $font-size-md;
+      line-height: 1.8;
+      opacity: 0.9;
+    }
+  }
+}

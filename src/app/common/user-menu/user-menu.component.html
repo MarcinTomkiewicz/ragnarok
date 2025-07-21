@@ -1,10 +1,12 @@
 <div class="user-menu" (click)="toggleMenu()" [class.open]="isOpen">
-    <span class="icon"><i class="bi bi-person-badge"></i></span>
+  <span class="icon">
+    <img src="/icons/viking-head.svg" alt="User Menu" width="24" height="24" />
+  </span>
 
-  
-    @if (isOpen) {
-      <div class="submenu" (click)="$event.stopPropagation()">
-          <app-login></app-login>
-        </div>
-    }
-  </div>
+  @if (isOpen) {
+    <div class="submenu" (click)="$event.stopPropagation()">
+      <app-login></app-login>
+    </div>
+  }
+</div>
+

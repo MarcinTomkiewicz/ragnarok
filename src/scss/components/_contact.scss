@@ -1,0 +1,84 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.contact-section {
+  @include section-wrapper;
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-box {
+      background-color: $bg-color-light;
+      padding: 2rem;
+      border-radius: $border-radius;
+      box-shadow: 0 2px 8px rgba($text-color, 0.1);
+      text-align: left;
+
+      h3.contact-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+
+        .icon {
+          width: 1.2rem;
+          margin-right: 0.5rem;
+        }
+      }
+
+      p {
+        margin: 0.5rem 0;
+        font-size: 0.95rem;
+
+        a {
+          color: $primary-color;
+          text-decoration: none;
+          border: none;
+
+          &:hover {
+            color: $hover-color;
+            @include gold-gradient-text;
+          }
+        }
+
+        .icon {
+          width: 1rem;
+          margin-right: 0.4rem;
+          vertical-align: middle;
+        }
+      }
+    }
+  }
+
+  .map-wrapper {
+    margin-top: 3rem;
+
+    .contact-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+
+      .icon {
+        width: 1.2rem;
+        margin-right: 0.5rem;
+      }
+    }
+
+    google-map {
+      border-radius: $border-radius;
+      overflow: hidden;
+      box-shadow: $box-shadow;
+    }
+  }
+}

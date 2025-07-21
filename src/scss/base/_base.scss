@@ -9,7 +9,8 @@ body {
   font-display: swap;
   background-color: $bg-color;
   color: $text-color;
-  @include responsive-font-size(14px);
+  padding-top: $navbar-height;  
+  @include responsive-font-size(12px);
 }
 
 /* Resetowanie niechcianych stylów dla wszystkich elementów */
@@ -17,85 +18,83 @@ body {
   box-sizing: border-box;
 }
 
-@media (max-width: $breakpoint-sm) {
-  body {
-    padding-top: $navbar-height!important;
+// @media (max-width: $breakpoint-sm) {
+//   body {
+//     padding-top: $navbar-height!important;
+//   }
+// }
+
+::-webkit-scrollbar {
+  width: 12px;
+  background-color: $bg-color;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: $primary-color;
+  border-radius: 10px;
+  border: 2px solid $bg-color;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: $button-hover-color;
+}
+
+::-webkit-scrollbar-track {
+  background-color: $bg-color;
+  border-radius: 10px;
+}
+
+* {
+  scrollbar-color: $primary-color $bg-color;
+  scrollbar-width: thin;
+  font-display: swap;
+}
+
+.container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.component-container {
+  @include flex-wrapper(column, start, start);
+  height: 100%;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: $breakpoint-sm) {
+  .container {
+    width: $container-width-md;
   }
 }
 
-::-webkit-scrollbar {
-    width: 12px;
-    background-color: $bg-color;
-    border-radius: 5px;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background-color: $primary-color;
-    border-radius: 10px;
-    border: 2px solid $bg-color;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: $button-hover-color;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background-color: $bg-color;
-    border-radius: 10px;
-  }
-  
-  * {
-    scrollbar-color: $primary-color $bg-color;
-    scrollbar-width: thin;
-    font-display: swap;
-  }
-
+@media (min-width: $breakpoint-lg) {
   .container {
-    width: 100%;
-    margin: 0 auto;
+    width: $container-width-lg;
   }
+}
 
-  .component-container {
-    @include flex-wrapper(column, start, start);
-    height: 100%;
-    gap: 10px;
-    margin-bottom: 20px;
+@media (min-width: $breakpoint-mid) {
+  .medium-screens {
+    display: none;
   }
-  
-  @media (min-width: $breakpoint-sm) {
-    .container {
-      width: $container-width-md;
-    }
-  }
-  
-  @media (min-width: $breakpoint-lg) {
-    .container {
-      width: $container-width-lg;
-    }
+}
 
+@media (max-width: $breakpoint-mid) {
+  .mid-screens {
+    display: none;
   }
+}
 
-  @media (min-width: $breakpoint-mid) {
-    .medium-screens {
-      display: none;
-    }
-    
+@media (min-width: $breakpoint-sm) {
+  .small-screens {
+    display: none;
   }
+}
 
-  @media (max-width: $breakpoint-mid) {
-    .mid-screens {
-      display: none;
-    }
+@media (max-width: $breakpoint-sm) {
+  .large-screens {
+    display: none;
   }
-
-  @media (min-width: $breakpoint-sm) {
-    .small-screens {
-      display: none;
-    }
-  }
-
-  @media (max-width: $breakpoint-sm) {
-    .large-screens {
-      display: none;
-    }
-  }
+}

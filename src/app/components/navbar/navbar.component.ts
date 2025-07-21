@@ -17,6 +17,7 @@ export class NavbarComponent {
 
   menuLinks = [
     { label: 'O nas', path: '/about' },
+    { label: 'Dla początkujących', path: '/for-beginners' },
     { label: 'Cennik', path: '/services' },
     { label: 'Sklep', path: '/offers-list'},
     { label: 'Wydarzenia', path: '/events'},

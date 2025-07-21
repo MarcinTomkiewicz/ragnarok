@@ -1,0 +1,44 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.services-section {
+   @include section-wrapper;
+
+  .price-category {
+    margin-bottom: 3rem;
+
+    h3 {
+      font-size: $font-size-xl;
+      margin-bottom: 0.5rem;
+      color: $primary-color;
+    }
+
+    p {
+      font-size: $font-size-sm;
+      margin-bottom: 1rem;
+      opacity: 0.9;
+    }
+
+    .disclaimer {
+      font-size: $font-size-sm;
+      color: $secondary-text-color;
+      margin-top: 1rem;
+      line-height: 1.5;
+
+      button {
+        color: $primary-color;
+        padding: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: $font-size-sm;
+        text-decoration: underline;
+
+        &:hover {
+          color: $hover-color;
+        }
+      }
+    }
+  }
+}

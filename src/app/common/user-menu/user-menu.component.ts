@@ -11,16 +11,15 @@ import { LoginComponent } from '../../auth/login/login.component';
 export class UserMenuComponent {
   isOpen = false;
 
-  constructor(private elementRef: ElementRef) {}
+  @HostListener('document:click', ['$event'])
+  handleClickOutside(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.user-menu')) {
+      this.isOpen = false;
+    }
+  }
 
   toggleMenu(): void {
     this.isOpen = !this.isOpen;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.isOpen = false;
-    }
   }
 }

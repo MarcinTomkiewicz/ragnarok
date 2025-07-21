@@ -1,0 +1,55 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.audience-section {
+@include section-wrapper;
+
+  .audience-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+
+    .audience-card {
+      background-color: $bg-color-light;
+      padding: 2rem;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border: 1px solid transparent;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: transform $transition-fast, box-shadow $transition-fast, border-color $transition-fast;
+
+      &:hover {
+        transform: translateY(-6px);
+        border-color: $hover-color;
+        box-shadow: 0 0 15px 4px rgba($hover-color, 0.4);
+      }
+
+      img {
+        width: 40px;
+        margin-bottom: 1rem;
+        filter: $icon-filter;
+      }
+
+      h3 {
+        font-size: $font-size-md;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        font-size: $font-size-sm;
+        color: $secondary-text-color;
+        text-align: left;
+      }
+    }
+  }
+}

@@ -1,48 +1,89 @@
-$primary-color: #f9f5c6;
-$secondary-color: #808080;
+// ---------------------------------------------
+// PALETA Z PROJEKTU (Tailwind HTML)
+// ---------------------------------------------
 
-// Tło
-$bg-color: #4a3e38;
-$border-color: #fbf5be; // zachowane dla kontrastu
+// Kolory podstawowe
+$primary-color: #e8bc58; // Główne złoto z logo (tekst, border, linki)
+$secondary-color: #684220; // Jasne złoto – tło przycisków, dodatkowe elementy
+$hover-color: #d4b373; // Hover na CTA/linkach
+
+// Tła
+$bg-color: #16140f; // Tło główne (ciemny brąz)
+$bg-color-light: #1f1c17; // Jaśniejszy brąz (sekcje, przyciski)
+$border-color: #3a372e; // Ramki, separator
+$bg-hero-overlay: rgba(0, 0, 0, 0.6); // Do hero-section z tłem video
 
 // Tekst
 $text-color: $primary-color;
-$secondary-text-color: lighten($primary-color, 5%); // zamiast osobnej wartości
+$secondary-text-color: lighten($primary-color, 10%);
+$link-color: $secondary-color;
+$link-hover-color: lighten($secondary-color, 10%);
 
 // Przyciski
-$button-color: $primary-color;
-$button-hover-color: darken($primary-color, 10%);
-$secondary-button-color: $bg-color;
-$secondary-button-hover-color: darken($bg-color, 10%);
+$button-color: #d4b373; // Ciepłe złoto z projektu
+$button-hover-color: #b59554; // Hover CTA
+$secondary-button-color: #3a372e; // Przyciski neutralne
+$secondary-button-hover-color: lighten(#3a372e, 5%);
+$button-text-color: #16140f;
 
-// Kolory ogólne
-$info-color: #0DCAF0;
+// Ikony
+$icon-filter: brightness(0) saturate(100%) invert(88%) sepia(76%)
+  saturate(5302%) hue-rotate(315deg) brightness(98%) contrast(86%);
+$icon-filter-dark: brightness(0) invert(20%) sepia(30%) saturate(800%)
+  hue-rotate(20deg) brightness(90%) contrast(85%);
 
-// Filtry ikon
-$icon-filter: brightness(0) saturate(100%) invert(88%) sepia(24%) saturate(374%) hue-rotate(1deg) brightness(107%) contrast(97%);
-$icon-filter-dark: brightness(0) saturate(100%) invert(14%) sepia(10%) saturate(1170%) hue-rotate(236deg) brightness(96%) contrast(85%);
+// Informacje (opcjonalne kolory semantyczne)
+$info-color: #0dcaf0;
+$danger-color: #dc3545;
+$success-color: #198754;
 
-// Typografia
-$font-family-base: 'Modern Antiqua', serif;
+$border-radius: 10px; // Zaokrąglenie rogów
+$box-shadow: 0 0 20px rgba($secondary-color, 0.4);
+
+// ---------------------------------------------
+// TYPOGRAFIA
+// ---------------------------------------------
+
+$font-family-base: "Cinzel", serif;
 $font-size-base: 1rem;
-$line-height-base: 1.5;
-$font-size-sm: 0.875rem;
-$font-size-lg: 1.125rem;
+$line-height-base: 1.2;
 
-// Breakpointy
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.25rem;
+$font-size-xl: 1.5rem;
+$font-size-xxl: 2rem;
+$font-size-hero: 3rem;
+
+// ---------------------------------------------
+// UI ELEMENTS / CIEŃ / PRZEJŚCIA
+// ---------------------------------------------
+
+$navbar-height: 60px;
+$container-padding: 1.5rem;
+
+$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+$transition-fast: 0.2s ease-in-out;
+$transition-slow: 0.5s ease;
+
+// ---------------------------------------------
+// BREAKPOINTY (zachowane)
+// ---------------------------------------------
+
 $breakpoint-xs: 479px;
 $breakpoint-sm: 767px;
 $breakpoint-mid: 1103px;
 $breakpoint-md: 1023px;
 $breakpoint-lg: 1270px;
 $breakpoint-xl: 1440px;
-
 $height-breakpoint-md: 768px;
 
-// Szerokości kontenerów
+// ---------------------------------------------
+// SZEROKOŚCI KONTENERÓW (zachowane)
+// ---------------------------------------------
+
 $container-width-sm: 100%;
 $container-width-md: 960px;
 $container-width-lg: 1140px;
-
-// Ustawienia nawigacji
-$navbar-height: 60px;
+$container-width-full: 100%;

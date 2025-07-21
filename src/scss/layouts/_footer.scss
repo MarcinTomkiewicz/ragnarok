@@ -1,67 +1,174 @@
-footer {
-  background-color: $secondary-color;
-  color: $bg-color;
-  padding: 2rem 0;
-  text-align: center;
-  @include flex-wrapper(column);
+@import "abstracts/variables";
+@import "abstracts/mixins";
 
-  .navbar-nav {
-    gap: 10px;
-    margin-bottom: 1rem;
+.footer {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 1rem 2rem;
+
+  .footer-container {
+    margin: 0 auto;
+  }
+
+  .footer-columns {
+    display: flex;
     flex-wrap: wrap;
-    @include flex-wrapper(row, center, center);;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .footer-column {
+    flex: 1 1 280px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .footer-logo {
+    width: 130px;
+    margin-bottom: 1rem;
+    align-self: center;
+  }
+
+  .footer-description {
+    font-size: $font-size-md;
+    line-height: 1.5;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+  }
+
+  .footer-heading {
+    font-size: $font-size-lg;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
     li {
-      position: relative;
+      margin-bottom: 0.5rem;
 
-      a, button {
-        color: $bg-color;
+      a,
+      button {
+        font-size: $font-size-md;
+        color: $text-color;
+        opacity: 0.8;
         text-decoration: none;
-        padding: 0.5rem;
-        position: relative;
-        @include responsive-font-size(11px);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition: color $transition-fast, opacity $transition-fast;
 
         &:hover {
-          border: 1px solid $secondary-text-color;
-          border-radius: 5px;
-          box-sizing: border-box;
-          color: $secondary-text-color;
+          color: $primary-color;
+          opacity: 1;
         }
-
-        &::after {
-          position: absolute;
-          @include responsive-font-size(11px);
-          content: "|";
-          margin-left: 10px;
-          top: 6px;
-          color: lighten($bg-color, 20%);
-        }
-      }
-
-      &:last-child a::after {
-        content: "";
       }
     }
   }
 
-  .footer-summary {
-    font-size: 0.9rem;
-    color: lighten($bg-color, 70%);
+  .footer-contact {
+    li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: $font-size-sm;
+      opacity: 0.8;
+
+      i {
+        color: $primary-color;
+        flex-shrink: 0;
+      }
+
+      span {
+        line-height: 1.4;
+      }
+    }
   }
 
   .social-icons {
-    gap: 15px;
-    @include flex-wrapper(row);
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    align-self: center;
 
     a {
-      font-size: 1.5rem;
-      padding: 0.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      background-color: rgba($primary-color, 0.2);
+      color: $primary-color;
+      font-size: $font-size-lg;
+      transition: background-color $transition-fast, border $transition-fast;
+      cursor: pointer;
 
       &:hover {
+        background-color: rgba($primary-color, 0.3);
         border: 1px solid $secondary-text-color;
-        border-radius: 5px;
-        box-sizing: border-box;
-        color: $secondary-text-color;
+      }
+    }
+  }
+
+  .footer-bottom {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba($primary-color, 0.2);
+    text-align: center;
+    font-size: $font-size-sm;
+    opacity: 0.6;
+
+    p {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+
+      a,
+      button {
+        font-size: $font-size-sm;
+        color: $text-color;
+        opacity: 0.8;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        padding: 0;
+
+        &:hover {
+          color: $primary-color;
+          opacity: 1;
+        }
+      }
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      p {
+        flex-direction: column;
+        align-items: center;
+
+        a,
+        button {
+          &::after {
+            content: "";
+          }
+        }
+      }
+    }
+
+    .separator {
+      margin: 0 0.5rem;
+      color: lighten($text-color, 20%);
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      .separator {
+        display: none;
       }
     }
   }

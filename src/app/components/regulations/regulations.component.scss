@@ -1,13 +1,58 @@
-@import 'abstracts/variables';
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.modal-header,
+.modal-body {
+  background-color: $bg-color;
+  color: $text-color;
+}
 
 .modal-header {
-    background: $bg-color;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .regulations-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .btn-close {
+    filter: $icon-filter;
+  }
 }
 
-.modal-body {
-    background: $bg-color;
-}
+.regulations-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1.5rem;
 
-.btn-close {
-    filter: $icon-filter
+  .regulation-section {
+    margin-bottom: 2rem;
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: $primary-color;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-paragraph {
+      margin-bottom: 0.5rem;
+
+      p {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+    }
+
+    .section-separator {
+      margin-top: 1.5rem;
+      border: none;
+      border-top: 1px solid $border-color;
+    }
+  }
 }

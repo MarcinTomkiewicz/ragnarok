@@ -1,58 +1,66 @@
 <div class="modal-header">
-  <h5 class="modal-title">Polityka prywatności</h5>
+  <h4 class="modal-title">Polityka prywatności</h4>
   <button
     type="button"
     class="btn-close"
-    aria-label="Close"
+    aria-label="Zamknij"
     (click)="close()"
   ></button>
 </div>
-<div class="modal-body">
-  <div class="pb-3">
+
+<div class="modal-body privacy-body">
+  <p class="intro">
     W Ragnarok szanujemy Twoją prywatność i dokładamy wszelkich starań, aby
     Twoje dane osobowe były chronione zgodnie z obowiązującymi przepisami.
     Niniejsza Polityka prywatności wyjaśnia, jakie dane zbieramy, jak je
     przetwarzamy oraz jakie są Twoje prawa.
-  </div>
+  </p>
 
-  <h5>1. Jakie dane zbieramy?</h5>
-  <div class="pb-3">
-    Gromadzimy jedynie dane niezbędne do zapewnienia pełnej funkcjonalności
-    naszej strony i usług. Mogą to być m.in.: adresy IP, dane kontaktowe,
-    informacje o sesjach przeglądania.
-  </div>
+  <section class="privacy-section">
+    <h5>1. Jakie dane zbieramy?</h5>
+    <p>
+      Gromadzimy jedynie dane niezbędne do zapewnienia pełnej funkcjonalności
+      naszej strony i usług. Mogą to być m.in.: adresy IP, dane kontaktowe,
+      informacje o sesjach przeglądania.
+    </p>
+  </section>
 
-  <h5>2. Cel przetwarzania danych</h5>
-  <div class="pb-3">
-    Dane zbieramy w celu lepszego dostosowania usług, analizy ruchu na stronie,
-    kontaktu z użytkownikami oraz ewentualnych działań marketingowych (za Twoją
-    zgodą).
-  </div>
+  <section class="privacy-section">
+    <h5>2. Cel przetwarzania danych</h5>
+    <p>
+      Dane zbieramy w celu lepszego dostosowania usług, analizy ruchu na stronie,
+      kontaktu z użytkownikami oraz ewentualnych działań marketingowych (za Twoją
+      zgodą).
+    </p>
+  </section>
 
-  <h5>3. Twoje prawa</h5>
-  <div class="pb-3">
-    Masz prawo do dostępu do swoich danych, ich poprawiania, usunięcia lub
-    ograniczenia przetwarzania. W każdej chwili możesz się z nami skontaktować,
-    aby dowiedzieć się więcej.
-  </div>
+  <section class="privacy-section">
+    <h5>3. Twoje prawa</h5>
+    <p>
+      Masz prawo do dostępu do swoich danych, ich poprawiania, usunięcia lub
+      ograniczenia przetwarzania. W każdej chwili możesz się z nami skontaktować,
+      aby dowiedzieć się więcej.
+    </p>
+  </section>
 
-  <div class="pb-3">
+  <p class="contact-info">
     Jeżeli masz jakiekolwiek pytania dotyczące polityki prywatności, prosimy o
-    kontakt na adres
-    <a href="mailto:ragnarok-rooms@gmail.com">ragnarok.rooms&#54;gmail.com</a>.
-  </div>
+    kontakt na adres:
+    <a href="mailto:ragnarok-rooms@gmail.com">ragnarok.rooms&#64;gmail.com</a>
+  </p>
 
-  <h5>Administratorem Twoich danych jest:</h5>
-  <div class="pb-3">
-    <div>FBE Solutions Marcin Tomkiewicz</div>
-    <div>os. Polan 22/8</div>
-    <div>61-253 Poznań</div>
-    <div>NIP: 972 114 73 18</div>
-    <div>REGON: 301 716 748</div>
-  </div>
+  <section class="privacy-section">
+    <h5>Administrator danych</h5>
+    <address>
+      <div>FBE Solutions Marcin Tomkiewicz</div>
+      <div>os. Polan 22/8</div>
+      <div>61-253 Poznań</div>
+      <div>NIP: 972 114 73 18</div>
+      <div>REGON: 301 716 748</div>
+    </address>
+  </section>
 </div>
+
 <div class="modal-footer">
-  <button type="button"  class="btn btn-primary" (click)="close()">
-    Zamknij
-  </button>
+  <button type="button" class="btn btn-primary" (click)="close()">Zamknij</button>
 </div>

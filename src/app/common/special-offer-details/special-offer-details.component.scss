@@ -1,0 +1,57 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.special-offer-section {
+  @include section-wrapper;
+
+  .special-offer-image {
+    max-width: 800px;
+    margin: 2rem auto;
+
+    img {
+      width: 100%;
+      border-radius: 0.75rem;
+      box-shadow: $card-shadow;
+    }
+  }
+
+  .content-blocks {
+    text-align: left;
+    max-width: $container-width-md;
+    margin: 0 auto;
+    padding-top: 2rem;
+
+    .block-heading {
+      @include gold-gradient-text;
+      margin-top: 2rem;
+    }
+
+    .block-paragraph {
+      color: $text-color;
+      margin: 1rem 0;
+        white-space: pre-line;
+    }
+
+    .block-image {
+      margin: 2rem 0;
+
+      img {
+        max-width: 100%;
+        border-radius: 0.5rem;
+        box-shadow: $card-shadow;
+      }
+    }
+
+    .block-list {
+      padding-left: 1.5rem;
+      margin-bottom: 1rem;
+
+      li {
+        margin-bottom: 0.5rem;
+        font-size: $font-size-sm;
+        color: $text-color;
+      }
+    }
+  }
+}

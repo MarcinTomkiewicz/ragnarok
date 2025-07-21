@@ -1,140 +1,140 @@
-@import "abstracts/variables";
-@import "abstracts/mixins";
+// @import "abstracts/variables";
+// @import "abstracts/mixins";
 
-:host {
-  display: block;
-  min-height: 100vh;
-  background-color: $primary-color;
-  color: $bg-color;
+// :host {
+//   display: block;
+//   min-height: 100vh;
+//   background-color: $primary-color;
+//   color: $bg-color;
 
-  @media (max-width: $breakpoint-md) and (orientation: landscape) {
-    height: auto;
-  }
-}
+//   @media (max-width: $breakpoint-md) and (orientation: landscape) {
+//     height: auto;
+//   }
+// }
 
-p, .h2-contact, .form-label {
-  color: $bg-color !important;
-}
+// p, .h2-contact, .form-label {
+//   color: $bg-color !important;
+// }
 
-.responsive-textarea {
-  height: auto;
-}
+// .responsive-textarea {
+//   height: auto;
+// }
 
-.image-banner-container {
-  width: 100%;
-  height: 250px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+// .image-banner-container {
+//   width: 100%;
+//   height: 250px;
+//   overflow: hidden;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+// }
 
-.image-banner {
-  width: 100%;
-  max-height: 250px;
-  object-fit: cover;
-  object-position: 0 50%;
-}
+// .image-banner {
+//   width: 100%;
+//   max-height: 250px;
+//   object-fit: cover;
+//   object-position: 0 50%;
+// }
 
-.map-container {
-  height: 400px;
-  width: 100%;
-}
+// .map-container {
+//   height: 400px;
+//   width: 100%;
+// }
 
-@media (min-width: $breakpoint-sm) {
-  .divide-et-impera {
-    @include flex-wrapper(row);
-    justify-content: space-evenly;
-    align-items: flex-start;
-    width: 100%;
+// @media (min-width: $breakpoint-sm) {
+//   .divide-et-impera {
+//     @include flex-wrapper(row);
+//     justify-content: space-evenly;
+//     align-items: flex-start;
+//     width: 100%;
 
-    & > div {
-      width: 100%;
-    }
-  }
-}
+//     & > div {
+//       width: 100%;
+//     }
+//   }
+// }
 
-.icon {
-  height: 1em;
-  width: 1em;
-  margin-right: 10px;
-  filter: $icon-filter-dark;
-}
+// .icon {
+//   height: 1em;
+//   width: 1em;
+//   margin-right: 10px;
+//   filter: $icon-filter-dark;
+// }
 
-.separator {
-  max-height: 323px;
-  width: 20%;
-  filter: $icon-filter-dark;
-}
+// .separator {
+//   max-height: 323px;
+//   width: 20%;
+//   filter: $icon-filter-dark;
+// }
 
-@media (max-width: $breakpoint-md) {
-  .form-label {
-    font-size: smaller;
-  }
-}
+// @media (max-width: $breakpoint-md) {
+//   .form-label {
+//     font-size: smaller;
+//   }
+// }
 
-@media (max-width: $breakpoint-sm) {
-  .component-container {
-    font-size: smaller;
-  }
+// @media (max-width: $breakpoint-sm) {
+//   .component-container {
+//     font-size: smaller;
+//   }
 
-  .divide-et-impera {
-    @include flex-wrapper(column);
-    width: 100%;
+//   .divide-et-impera {
+//     @include flex-wrapper(column);
+//     width: 100%;
 
-    > div {
-      width: 100% !important;
-    }
-  }
+//     > div {
+//       width: 100% !important;
+//     }
+//   }
 
-  .separator {
-    display: none;
-  }
+//   .separator {
+//     display: none;
+//   }
 
-  .image-banner-container {
-    height: 150px;
-  }
+//   .image-banner-container {
+//     height: 150px;
+//   }
 
-  .image-banner {
-    object-position: center 30%;
-  }
-}
+//   .image-banner {
+//     object-position: center 30%;
+//   }
+// }
 
-@media (max-width: $breakpoint-xs) {
-  .component-container {
-    padding: 0.5rem;
-    font-size: x-small;
-  }
+// @media (max-width: $breakpoint-xs) {
+//   .component-container {
+//     padding: 0.5rem;
+//     font-size: x-small;
+//   }
 
-  .form-label {
-    font-size: x-small;
-  }
+//   .form-label {
+//     font-size: x-small;
+//   }
 
-  .responsive-textarea {
-    height: 60px;
-  }
+//   .responsive-textarea {
+//     height: 60px;
+//   }
 
-  .image-banner-container {
-    height: auto;
-  }
+//   .image-banner-container {
+//     height: auto;
+//   }
 
-  .image-banner {
-    object-position: center 30%;
-  }
-}
+//   .image-banner {
+//     object-position: center 30%;
+//   }
+// }
 
-.custom-toast {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1050;
+// .custom-toast {
+//   position: fixed;
+//   top: 1rem;
+//   right: 1rem;
+//   z-index: 1050;
 
-  .toast-progress-bar {
-    width: 100%;
-    margin-top: 5px;
-  }
+//   .toast-progress-bar {
+//     width: 100%;
+//     margin-top: 5px;
+//   }
 
-  .btn-close {
-    margin-left: auto;
-  }
-}
+//   .btn-close {
+//     margin-left: auto;
+//   }
+// }

@@ -1,36 +1,25 @@
-<div class="component-container">
-  <div>
+<section class="event-calendar-section">
+  <div class="container">
     <h2 class="section-title">Kalendarz wydarzeń</h2>
-    <div>
-      Witamy na stronie kalendarza wydarzeń poświęconych grom fabularnym (RPG)!
-      To idealne miejsce dla wszystkich miłośników sesji RPG — zarówno
-      doświadczonych graczy, jak i tych, którzy dopiero zaczynają swoją
-      przygodę. Znajdziesz tu zaplanowane spotkania, otwarte sesje i wydarzenia
-      prowadzone przez różnych Mistrzów Gry, którzy zabiorą Cię w niezapomniane
-      przygody. Dzięki przejrzystemu kalendarzowi łatwo sprawdzisz daty
-      nadchodzących sesji i wybierzesz te, które najbardziej Ci odpowiadają.
-      Dołącz do naszej społeczności, odkrywaj nowe systemy i poznawaj
-      wspaniałych ludzi, z którymi stworzysz niezwykłe historie. Jesteście
-      gotowi, by rzucić kośćmi i wkroczyć do świata wyobraźni?
+    <p class="section-subtitle">
+      Witamy w kalendarzu wydarzeń RPG! Znajdziesz tu sesje prowadzone przez różnych Mistrzów Gry,
+      wydarzenia otwarte oraz spotkania tematyczne. Nasz kalendarz to nie tylko daty – to bramy do
+      światów pełnych magii, tajemnic i heroicznych czynów. Przeglądaj wydarzenia, wybieraj ulubione
+      systemy i dołącz do przygody!
+    </p>
+
+    <div class="event-section">
+      <h3 class="event-header">Wydarzenia cykliczne</h3>
+      <app-event-list
+        [events]="recurringEvents"
+        [recurring]="true"
+      ></app-event-list>
+
+      <h3 class="event-header">Wydarzenia jednorazowe</h3>
+      <app-event-list
+        [events]="singleEvents"
+        [recurring]="false"
+      ></app-event-list>
     </div>
   </div>
-  <div class="image-banner-container">
-    <img
-      src="strip.avif"
-      alt="Banner for event calendar"
-      class="image-banner"
-    />
-  </div>
-  <div class="w-100">
-    <h2>Wydarzenia cykliczne</h2>
-    <app-event-list
-      [events]="recurringEvents"
-      [recurring]="true"
-    ></app-event-list>
-    <h2>Wydarzenia jednorazowe</h2>
-    <app-event-list
-      [events]="singleEvents"
-      [recurring]="false"
-    ></app-event-list>
-  </div>
-</div>
+</section>

@@ -1,26 +1,32 @@
-<table class="table table-hover table-striped align-middle">
-    <thead>
-      <tr class="table-header table-light">
-        <th scope="col" class="service-name">{{ isServiceByHour() ? 'Długość wynajmu' : 'Nazwa usługi'}}</th>
-        <th scope="col" class="td-15">Cena</th>
-        <th scope="col" class="large-screens td-60">Opis</th>
-      </tr>
-    </thead>
-    <tbody class="table-group-divider">
+<table class="table table-hover table-striped align-middle text-center">
+  <thead>
+    <tr class="table-header table-light">
+      <th scope="col" class="service-name">
+        {{ isServiceByHour() ? 'Długość wynajmu' : 'Nazwa usługi' }}
+      </th>
+      <th scope="col" class="td-15">Cena</th>
+      <th scope="col" class="large-screens td-60">Opis</th>
+    </tr>
+  </thead>
+
+  <tbody class="table-group-divider">
+    @for (service of services(); track service.id) {
       <tr
-        *ngFor="let service of services()"
         [ngbTooltip]="service.longDescription || null"
         tooltipClass="custom-tooltip"
         triggers="click:blur"
       >
-        <td>
-          <span *ngIf="service.longDescription"><i class="bi bi-info-square"></i></span>
+        <td class="text-start">
+          @if (service.longDescription) {
+            <span><i class="bi bi-info-square icon-dark"></i></span>
+          }
           {{ service.name }}
         </td>
         <td>
-          {{ service.price | number }} {{service.priceType === 'hour' ? 'zł / h' : 'zł' }}
+          {{ service.price | number }} {{ service.priceType === 'hour' ? 'zł / h' : 'zł' }}
         </td>
         <td class="large-screens">{{ service.shortDescription }}</td>
       </tr>
-    </tbody>
-  </table>
+    }
+  </tbody>
+</table>

@@ -1,3 +1,5 @@
+import { Roles } from "../enums/roles";
+
 export interface TechStack {
     id: number;
     name: string;
@@ -6,4 +8,6 @@ export interface TechStack {
     longDescription?: string;
     ctaButton?: any;
     isActive: boolean;
+    role: Roles;
+    roleDisplay: string;
   }

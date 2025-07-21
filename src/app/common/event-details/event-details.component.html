@@ -1,69 +1,74 @@
 @if (eventData) {
-<div class="component-container flex-column-center">
-  <img
-    class="event-image align-self-center"
-    [src]="eventData.image"
-    alt="{{ eventData.name }}"
-  />
-  <div class="event-container w-100">
+<section class="event-details-section">
+  <div class="container flex-column gap-4">
+    
+    <div class="event-image-wrapper">
+      <img
+        class="event-image"
+        [src]="eventData.image"
+        [alt]="eventData.name"
+        width="100%"
+        height="auto"
+      />
+    </div>
+
     @if (eventData.eventDate && (eventData.eventDate < today)) {
-      <ngb-alert type="danger">
+      <ngb-alert type="danger" class="w-100 text-center">
         UWAGA! Wydarzenie archiwalne!
       </ngb-alert>
     }
-    <h2 class="text-center">{{ eventData.name }}</h2>
+
+    <h2 class="section-title text-center">{{ eventData.name }}</h2>
+
     <div class="event-description">
-      @let paragraphs = eventData.longDescription.split('\n'); @for (paragraph
-      of paragraphs; track paragraph) {
-      <p class="event-paragraph">{{ paragraph }}</p>
+      @let paragraphs = eventData.longDescription.split('\n');
+      @for (paragraph of paragraphs; track paragraph) {
+        <p class="event-paragraph">{{ paragraph }}</p>
       }
     </div>
-    <table
-      class="table table-transparent dark-color align-middle font-size-small responsive-table"
-    >
-      <th></th>
-      <th></th>
+
+    <table class="table table-dark-style align-middle font-size-small">
+
       <tbody>
         <tr>
-          <td>
+          <th scope="row">
             {{ eventData.isRecurring ? "Następna data:" : "Data spotkania:" }}
-          </td>
-          <td>{{ eventData.eventDate | date : "dd.MM.yyyy" }}</td>
+          </th>
+          <td>{{ eventData.eventDate | date : 'dd.MM.yyyy' }}</td>
         </tr>
         <tr>
-          <td>Godzina rozpoczęcia:</td>
-          @let eventTime = eventData.time | slice : 0 : 5;
+          <th scope="row">Godzina rozpoczęcia:</th>
+          @let eventTime = eventData.time | slice:0:5;
           <td>
             {{ eventData.time !== '00:00:00' ? eventTime : "Cały dzień" }}
           </td>
         </tr>
         <tr>
-          <td>Koszt uczestnictwa:</td>
+          <th scope="row">Koszt uczestnictwa:</th>
           <td>
             {{
               eventData.cost && eventData.cost >= 0
-                ? eventData.cost + " zł"
-                : "Bezpłatny"
+                ? eventData.cost + ' zł'
+                : 'Bezpłatny'
             }}
           </td>
         </tr>
         <tr>
-          <td>Link do wydarzenia:</td>
+          <th scope="row">Link do wydarzenia:</th>
           <td>
             @if (eventData.facebookLink) {
-            <button
-              class="btn btn-plain btn-info px-2 py-1"
-              (click)="openFacebook(eventData.facebookLink)"
-            >
-              Zobacz na Facebooku
-            </button>
+              <button
+                class="btn btn-info btn-sm"
+                (click)="openFacebook(eventData.facebookLink)">
+                Zobacz na Facebooku
+              </button>
             } @else {
-            <span>Brak wydarzenia</span>
+              <span>Brak wydarzenia</span>
             }
           </td>
         </tr>
       </tbody>
     </table>
   </div>
-</div>
+</section>
 }

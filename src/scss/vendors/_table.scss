@@ -1,32 +1,121 @@
+@import "abstracts/variables";
 @import "abstracts/mixins";
 
-.td-10 {
+// Ustawienia szerokości kolumn
+.table td.td-10,
+.table th.td-10 {
   @include td-width(10%);
 }
-
-.td-15 {
+.table td.td-15,
+.table th.td-15 {
   @include td-width(15%);
 }
-
-.td-20 {
+.table td.td-20,
+.table th.td-20 {
   @include td-width(20%);
 }
-
-.td-40 {
+.table td.td-25,
+.table th.td-25 {
+  @include td-width(25%);
+}
+.table td.td-40,
+.table th.td-40 {
   @include td-width(40%);
 }
-
-.td-60 {
+.table td.td-60,
+.table th.td-60 {
   @include td-width(60%);
 }
 
 @media (max-width: $breakpoint-lg) {
-  th.large-screens,
-  td.large-screens {
-    display: none;
+  table th.large-screens,
+  table td.large-screens {
+    display: none !important;
   }
 }
 
-.table.td-light > :not(caption) > * > * {
-    color: $text-color;
+// Główne stylowanie tabel
+body .table {
+  background-color: $bg-color;
+  color: $text-color;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: $font-family-base;
+  font-size: $font-size-sm;
+  box-shadow: 0 0 20px rgba($secondary-color, 0.4);
+  border-radius: 10px;
+
+  thead {
+    background-color: $bg-color-light;
+    border-bottom: 2px solid $border-color;
+
+    th {
+      padding: 1rem 0.75rem;
+      --bs-table-color: #{$text-color};
+      --bs-table-bg: #{$bg-color};
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: $font-size-xs;
+      border-bottom: 1px solid $border-color;
+    }
   }
+
+  tbody {
+    tr {
+      transition: background-color $transition-fast;
+
+      &:hover {
+        background-color: rgba($primary-color, 0.05);
+      }
+
+      td {
+        padding: 0.75rem;
+        vertical-align: middle;
+
+        i {
+          color: $primary-color;
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+
+  .table-group-divider {
+    border-top: 2px solid $border-color;
+  }
+
+  .tooltip {
+    background-color: $bg-color-light;
+    border: 1px solid $border-color;
+    color: $text-color;
+    font-size: $font-size-xs;
+  }
+
+  &.table-light {
+    --bs-table-color: #{$text-color};
+    --bs-table-bg: #{$bg-color};
+  }
+
+  &.table-dark-style {
+    --bs-table-color-type: initial;
+    --bs-table-bg-type: initial;
+    --bs-table-color-state: initial;
+    --bs-table-bg-state: initial;
+
+    --bs-table-color: #{$text-color};
+    --bs-table-bg: #{$bg-color};
+    --bs-table-border-color: #{$border-color};
+    --bs-table-accent-bg: transparent;
+    --bs-table-striped-color: #{$text-color};
+    --bs-table-striped-bg: rgba($primary-color, 0.03);
+    --bs-table-active-color: #{$text-color};
+    --bs-table-active-bg: rgba($primary-color, 0.06);
+    --bs-table-hover-color: #{$text-color};
+    --bs-table-hover-bg: rgba($primary-color, 0.08);
+
+    width: 100%;
+    margin-bottom: 1rem;
+    vertical-align: top;
+    border-color: var(--bs-table-border-color);
+  }
+}

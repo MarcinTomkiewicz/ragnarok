@@ -1,0 +1,38 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.event-calendar-section {
+  @include section-wrapper;
+
+  .calendar-description {
+    font-size: $font-size-sm;
+    margin-bottom: 2rem;
+    text-align: justify;
+    opacity: 0.9;
+  }
+
+  .image-banner-container {
+    margin: 2rem 0;
+
+    .image-banner {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: $card-shadow;
+    }
+  }
+
+  .event-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .event-header {
+    font-size: $font-size-xl;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid $border-color;
+    padding-bottom: 0.5rem;
+  }
+}

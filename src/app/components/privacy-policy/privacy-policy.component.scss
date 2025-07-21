@@ -1,13 +1,85 @@
-@import 'abstracts/variables';
-
-:host {
-    background-color: $primary-color;
-    color: $text-color;
-}
+@import "abstracts/variables";
+@import "abstracts/mixins";
 
 .modal-header,
 .modal-body,
 .modal-footer {
-    background-color: $primary-color;
-    color: $bg-color;
+  background-color: $bg-color;
+  color: $text-color;
+}
+
+.modal-header {
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .btn-close {
+    filter: $icon-filter;
+  }
+}
+
+.privacy-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  line-height: 1.6;
+
+  .intro {
+    margin-bottom: 1.5rem;
+  }
+
+  .privacy-section {
+    margin-bottom: 1.5rem;
+
+    h5 {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: $primary-color;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  }
+
+  .contact-info {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+
+    a {
+      color: $primary-color;
+      text-decoration: underline;
+      border: none;
+      padding: 0;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+
+  address {
+    font-style: normal;
+    font-size: 0.95rem;
+    line-height: 1.5;
+
+    div {
+      margin-bottom: 0.25rem;
+    }
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid $border-color;
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
 }

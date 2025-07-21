@@ -1,12 +1,15 @@
+@if (!events().length) {
+  <div>Brak nadchodzących wydarzeń</div>
+} @else {
 <table class="table table-hover table-striped align-middle text-center">
   <thead>
     <tr class="table-header table-light">
-      <th scope="col" class="td-15">Nazwa</th>
+      <th scope="col" [class.td-20]="!isMobile" [class.td-10]="isMobile">Nazwa</th>
       <th scope="col" class="td-10">{{ recurring() ? "Następne" : "Data" }}</th>
       <th scope="col" class="td-10">Godzina</th>
       <th scope="col" class="large-screens">Opis</th>
       <th scope="col" class="td-10">Szczegóły</th>
-      @if (checkScreenWidth()) {
+      @if (!isMobile) {
         <th scope="col" class="td-10">Facebook</th>
       }
     </tr>
@@ -23,7 +26,7 @@
           {{ event.time !== '00:00:00' ? eventTime : 'Cały dzień' }}
         </td>
         <td class="font-size-small large-screens text-start">
-          {{ event.shortDescription }}
+          <div class="truncate-two-lines">{{ event.shortDescription }}</div>
         </td>
         <td class="font-size-small">
           <button
@@ -45,7 +48,7 @@
             />
           </button>
         </td>
-        @if (checkScreenWidth()) {
+        @if (!isMobile) {
           <td class="">
             @if (event.facebookLink) {
               <button class="btn btn-info large-screens font-size-small" (click)="openFacebook(event.facebookLink)">
@@ -63,3 +66,4 @@
     }
   </tbody>
 </table>
+}

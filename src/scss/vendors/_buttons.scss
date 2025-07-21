@@ -1,35 +1,42 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-// Mixin do hovera
-@mixin btn-hover($color) {
-  background-color: darken($color, 10%);
-  transform: translateY(-3px);
+// Mixin do hovera na buttonach
+@mixin btn-hover($bg, $text: null) {
+  background-color: darken($bg, 10%);
+  transform: translateY(-2px);
+  @if $text {
+    color: $text;
+  }
 }
 
+// Bazowe style dla przycisków
 .btn {
+  display: inline-block;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
-  @include responsive-font-size(12px);
+  font-family: $font-family-base;
+  font-size: $font-size-sm;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
-  font-family: $font-family-base;
+
+  &:disabled {
+    cursor: not-allowed;
+    transform: none;
+  }
 
   &.btn-primary {
     background-color: $primary-color;
     color: $bg-color;
 
-    &:hover {
-      @include btn-hover($primary-color);
-      color: darken($bg-color, 10%);
+    &:hover:not(:disabled) {
+      @include btn-hover($primary-color, darken($bg-color, 10%));
     }
 
     &:disabled {
       background-color: lighten($primary-color, 20%);
       color: lighten($bg-color, 15%);
-      cursor: not-allowed;
-      transform: none;
     }
   }
 
@@ -37,15 +44,13 @@
     background-color: $secondary-color;
     color: $bg-color;
 
-    &:hover {
+    &:hover:not(:disabled) {
       @include btn-hover($secondary-color);
     }
 
     &:disabled {
       background-color: lighten($secondary-color, 15%);
       color: lighten($bg-color, 10%);
-      cursor: not-allowed;
-      transform: none;
     }
   }
 
@@ -53,65 +58,30 @@
     background-color: $info-color;
     color: $bg-color;
 
-    &:hover {
+    &:hover:not(:disabled) {
       @include btn-hover($info-color);
     }
 
     &:disabled {
       background-color: lighten($info-color, 15%);
       color: lighten($bg-color, 10%);
-      cursor: not-allowed;
-      transform: none;
     }
   }
 
   &.btn-outline {
     background-color: transparent;
-    border: 2px solid $border-color;
+    border: 1px solid $text-color;
     color: $text-color;
 
-    &:hover {
-      background-color: $border-color;
+    &:hover:not(:disabled) {
+      background-color: $text-color;
       color: $bg-color;
     }
 
     &:disabled {
-      background-color: transparent;
       border-color: lighten($border-color, 20%);
       color: lighten($text-color, 15%);
-      cursor: not-allowed;
     }
-
-    // &.btn-secondary-outline {
-    //   background-color: transparent;
-    //   border: 2px solid $border-color;
-    //   color: $text-color;
-
-    //   &:hover {
-    //     background-color: $border-color;
-    //     color: $bg-color;
-    //   }
-
-    //   &:disabled {
-    //     background-color: transparent;
-    //     border-color: lighten($border-color, 20%);
-    //     color: lighten($text-color, 15%);
-    //     cursor: not-allowed;
-    //   }
-    // }
-  }
-  &.btn-plain {
-    padding: unset;
-    border: unset;
-    &:hover {
-      background-color: transparent;
-    }
-  }
-
-  &.btn-plain-light {
-    padding: unset;
-    border: unset;
-    color: $text-color;
   }
 
   &.btn-outline-reverse {
@@ -120,17 +90,38 @@
       border: 2px solid $border-color;
       color: $text-color;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: $border-color;
         color: $bg-color;
       }
 
       &:disabled {
-        background-color: transparent;
         border-color: lighten($border-color, 20%);
         color: lighten($text-color, 15%);
-        cursor: not-allowed;
       }
     }
+  }
+
+  // Styl przycisku typu "link-like"
+  &.btn-plain,
+  &.btn-plain-light {
+    padding: 0.5rem;
+    background: none;
+    border: 1px solid transparent;
+    font-size: $font-size-sm;
+    color: $text-color;
+    opacity: 0.8;
+    transition: color $transition-fast, opacity $transition-fast;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      // color: $bg-color;
+      border: 1px solid $secondary-text-color;
+    }
+  }
+
+  &.btn-plain-light {
+    color: $secondary-text-color;
   }
 }

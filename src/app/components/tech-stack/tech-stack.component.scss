@@ -1,59 +1,59 @@
-@import "abstracts/variables";
-@import "abstracts/mixins";
+// @import "abstracts/variables";
+// @import "abstracts/mixins";
 
-:host {
-  display: block;
-  min-height: 100vh;
-  height: auto;
+// :host {
+//   display: block;
+//   min-height: 100vh;
+//   height: auto;
 
-  @media (max-width: $breakpoint-md) {
-    @media (orientation: landscape) {
-      height: auto;
-    }
-  }
-}
+//   @media (max-width: $breakpoint-md) {
+//     @media (orientation: landscape) {
+//       height: auto;
+//     }
+//   }
+// }
 
-  .description {
-    @include responsive-font-size(10px);
-}
+//   .description {
+//     @include responsive-font-size(10px);
+// }
 
-.image-banner-container {
-  width: 100%;
-}
+// .image-banner-container {
+//   width: 100%;
+// }
 
-.image-banner {
-  width: 100%;
-  max-height: 250px;
-  object-fit: cover;
-  object-position: 0 50%;
-}
+// .image-banner {
+//   width: 100%;
+//   max-height: 250px;
+//   object-fit: cover;
+//   object-position: 0 50%;
+// }
 
-@media (max-width: $breakpoint-lg) {
-  th.large-screens, td.large-screens {
-      display: none;
-  }
-}
+// @media (max-width: $breakpoint-lg) {
+//   th.large-screens, td.large-screens {
+//       display: none;
+//   }
+// }
 
-@media (max-width: $breakpoint-sm) {
-  .component-container {
-      font-size: smaller;
-  }
-  .image-banner {
-      width: 100%;
-      max-height: 150px;
-      object-fit: cover;
-      object-position: 0 90%;
-    }
-}
+// @media (max-width: $breakpoint-sm) {
+//   .component-container {
+//       font-size: smaller;
+//   }
+//   .image-banner {
+//       width: 100%;
+//       max-height: 150px;
+//       object-fit: cover;
+//       object-position: 0 90%;
+//     }
+// }
 
-@media (max-width: $breakpoint-xs) {
-  .component-container {
-      font-size: x-small;
-  }
-  .image-banner {
-      width: 100%;
-      max-height: auto;
-      object-fit: cover;
-      object-position: 0 80%;
-    }
-  }
+// @media (max-width: $breakpoint-xs) {
+//   .component-container {
+//       font-size: x-small;
+//   }
+//   .image-banner {
+//       width: 100%;
+//       max-height: auto;
+//       object-fit: cover;
+//       object-position: 0 80%;
+//     }
+//   }

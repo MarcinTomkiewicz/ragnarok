@@ -1,15 +1,30 @@
 // Abstracts
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/components";
 
 // Base
 @import "base/reset";
 @import "base/typography";
 @import "base/img";
 @import "base/flex";
+@import "base/icons";
 
 // Components
 @import "components/navbar";
+@import "components/audience-section";
+@import "components/how-it-works";
+@import "components/upcoming-events";
+@import "components/meet-the-team";
+@import "components/testimonial";
+@import "components/about";
+@import "components/services";
+@import "components/offers-list";
+@import "components/event-calendar";
+@import "components/tech-stack";
+@import "components/our-rooms";
+@import "components/contact";
+@import "components/for-beginners";
 
 // Layouts
 @import "layouts/header";
@@ -21,7 +36,7 @@
 
 // Vendors (Bootstrap)
 @import "bootstrap/scss/bootstrap";
-@import "bootstrap-icons/font/bootstrap-icons"; // Import Bootstrap SCSS
+@import "bootstrap-icons/font/bootstrap-icons";
 @import "vendors/bootstrap";
 @import "vendors/carousel";
 @import "vendors/offcanvas";
@@ -31,9 +46,11 @@
 @import "vendors/dropdown-menu";
 @import "vendors/table";
 @import "vendors/pagination";
-@import "vendors/modals";
+@import "vendors/modals"; 
+@import "vendors/typeahead";
 
 @import "@fontsource/modern-antiqua/index.css";
+@import "@fontsource/cinzel/index.css";
 @import "@fontsource/material-icons/index.css";
 @import "@fontsource/material-icons-outlined/index.css";
 @import "@fontsource/material-icons-sharp";
