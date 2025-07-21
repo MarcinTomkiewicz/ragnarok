@@ -23,37 +23,48 @@
       transform: translateY(-4px);
     }
 
-    h2 {
-      font-size: $font-size-xl;
-      margin-bottom: 0.75rem;
-      @include gold-gradient-text;
-      width: 100%;
-      text-align: center;
-    }
+      h2 {
+    font-size: $font-size-xl;
+    margin-bottom: 0.75rem;
+    @include gold-gradient-text;
+    width: 100%;
+    text-align: center;
+    min-height: 3.5rem; // <= np. 2 linijki tytułu max
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .description {
-      font-size: $font-size-sm;
-      color: $secondary-text-color;
-      margin-bottom: 1rem;
-    }
+  .description {
+    font-size: $font-size-sm;
+    color: $secondary-text-color;
+    margin-bottom: 1rem;
+    min-height: 5rem; // <= np. 3 linijki
+  }
 
-    .membership-img {
-      width: 100%;
-      border-radius: $border-radius;
-      margin-bottom: 1rem;
-      box-shadow: $card-shadow;
-    }
+  .membership-img {
+    width: 100%;
+    border-radius: $border-radius;
+    margin-bottom: 1rem;
+    box-shadow: $card-shadow;
+    min-height: 180px; // <= jeśli wszystkie mają zdjęcie
+    object-fit: cover;
+  }
 
-    .price {
-      font-size: $font-size-lg;
-      font-weight: bold;
-      color: $primary-color;
-      margin: 1rem 0;
-    }
+  .price {
+    font-size: $font-size-lg;
+    font-weight: bold;
+    color: $primary-color;
+    margin: 1rem 0;
+    min-height: 2rem;
+  }
 
-    .perks-list {
-      margin: 1rem 0;
-    //   padding-left: 1rem;
+  .perks-list {
+    margin: 1rem 0;
+    flex-grow: 1; // <-- zajmuje przestrzeń między price a przyciskiem
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
 
       li {
         position: relative;
