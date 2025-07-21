@@ -1,0 +1,91 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.memberships-page {
+  @include section-wrapper;
+
+  .memberships-grid {
+    @include mg-grid(2);
+  }
+
+  .membership-card {
+    background-color: $bg-color-light;
+    color: $text-color;
+    padding: 2rem;
+    border-radius: $border-radius;
+    box-shadow: $card-shadow;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: translateY(-4px);
+    }
+
+    h2 {
+      font-size: $font-size-xl;
+      margin-bottom: 0.75rem;
+      @include gold-gradient-text;
+      width: 100%;
+      text-align: center;
+    }
+
+    .description {
+      font-size: $font-size-sm;
+      color: $secondary-text-color;
+      margin-bottom: 1rem;
+    }
+
+    .membership-img {
+      width: 100%;
+      border-radius: $border-radius;
+      margin-bottom: 1rem;
+      box-shadow: $card-shadow;
+    }
+
+    .price {
+      font-size: $font-size-lg;
+      font-weight: bold;
+      color: $primary-color;
+      margin: 1rem 0;
+    }
+
+    .perks-list {
+      margin: 1rem 0;
+    //   padding-left: 1rem;
+
+      li {
+        position: relative;
+        margin-bottom: 0.5rem;
+        text-align: left;
+        font-size: $font-size-sm;
+        color: $secondary-text-color;
+
+        &::before {
+          content: "✔";
+          position: absolute;
+          left: 0;
+          color: $primary-color;
+        }
+      }
+    }
+
+    .btn {
+      margin-top: auto;
+      align-self: stretch;
+      text-align: center;
+      background-color: $button-color;
+      color: $button-text-color;
+      padding: 0.75rem 1.5rem;
+      border-radius: $border-radius;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: background-color $transition-fast;
+
+      &:hover {
+        background-color: $button-hover-color;
+      }
+    }
+  }
+}

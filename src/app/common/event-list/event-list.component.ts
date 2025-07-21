@@ -26,7 +26,6 @@ export class EventListComponent {
     this.updateScreenState();
     if (this.platformService.isBrowser) {
       fromEvent(window, 'resize')
-        // .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(() => this.updateScreenState());
     }
   }

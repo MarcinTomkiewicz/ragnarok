@@ -1,7 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, ViewEncapsulation } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  ViewEncapsulation,
+} from '@angular/core';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { IOfferDetails } from '../../core/interfaces/i-offer-details';
+import { PlatformService } from '../../core/services/platform/platform.service';
+import { fromEvent } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-services-table',
@@ -12,13 +21,35 @@ import { IOfferDetails } from '../../core/interfaces/i-offer-details';
   encapsulation: ViewEncapsulation.None,
 })
 export class ServicesTableComponent {
-  services = input<IOfferDetails[]>([])
+  services = input<IOfferDetails[]>([]);
   isServiceByHour = input<boolean>(true);
 
+  private readonly platformService = inject(PlatformService);
+  private readonly router = inject(Router);
+  destroyRef?: DestroyRef;
+  public isMobile = false;
+
   ngOnInit() {
-    console.log('ServicesTableComponent initialized with services:', this.services());
-    console.log('Is service by hour:', this.isServiceByHour());
-    
+    this.updateScreenState();
+    if (this.platformService.isBrowser) {
+      fromEvent(window, 'resize').subscribe(() => this.updateScreenState());
+    }
   }
-    
+
+  updateScreenState() {
+    this.isMobile = window.innerWidth < 600;
+    console.log(
+      `Screen width: ${window.innerWidth}, isMobile: ${this.isMobile}`
+    );
+  }
+
+  hasDetails(): boolean {
+    return this.services().some((s) => s.details && s.detailsLink);
+  }
+
+    openDetails(link: string) {
+    if (this.platformService.isBrowser) {
+      this.router.navigate([link]);
+    }
+  }
 }

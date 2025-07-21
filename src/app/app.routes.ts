@@ -96,6 +96,13 @@ export const routes: Routes = [
         (m) => m.OffersPageComponent
       ),
   },
+    {
+    path: 'memberships',
+    loadComponent: () =>
+      import('./components/club-membership/club-membership.component').then(
+        (m) => m.ClubMembershipComponent
+      ),
+  },
   {
     path: 'special/:id',
     loadComponent: () =>

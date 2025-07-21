@@ -1,32 +1,60 @@
 <table class="table table-hover table-striped align-middle text-center">
   <thead>
     <tr class="table-header table-light">
-      <th scope="col" class="service-name">
-        {{ isServiceByHour() ? 'Długość wynajmu' : 'Nazwa usługi' }}
+      <th scope="col" class="service-name td-40">
+        {{ isServiceByHour() ? "Długość wynajmu" : "Nazwa usługi" }}
       </th>
-      <th scope="col" class="td-15">Cena</th>
+      <th scope="col" class="td-10">Cena</th>
       <th scope="col" class="large-screens td-60">Opis</th>
+      @if (hasDetails()) {
+      <th scope="col" class="td-15">Szczegóły</th>
+      }
     </tr>
   </thead>
 
   <tbody class="table-group-divider">
     @for (service of services(); track service.id) {
-      <tr
-        [ngbTooltip]="service.longDescription || null"
-        tooltipClass="custom-tooltip"
-        triggers="click:blur"
-      >
-        <td class="text-start">
-          @if (service.longDescription) {
-            <span><i class="bi bi-info-square icon-dark"></i></span>
-          }
-          {{ service.name }}
-        </td>
-        <td>
-          {{ service.price | number }} {{ service.priceType === 'hour' ? 'zł / h' : 'zł' }}
-        </td>
-        <td class="large-screens">{{ service.shortDescription }}</td>
-      </tr>
+    <tr [ngbTooltip]="service.longDescription || null" triggers="click:blur">
+      <td class="text-start">
+        @if (service.longDescription) {
+        <span><i class="bi bi-info-square icon-dark"></i></span>
+        }
+        {{ service.name }}
+      </td>
+
+      <td>
+        {{ service.price | number }}
+        {{ service.priceType === "hour" ? "zł / h" : "zł" }}
+      </td>
+
+      <td class="large-screens">{{ service.shortDescription }}</td>
+
+      @if (hasDetails()) {
+      <td>
+        @if (service.details && service.detailsLink) { @if (!isMobile) {
+        <button
+          (click)="openDetails(service.detailsLink)"
+          class="btn btn-primary"
+        >
+          {{ service.details }}
+        </button>
+        } @else {
+        <button
+          class="btn btn-outline small-screens w-100 btn-plain"
+          (click)="openDetails(service.detailsLink)"
+        >
+          <img
+            src="icons/3.svg"
+            alt="Ikona drakkara"
+            class="icon small-screens"
+            width="2em"
+            height="2em"
+          />
+        </button>
+        } }
+      </td>
+      }
+    </tr>
     }
   </tbody>
 </table>

@@ -25,6 +25,7 @@
 @import "components/our-rooms";
 @import "components/contact";
 @import "components/for-beginners";
+@import "components/club-membership";
 
 // Layouts
 @import "layouts/header";
@@ -48,6 +49,8 @@
 @import "vendors/pagination";
 @import "vendors/modals"; 
 @import "vendors/typeahead";
+@import "vendors/tooltip";
+@import "vendors/list";
 
 @import "@fontsource/modern-antiqua/index.css";
 @import "@fontsource/cinzel/index.css";

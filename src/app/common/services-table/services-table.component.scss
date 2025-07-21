@@ -1,0 +1,7 @@
+@import "abstracts/variables";
+
+.icon {
+    height: 2em;
+    width: 2em;
+    filter: $icon-filter-dark;
+  }

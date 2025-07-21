@@ -41,7 +41,7 @@ export class NavbarComponent {
         { label: 'Sklep', path: '/offers-list' },
       ],
     },
-    { label: 'Członkostwo w Klubie', path: '/services/memberships' },
+    { label: 'Klub Gier Fabularnych', path: '/memberships' },
     { label: 'Wydarzenia', path: '/events' },
     { label: 'Nasz Zespół', path: '/tech-stack' },
     { label: 'Kontakt', path: '/contact' },

@@ -1,0 +1,44 @@
+<section class="memberships-page">
+  <div class="container">
+    <h1 class="section-title">Klub Gier Fabularnych</h1>
+    <p class="section-subtitle">
+      Wybierz jedną z opcji członkostwa i zyskaj dostęp do benefitów, zniżek i
+      specjalnych wydarzeń.
+    </p>
+
+    <div class="memberships-grid">
+      @for (membership of memberships(); track membership.id) {
+      {{ log(membership) }}
+      <div class="membership-card">
+        <h2>{{ membership.name }}</h2>
+        <p class="description">{{ membership.description }}</p>
+
+        @if (membership.imageUrl) {
+        <img
+          [src]="membership.imageUrl"
+          [alt]="membership.name"
+          class="membership-img"
+        />
+        }
+
+        <div class="price">
+          <strong>{{ membership.price | number }} zł</strong>
+          @if (membership.monthly) {
+          <span> / miesiąc</span>
+          }
+        </div>
+
+        <ul class="perks-list">
+          @for (perk of membership.membershipPerks; track perk.id) {
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">{{ perk.text }}</li>
+          </ul>
+          }
+        </ul>
+
+        <a class="btn btn-primary" [routerLink]="'/contact'">Dołącz teraz</a>
+      </div>
+      }
+    </div>
+  </div>
+</section>

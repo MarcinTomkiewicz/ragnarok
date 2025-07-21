@@ -5,4 +5,6 @@ export interface IOfferDetails {
   priceType: 'hour' | 'piece';
   shortDescription: string;
   longDescription?: string;
+  details?: string;
+  detailsLink?: string;
 }

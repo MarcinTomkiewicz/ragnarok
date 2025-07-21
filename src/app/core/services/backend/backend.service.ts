@@ -1,16 +1,15 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, from, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
 import {
-  SupabaseClient,
-  PostgrestSingleResponse,
   PostgrestResponse,
+  PostgrestSingleResponse,
+  SupabaseClient,
 } from '@supabase/supabase-js';
-import { SupabaseService } from '../supabase/supabase.service';
+import { from, Observable, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { FilterOperator } from '../../enums/filterOperator';
 import { IFilter } from '../../interfaces/i-filters';
-import { IOfferDetails } from '../../interfaces/i-offer-details';
 import { toCamelCase } from '../../utils/type-mappers';
+import { SupabaseService } from '../supabase/supabase.service';
 
 export interface IPagination {
   page?: number;
@@ -45,9 +44,15 @@ export class BackendService {
     sortBy?: keyof T,
     sortOrder: 'asc' | 'desc' = 'asc',
     pagination?: IPagination,
-    imageConfig?: ImageConfig
+    imageConfig?: ImageConfig,
+    joins?: string
   ): Observable<T[]> {
-    let query = this.supabase.from(table).select('*');
+    let select = '*';
+    if (joins) {
+      select = `*, ${joins}`;
+    }
+
+    let query = this.supabase.from(table).select(select);
 
     query = this.applyFilters(query, pagination?.filters);
 
@@ -62,15 +67,15 @@ export class BackendService {
     }
 
     return from(query).pipe(
-      map((response: PostgrestResponse<T>) => {
+      map((response: PostgrestResponse<any>) => {
         if (response.error) {
           throw new Error(response.error.message);
         }
 
-        // Przetwarzanie wszystkich danych, które mogą zawierać obrazki
         return (response.data || []).map((item) => {
+          const camelItem = toCamelCase<T>(item);
           return this.processImage(
-            item,
+            camelItem,
             imageConfig?.width,
             imageConfig?.height
           );
@@ -126,48 +131,70 @@ export class BackendService {
     );
   }
 
-getBySlug<T>(table: string, slug: string): Observable<T | null> {
-  return from(
-    this.supabase.from(table).select('*').eq('slug', slug).single()
-  ).pipe(
-    switchMap((response: PostgrestSingleResponse<any>) => {
-      if (response.error) throw new Error(response.error.message);
-      const data = response.data ? this.processImage(response.data) : null;
-
-      if (!data || table !== 'offer_pages' || !Array.isArray(data.sections)) {
-        return of(toCamelCase<T>(data));
-      }
-
-      const allIds = data.sections.flatMap((section: any) =>
-        Array.isArray(section.services) ? section.services : []
-      );
-      const uniqueIds = [...new Set(allIds)];
-
+  getBySlug<T>(table: string, slug: string): Observable<T | null> {
+    // Special case for club_memberships with auto-join to perks
+    if (table === 'club_memberships') {
       return from(
-        this.supabase.from('offer_items').select('*').in('id', uniqueIds)
+        this.supabase
+          .from(table)
+          .select('*, membership_perks(*)')
+          .eq('slug', slug)
+          .single()
       ).pipe(
-        map((itemsResponse: PostgrestSingleResponse<any[]>) => {
-          if (itemsResponse.error) throw new Error(itemsResponse.error.message);
-          const itemsMap = new Map(
-            (itemsResponse.data || []).map((item) => [item.id, toCamelCase(item)])
-          );
-
-          const resolvedSections = data.sections.map((section: any) => ({
-            ...section,
-            services: (section.services || [])
-              .map((id: number) => itemsMap.get(id))
-              .filter(Boolean),
-          }));
-
-          return toCamelCase<T>({
-            ...data,
-            sections: resolvedSections,
-          });
+        map((response: PostgrestSingleResponse<any>) => {
+          if (response.error) throw new Error(response.error.message);
+          return response.data ? toCamelCase<T>(response.data) : null;
         })
       );
-    })
-  );
-}
+    }
+
+    // Normal fetch + offer_pages resolver
+    return from(
+      this.supabase.from(table).select('*').eq('slug', slug).single()
+    ).pipe(
+      switchMap((response: PostgrestSingleResponse<any>) => {
+        if (response.error) throw new Error(response.error.message);
+        const data = response.data ? this.processImage(response.data) : null;
+
+        // Special case for offer_pages (with section.services IDs to be resolved)
+        if (!data || table !== 'offer_pages' || !Array.isArray(data.sections)) {
+          return of(toCamelCase<T>(data));
+        }
+
+        const allIds = data.sections.flatMap((section: any) =>
+          Array.isArray(section.services) ? section.services : []
+        );
+        const uniqueIds = [...new Set(allIds)];
+
+        return from(
+          this.supabase.from('offer_items').select('*').in('id', uniqueIds)
+        ).pipe(
+          map((itemsResponse: PostgrestSingleResponse<any[]>) => {
+            if (itemsResponse.error)
+              throw new Error(itemsResponse.error.message);
+            const itemsMap = new Map(
+              (itemsResponse.data || []).map((item) => [
+                item.id,
+                toCamelCase(item),
+              ])
+            );
+
+            const resolvedSections = data.sections.map((section: any) => ({
+              ...section,
+              services: (section.services || [])
+                .map((id: number) => itemsMap.get(id))
+                .filter(Boolean),
+            }));
+
+            return toCamelCase<T>({
+              ...data,
+              sections: resolvedSections,
+            });
+          })
+        );
+      })
+    );
+  }
 
   /**
    * Tworzy nowy rekord w wybranej tabeli.

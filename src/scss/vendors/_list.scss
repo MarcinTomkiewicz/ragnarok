@@ -1,0 +1,7 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+
+.list-group-item {
+ --bs-list-group-bg: transparent;
+}

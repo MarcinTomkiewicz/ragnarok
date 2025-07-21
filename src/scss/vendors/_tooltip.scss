@@ -1,0 +1,11 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.tooltip .tooltip-arrow::before {
+  transform: translate(-50%, 200%);
+}
+
+.tooltip .tooltip-inner {
+    max-width: unset;
+  width: 100%;
+}
