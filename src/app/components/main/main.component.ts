@@ -68,6 +68,7 @@ export class MainComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     const win = this.platformService.getWindow();
+    
     if (win) {
       this.isMobile.set(win.innerWidth <= 768);
     }

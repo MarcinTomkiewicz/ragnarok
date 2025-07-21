@@ -2,19 +2,22 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { PlatformService } from '../../core/services/platform/platform.service';
 
 @Component({
-  selector: 'app-cookie-consent',
+  selector: 'app-cookies-consent',
   standalone: true,
   templateUrl: './cookies-consent.component.html',
   styleUrl: './cookies-consent.component.scss',
 })
-export class CookieConsentComponent {
+export class CookiesConsentComponent {
   private readonly platform = inject(PlatformService);
   visible = signal(false);
 
   constructor() {
     const consent = this.getCookie('cookie_consent');
-    if (!consent) this.visible.set(true);
-    else if (consent === 'all') this.loadThirdPartyScripts();
+    if (!consent) {
+      this.visible.set(true);
+    } else if (consent === 'all') {
+      this.loadThirdPartyScripts();
+    }
   }
 
   acceptAll(): void {
@@ -44,21 +47,27 @@ export class CookieConsentComponent {
   private loadThirdPartyScripts(): void {
     if (!this.platform.isBrowser) return;
 
+    // Google Tag Manager
     const gtm = document.createElement('script');
     gtm.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-P5FPPLDC';
     gtm.async = true;
     document.head.appendChild(gtm);
 
+    // Google Analytics
     const ga = document.createElement('script');
     ga.src = 'https://www.googletagmanager.com/gtag/js?id=AW-16834781429';
     ga.async = true;
     document.head.appendChild(ga);
 
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function () {
-      window.dataLayer.push(arguments);
+    // Typ-safe przypisanie GTAG i dataLayer
+    const w = window as any;
+
+    w.dataLayer = w.dataLayer || [];
+    w.gtag = function (...args: any[]) {
+      w.dataLayer.push(args);
     };
-    window.gtag('js', new Date());
-    window.gtag('config', 'AW-16834781429');
+
+    w.gtag('js', new Date());
+    w.gtag('config', 'AW-16834781429');
   }
 }
