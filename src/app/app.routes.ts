@@ -47,7 +47,7 @@ export const routes: Routes = [
         (m) => m.TechStackComponent
       ),
   },
-    {
+  {
     path: 'for-beginners',
     loadComponent: () =>
       import('./components/for-beginners/for-beginners.component').then(
@@ -90,12 +90,19 @@ export const routes: Routes = [
       ),
   },
   {
-  path: 'special/:id',
-  loadComponent: () =>
-    import('./common/special-offer-details/special-offer-details.component').then(
-      (m) => m.SpecialOfferDetailsComponent
-    ),
-},
+    path: 'offers/:slug',
+    loadComponent: () =>
+      import('./components/offers-page/offers-page.component').then(
+        (m) => m.OffersPageComponent
+      ),
+  },
+  {
+    path: 'special/:id',
+    loadComponent: () =>
+      import(
+        './common/special-offer-details/special-offer-details.component'
+      ).then((m) => m.SpecialOfferDetailsComponent),
+  },
 
   { path: '**', component: NotFoundComponent },
 ];

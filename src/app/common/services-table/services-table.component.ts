@@ -14,4 +14,11 @@ import { IOfferDetails } from '../../core/interfaces/i-offer-details';
 export class ServicesTableComponent {
   services = input<IOfferDetails[]>([])
   isServiceByHour = input<boolean>(true);
+
+  ngOnInit() {
+    console.log('ServicesTableComponent initialized with services:', this.services());
+    console.log('Is service by hour:', this.isServiceByHour());
+    
+  }
+    
 }

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import {
   SupabaseClient,
   PostgrestSingleResponse,
@@ -9,6 +9,8 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import { FilterOperator } from '../../enums/filterOperator';
 import { IFilter } from '../../interfaces/i-filters';
+import { IOfferDetails } from '../../interfaces/i-offer-details';
+import { toCamelCase } from '../../utils/type-mappers';
 
 export interface IPagination {
   page?: number;
@@ -124,16 +126,48 @@ export class BackendService {
     );
   }
 
-  getBySlug<T>(table: string, slug: string): Observable<T | null> {
-    return from(
-      this.supabase.from(table).select('*').eq('slug', slug).single()
-    ).pipe(
-      map((response: PostgrestSingleResponse<T>) => {
-        if (response.error) throw new Error(response.error.message);
-        return response.data ? this.processImage(response.data) : null;
-      })
-    );
-  }
+getBySlug<T>(table: string, slug: string): Observable<T | null> {
+  return from(
+    this.supabase.from(table).select('*').eq('slug', slug).single()
+  ).pipe(
+    switchMap((response: PostgrestSingleResponse<any>) => {
+      if (response.error) throw new Error(response.error.message);
+      const data = response.data ? this.processImage(response.data) : null;
+
+      if (!data || table !== 'offer_pages' || !Array.isArray(data.sections)) {
+        return of(toCamelCase<T>(data));
+      }
+
+      const allIds = data.sections.flatMap((section: any) =>
+        Array.isArray(section.services) ? section.services : []
+      );
+      const uniqueIds = [...new Set(allIds)];
+
+      return from(
+        this.supabase.from('offer_items').select('*').in('id', uniqueIds)
+      ).pipe(
+        map((itemsResponse: PostgrestSingleResponse<any[]>) => {
+          if (itemsResponse.error) throw new Error(itemsResponse.error.message);
+          const itemsMap = new Map(
+            (itemsResponse.data || []).map((item) => [item.id, toCamelCase(item)])
+          );
+
+          const resolvedSections = data.sections.map((section: any) => ({
+            ...section,
+            services: (section.services || [])
+              .map((id: number) => itemsMap.get(id))
+              .filter(Boolean),
+          }));
+
+          return toCamelCase<T>({
+            ...data,
+            sections: resolvedSections,
+          });
+        })
+      );
+    })
+  );
+}
 
   /**
    * Tworzy nowy rekord w wybranej tabeli.

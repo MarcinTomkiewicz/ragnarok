@@ -35,9 +35,9 @@ export class NavbarComponent {
     {
       label: 'Oferta',
       children: [
-        { label: 'Wynajem Pomieszczeń', path: '/services/rooms' },
-        { label: 'Vouchery', path: '/services/vouchers' },
-        { label: 'Kursy', path: '/services/courses' },
+        { label: 'Wynajem Pomieszczeń', path: '/offers/rooms' },
+        { label: 'Vouchery', path: '/offers/vouchers' },
+        { label: 'Kursy', path: '/offers/courses' },
         { label: 'Sklep', path: '/offers-list' },
       ],
     },
