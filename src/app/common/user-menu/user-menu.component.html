@@ -4,14 +4,11 @@
   </span>
 
   @if (isOpen) {
-    <div class="submenu" (click)="$event.stopPropagation()">
-      @if (!auth.user()) {
-        <app-login />
-      } @else {
-        <div class="d-flex flex-column align-items-center justify-content-center py-3">          
-        <button class="btn btn-primary" (click)="auth.logout().subscribe()">Wyloguj</button>
-        </div>
-      }
-    </div>
+  <div class="submenu" (click)="$event.stopPropagation()">
+    @if (!auth.user()) {
+    <app-login />
+    } @else {
+    <app-user-menu-panel></app-user-menu-panel> }
+  </div>
   }
 </div>

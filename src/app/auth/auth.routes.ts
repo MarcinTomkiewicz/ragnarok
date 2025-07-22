@@ -10,5 +10,12 @@ export const AUTH_ROUTES: Routes = [
         (m) => m.RegistrationComponent
       ),
   },
+    {
+    path: 'edit-data',
+    loadComponent: () =>
+      import('./components/edit-data/edit-data.component').then(
+        (m) => m.EditDataComponent
+      ),
+  },
 ];
 

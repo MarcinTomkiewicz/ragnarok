@@ -1,11 +1,16 @@
 <div class="registration-panel">
   <h3 class="panel-title">Zarejestruj się</h3>
 
-  <form [formGroup]="registerForm" (ngSubmit)="register()" class="registration-form">
+  <form
+    [formGroup]="registerForm"
+    (ngSubmit)="register()"
+    class="registration-form"
+  >
     <app-user-form
       [form]="registerForm"
       [showEmail]="true"
       [showPassword]="true"
+
     />
 
     <button
@@ -17,11 +22,14 @@
     </button>
 
     <ng-template #registrationSuccessToast>
-      <strong>Sukces!</strong> Rejestracja zakończona pomyślnie.
+      <div class="toast-body d-flex flex-column align-items-center">
+        <span><strong>Sukces!</strong> Rejestracja zakończona pomyślnie.</span>
+        <span>Sprawdź swoją skrzynkę e-mail, aby aktywować konto.</span>
+      </div>
     </ng-template>
   </form>
 
   @if (errorMessage) {
-    <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
+  <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
   }
 </div>

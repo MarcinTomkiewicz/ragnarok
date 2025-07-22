@@ -1,14 +1,14 @@
-import { Component, effect, inject } from '@angular/core';
+import { Component, effect, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LoginComponent } from '../../auth/components/login/login.component';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { IUser } from '../../core/interfaces/i-user';
-
+import { UserMenuPanelComponent } from "../../auth/common/user-menu-panel/user-menu-panel.component";
 
 @Component({
   selector: 'app-user-menu',
   standalone: true,
-  imports: [CommonModule, LoginComponent],
+  imports: [CommonModule, LoginComponent, UserMenuPanelComponent],
   templateUrl: './user-menu.component.html',
   styleUrls: ['./user-menu.component.scss'],
 })
@@ -31,7 +31,8 @@ export class UserMenuComponent {
     this.isOpen = !this.isOpen;
   }
 
-  handleClickOutside(event: Event) {
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.user-menu')) {
       this.isOpen = false;

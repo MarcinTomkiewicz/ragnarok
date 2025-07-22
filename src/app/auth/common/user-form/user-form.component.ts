@@ -1,5 +1,5 @@
-import { Component, Input, OnInit, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
@@ -16,8 +16,7 @@ export class UserFormComponent implements OnInit {
   readonly disabledEmail = input(false);
 
   ngOnInit(): void {
-    if (this.disabledEmail()) {
-      this.form().get('email')?.disable();
-    }
+    console.log('UserFormComponent initialized with form:', this.form().get('email')?.value);
+    
   }
 }

@@ -34,7 +34,7 @@ export class RegistrationComponent {
 
   readonly successToast = viewChild<TemplateRef<unknown>>('registrationSuccessToast');
 
-  readonly registerForm = createUserForm(this.fb, true);
+  readonly registerForm = createUserForm(this.fb, true, true);
 
   errorMessage: string | null = null;
 

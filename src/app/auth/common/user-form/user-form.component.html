@@ -1,15 +1,23 @@
 <div [formGroup]="form()" class="user-form">
   @if (showEmail()) {
-    <div class="form-group">
-      <label for="email">E-mail</label>
-      <input
-        id="email"
-        type="email"
-        class="form-control"
-        formControlName="email"
-      />
-    </div>
-  }
+    @if (!disabledEmail()) {
+      <!-- INPUT jeśli email nie jest zablokowany -->
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          class="form-control"
+          formControlName="email"
+        />
+      </div>
+    } @else {
+      <div class="form-group">
+        <label>E-mail</label>
+        <p class="m-0">{{ form().get('email')?.value }}</p>
+      </div>
+    }
+  } 
 
   @if (showPassword()) {
     <div class="form-group">

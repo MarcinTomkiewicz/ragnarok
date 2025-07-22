@@ -2,9 +2,10 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 export function createUserForm(
   fb: FormBuilder,
-  includeAuthFields = false
+  includeEmail = false,
+  includePassword = false
 ): FormGroup {
-  const controls: any = {
+  const controls: Record<string, any> = {
     firstName: [''],
     phoneNumber: [''],
     city: [''],
@@ -18,9 +19,12 @@ export function createUserForm(
     extendedDescription: [''],
   };
 
-  if (includeAuthFields) {
-    controls.email = ['', [Validators.required, Validators.email]];
-    controls.password = ['', [Validators.required, Validators.minLength(6)]];
+  if (includeEmail) {
+    controls['email'] = ['', [Validators.required, Validators.email]];
+  }
+
+  if (includePassword) {
+    controls['password'] = ['', [Validators.required, Validators.minLength(6)]];
   }
 
   return fb.group(controls);

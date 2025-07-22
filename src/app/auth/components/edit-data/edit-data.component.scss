@@ -1,0 +1,9 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "../registration/registration.component.scss";
+
+
+.edit-data-panel {
+  @extend .registration-panel;
+    max-width: 100%;
+}

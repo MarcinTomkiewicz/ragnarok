@@ -1,0 +1,11 @@
+<div class="menu-panel d-flex flex-column align-items-center">
+  <span class="menu-title fw-bold text-center">Witaj, {{ username }}!</span>
+
+  <a class="menu-item w-100 text-center" href="/auth/edit-data">Edytuj dane</a>
+  <a class="menu-item w-100 text-center" href="#">Twoje sesje</a>
+  <a class="menu-item w-100 text-center" href="#">Zarządzaj kontem</a>
+
+  <hr class="menu-divider w-100 my-2" />
+
+  <a class="menu-item w-100 text-center" href="#" (click)="logout()">Wyloguj</a>
+</div>

@@ -11,5 +11,6 @@ import { RouterLink } from '@angular/router';
 export class HeaderComponent {
   title = signal('Gdzie legendy pisze się kostkami');
   subtitle = signal('Twoja przygoda zaczyna się tutaj!');
-  ctaText = signal('Złoty Bilet do Valhalli!');
+  ctaText = signal('Dołącz do Klubu Gier Fabularnych');
+  link = signal('/memberships');
 }
