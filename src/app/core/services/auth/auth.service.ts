@@ -1,17 +1,20 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { SupabaseService } from '../supabase/supabase.service';
-import { from, map, Observable, of, switchMap } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { toCamelCase, toSnakeCase } from '../../utils/type-mappers';
 import { PlatformService } from '../platform/platform.service';
 import { Responses } from '../../enums/responses';
 import { IUser } from '../../interfaces/i-user';
+import { AuthError } from '@supabase/supabase-js';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly platformService = inject(PlatformService);
   private readonly supabase = inject(SupabaseService).getClient();
   private readonly _user = signal<IUser | null>(null);
+  private readonly router = inject(Router);
   readonly user = computed(() => this._user());
 
   constructor() {
@@ -58,8 +61,6 @@ export class AuthService {
           switchMap((response) => {
             if (response.error) return of(response.error.message);
             this._user.set(toCamelCase<IUser>(response.data));
-            console.log('User logged in:', this._user());
-
             return of(Responses.Success);
           })
         );
@@ -92,18 +93,34 @@ export class AuthService {
       ...data,
     });
 
-    console.log('Updating user data:', payload);
-
     return from(this.supabase.from('users').upsert([payload])).pipe(
       map(({ error }) => (error ? error.message : null))
     );
   }
 
-  logout() {
-    return from(this.supabase.auth.signOut()).pipe(
-      switchMap(() => {
-        this._user.set(null);
-        return of(void 0);
+  logout(): Observable<void> {
+    return from(this.supabase.auth.getSession()).pipe(
+      switchMap(({ data }) => {
+        if (!data.session) {
+          // Brak sesji – fallback: czyść lokalnie i przekieruj
+          localStorage.removeItem('supabase.auth.token');
+          this._user.set(null);
+          this.router.navigate(['/']);
+          return of(void 0);
+        }
+
+        return from(this.supabase.auth.signOut({ scope: 'local' })).pipe(
+          catchError((err) => {
+            console.warn('Logout error:', err?.message || err);
+            localStorage.removeItem('supabase.auth.token');
+            return of({ error: null });
+          }),
+          tap(() => {
+            this._user.set(null);
+            this.router.navigate(['/']);
+          }),
+          map(() => void 0)
+        );
       })
     );
   }

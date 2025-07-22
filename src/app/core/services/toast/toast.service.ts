@@ -1,28 +1,26 @@
 import { Injectable, TemplateRef, inject, signal } from '@angular/core';
 
 export interface Toast {
-	template: TemplateRef<any>;
-	classname?: string;
-	delay?: number;
+  template: TemplateRef<any>;
+  classname?: string;
+  delay?: number;
   header?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ToastService {
-	private readonly _toasts = signal<Toast[]>([]);
-	readonly toasts = this._toasts.asReadonly();
+  private readonly _toasts = signal<Toast[]>([]);
+  readonly toasts = this._toasts.asReadonly();
 
-	show(toast: Toast) {
-    console.log('ToastService: Showing toast', toast);
-    
-		this._toasts.update((toasts) => [...toasts, toast]);
-	}
+  show(toast: Toast) {
+    this._toasts.update((toasts) => [...toasts, toast]);
+  }
 
-	remove(toast: Toast) {
-		this._toasts.update((toasts) => toasts.filter((t) => t !== toast));
-	}
+  remove(toast: Toast) {
+    this._toasts.update((toasts) => toasts.filter((t) => t !== toast));
+  }
 
-	clear() {
-		this._toasts.set([]);
-	}
+  clear() {
+    this._toasts.set([]);
+  }
 }

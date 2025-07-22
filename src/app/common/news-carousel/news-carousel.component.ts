@@ -34,10 +34,6 @@ export class NewsCarouselComponent {
     } else {
       this.router.navigateByUrl(link); // Zamiast window.location.href
     }
-  }
-
-  log(data: any) {
-    console.log(data);
   } 
 
   private authorCache = new Map<string, Observable<any>>();
