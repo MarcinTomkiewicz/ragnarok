@@ -5,8 +5,13 @@
 
   @if (isOpen) {
     <div class="submenu" (click)="$event.stopPropagation()">
-      <app-login></app-login>
+      @if (!auth.user()) {
+        <app-login />
+      } @else {
+        <div>
+        <button class="btn btn-primary" (click)="auth.logout().subscribe()">Wyloguj</button>
+        </div>
+      }
     </div>
   }
 </div>
-

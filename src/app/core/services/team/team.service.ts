@@ -20,7 +20,7 @@ export class TeamService {
       { width: 234, height: 234 }
     ).pipe(
       map((data) =>
-        data.filter((member) => member.isActive && member.role !== Roles.GM)
+        data.filter((member) => member.isActive && member.role !== Roles.Gm)
       )
     );
   }

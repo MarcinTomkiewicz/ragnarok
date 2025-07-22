@@ -42,7 +42,7 @@ export class TechStackComponent implements OnInit {
     this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc', undefined, { width: 234, height: 234 })
       .subscribe({
         next: (data) => {
-          const filtered = data.filter((item) => item.isActive && item.role === Roles.GM);
+          const filtered = data.filter((item) => item.isActive && item.role === Roles.Gm);
           if (filtered.length === 0) {
             this.error.set('Nie znaleziono żadnych aktywnych członków zespołu.');
           } else {

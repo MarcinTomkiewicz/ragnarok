@@ -1,73 +1,66 @@
-import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { SupabaseService } from '../supabase/supabase.service';
+import { from, of, switchMap } from 'rxjs';
+import { IUser } from '../../interfaces/i-user';
+import { toCamelCase } from '../../utils/type-mappers';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly supabaseService = inject(SupabaseService)
-  private readonly supabaseClient = this.supabaseService.getClient();
+  private readonly supabase = inject(SupabaseService).getClient();
+  private readonly _user = signal<IUser | null>(null);
+  readonly user = computed(() => this._user());
 
+  constructor() {
+    this.loadUserFromSession(); // odpala na starcie
+    this.supabase.auth.onAuthStateChange(() => this.loadUserFromSession());
+  }
 
-  // Logowanie użytkownika
-  login(email: string, password: string): Observable<string | null> {
-    return new Observable<string | null>((observer) => {
-      this.supabaseClient.auth
-        .signInWithPassword({ email, password })
-        .then(({ error,  }) => {
-          if (error) {
-            observer.next(error.message);
-          } else {
-            observer.next(error);
-          }
-          observer.complete();
+  private loadUserFromSession() {
+    from(this.supabase.auth.getUser())
+      .pipe(
+        switchMap(({ data }) => {
+          const id = data?.user?.id;
+          if (!id) return of(null);
+
+          return from(
+            this.supabase.from('users').select('*').eq('id', id).single()
+          );
         })
-        .catch((err) => {
-          observer.error(err);
-        });
-    });
+      )
+      .subscribe((response) => {
+        if (!response || response.error) {
+          this._user.set(null);
+        } else {
+          this._user.set(toCamelCase<IUser>(response.data));
+        }
+      });
   }
 
-  // Rejestracja użytkownika
-  register(pseudonim: string, email: string, password: string): Observable<string | null> {
-    return new Observable<string | null>((observer) => {
-      this.supabaseClient.auth
-        .signUp({ email, password })
-        .then(async ({ error }) => {
-          if (error) {
-            observer.next(error.message);
-          } else {
-            const { data, error: userError } = await this.supabaseClient
-              .from('users')
-              .upsert([{ pseudonim, email }]);
-
-            observer.next(userError ? userError.message : null);
-          }
-          observer.complete();
-        })
-        .catch((err) => {
-          observer.error(err);
-        });
-    });
+  login(email: string, password: string) {
+    return from(
+      this.supabase.auth.signInWithPassword({ email, password })
+    ).pipe(
+      switchMap(({ data, error }) => {
+        if (error) return of(error.message);
+        return from(
+          this.supabase.from('users').select('*').eq('id', data.user.id).single()
+        ).pipe(
+          switchMap((response) => {
+            if (response.error) return of(response.error.message);
+            this._user.set(toCamelCase<IUser>(response.data));
+            return of(null);
+          })
+        );
+      })
+    );
   }
 
-  // Wylogowanie
-  logout(): Observable<void> {
-    return new Observable<void>((observer) => {
-      this.supabaseClient.auth
-        .signOut()
-        .then(() => observer.complete())
-        .catch((err) => observer.error(err));
-    });
-  }
-
-  // Sprawdzenie aktualnie zalogowanego użytkownika
-  getCurrentUser(): Observable<any> {
-    return new Observable((observer) => {
-      const user = this.supabaseClient.auth.getUser();
-      observer.next(user);
-      observer.complete();
-    });
+  logout() {
+    return from(this.supabase.auth.signOut()).pipe(
+      switchMap(() => {
+        this._user.set(null);
+        return of(void 0);
+      })
+    );
   }
 }
