@@ -1,4 +1,29 @@
-<div [formGroup]="form">
+<div [formGroup]="form()" class="user-form">
+  @if (showEmail()) {
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input
+        id="email"
+        type="email"
+        class="form-control"
+        formControlName="email"
+      />
+    </div>
+  }
+
+  @if (showPassword()) {
+    <div class="form-group">
+      <label for="password">Hasło</label>
+      <input
+        id="password"
+        type="password"
+        class="form-control"
+        formControlName="password"
+      />
+    </div>
+  }
+
+  <!-- Pozostałe pola -->
   <div class="form-group">
     <label for="firstName">Imię</label>
     <input id="firstName" type="text" class="form-control" formControlName="firstName" />

@@ -1,0 +1,72 @@
+@import '../abstracts/variables';
+@import '../abstracts/mixins';
+
+.form-panel {
+  background-color: $bg-color-light;
+  color: $text-color;
+  padding: 2rem;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  width: 100%;
+  margin: 0 auto;
+  text-align: left;
+
+  .panel-title {
+    font-size: $font-size-xl;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: $primary-color;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: $font-size-sm;
+      color: $secondary-text-color;
+    }
+
+    .form-control {
+      @include form-control;
+      width: 100%;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+    }
+
+    .invalid-feedback {
+      font-size: $font-size-xs;
+      color: $danger-color;
+      margin-top: 0.25rem;
+    }
+  }
+
+//   .btn-primary {
+//     background-color: $primary-color;
+//     color: $button-text-color;
+//     border: none;
+//     padding: 0.5rem 1rem;
+//     font-size: $font-size-md;
+//     font-weight: bold;
+//     border-radius: 6px;
+//     width: 100%;
+//     transition: background-color $transition-fast;
+
+//     &:hover {
+//       background-color: $hover-color;
+//     }
+
+//     &:disabled {
+//       background-color: lighten($primary-color, 20%);
+//       cursor: not-allowed;
+//     }
+//   }
+
+  .text-danger {
+    font-size: $font-size-sm;
+    margin-top: 1rem;
+  }
+}

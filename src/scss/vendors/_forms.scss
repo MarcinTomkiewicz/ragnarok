@@ -1,0 +1,28 @@
+@import '../abstracts/variables';
+@import '../abstracts/mixins';
+
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: $font-size-sm;
+    color: $secondary-text-color;
+  }
+
+  .form-control {
+    @include form-control;
+    width: 100%;
+  }
+
+  .invalid-feedback {
+    font-size: $font-size-xs;
+    color: $danger-color;
+    margin-top: 0.25rem;
+  }
+
+  textarea.form-control {
+    resize: vertical;
+  }
+}

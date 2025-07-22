@@ -34,6 +34,7 @@
 @import "layouts/main";
 @import "layouts/div";
 @import "layouts/table";
+@import "layouts/form-panel";
 
 // Vendors (Bootstrap)
 @import "bootstrap/scss/bootstrap";
@@ -51,6 +52,7 @@
 @import "vendors/typeahead";
 @import "vendors/tooltip";
 @import "vendors/list";
+@import "vendors/forms";
 
 @import "@fontsource/modern-antiqua/index.css";
 @import "@fontsource/cinzel/index.css";

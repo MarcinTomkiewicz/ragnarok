@@ -1,7 +1,10 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
-export function createUserForm(fb: FormBuilder): FormGroup {
-  return fb.group({
+export function createUserForm(
+  fb: FormBuilder,
+  includeAuthFields = false
+): FormGroup {
+  const controls: any = {
     firstName: [''],
     phoneNumber: [''],
     city: [''],
@@ -13,5 +16,12 @@ export function createUserForm(fb: FormBuilder): FormGroup {
     shortDescription: [''],
     longDescription: [''],
     extendedDescription: [''],
-  });
+  };
+
+  if (includeAuthFields) {
+    controls.email = ['', [Validators.required, Validators.email]];
+    controls.password = ['', [Validators.required, Validators.minLength(6)]];
+  }
+
+  return fb.group(controls);
 }

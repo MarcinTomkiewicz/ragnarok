@@ -67,11 +67,32 @@ export class AuthService {
     );
   }
 
-  register(email: string, password: string): Observable<string | null> {
-    return from(this.supabase.auth.signUp({ email, password })).pipe(
-      map(({ error }) => (error ? error.message : null))
-    );
-  }
+ register(
+  email: string,
+  password: string,
+  userData: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>
+): Observable<string | null> {
+  return from(
+    this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData,
+      },
+    })
+  ).pipe(
+    switchMap(({ error }) => {
+      if (error) {
+        return of(error.message);
+      }
+
+      return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
+        map(({ error }) => (error ? error.message : null))
+      );
+    })
+  );
+}
+
 
   updateUserData(data: Partial<IUser>): Observable<string | null> {
     return from(this.supabase.from('users').upsert([data])).pipe(
