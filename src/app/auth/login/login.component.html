@@ -13,10 +13,14 @@
         type="email"
         class="form-control"
         formControlName="email"
-        [class.is-invalid]="loginForm.controls['email'].invalid && loginForm.controls['email'].touched"
+        [class.is-invalid]="
+          loginForm.controls['email'].invalid &&
+          loginForm.controls['email'].touched
+        "
       />
-      @if (loginForm.controls['email'].invalid && loginForm.controls['email'].touched) {
-        <div class="invalid-feedback">Podaj poprawny e-mail.</div>
+      @if (loginForm.controls['email'].invalid &&
+      loginForm.controls['email'].touched) {
+      <div class="invalid-feedback">Podaj poprawny e-mail.</div>
       }
     </div>
 
@@ -27,19 +31,30 @@
         type="password"
         class="form-control"
         formControlName="password"
-        [class.is-invalid]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched"
+        [class.is-invalid]="
+          loginForm.controls['password'].invalid &&
+          loginForm.controls['password'].touched
+        "
       />
-      @if (loginForm.controls['password'].invalid && loginForm.controls['password'].touched) {
-        <div class="invalid-feedback">Hasło musi mieć co najmniej 6 znaków.</div>
+      @if (loginForm.controls['password'].invalid &&
+      loginForm.controls['password'].touched) {
+      <div class="invalid-feedback">Hasło musi mieć co najmniej 6 znaków.</div>
       }
     </div>
 
-    <button type="submit" class="btn btn-primary w-100 mt-3" [disabled]="loginForm.invalid">
+    <button
+      type="submit"
+      class="btn btn-primary w-100 mt-3"
+      [disabled]="loginForm.invalid"
+    >
       Zaloguj
     </button>
+    <ng-template #loginSuccessToast>
+      <strong>Sukces!</strong> Zalogowano pomyślnie.
+    </ng-template>
   </form>
 
   @if (errorMessage) {
-    <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
+  <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
   }
 </div>

@@ -11,6 +11,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { PlatformService } from './core/services/platform/platform.service';
 import { SeoService } from './core/services/seo/seo.service'; // Wstrzykiwanie SeoService
+import { ToastContainerComponent } from './common/toast-container/toast-container.component';
 
 declare let fbq: Function;
 declare let gtag: Function;
@@ -24,6 +25,7 @@ declare let gtag: Function;
     RouterOutlet,
     NavbarComponent,
     HeaderComponent,
+    ToastContainerComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',

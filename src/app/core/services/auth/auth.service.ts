@@ -3,23 +3,28 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { from, of, switchMap } from 'rxjs';
 import { IUser } from '../../interfaces/i-user';
 import { toCamelCase } from '../../utils/type-mappers';
+import { PlatformService } from '../platform/platform.service';
+import { Responses } from '../../enums/responses';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly platformService = inject(PlatformService);
   private readonly supabase = inject(SupabaseService).getClient();
   private readonly _user = signal<IUser | null>(null);
   readonly user = computed(() => this._user());
 
   constructor() {
-    this.loadUserFromSession(); // odpala na starcie
-    this.supabase.auth.onAuthStateChange(() => this.loadUserFromSession());
+    if (this.platformService.isBrowser) {
+      this.loadUserFromSession();
+      this.supabase.auth.onAuthStateChange(() => this.loadUserFromSession());
+    }
   }
 
   private loadUserFromSession() {
-    from(this.supabase.auth.getUser())
+    from(this.supabase.auth.getSession())
       .pipe(
         switchMap(({ data }) => {
-          const id = data?.user?.id;
+          const id = data?.session?.user?.id;
           if (!id) return of(null);
 
           return from(
@@ -43,12 +48,18 @@ export class AuthService {
       switchMap(({ data, error }) => {
         if (error) return of(error.message);
         return from(
-          this.supabase.from('users').select('*').eq('id', data.user.id).single()
+          this.supabase
+            .from('users')
+            .select('*')
+            .eq('id', data.user.id)
+            .single()
         ).pipe(
           switchMap((response) => {
             if (response.error) return of(response.error.message);
             this._user.set(toCamelCase<IUser>(response.data));
-            return of(null);
+            console.log('User logged in:', this._user());
+
+            return of(Responses.Success);
           })
         );
       })
