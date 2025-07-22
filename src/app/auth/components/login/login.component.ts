@@ -7,11 +7,11 @@ import {
 } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { SupabaseService } from '../../core/services/supabase/supabase.service';
-import { AuthService } from '../../core/services/auth/auth.service';
-import { LoaderService } from '../../core/services/loader/loader.service';
-import { ToastService } from '../../core/services/toast/toast.service';
-import { Responses } from '../../core/enums/responses';
+import { SupabaseService } from '../../../core/services/supabase/supabase.service';
+import { AuthService } from '../../../core/services/auth/auth.service';
+import { LoaderService } from '../../../core/services/loader/loader.service';
+import { ToastService } from '../../../core/services/toast/toast.service';
+import { Responses } from '../../../core/enums/responses';
 
 @Component({
   selector: 'app-login',

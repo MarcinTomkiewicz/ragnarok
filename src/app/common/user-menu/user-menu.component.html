@@ -8,7 +8,7 @@
       @if (!auth.user()) {
         <app-login />
       } @else {
-        <div>
+        <div class="d-flex flex-column align-items-center justify-content-center py-3">          
         <button class="btn btn-primary" (click)="auth.logout().subscribe()">Wyloguj</button>
         </div>
       }

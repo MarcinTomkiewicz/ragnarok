@@ -1,8 +1,9 @@
 import { Component, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LoginComponent } from '../../auth/login/login.component';
+import { LoginComponent } from '../../auth/components/login/login.component';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { IUser } from '../../core/interfaces/i-user';
+
 
 @Component({
   selector: 'app-user-menu',

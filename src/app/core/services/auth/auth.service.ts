@@ -1,10 +1,11 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { SupabaseService } from '../supabase/supabase.service';
-import { from, of, switchMap } from 'rxjs';
-import { IUser } from '../../interfaces/i-user';
+import { from, map, Observable, of, switchMap } from 'rxjs';
+
 import { toCamelCase } from '../../utils/type-mappers';
 import { PlatformService } from '../platform/platform.service';
 import { Responses } from '../../enums/responses';
+import { IUser } from '../../interfaces/i-user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -63,6 +64,18 @@ export class AuthService {
           })
         );
       })
+    );
+  }
+
+  register(email: string, password: string): Observable<string | null> {
+    return from(this.supabase.auth.signUp({ email, password })).pipe(
+      map(({ error }) => (error ? error.message : null))
+    );
+  }
+
+  updateUserData(data: Partial<IUser>): Observable<string | null> {
+    return from(this.supabase.from('users').upsert([data])).pipe(
+      map(({ error }) => (error ? error.message : null))
     );
   }
 

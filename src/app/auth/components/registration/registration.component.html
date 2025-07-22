@@ -1,0 +1,61 @@
+<div class="registration-panel">
+  <h3 class="panel-title">Zarejestruj się</h3>
+
+  <form [formGroup]="registerForm" (ngSubmit)="register()" class="registration-form">
+    <!-- Email -->
+    <div class="form-group">
+      <label for="email">E-mail</label>
+      <input
+        id="email"
+        type="email"
+        class="form-control"
+        formControlName="email"
+        [class.is-invalid]="
+          registerForm.controls['email'].invalid && registerForm.controls['email'].touched
+        "
+      />
+      @if (registerForm.controls['email'].invalid && registerForm.controls['email'].touched) {
+        <div class="invalid-feedback">Podaj poprawny e-mail.</div>
+      }
+    </div>
+
+    <!-- Hasło -->
+    <div class="form-group">
+      <label for="password">Hasło</label>
+      <input
+        id="password"
+        type="password"
+        class="form-control"
+        formControlName="password"
+        [class.is-invalid]="
+          registerForm.controls['password'].invalid && registerForm.controls['password'].touched
+        "
+      />
+      @if (registerForm.controls['password'].invalid && registerForm.controls['password'].touched) {
+        <div class="invalid-feedback">Hasło musi mieć co najmniej 6 znaków.</div>
+      }
+    </div>
+
+    <!-- Pozostałe dane użytkownika -->
+    <app-user-form [form]="userForm" />
+
+    <!-- Submit -->
+    <button
+      type="submit"
+      class="btn btn-primary w-100 mt-3"
+      [disabled]="registerForm.invalid || userForm.invalid"
+    >
+      Zarejestruj
+    </button>
+
+    <!-- Toast szablon -->
+    <ng-template #registrationSuccessToast>
+      <strong>Sukces!</strong> Rejestracja zakończona pomyślnie.
+    </ng-template>
+  </form>
+
+  <!-- Błąd -->
+  @if (errorMessage) {
+    <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
+  }
+</div>
