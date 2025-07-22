@@ -4,6 +4,18 @@
     <meta charset="utf-8" />
     <title>Ragnarok - pokoje do sesji RPG w Poznaniu</title>
     <base href="/" />
+
+    <!-- ✅ Cookiebot -->
+    <script
+      id="Cookiebot"
+      src="https://consent.cookiebot.com/uc.js"
+      data-cbid="1d8ccadf-618f-4df5-8913-9f1bf2d6ed32"
+      data-blockingmode="auto"
+      type="text/javascript"
+      async
+    ></script>
+
+    <!-- Other -->
     <link
       rel="preconnect"
       href="https://iqkltypxuzmchvxuzlcd.supabase.co"
@@ -61,54 +73,76 @@
       name="twitter:image"
       content="https://ragnarok-rooms.pl/ragnarok.webp"
     />
-
-    <!-- Google Tag Manager (preload, ale bez wykonania kodu) -->
-    <link
-      rel="preload"
-      as="script"
-      href="https://www.googletagmanager.com/gtm.js?id=GTM-P5FPPLDC"
-    />
   </head>
   <body>
-    <!-- Google Tag Manager (noscript) -->
+    <!-- ✅ GTM noscript z Cookiebot -->
     <noscript>
       <iframe
         src="https://www.googletagmanager.com/ns.html?id=GTM-P5FPPLDC"
         height="0"
         width="0"
         style="display: none; visibility: hidden"
+        data-cookieconsent="marketing"
         title="Google Tag Manager"
       ></iframe>
     </noscript>
-    <!-- End Google Tag Manager (noscript) -->
 
     <app-root></app-root>
 
-    <!-- Google Maps API -->
-    <!-- <script
-      loading="async"
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs&libraries=places"
-    ></script> -->
-
+    <!-- Google Maps API (nie objęty przez Cookiebot, bez zmian) -->
     <script>
-      (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+      (g => {
+        var h, a, k,
+          p = "The Google Maps JavaScript API",
+          c = "google",
+          l = "importLibrary",
+          q = "__ib__",
+          m = document,
+          b = window;
+        b = b[c] || (b[c] = {});
+        var d = b.maps || (b.maps = {}),
+          r = new Set(),
+          e = new URLSearchParams(),
+          u = () =>
+            h ||
+            (h = new Promise(async (f, n) => {
+              await (a = m.createElement("script"));
+              e.set("libraries", [...r] + "");
+              for (k in g)
+                e.set(
+                  k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()),
+                  g[k]
+                );
+              e.set("callback", c + ".maps." + q);
+              a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+              d[q] = f;
+              a.onerror = () => (h = n(Error(p + " could not load.")));
+              a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+              m.head.append(a);
+            }));
+        d[l]
+          ? console.warn(p + " only loads once. Ignoring:", g)
+          : (d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)));
+      })({
         v: "weekly",
-        key: "AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs"
+        key: "AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs",
       });
     </script>
 
-    <!-- Google Tag Manager -->
+    <!-- ✅ GTM zablokowany przez Cookiebot -->
     <script
-      defer
+      type="text/plain"
+      data-cookieconsent="marketing"
       src="https://www.googletagmanager.com/gtm.js?id=GTM-P5FPPLDC"
     ></script>
 
-    <!-- Google Analytics -->
+    <!-- ✅ Google Analytics zablokowany przez Cookiebot -->
     <script
-      defer
+      type="text/plain"
+      data-cookieconsent="marketing"
       src="https://www.googletagmanager.com/gtag/js?id=AW-16834781429"
     ></script>
-    <script>
+    <script type="text/plain" data-cookieconsent="marketing">
       window.dataLayer = window.dataLayer || [];
       function gtag() {
         dataLayer.push(arguments);
