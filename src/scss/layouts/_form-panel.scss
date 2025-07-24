@@ -10,6 +10,9 @@
   width: 100%;
   margin: 0 auto;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   .panel-title {
     font-size: $font-size-xl;
@@ -43,27 +46,6 @@
       margin-top: 0.25rem;
     }
   }
-
-//   .btn-primary {
-//     background-color: $primary-color;
-//     color: $button-text-color;
-//     border: none;
-//     padding: 0.5rem 1rem;
-//     font-size: $font-size-md;
-//     font-weight: bold;
-//     border-radius: 6px;
-//     width: 100%;
-//     transition: background-color $transition-fast;
-
-//     &:hover {
-//       background-color: $hover-color;
-//     }
-
-//     &:disabled {
-//       background-color: lighten($primary-color, 20%);
-//       cursor: not-allowed;
-//     }
-//   }
 
   .text-danger {
     font-size: $font-size-sm;

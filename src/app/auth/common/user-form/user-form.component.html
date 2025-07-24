@@ -2,7 +2,7 @@
   @if (showEmail()) {
     @if (!disabledEmail()) {
       <!-- INPUT jeśli email nie jest zablokowany -->
-      <div class="form-group">
+      <div class="form-group w-75">
         <label for="email">E-mail</label>
         <input
           id="email"
@@ -12,7 +12,7 @@
         />
       </div>
     } @else {
-      <div class="form-group">
+      <div class="form-group w-75">
         <label>E-mail</label>
         <p class="m-0">{{ form().get('email')?.value }}</p>
       </div>
@@ -20,7 +20,7 @@
   } 
 
   @if (showPassword()) {
-    <div class="form-group">
+    <div class="form-group w-75">
       <label for="password">Hasło</label>
       <input
         id="password"
@@ -32,57 +32,57 @@
   }
 
   <!-- Pozostałe pola -->
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="firstName">Imię</label>
     <input id="firstName" type="text" class="form-control" formControlName="firstName" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="phoneNumber">Telefon</label>
     <input id="phoneNumber" type="text" class="form-control" formControlName="phoneNumber" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="city">Miasto</label>
     <input id="city" type="text" class="form-control" formControlName="city" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="street">Ulica</label>
     <input id="street" type="text" class="form-control" formControlName="street" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="houseNumber">Numer domu</label>
     <input id="houseNumber" type="text" class="form-control" formControlName="houseNumber" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="apartmentNumber">Numer mieszkania</label>
     <input id="apartmentNumber" type="text" class="form-control" formControlName="apartmentNumber" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="postalCode">Kod pocztowy</label>
     <input id="postalCode" type="text" class="form-control" formControlName="postalCode" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="age">Wiek</label>
     <input id="age" type="number" class="form-control" formControlName="age" />
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="shortDescription">Krótki opis</label>
     <textarea id="shortDescription" class="form-control" formControlName="shortDescription" rows="2"></textarea>
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="longDescription">Dłuższy opis</label>
     <textarea id="longDescription" class="form-control" formControlName="longDescription" rows="3"></textarea>
   </div>
 
-  <div class="form-group">
+  <div class="form-group w-75">
     <label for="extendedDescription">Rozszerzony opis</label>
     <textarea id="extendedDescription" class="form-control" formControlName="extendedDescription" rows="4"></textarea>
   </div>

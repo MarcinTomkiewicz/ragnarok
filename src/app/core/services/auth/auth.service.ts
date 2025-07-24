@@ -19,30 +19,40 @@ export class AuthService {
 
   constructor() {
     if (this.platformService.isBrowser) {
-      this.loadUserFromSession();
-      this.supabase.auth.onAuthStateChange(() => this.loadUserFromSession());
+      this.loadUser().subscribe();
+      this.supabase.auth.onAuthStateChange(() => void this.loadUser().subscribe());
     }
   }
 
-  private loadUserFromSession() {
-    from(this.supabase.auth.getSession())
-      .pipe(
-        switchMap(({ data }) => {
-          const id = data?.session?.user?.id;
-          if (!id) return of(null);
-
-          return from(
-            this.supabase.from('users').select('*').eq('id', id).single()
-          );
-        })
-      )
-      .subscribe((response) => {
-        if (!response || response.error) {
+  loadUser(): Observable<IUser | null> {
+    return from(this.supabase.auth.getSession()).pipe(
+      switchMap(({ data }) => {
+        const id = data?.session?.user?.id;
+        if (!id) {
           this._user.set(null);
-        } else {
-          this._user.set(toCamelCase<IUser>(response.data));
+          return of(null);
         }
-      });
+
+        return from(
+          this.supabase.from('users').select('*').eq('id', id).single()
+        ).pipe(
+          map((response) => {
+            if (!response || response.error) {
+              this._user.set(null);
+              return null;
+            }
+
+            const user = toCamelCase<IUser>(response.data);
+            this._user.set(user);
+            return user;
+          })
+        );
+      }),
+      catchError(() => {
+        this._user.set(null);
+        return of(null);
+      })
+    );
   }
 
   login(email: string, password: string) {
@@ -98,30 +108,17 @@ export class AuthService {
     );
   }
 
-  logout(): Observable<void> {
-    return from(this.supabase.auth.getSession()).pipe(
-      switchMap(({ data }) => {
-        if (!data.session) {
-          // Brak sesji – fallback: czyść lokalnie i przekieruj
-          localStorage.removeItem('supabase.auth.token');
-          this._user.set(null);
-          this.router.navigate(['/']);
-          return of(void 0);
-        }
-
-        return from(this.supabase.auth.signOut({ scope: 'local' })).pipe(
-          catchError((err) => {
-            console.warn('Logout error:', err?.message || err);
-            localStorage.removeItem('supabase.auth.token');
-            return of({ error: null });
-          }),
-          tap(() => {
-            this._user.set(null);
-            this.router.navigate(['/']);
-          }),
-          map(() => void 0)
-        );
-      })
-    );
-  }
+logout(): Observable<void> {
+  return from(this.supabase.auth.signOut({ scope: 'local' })).pipe(
+    catchError((err) => {
+      console.warn('Logout error:', err?.message || err);
+      return of(void 0);
+    }),
+    tap(() => {
+      this._user.set(null);
+      this.router.navigate(['/']);
+    }),
+    map(() => void 0)
+  );
+}
 }

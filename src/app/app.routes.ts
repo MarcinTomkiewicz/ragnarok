@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
-import { AUTH_ROUTES } from './auth/auth.routes';
 import { ADMIN_ROUTES } from './admin/admin-routing';
+import { AUTH_ROUTES } from './auth/auth.routes';
+import { NotAuthorizedComponent } from './common/not-authorized/not-authorized.component';
 import { NotFoundComponent } from './common/not-found/not-found.component';
 
 export const routes: Routes = [
@@ -96,7 +97,7 @@ export const routes: Routes = [
         (m) => m.OffersPageComponent
       ),
   },
-    {
+  {
     path: 'memberships',
     loadComponent: () =>
       import('./components/club-membership/club-membership.component').then(
@@ -111,5 +112,6 @@ export const routes: Routes = [
       ).then((m) => m.SpecialOfferDetailsComponent),
   },
 
+  { path: 'not-authorized', component: NotAuthorizedComponent },
   { path: '**', component: NotFoundComponent },
 ];

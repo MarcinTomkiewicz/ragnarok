@@ -38,8 +38,11 @@ export class AuthGuard implements CanActivate {
       authOnly
     );
 
+    console.log(user);
+    
+
     if (!user && requiresAuth) {
-      return this.router.parseUrl('/auth/login');
+      return this.router.parseUrl('/not-authorized');
     }
 
     if (user) {

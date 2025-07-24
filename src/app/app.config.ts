@@ -9,6 +9,7 @@ import {
 } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { AppInitializerProvider } from './core/config/app.initializer';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,5 +23,6 @@ export const appConfig: ApplicationConfig = {
         includePostRequests: true,
       })
     ),
+    AppInitializerProvider
   ],
 };
