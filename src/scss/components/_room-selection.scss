@@ -3,8 +3,9 @@
 
 .room-selection-wrapper {
   @include section-wrapper;
-  max-width: 900px;
-  margin: 0 auto;
+
+  @include flex-center;
+  flex-direction: column;
 
   .room-buttons {
     @include flex-center;
@@ -45,6 +46,8 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-width: 810px;
+    width: 100%;
 
     .calendar-header {
       display: grid;
@@ -60,21 +63,31 @@
 
     .calendar-body {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 0.5rem;
+      grid-template-columns: repeat(7, 1fr); // dokładnie 7 kolumn
+      gap: 0.4rem;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
 
       .calendar-day {
         background-color: $bg-color-light;
         border: 1px solid $border-color;
-        padding: 0.75rem;
+        padding: 0.5rem 0.25rem;
         text-align: center;
         cursor: pointer;
         border-radius: 6px;
         transition: background-color 0.3s;
         color: $text-color;
+        font-size: 0.85rem;
+        min-width: 0;
+        min-height: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
 
         &.outside-month {
-          opacity: 0.3;
+          visibility: hidden;
         }
 
         &.reserved {
@@ -88,16 +101,33 @@
           color: $button-text-color;
         }
 
-        &:hover:not(.reserved) {
+        &:hover:not(.reserved):not(.disabled) {
           background-color: $hover-color;
         }
+
         &.disabled {
           opacity: 0.4;
           pointer-events: none;
           cursor: not-allowed;
         }
-        &.outside-month {
-          visibility: hidden;
+
+        .hour-grid {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 1px;
+          margin-top: 0.25rem;
+        }
+
+        .hour-block {
+          width: 6px;
+          height: 6px;
+          background-color: $success-color;
+          border-radius: 1px;
+
+          &.taken {
+            background-color: $danger-color;
+          }
         }
       }
     }

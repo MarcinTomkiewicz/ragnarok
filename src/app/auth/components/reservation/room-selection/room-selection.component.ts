@@ -43,7 +43,7 @@ export class RoomSelectionComponent {
   readonly maxMonth = startOfMonth(addMonths(new Date(), 1));
 
   readonly canGoPrev = computed(
-    () => this.currentMonth().getTime() > this.maxMonth.getTime()    
+    () => this.currentMonth().getTime() > this.maxMonth.getTime()
   );
   readonly canGoNext = computed(
     () => this.currentMonth().getTime() < this.maxMonth.getTime()
@@ -127,6 +127,31 @@ export class RoomSelectionComponent {
   isSameMonth(date: Date, base: Date): boolean {
     return isSameMonth(date, base);
   }
+
+  getHourlyAvailability(date: Date): boolean[] {
+    const startHour = 17;
+    const endHour = 23;
+    const slots = Array(endHour - startHour).fill(false); // false = wolne
+
+    const dateStr = formatFn(date, 'yyyy-MM-dd');
+    const reservations = this.reservationsMap().get(dateStr) || [];
+
+    for (const res of reservations) {
+      const resStart = parseInt(res.startTime.split(':')[0], 10);
+      const resEnd = resStart + res.durationHours;
+
+      for (let h = resStart; h < resEnd; h++) {
+        if (h >= startHour && h < endHour) {
+          slots[h - startHour] = true; // true = zajęte
+        }
+      }
+    }
+
+    return slots;
+  }
+
+  canShowHours = (day: Date) =>
+    !this.isPastDay(day) && this.isSameMonth(day, this.currentMonth());
 
   confirmSelection() {
     if (this.selectedRoom() && this.selectedDate()) {

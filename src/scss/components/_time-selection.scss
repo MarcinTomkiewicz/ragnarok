@@ -1,0 +1,33 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.time-selection-wrapper {
+  @include section-wrapper;
+
+  .hour-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .btn {
+    min-width: 70px;
+
+    &.active {
+      background-color: $primary-color;
+      color: $button-text-color;
+    }
+  }
+
+  .duration-picker {
+    margin-top: 2rem;
+    text-align: center;
+
+    .btn {
+      min-width: 60px;
+    }
+  }
+}

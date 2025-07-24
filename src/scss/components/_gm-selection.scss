@@ -1,0 +1,26 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.gm-selection-wrapper {
+  @include section-wrapper;
+  @include flex-wrapper(column, center, center);
+
+  .gm-grid {
+    @include flex-wrapper(row, center, center);
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 2rem 0;
+
+    .gm-btn {
+      min-width: 120px;
+      padding: 0.75rem 1.25rem;
+      font-size: $font-size-md;
+
+      &.active {
+        background-color: $primary-color;
+        color: $button-text-color;
+      }
+    }
+  }
+}

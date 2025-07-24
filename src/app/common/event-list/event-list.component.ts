@@ -25,13 +25,14 @@ export class EventListComponent {
   ngOnInit() {
     this.updateScreenState();
     if (this.platformService.isBrowser) {
-      fromEvent(window, 'resize')
-        .subscribe(() => this.updateScreenState());
+      fromEvent(window, 'resize').subscribe(() => this.updateScreenState());
     }
   }
 
   updateScreenState() {
-    this.isMobile = window.innerWidth < 600;    
+    if (this.platformService.isBrowser) {
+      this.isMobile = window.innerWidth < 600;
+    }
   }
 
   openFacebook(link: string) {
