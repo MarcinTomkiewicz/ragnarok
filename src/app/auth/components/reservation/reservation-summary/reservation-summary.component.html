@@ -1,0 +1,37 @@
+<div class="reservation-summary-wrapper">
+  <h2 class="section-title">Podsumowanie rezerwacji</h2>
+
+  <div class="summary-details">
+    <div class="summary-row">
+      <span class="label">Sala:</span>
+      <span class="value">{{ room() }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Data:</span>
+      <span class="value">{{ date() }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Godzina:</span>
+      <span class="value">{{ startTime() }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Czas trwania:</span>
+      <span class="value">{{ duration() }}h</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">MG potrzebny:</span>
+      <span class="value">{{ needsGm() ? 'Tak' : 'Nie' }}</span>
+    </div>
+    @if (needsGm() && gmFirstName()) {
+    <div class="summary-row">
+      <span class="label">Wybrany MG:</span>
+      <span class="value">{{ gmFirstName() }}</span>
+    </div>
+    }
+  </div>
+
+  <div class="d-flex justify-content-center gap-4 mt-4">
+    <button class="btn btn-outline" (click)="goBack.emit()">Wstecz</button>
+    <button class="btn btn-primary" (click)="confirm()">Rezerwuj</button>
+  </div>
+</div>

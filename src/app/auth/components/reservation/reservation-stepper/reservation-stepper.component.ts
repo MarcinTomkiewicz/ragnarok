@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { Rooms } from '../../../../core/enums/rooms';
 import { TimeSelectionComponent } from '../time-selection/time-selection.component';
 import { GmSelectionComponent } from '../gm-selection/gm-selection.component';
+import { ReservationSummaryComponent } from '../reservation-summary/reservation-summary.component';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -21,6 +22,7 @@ import { GmSelectionComponent } from '../gm-selection/gm-selection.component';
     RoomSelectionComponent,
     TimeSelectionComponent,
     GmSelectionComponent,
+    ReservationSummaryComponent,
   ],
   templateUrl: './reservation-stepper.component.html',
   styleUrls: ['./reservation-stepper.component.scss'],
@@ -35,6 +37,7 @@ export class ReservationStepperComponent {
   readonly selectedDuration = signal<number | null>(null);
   readonly needsGm = signal(false);
   readonly selectedGm = signal<string | null>(null);
+  readonly gmFirstName = signal<string | null>(null);
 
   handleRoomSelection(room: Rooms, date: string) {
     this.selectedRoom.set(room);
@@ -54,25 +57,25 @@ export class ReservationStepperComponent {
     if (needsGm) {
       this.step.set(3);
     } else {
-      this.finishReservation();
+      this.step.set(4);
     }
   }
 
-  handleGmSelection(gmName: string) {
-    this.selectedGm.set(gmName);
-    this.finishReservation();
+  handleGmSelection(gm: { id: string; firstName: string }) {
+    this.selectedGm.set(gm.id);
+    this.gmFirstName.set(gm.firstName);
+    this.step.set(4);
   }
 
-  finishReservation() {
-    console.log(
-      'Finalizing reservation with the following details:',
-      this.selectedRoom(),
-      this.selectedDate(),
-      this.selectedStartTime(),
-      this.selectedDuration(),
-      this.needsGm(),
-      this.selectedGm()
-    );
+  submitReservation() {
+    console.log('Finalizing reservation with the following details:', {
+      room: this.selectedRoom(),
+      date: this.selectedDate(),
+      startTime: this.selectedStartTime(),
+      duration: this.selectedDuration(),
+      needsGm: this.needsGm(),
+      gm: this.selectedGm(),
+    });
   }
 
   goBack() {

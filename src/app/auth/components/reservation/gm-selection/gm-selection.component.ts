@@ -1,9 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, output } from '@angular/core';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
-import { signal, output } from '@angular/core';
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 
 @Component({
@@ -17,12 +16,12 @@ export class GmSelectionComponent {
   private readonly backend = inject(BackendService);
   private readonly fb = inject(FormBuilder);
 
-  readonly gmSelected = output<string>();
+  readonly gmSelected = output<{ id: string; firstName: string }>();
   readonly goBack = output<void>();
 
   readonly systems = signal<IRPGSystem[]>([]);
   readonly gms = signal<IGmData[]>([]);
-  readonly selectedGmId = signal<string | null>(null);
+  readonly selectedGmId = signal<string | null>(null); // ← brakowało tego
 
   readonly form: FormGroup = this.fb.group({
     systemId: [null],
@@ -31,18 +30,14 @@ export class GmSelectionComponent {
   constructor() {
     this.loadSystems();
 
-    this.form
-      .get('systemId')
-      ?.valueChanges.subscribe((systemId: string | null) => {
-        if (systemId) {
-          console.log('Selected system ID:', systemId);
-          
-          this.loadGmsForSystem(systemId);
-        } else {
-          this.gms.set([]);
-          this.selectedGmId.set(null);
-        }
-      });
+    this.form.get('systemId')?.valueChanges.subscribe((systemId: string | null) => {
+      if (systemId) {
+        this.loadGmsForSystem(systemId);
+      } else {
+        this.gms.set([]);
+        this.selectedGmId.set(null);
+      }
+    });
   }
 
   loadSystems() {
@@ -52,22 +47,21 @@ export class GmSelectionComponent {
   }
 
   loadGmsForSystem(systemId: string) {
-    this.backend
-      .getAll<IGmData>('v_gm_specialties_with_user')
-
-      .subscribe((records) => {
-        const filtered = records.filter(
-          (r) => r.systemId === systemId
-        );
-        console.log(records, systemId, filtered);
-        
-        this.gms.set(filtered);
-      });
+    this.backend.getAll<IGmData>('v_gm_specialties_with_user').subscribe((records) => {
+      const filtered = records.filter((r) => r.systemId === systemId);
+      this.gms.set(filtered);
+    });
   }
 
   confirm() {
-    if (this.selectedGmId()) {
-      this.gmSelected.emit(this.selectedGmId()!);
+    const selectedId = this.selectedGmId();
+    const gm = this.gms().find((g) => g.userId === selectedId);
+
+    if (selectedId && gm?.firstName) {
+      this.gmSelected.emit({
+        id: selectedId,
+        firstName: gm.firstName,
+      });
     }
   }
 

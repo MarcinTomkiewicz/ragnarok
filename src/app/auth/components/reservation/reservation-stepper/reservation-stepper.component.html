@@ -20,9 +20,21 @@
         "
         (goBack)="goBack()"
       />
-      } @else if (step() === 3 && needsGm()) {
+      } @if (step() === 3 && needsGm()) {
       <app-gm-selection
         (gmSelected)="handleGmSelection($event)"
+        (goBack)="goBack()"
+      />
+      } @else if (step() === 4) {
+      <app-reservation-summary
+        [room]="selectedRoom()!"
+        [date]="selectedDate()!"
+        [startTime]="selectedStartTime()!"
+        [duration]="selectedDuration()!"
+        [needsGm]="needsGm()"
+        [gmId]="selectedGm()"
+        [gmFirstName]="gmFirstName()"
+        (confirmReservation)="submitReservation()"
         (goBack)="goBack()"
       />
       }

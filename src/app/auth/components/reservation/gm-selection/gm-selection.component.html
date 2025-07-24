@@ -17,7 +17,7 @@
       <div class="gm-grid">
         @for (gm of gms(); track gm.userId) {
           <button
-            class="btn btn-outline gm-btn"
+            class="btn btn-outline"
             [class.active]="selectedGmId() === gm.userId"
             (click)="selectedGmId.set(gm.userId)"
           >
