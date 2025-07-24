@@ -1,0 +1,68 @@
+<div class="room-selection-wrapper">
+  <h2 class="section-title">Wybierz salę do gry</h2>
+
+  <div class="room-buttons">
+    @for (room of rooms; track room) {
+    <button
+      class="btn btn-outline-light"
+      [class.active]="selectedRoom() === room"
+      (click)="selectedRoom.set(room)"
+    >
+      {{ room }}
+    </button>
+    }
+  </div>
+
+  <div class="calendar-nav">
+    <button
+      class="btn btn-sm btn-outline"
+      (click)="prevMonth()"
+      [style.visibility]="canGoPrev() ? 'visible' : 'hidden'"
+    >
+      «
+    </button>
+
+    <span class="calendar-title">{{ formattedCurrentMonth() }}</span>
+
+    <button
+      class="btn btn-sm btn-outline"
+      (click)="nextMonth()"
+      [style.visibility]="canGoNext() ? 'visible' : 'hidden'"
+    >
+      »
+    </button>
+  </div>
+
+  <div class="calendar">
+    <div class="calendar-header">
+      @for (dayName of dayNames; track dayName) {
+      <div class="day-name">
+        {{ dayName }}
+      </div>
+      }
+    </div>
+
+    <div class="calendar-body">
+      @for (day of visibleDays(); track day) {
+      <div
+        class="calendar-day"
+        [class.outside-month]="!isSameMonth(day, currentMonth())"
+        [class.selected]="selectedDate() === format(day, 'yyyy-MM-dd')"
+        [class.reserved]="isReserved(day)"
+        [class.disabled]="isPastDay(day) || !isSameMonth(day, currentMonth())"
+        (click)="selectDate(day)"
+      >
+        {{ format(day, "d") }}
+      </div>
+      }
+    </div>
+  </div>
+
+  <button
+    class="btn btn-primary mt-3"
+    [disabled]="!selectedDate()"
+    (click)="confirmSelection()"
+  >
+    Potwierdź wybór
+  </button>
+</div>

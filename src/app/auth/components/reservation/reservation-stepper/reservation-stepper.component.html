@@ -1,0 +1,15 @@
+<div class="stepper-wrapper">
+  @if (step() === 1) {
+    <app-room-selection (selectionConfirmed)="onRoomSelected($event)" />
+  }
+
+  @if (step() === 2) {
+    <div class="confirmation-step">
+      <h3>Wybrałeś salkę:</h3>
+      <p><strong>{{ selectedRoom() }}</strong> — {{ selectedDate() }}</p>
+
+      <button class="btn btn-secondary mt-3 me-2" (click)="goBack()">Wróć</button>
+      <button class="btn btn-primary mt-3" (click)="goToSummary()">Dalej</button>
+    </div>
+  }
+</div>

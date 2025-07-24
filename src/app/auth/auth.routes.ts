@@ -20,4 +20,13 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { authOnly: true },
   },
+  {
+  path: 'reservation',
+  loadComponent: () =>
+    import('./components/reservation/reservation-stepper/reservation-stepper.component').then(
+      (m) => m.ReservationStepperComponent
+    ),
+  canActivate: [AuthGuard],
+  data: { authOnly: true },
+},
 ];

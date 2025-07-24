@@ -8,7 +8,7 @@ import { from, Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { FilterOperator } from '../../enums/filterOperator';
 import { IFilter } from '../../interfaces/i-filters';
-import { toCamelCase } from '../../utils/type-mappers';
+import { toCamelCase, toSnakeKey } from '../../utils/type-mappers';
 import { SupabaseService } from '../supabase/supabase.service';
 
 export interface IPagination {
@@ -57,7 +57,10 @@ export class BackendService {
     query = this.applyFilters(query, pagination?.filters);
 
     if (sortBy) {
-      query = query.order(sortBy as string, { ascending: sortOrder === 'asc' });
+      
+      const sortKey = toSnakeKey(sortBy as string);
+      console.log(sortBy, sortKey);
+      query = query.order(sortKey, { ascending: sortOrder === 'asc' });
     }
 
     if (pagination?.page !== undefined && pagination?.pageSize !== undefined) {

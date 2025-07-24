@@ -29,3 +29,7 @@ export function toSnakeCase<T>(obj: any): T {
 
   return obj;
 }
+
+export function toSnakeKey(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}

@@ -1,0 +1,23 @@
+@import 'abstracts/mixins';
+@import 'abstracts/variables';
+
+.stepper-wrapper {
+  padding: 2rem;
+  background-color: $bg-color-light;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  color: $text-color;
+
+  .confirmation-step {
+    text-align: center;
+
+    p {
+      font-size: $font-size-lg;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      min-width: 150px;
+    }
+  }
+}

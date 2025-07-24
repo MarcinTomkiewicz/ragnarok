@@ -1,5 +1,5 @@
-import { RoleDisplay, Roles } from "../enums/roles";
+import { RoleDisplay, CoworkerRoles } from "../enums/roles";
 
-export function getRoleLabel(role: Roles): string {
+export function getRoleLabel(role: CoworkerRoles): string {
   return RoleDisplay[role] ?? 'Nieznana rola';
 }
