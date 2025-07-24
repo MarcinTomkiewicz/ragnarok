@@ -1,4 +1,4 @@
-export enum Roles {
+export enum CoworkerRoles {
   Owner = 'owner',
   Coowner = 'coowner',
   Gm = 'gm',
@@ -8,12 +8,12 @@ export enum Roles {
   User = 'user',
 }
 
-export const RoleDisplay: Record<Roles, string> = {
-  [Roles.Owner]: 'Właściciel',
-  [Roles.Coowner]: 'Specjalistka d/s Marketingu',
-  [Roles.Gm]: 'Mistrz Gry',
-  [Roles.Reception]: 'Recepcja',
-  [Roles.Member]: 'Członek Klubu',
-  [Roles.Golden]: 'Złoty Bilet',
-  [Roles.User]: 'Użytkownik',
+export const RoleDisplay: Record<CoworkerRoles, string> = {
+  [CoworkerRoles.Owner]: 'Właściciel',
+  [CoworkerRoles.Coowner]: 'Specjalistka d/s Marketingu',
+  [CoworkerRoles.Gm]: 'Mistrz Gry',
+  [CoworkerRoles.Reception]: 'Recepcja',
+  [CoworkerRoles.Member]: 'Członek Klubu',
+  [CoworkerRoles.Golden]: 'Złoty Bilet',
+  [CoworkerRoles.User]: 'Użytkownik',
 };

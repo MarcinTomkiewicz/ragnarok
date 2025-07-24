@@ -43,7 +43,6 @@ export class LoginComponent {
       .login(this.loginForm.value.email, this.loginForm.value.password)
       .subscribe({
         next: (response) => {
-          console.log(response);
           if (response === Responses.Success) {
             this.loaderService.hide();
             const template = this.successToast();

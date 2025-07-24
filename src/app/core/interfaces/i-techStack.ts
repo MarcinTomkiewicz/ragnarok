@@ -1,4 +1,4 @@
-import { Roles } from "../enums/roles";
+import { CoworkerRoles } from "../enums/roles";
 
 export interface TechStack {
     id: number;
@@ -8,6 +8,6 @@ export interface TechStack {
     longDescription?: string;
     ctaButton?: any;
     isActive: boolean;
-    role: Roles;
+    role: CoworkerRoles;
     roleDisplay: string;
   }

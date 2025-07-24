@@ -1,7 +1,10 @@
+import { CoworkerRoles } from "../enums/roles";
+import { SystemRole } from "../enums/systemRole";
+
 export interface IUser {
   id: string;
   email: string;
-  role: 'user' | 'admin';
+  role: SystemRole;
   firstName?: string;
   phoneNumber?: string;
   city?: string;
@@ -10,7 +13,7 @@ export interface IUser {
   apartmentNumber?: string;
   postalCode?: string;
   age?: number;
-  coworker?: string;
+  coworker?: CoworkerRoles;
   shortDescription?: string;
   longDescription?: string;
   extendedDescription?: string;

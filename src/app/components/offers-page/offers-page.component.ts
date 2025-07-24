@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ServicesTableComponent } from '../../common/services-table/services-table.component';
@@ -6,8 +7,6 @@ import { IOfferCategory } from '../../core/interfaces/i-offer-category';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { SeoService } from '../../core/services/seo/seo.service';
 import { RegulationsComponent } from '../regulations/regulations.component';
-import { Subscription } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-offers-page',

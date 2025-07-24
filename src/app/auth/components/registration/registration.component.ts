@@ -48,6 +48,7 @@ export class RegistrationComponent {
     const rawUser: Partial<IUser> = {
       email: email!,
       role: 'user',
+      coworker: 'user',
       ...rest,
     };
 

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { BackendService } from '../backend/backend.service';
 import { Observable, map } from 'rxjs';
 import { TechStack } from '../../interfaces/i-techStack';
-import { Roles } from '../../enums/roles';
+import { CoworkerRoles } from '../../enums/roles';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +20,7 @@ export class TeamService {
       { width: 234, height: 234 }
     ).pipe(
       map((data) =>
-        data.filter((member) => member.isActive && member.role !== Roles.Gm)
+        data.filter((member) => member.isActive && member.role !== CoworkerRoles.Gm)
       )
     );
   }

@@ -5,7 +5,7 @@ import { LoaderService } from '../../core/services/loader/loader.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
 import { TechStack } from '../../core/interfaces/i-techStack';
-import { Roles } from '../../core/enums/roles';
+import { CoworkerRoles } from '../../core/enums/roles';
 import { LoaderComponent } from '../../common/loader/loader.component';
 
 @Component({
@@ -42,7 +42,7 @@ export class TechStackComponent implements OnInit {
     this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc', undefined, { width: 234, height: 234 })
       .subscribe({
         next: (data) => {
-          const filtered = data.filter((item) => item.isActive && item.role === Roles.Gm);
+          const filtered = data.filter((item) => item.isActive && item.role === CoworkerRoles.Gm);
           if (filtered.length === 0) {
             this.error.set('Nie znaleziono żadnych aktywnych członków zespołu.');
           } else {
