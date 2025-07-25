@@ -12,7 +12,7 @@ export class ReservationStoreService {
   readonly selectedGm = signal<string | null>(null);
   readonly gmFirstName = signal<string | null>(null);
   readonly selectedSystemId = signal<string | null>(null);
-  readonly clubConfirmationAccepted = signal(false);
+  readonly confirmedTeam = signal(false);
 
   // === Validity "guards" ===
   readonly isDateValid = computed(() =>

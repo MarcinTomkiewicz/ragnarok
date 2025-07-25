@@ -1,15 +1,7 @@
 import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  inject,
-  signal,
-  ViewChild,
-} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
-import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-about',
@@ -17,31 +9,15 @@ import { animate, style, transition, trigger } from '@angular/animations';
   standalone: true,
   imports: [CommonModule],
   styleUrls: ['./about.component.scss'],
-  // animations: [
-  //   trigger('slideInAnimation', [
-  //     transition(':enter', [
-  //       style({ transform: 'translateX(-100%)', opacity: 0 }),
-  //       animate(
-  //         '300ms ease-out',
-  //         style({ transform: 'translateX(0)', opacity: 1 })
-  //       ),
-  //     ]),
-  //   ]),
-  // ],
 })
-export class AboutComponent implements AfterViewInit {
+export class AboutComponent {
   showMore = signal(false);
-  isScrolledToTop = signal(true);
-  isScrolledToBottom = signal(false);
   isLargeScreen = signal(false);
+
   private readonly seo = inject(SeoService);
-
-  @ViewChild('scrollContainer') scrollContainer!: ElementRef;
-
   private readonly platformService = inject(PlatformService);
 
   constructor() {
-    // Ustawiamy wartość ekranu tylko w CSR
     if (this.platformService.isBrowser) {
       this.isLargeScreen.set(window.innerWidth >= 481);
       this.observeResize();
@@ -50,38 +26,11 @@ export class AboutComponent implements AfterViewInit {
 
   ngOnInit(): void {
     this.seo.setTitleAndMeta('O nas');
+    this.checkHash(); // tylko jeśli chcesz wspierać #kotwice
   }
 
-  ngAfterViewInit() {
-    if (!this.platformService.isBrowser) return;
-
-    this.scrollContainer.nativeElement.addEventListener('scroll', () =>
-      this.updateScrollState()
-    );
-    this.updateScrollState();
-    this.checkHash();
-  }
-
-  private updateScrollState() {
-    const container = this.scrollContainer.nativeElement;
-    this.isScrolledToTop.set(container.scrollTop === 0);
-    this.isScrolledToBottom.set(
-      container.scrollTop + container.clientHeight >= container.scrollHeight
-    );
-  }
-
-  scrollUp() {
-    this.scrollContainer.nativeElement.scrollBy({
-      top: -50,
-      behavior: 'smooth',
-    });
-  }
-
-  scrollDown() {
-    this.scrollContainer.nativeElement.scrollBy({
-      top: 50,
-      behavior: 'smooth',
-    });
+  toggleShowMore() {
+    this.showMore.set(!this.showMore());
   }
 
   private observeResize(): void {
@@ -103,9 +52,5 @@ export class AboutComponent implements AfterViewInit {
         element.scrollIntoView({ behavior: 'smooth' });
       }
     }
-  }
-
-  toggleShowMore() {
-    this.showMore.set(!this.showMore());
   }
 }

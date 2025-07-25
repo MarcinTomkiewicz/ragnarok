@@ -1,17 +1,19 @@
 <div class="modal-header custom-modal-header">
-  <h4 class="modal-title">{{ currentHeader() }}</h4>
-  <button
-    type="button"
-    class="btn-close"
-    aria-label="Close"
-    (click)="close()"
-  ></button>
+  <h4 class="modal-title">{{ header }}</h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="dismiss()"></button>
 </div>
 
 <div class="modal-body custom-modal-body">
-  <p>{{ currentMessage() }}</p>
+  <p>{{ message }}</p>
 </div>
 
 <div class="modal-footer custom-modal-footer">
-  <button type="button" class="btn btn-primary w-100" (click)="close()">OK</button>
+  @if (showCancel) {
+    <div class="d-flex justify-content-end gap-3 w-100">
+      <button type="button" class="btn btn-secondary" (click)="dismiss()">Anuluj</button>
+      <button type="button" class="btn btn-primary" (click)="confirm()">Potwierdź</button>
+    </div>
+  } @else {
+    <button type="button" class="btn btn-primary w-100" (click)="close()">OK</button>
+  }
 </div>

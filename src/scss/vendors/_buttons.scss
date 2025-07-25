@@ -124,4 +124,18 @@
   &.btn-plain-light {
     color: $secondary-text-color;
   }
+
+  &.btn-danger {
+    background-color: $danger-color;
+    color: $bg-color;
+
+    &:hover:not(:disabled) {
+      @include btn-hover($danger-color);
+    }
+
+    &:disabled {
+      background-color: lighten($danger-color, 15%);
+      color: lighten($bg-color, 10%);
+    }
+  }
 }

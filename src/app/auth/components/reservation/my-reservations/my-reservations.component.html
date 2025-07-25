@@ -1,0 +1,62 @@
+<div class="my-reservations-wrapper full-height">
+  <div class="container">
+    <h2 class="section-title">Moje Rezerwacje</h2>
+
+    @let reservations = reservations$ | async; @if (reservations) { @if
+    (reservations.length > 0) {
+    <div class="reservations-grid">
+      @for (res of reservations; track res.id) {
+      <div class="card card-dark reservation-card">
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="reservation-date">
+              {{ res.date | date : "dd.MM.yyyy" }} {{ res.startTime }}
+            </span>
+            <span
+              class="reservation-status"
+              [ngClass]="{
+                'status-confirmed': res.status === statusEnum.Confirmed,
+                'status-cancelled': res.status === statusEnum.Cancelled
+              }"
+            >
+              {{ statusDisplay[res.status] }}
+            </span>
+          </div>
+
+          <div class="card-details">
+            <p>{{ res.roomName }} – {{ res.durationHours }}h</p>
+          </div>
+
+          <div class="reservation-id">
+            ID: <code>{{ res.id }}</code>
+          </div>
+
+          <div class="card-actions">
+            <span
+              ngbTooltip="Funkcja dostępna wkrótce"
+              placement="top"
+              class="d-inline-block"
+            >
+              <button
+                class="btn btn-outline"
+                disabled
+                style="pointer-events: none"
+              >
+                Zarządzaj rezerwacją
+              </button>
+            </span>
+            <button class="btn btn-danger" (click)="openCancelModal(res.id)">
+              Odwołaj rezerwację
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    } @else {
+    <p>Brak rezerwacji.</p>
+    } } @else {
+    <p>Ładowanie rezerwacji...</p>
+    }
+  </div>
+</div>

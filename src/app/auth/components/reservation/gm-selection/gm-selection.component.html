@@ -1,33 +1,33 @@
-<div class="gm-selection-wrapper">
+<div class="gm-selection-wrapper full-height">
   <h2 class="section-title">Wybierz system RPG</h2>
 
   <form [formGroup]="form">
     <select class="form-select w-100 mb-4" formControlName="systemId">
       <option [ngValue]="null" disabled>Wybierz system...</option>
       @for (system of systems(); track system.id) {
-        <option [value]="system.id">{{ system.name }}</option>
+      <option [value]="system.id">{{ system.name }}</option>
       }
     </select>
   </form>
 
   @if (form.get('systemId')?.value && gms().length) {
-    <div>
-      <h2 class="section-title">Dostępni Mistrzowie Gry</h2>
+  <div>
+    <h2 class="section-title">Dostępni Mistrzowie Gry</h2>
 
-      <div class="gm-grid">
-        @for (gm of gms(); track gm.userId) {
-          <button
-            class="btn btn-outline"
-            [class.active]="gm.userId === store.selectedGm()"
-            (click)="store.selectedGm.set(gm.userId)"
-          >
-            {{ gm.firstName }}
-          </button>
-        }
-      </div>
+    <div class="gm-grid">
+      @for (gm of gms(); track gm.userId) {
+      <button
+        class="btn btn-outline"
+        [class.active]="gm.userId === store.selectedGm()"
+        (click)="store.selectedGm.set(gm.userId)"
+      >
+        {{ gm.firstName }}
+      </button>
+      }
     </div>
+  </div>
   } @else if (form.get('systemId')?.value) {
-    <p class="text-danger mt-3">Brak dostępnych MG dla wybranego systemu.</p>
+  <p class="text-danger mt-3">Brak dostępnych MG dla wybranego systemu.</p>
   }
 
   <div class="d-flex justify-content-center gap-4 mt-4">

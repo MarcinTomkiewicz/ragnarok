@@ -4,8 +4,7 @@
 .room-selection-wrapper {
   @include section-wrapper;
 
-  @include flex-center;
-  flex-direction: column;
+  @include flex-wrapper(column, start, center);
 
   .room-buttons {
     @include flex-center;

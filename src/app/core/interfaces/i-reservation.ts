@@ -8,9 +8,9 @@ export interface IReservation {
   startTime: string;
   durationHours: number;
   needsGm: boolean;
-  gmId?: string;
-  systemId?: string;
-  confirmedTeam?: boolean;
+  gmId?: string | null;
+  systemId?: string | null;
+  confirmedTeam?: boolean | null;
   status: ReservationStatus;
   createdAt: string;
 }

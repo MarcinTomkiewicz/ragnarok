@@ -29,4 +29,10 @@ export const AUTH_ROUTES: Routes = [
   canActivate: [AuthGuard],
   data: { authOnly: true },
 },
+{
+  path: 'my-reservations',
+  loadComponent: () => import('./components/reservation/my-reservations/my-reservations.component').then(m => m.MyReservationsComponent),
+  canActivate: [AuthGuard],
+  data: { authOnly: true },
+},
 ];

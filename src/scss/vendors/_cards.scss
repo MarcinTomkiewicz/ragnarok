@@ -2,12 +2,12 @@
 @import "abstracts/mixins";
 
 .card-dark {
-    background-color: $bg-color;
-    border: $primary-color solid 1px;
+  background-color: $bg-color;
+  border: $primary-color solid 1px;
 
-    @media (max-width: $breakpoint-xs) {
-      width: 300px;
-    }
+  @media (max-width: $breakpoint-xs) {
+    width: 300px;
+  }
 }
 
 .card-body {
@@ -27,14 +27,21 @@
 }
 
 .card-text-dark {
-    color: $primary-color;
-    @include responsive-font-size(12px);
+  color: $primary-color;
+  @include responsive-font-size(12px);
 
-    &.large {
-        @include responsive-font-size(18px)
-    }
+  &.large {
+    @include responsive-font-size(18px);
+  }
 }
 
 .card-350 {
   height: 350px;
+}
+
+.card-body {
+  padding: 1rem;
+  width: 100%;
+  text-align: center;
+  color: $primary-color;
 }

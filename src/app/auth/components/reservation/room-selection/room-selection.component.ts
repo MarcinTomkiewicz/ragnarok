@@ -39,7 +39,7 @@ export class RoomSelectionComponent {
   // === Store signals ===
   readonly selectedRoom = this.store.selectedRoom;
   readonly selectedDate = this.store.selectedDate;
-  readonly clubConfirmationAccepted = this.store.clubConfirmationAccepted;
+  readonly confirmedTeam = this.store.confirmedTeam;
 
   // === Calendar ===
   readonly currentMonth = signal(new Date());
@@ -108,7 +108,7 @@ export class RoomSelectionComponent {
     () =>
       !this.isSelectionDisabled() &&
       !!this.selectedDate() &&
-      (!this.requiresClubConfirmation() || this.clubConfirmationAccepted())
+      (!this.requiresClubConfirmation() || this.confirmedTeam())
   );
 
   readonly rooms = computed(() =>
@@ -131,7 +131,7 @@ export class RoomSelectionComponent {
       this.store.selectedSystemId.set(null);
       this.store.gmFirstName.set(null);
       this.store.needsGm.set(false);
-      this.store.clubConfirmationAccepted.set(false);
+      this.store.confirmedTeam.set(false);
     }
   }
 
@@ -178,10 +178,12 @@ export class RoomSelectionComponent {
   }
 
   isReserved(date: Date): boolean {
-    const dateStr = formatFn(date, 'yyyy-MM-dd');
-    return !!this.reservationsMap().get(dateStr)?.length;
-  }
+    const key = formatFn(date, 'yyyy-MM-dd');
+    const hourly = this.hourlyAvailabilityMap().get(key);
+    if (!hourly) return false;
 
+    return hourly.every((slot) => slot === true);
+  }
   canShowHours(date: Date): boolean {
     return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
   }
@@ -239,7 +241,7 @@ export class RoomSelectionComponent {
 
   onClubCheckboxChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.clubConfirmationAccepted.set(input.checked);
+    this.confirmedTeam.set(input.checked);
   }
 
   trackByDate(date: Date): string {

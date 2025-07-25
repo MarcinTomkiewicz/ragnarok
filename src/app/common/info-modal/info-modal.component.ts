@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit } from '@angular/core';
+import { Component, computed, inject, Input, input } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -9,13 +9,21 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrl: './info-modal.component.scss',
 })
 export class InfoModalComponent {
-  header = input<string>('');
-  message = input<string>('');
-  currentHeader = computed(() => this.header ? this.header : 'Informacja');
-  currentMessage = computed(() => this.message);
-  public activeModal = inject(NgbActiveModal);
+  @Input() header = 'Informacja';
+  @Input() message = ''
+  @Input() showCancel = false
+
+  readonly activeModal = inject(NgbActiveModal);
 
   close(): void {
-    this.activeModal.close();
+    this.activeModal.close(true);
+  }
+
+  confirm(): void {
+    this.activeModal.close(true);
+  }
+
+  dismiss(): void {
+    this.activeModal.dismiss('cancel');
   }
 }
