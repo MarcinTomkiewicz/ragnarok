@@ -1,17 +1,7 @@
-// time-selection.component.ts
-
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from '@angular/core';
-import { Rooms } from '../../../../core/enums/rooms';
-import { ReservationService } from '../../../../core/services/reservation/reservation.service';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { IReservation } from '../../../../core/interfaces/i-reservation';
+import { ReservationService } from '../../../../core/services/reservation/reservation.service';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 
 @Component({
   selector: 'app-time-selection',
@@ -21,21 +11,13 @@ import { IReservation } from '../../../../core/interfaces/i-reservation';
   styleUrl: './time-selection.component.scss',
 })
 export class TimeSelectionComponent {
-  readonly selected = output<{
-    startTime: string;
-    durationHours: number;
-    needsGm: boolean;
-  }>();
-  readonly goBack = output<void>();
+  private readonly store = inject(ReservationStoreService);
+  private readonly reservationService = inject(ReservationService);
 
   readonly selectedTime = signal<string | null>(null);
   readonly selectedDuration = signal<number>(1);
   readonly needsGm = signal(false);
 
-  readonly date = input<string>();
-  readonly room = input<Rooms>();
-
-  private readonly reservationService = inject(ReservationService);
   readonly reservations = signal<IReservation[]>([]);
 
   readonly timeSlots = computed(() => {
@@ -58,8 +40,8 @@ export class TimeSelectionComponent {
 
   constructor() {
     effect(() => {
-      const date = this.date();
-      const room = this.room();
+      const date = this.store.selectedDate();
+      const room = this.store.selectedRoom();
 
       if (date && room) {
         this.reservationService
@@ -86,8 +68,14 @@ export class TimeSelectionComponent {
   selectTime(hour: number) {
     const time = `${String(hour).padStart(2, '0')}:00`;
     this.selectedTime.set(time);
-    this.selectedDuration.set(1); // reset
+    this.selectedDuration.set(1);
   }
+
+  get selectedHour(): number | null {
+  const time = this.selectedTime();
+  return time ? +time.split(':')[0] : null;
+}
+
 
   isTimeAndDurationSelected(): boolean {
     return this.selectedTime() !== null && this.selectedDuration() > 0;
@@ -99,15 +87,16 @@ export class TimeSelectionComponent {
 
   confirm() {
     if (this.selectedTime()) {
-      this.selected.emit({
-        startTime: this.selectedTime()!,
-        durationHours: this.selectedDuration(),
-        needsGm: this.needsGm(),
-      });
+      this.store.selectedStartTime.set(this.selectedTime()!);
+      this.store.selectedDuration.set(this.selectedDuration());
+      this.store.needsGm.set(this.needsGm());
+      this.store.step.set(this.needsGm() ? 3 : 4);
     }
   }
 
   handleBack() {
-    this.goBack.emit();
+    this.store.step.set(1);
+    this.store.selectedStartTime.set(null);
+    this.store.selectedDuration.set(null);
   }
 }

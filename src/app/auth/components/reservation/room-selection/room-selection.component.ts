@@ -1,12 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
   addDays,
   addMonths,
@@ -22,6 +15,10 @@ import { pl } from 'date-fns/locale';
 import { Rooms } from '../../../../core/enums/rooms';
 import { IReservation } from '../../../../core/interfaces/i-reservation';
 import { ReservationService } from '../../../../core/services/reservation/reservation.service';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { AuthService } from '../../../../core/services/auth/auth.service'; // zakładam, że masz taki serwis
+import { CoworkerRoles } from '../../../../core/enums/roles';
+import { SystemRole } from '../../../../core/enums/systemRole';
 
 @Component({
   selector: 'app-room-selection',
@@ -30,17 +27,45 @@ import { ReservationService } from '../../../../core/services/reservation/reserv
   templateUrl: './room-selection.component.html',
 })
 export class RoomSelectionComponent {
+  private readonly store = inject(ReservationStoreService);
   private readonly reservationService = inject(ReservationService);
+  private readonly auth = inject(AuthService);
 
-  readonly selectionConfirmed = output<{ room: Rooms; date: string }>();
+  readonly selectedRoom = this.store.selectedRoom;
+  readonly selectedDate = this.store.selectedDate;
+  readonly clubConfirmationAccepted = this.store.clubConfirmationAccepted;
 
-  readonly selectedRoom = signal<Rooms>(Rooms.Midgard);
-  readonly selectedDate = signal<string | null>(null);
-  readonly rooms = Object.values(Rooms);
   readonly currentMonth = signal(new Date());
 
   readonly minMonth = startOfMonth(new Date());
   readonly maxMonth = startOfMonth(addMonths(new Date(), 1));
+
+  readonly userCoworkerRole = this.auth.userCoworkerRole();
+  readonly userSystemRole = this.auth.userSystemRole();
+
+  readonly isPrivilegedUser = computed(
+    () =>
+      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+        this.auth.userCoworkerRole() as CoworkerRoles
+      ) || this.auth.userSystemRole() === SystemRole.Admin
+  );
+
+  readonly isMember = computed(
+    () => this.auth.userCoworkerRole() === CoworkerRoles.Member
+  );
+
+  readonly rooms = computed(() => {
+    return Object.values(Rooms).filter((room) => {
+      if ([Rooms.Asgard, Rooms.Alfheim].includes(room)) {
+        return this.isPrivilegedUser() || this.isMember();
+      }
+      return true;
+    });
+  });
+
+readonly requiresClubConfirmation = computed(() => {
+  return [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom());
+});
 
   readonly canGoPrev = computed(
     () => this.currentMonth().getTime() > this.maxMonth.getTime()
@@ -75,19 +100,20 @@ export class RoomSelectionComponent {
     effect(() => {
       const room = this.selectedRoom();
       const dates = this.visibleDays().map((d) => formatFn(d, 'yyyy-MM-dd'));
-
-      const updatedMap = new Map<string, IReservation[]>();
-
-      dates.forEach((dateStr) => {
-        this.reservationService
-          .getReservationsForRoom(room, dateStr)
-          .subscribe((res) => {
-            updatedMap.set(dateStr, res);
-            this.reservationsMap.set(new Map(updatedMap));
-          });
-      });
+      this.fetchReservationsForRoom(room, dates);
     });
-    console.log(this.currentMonth().getTime(), this.minMonth.getTime());
+  }
+
+  private fetchReservationsForRoom(room: Rooms, dates: string[]) {
+    const updatedMap = new Map<string, IReservation[]>();
+    dates.forEach((dateStr) => {
+      this.reservationService
+        .getReservationsForRoom(room, dateStr)
+        .subscribe((res) => {
+          updatedMap.set(dateStr, res);
+          this.reservationsMap.set(new Map(updatedMap));
+        });
+    });
   }
 
   isReserved(date: Date): boolean {
@@ -131,7 +157,7 @@ export class RoomSelectionComponent {
   getHourlyAvailability(date: Date): boolean[] {
     const startHour = 17;
     const endHour = 23;
-    const slots = Array(endHour - startHour).fill(false); // false = wolne
+    const slots = Array(endHour - startHour).fill(false);
 
     const dateStr = formatFn(date, 'yyyy-MM-dd');
     const reservations = this.reservationsMap().get(dateStr) || [];
@@ -142,7 +168,7 @@ export class RoomSelectionComponent {
 
       for (let h = resStart; h < resEnd; h++) {
         if (h >= startHour && h < endHour) {
-          slots[h - startHour] = true; // true = zajęte
+          slots[h - startHour] = true;
         }
       }
     }
@@ -153,12 +179,16 @@ export class RoomSelectionComponent {
   canShowHours = (day: Date) =>
     !this.isPastDay(day) && this.isSameMonth(day, this.currentMonth());
 
+  onClubCheckboxChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.clubConfirmationAccepted.set(input.checked);
+  }
+
   confirmSelection() {
-    if (this.selectedRoom() && this.selectedDate()) {
-      this.selectionConfirmed.emit({
-        room: this.selectedRoom(),
-        date: this.selectedDate()!,
-      });
-    }
+    if (!this.selectedDate()) return;
+    if (this.requiresClubConfirmation() && !this.clubConfirmationAccepted())
+      return;
+
+    this.store.step.set(2);
   }
 }

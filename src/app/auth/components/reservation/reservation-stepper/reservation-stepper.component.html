@@ -4,47 +4,17 @@
 
     <div class="stepper">
       @if (step() === 1) {
-      <app-room-selection
-        (selectionConfirmed)="handleRoomSelection($event.room, $event.date)"
-      />
-      } @if (step() === 2) {
-      <app-time-selection
-        [room]="selectedRoom()!"
-        [date]="selectedDate()!"
-        (selected)="
-          handleTimeSelection(
-            $event.startTime,
-            $event.durationHours,
-            $event.needsGm
-          )
-        "
-        (goBack)="goBack()"
-      />
-      } @if (step() === 3 && needsGm()) {
-      <app-gm-selection
-        (gmSelected)="handleGmSelection($event)"
-        (goBack)="goBack()"
-      />
-      } @else if (step() === 4) {
-      <app-reservation-summary
-        [room]="selectedRoom()!"
-        [date]="selectedDate()!"
-        [startTime]="selectedStartTime()!"
-        [duration]="selectedDuration()!"
-        [needsGm]="needsGm()"
-        [gmId]="selectedGm()"
-        [gmFirstName]="gmFirstName()"
-        (confirmReservation)="submitReservation()"
-        (goBack)="goBack()"
-      />
+        <app-room-selection />
+      }
+      @if (step() === 2) {
+        <app-time-selection />
+      }
+      @if (step() === 3 && store.needsGm()) {
+        <app-gm-selection />
+      }
+      @else if (step() === 4) {
+        <app-reservation-summary />
       }
     </div>
   </div>
-  <!-- <div class="confirmation-step">
-  <h3>Wybrałeś salkę:</h3>
-  <p><strong>{{ selectedRoom() }}</strong> — {{ selectedDate() }}</p>
-
-  <button class="btn btn-secondary mt-3 me-2" (click)="goBack()">Wróć</button>
-  <button class="btn btn-primary mt-3" (click)="goToSummary()">Dalej</button>
-</div> -->
 </div>

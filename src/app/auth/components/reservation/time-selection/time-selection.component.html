@@ -17,7 +17,7 @@
   @if (selectedTime()) {
   <div class="duration-picker mt-4">
     <h3 class="section-title">Wybierz długość rezerwacji</h3>
-    @for (d of getDurationsFrom(+selectedTime()!.split(':')[0]); track d) {
+    @for (d of getDurationsFrom(selectedHour!); track d) {
     <button
       class="btn btn-outline m-1"
       [class.active]="selectedDuration() === d"

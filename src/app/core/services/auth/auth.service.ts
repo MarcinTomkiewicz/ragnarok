@@ -8,6 +8,8 @@ import { Responses } from '../../enums/responses';
 import { IUser } from '../../interfaces/i-user';
 import { AuthError } from '@supabase/supabase-js';
 import { Router } from '@angular/router';
+import { SystemRole } from '../../enums/systemRole';
+import { CoworkerRoles } from '../../enums/roles';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -20,7 +22,9 @@ export class AuthService {
   constructor() {
     if (this.platformService.isBrowser) {
       this.loadUser().subscribe();
-      this.supabase.auth.onAuthStateChange(() => void this.loadUser().subscribe());
+      this.supabase.auth.onAuthStateChange(
+        () => void this.loadUser().subscribe()
+      );
     }
   }
 
@@ -108,17 +112,36 @@ export class AuthService {
     );
   }
 
-logout(): Observable<void> {
-  return from(this.supabase.auth.signOut({ scope: 'local' })).pipe(
-    catchError((err) => {
-      console.warn('Logout error:', err?.message || err);
-      return of(void 0);
-    }),
-    tap(() => {
-      this._user.set(null);
-      this.router.navigate(['/']);
-    }),
-    map(() => void 0)
-  );
-}
+  logout(): Observable<void> {
+    return from(this.supabase.auth.signOut()).pipe(
+      catchError((err) => {
+        console.warn('Logout error:', err?.message || err);
+        return of(void 0);
+      }),
+      switchMap(() => {
+        this._user.set(null);
+
+        // Usunięcie potencjalnych resztek tokenów z localStorage – jeśli jesteś w przeglądarce
+        if (this.platformService.isBrowser) {
+          Object.keys(localStorage)
+            .filter(
+              (key) => key.startsWith('sb-') && key.includes('-auth-token')
+            )
+            .forEach((key) => localStorage.removeItem(key));
+        }
+
+        // Przekierowanie do strony głównej jako observable
+        return from(this.router.navigate(['/']));
+      }),
+      map(() => void 0)
+    );
+  }
+
+  readonly userSystemRole = computed<SystemRole | null>(() => {
+    return this._user()?.role ?? null;
+  });
+
+  readonly userCoworkerRole = computed<CoworkerRoles | null>(() => {
+    return this._user()?.coworker ?? null;
+  });
 }

@@ -15,7 +15,7 @@ import { LoaderService } from '../../../core/services/loader/loader.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { sanitizeUserData } from '../../../core/utils/sanitize-user';
 import { UserFormComponent } from '../../common/user-form/user-form.component';
-import { createUserForm } from '../../factories/user-form.factory';
+import { createUserForm } from '../../core/factories/user-form.factory';
 
 @Component({
   selector: 'app-edit-data',

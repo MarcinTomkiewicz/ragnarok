@@ -57,9 +57,7 @@ export class BackendService {
     query = this.applyFilters(query, pagination?.filters);
 
     if (sortBy) {
-      
       const sortKey = toSnakeKey(sortBy as string);
-      console.log(sortBy, sortKey);
       query = query.order(sortKey, { ascending: sortOrder === 'asc' });
     }
 
@@ -316,22 +314,22 @@ export class BackendService {
           const operator = filter.operator || FilterOperator.EQ; // Używamy domyślnego 'eq' jeśli operator nie jest podany
           switch (operator) {
             case FilterOperator.EQ:
-              query = query.eq(key, filter.value);
+              query = query.eq(toSnakeKey(key), filter.value);
               break;
             case FilterOperator.GTE:
-              query = query.gte(key, filter.value);
+              query = query.gte(toSnakeKey(key), filter.value);
               break;
             case FilterOperator.LTE:
-              query = query.lte(key, filter.value);
+              query = query.lte(toSnakeKey(key), filter.value);
               break;
             case FilterOperator.GT:
-              query = query.gt(key, filter.value);
+              query = query.gt(toSnakeKey(key), filter.value);
               break;
             case FilterOperator.LT:
-              query = query.lt(key, filter.value);
+              query = query.lt(toSnakeKey(key), filter.value);
               break;
             case FilterOperator.LIKE:
-              query = query.like(key, filter.value);
+              query = query.like(toSnakeKey(key), filter.value);
               break;
             default:
               throw new Error(`Unsupported filter operator: ${operator}`);

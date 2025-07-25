@@ -13,6 +13,7 @@ import { Rooms } from '../../../../core/enums/rooms';
 import { TimeSelectionComponent } from '../time-selection/time-selection.component';
 import { GmSelectionComponent } from '../gm-selection/gm-selection.component';
 import { ReservationSummaryComponent } from '../reservation-summary/reservation-summary.component';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -28,71 +29,58 @@ import { ReservationSummaryComponent } from '../reservation-summary/reservation-
   styleUrls: ['./reservation-stepper.component.scss'],
 })
 export class ReservationStepperComponent {
-  readonly step = signal(1);
-  readonly router = inject(Router);
+  readonly store = inject(ReservationStoreService);
+  private readonly router = inject(Router);
 
-  readonly selectedRoom = signal<Rooms | null>(null);
-  readonly selectedDate = signal<string | null>(null);
-  readonly selectedStartTime = signal<string | null>(null);
-  readonly selectedDuration = signal<number | null>(null);
-  readonly needsGm = signal(false);
-  readonly selectedGm = signal<string | null>(null);
-  readonly gmFirstName = signal<string | null>(null);
+  readonly step = this.store.step;
 
   handleRoomSelection(room: Rooms, date: string) {
-    this.selectedRoom.set(room);
-    this.selectedDate.set(date);
-    this.step.set(2);
+    this.store.selectedRoom.set(room);
+    this.store.selectedDate.set(date);
+    this.store.step.set(2);
   }
 
-  handleTimeSelection(
-    startTime: string,
-    durationHours: number,
-    needsGm: boolean
-  ) {
-    this.selectedStartTime.set(startTime);
-    this.selectedDuration.set(durationHours);
-    this.needsGm.set(needsGm);
+  handleTimeSelection(startTime: string, duration: number, needsGm: boolean) {
+    this.store.selectedStartTime.set(startTime);
+    this.store.selectedDuration.set(duration);
+    this.store.needsGm.set(needsGm);
 
-    if (needsGm) {
-      this.step.set(3);
-    } else {
-      this.step.set(4);
-    }
+    this.store.step.set(needsGm ? 3 : 4);
   }
 
   handleGmSelection(gm: { id: string; firstName: string }) {
-    this.selectedGm.set(gm.id);
-    this.gmFirstName.set(gm.firstName);
-    this.step.set(4);
+    this.store.selectedGm.set(gm.id);
+    this.store.gmFirstName.set(gm.firstName);
+    this.store.step.set(4);
   }
 
   submitReservation() {
-    console.log('Finalizing reservation with the following details:', {
-      room: this.selectedRoom(),
-      date: this.selectedDate(),
-      startTime: this.selectedStartTime(),
-      duration: this.selectedDuration(),
-      needsGm: this.needsGm(),
-      gm: this.selectedGm(),
+    console.log('Finalizing reservation:', {
+      room: this.store.selectedRoom(),
+      date: this.store.selectedDate(),
+      startTime: this.store.selectedStartTime(),
+      duration: this.store.selectedDuration(),
+      needsGm: this.store.needsGm(),
+      gm: this.store.selectedGm(),
     });
   }
 
   goBack() {
-    const previous = this.step() - 1;
+    const currentStep = this.store.step();
+    const previous = currentStep - 1;
 
     if (previous === 1) {
-      this.selectedStartTime.set(null);
-      this.selectedDuration.set(null);
+      this.store.selectedStartTime.set(null);
+      this.store.selectedDuration.set(null);
     }
 
     if (previous === 0) {
-      this.selectedRoom.set(null);
-      this.selectedDate.set(null);
+      this.store.selectedRoom.set(Rooms.Midgard);
+      this.store.selectedDate.set(null);
     }
 
     if (previous >= 0) {
-      this.step.set(previous);
+      this.store.step.set(previous);
     } else {
       this.router.navigate(['/']);
     }

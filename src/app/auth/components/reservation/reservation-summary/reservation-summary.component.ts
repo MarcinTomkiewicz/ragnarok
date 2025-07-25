@@ -1,5 +1,6 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { Rooms } from '../../../../core/enums/rooms';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 
 @Component({
   selector: 'app-reservation-summary',
@@ -9,28 +10,23 @@ import { Rooms } from '../../../../core/enums/rooms';
   styleUrl: './reservation-summary.component.scss',
 })
 export class ReservationSummaryComponent {
-  readonly room = input<Rooms>();
-  readonly date = input<string>();
-  readonly startTime = input<string>();
-  readonly duration = input<number>();
-  readonly needsGm = input<boolean>();
-
-  readonly gmId = input<string | null>(); // do backendu
-  readonly gmFirstName = input<string | null>(); // do UI
-
-  readonly confirmReservation = output<void>();
-  readonly goBack = output<void>();
+    readonly store = inject(ReservationStoreService);
 
   confirm() {
     console.log('Rezerwacja złożona:', {
-      room: this.room(),
-      date: this.date(),
-      startTime: this.startTime(),
-      duration: this.duration(),
-      needsGm: this.needsGm(),
-      gmId: this.gmId(),
+      room: this.store.selectedRoom(),
+      date: this.store.selectedDate(),
+      startTime: this.store.selectedStartTime(),
+      duration: this.store.selectedDuration(),
+      needsGm: this.store.needsGm(),
+      gmId: this.store.selectedGm(),
+      systemId: this.store.selectedSystemId?.(),
     });
 
-    this.confirmReservation.emit();
+    // docelowy zapis do Supabase będzie tu
+  }
+
+  handleBack() {
+    this.store.step.set(this.store.needsGm() ? 3 : 2);
   }
 }

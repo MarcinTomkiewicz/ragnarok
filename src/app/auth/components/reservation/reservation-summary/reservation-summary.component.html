@@ -4,34 +4,34 @@
   <div class="summary-details">
     <div class="summary-row">
       <span class="label">Sala:</span>
-      <span class="value">{{ room() }}</span>
+      <span class="value">{{ store.selectedRoom() }}</span>
     </div>
     <div class="summary-row">
       <span class="label">Data:</span>
-      <span class="value">{{ date() }}</span>
+      <span class="value">{{ store.selectedDate() }}</span>
     </div>
     <div class="summary-row">
       <span class="label">Godzina:</span>
-      <span class="value">{{ startTime() }}</span>
+      <span class="value">{{ store.selectedStartTime() }}</span>
     </div>
     <div class="summary-row">
       <span class="label">Czas trwania:</span>
-      <span class="value">{{ duration() }}h</span>
+      <span class="value">{{ store.selectedDuration() }}h</span>
     </div>
     <div class="summary-row">
       <span class="label">MG potrzebny:</span>
-      <span class="value">{{ needsGm() ? 'Tak' : 'Nie' }}</span>
+      <span class="value">{{ store.needsGm() ? 'Tak' : 'Nie' }}</span>
     </div>
-    @if (needsGm() && gmFirstName()) {
+    @if (store.needsGm() && store.gmFirstName()) {
     <div class="summary-row">
       <span class="label">Wybrany MG:</span>
-      <span class="value">{{ gmFirstName() }}</span>
+      <span class="value">{{ store.gmFirstName() }}</span>
     </div>
     }
   </div>
 
   <div class="d-flex justify-content-center gap-4 mt-4">
-    <button class="btn btn-outline" (click)="goBack.emit()">Wstecz</button>
+    <button class="btn btn-outline" (click)="handleBack()">Wstecz</button>
     <button class="btn btn-primary" (click)="confirm()">Rezerwuj</button>
   </div>
 </div>

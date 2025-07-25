@@ -5,14 +5,13 @@ import {
   Router,
   UrlTree,
 } from '@angular/router';
-
-import { CoworkerRoles } from '../../core/enums/roles';
-import { SystemRole } from '../../core/enums/systemRole';
-import { AuthService } from '../../core/services/auth/auth.service';
+import { CoworkerRoles } from '../../../core/enums/roles';
+import { SystemRole } from '../../../core/enums/systemRole';
+import { AuthService } from '../../../core/services/auth/auth.service';
 import {
   hasMinimumCoworkerRole,
   hasMinimumSystemRole,
-} from '../../core/utils/required-roles';
+} from '../../../core/utils/required-roles';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
@@ -26,7 +25,9 @@ export class AuthGuard implements CanActivate {
     const requiredCoworkerRoles = route.data['coworkerRoles'] as
       | CoworkerRoles[]
       | undefined;
-    const minCoworkerRole = route.data['minCoworkerRole'] as CoworkerRoles | undefined;
+    const minCoworkerRole = route.data['minCoworkerRole'] as
+      | CoworkerRoles
+      | undefined;
     const minSystemRole = route.data['minSystemRole'] as SystemRole | undefined;
     const authOnly = route.data['authOnly'] as boolean | undefined;
 
