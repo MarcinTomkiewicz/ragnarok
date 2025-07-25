@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { signal } from '@angular/core';
 
 @Component({
   selector: 'app-gm-selection',
@@ -14,40 +15,36 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
   styleUrl: './gm-selection.component.scss',
 })
 export class GmSelectionComponent {
-  private readonly store = inject(ReservationStoreService);
+  readonly store = inject(ReservationStoreService);
   private readonly backend = inject(BackendService);
   private readonly fb = inject(FormBuilder);
 
   readonly systems = signal<IRPGSystem[]>([]);
   readonly gms = signal<IGmData[]>([]);
 
-  readonly selectedGmId = signal<string | null>(this.store.selectedGm());
-  readonly selectedSystemId = signal<string | null>(
-    this.store.selectedSystemId()
-  );
-
   readonly form: FormGroup = this.fb.group({
-    systemId: [this.selectedSystemId()],
+    systemId: [this.store.selectedSystemId()],
   });
 
   constructor() {
     this.loadSystems();
 
-    const currentSystemId = this.selectedSystemId();
+    const currentSystemId = this.store.selectedSystemId();
     if (currentSystemId) this.loadGmsForSystem(currentSystemId);
 
-    this.form
-      .get('systemId')
-      ?.valueChanges.subscribe((systemId: string | null) => {
-        this.selectedSystemId.set(systemId);
+    console.log(this.store.selectedGm(), this.gms());
+    
 
-        if (systemId) {
-          this.loadGmsForSystem(systemId);
-        } else {
-          this.gms.set([]);
-          this.selectedGmId.set(null);
-        }
-      });
+    this.form.get('systemId')?.valueChanges.subscribe((systemId: string | null) => {
+      this.store.selectedSystemId.set(systemId);
+
+      if (systemId) {
+        this.loadGmsForSystem(systemId);
+      } else {
+        this.gms.set([]);
+        this.store.selectedGm.set(null);
+      }
+    });
   }
 
   private loadSystems() {
@@ -65,19 +62,17 @@ export class GmSelectionComponent {
 
         const existingId = this.store.selectedGm();
         const stillExists = filtered.some((g) => g.userId === existingId);
-        this.selectedGmId.set(stillExists ? existingId : null);
+        if (!stillExists) this.store.selectedGm.set(null);
       });
   }
 
   confirm() {
-    const id = this.selectedGmId();
+    const id = this.store.selectedGm();
     const gm = this.gms().find((g) => g.userId === id);
-    const systemId = this.selectedSystemId();
+    const systemId = this.store.selectedSystemId();
 
     if (id && gm?.firstName && systemId) {
-      this.store.selectedGm.set(id);
       this.store.gmFirstName.set(gm.firstName);
-      this.store.selectedSystemId.set(systemId);
       this.store.step.set(4);
     }
   }

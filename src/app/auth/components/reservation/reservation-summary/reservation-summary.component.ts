@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { format } from 'date-fns';
 
 @Component({
   selector: 'app-reservation-summary',
@@ -20,6 +21,11 @@ export class ReservationSummaryComponent {
     gmId: this.store.selectedGm(),
     systemId: this.store.selectedSystemId(),
   }));
+
+  readonly formattedDate = computed(() => {
+    const raw = this.store.selectedDate();
+    return raw ? format(new Date(raw), 'dd.MM.yyyy') : '';
+  });
 
   confirm() {
     console.log('Rezerwacja:', this.summary());
