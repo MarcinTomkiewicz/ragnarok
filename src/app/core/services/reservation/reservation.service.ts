@@ -128,4 +128,51 @@ export class ReservationService {
       })
     );
   }
+
+  checkIfUserHasActiveReservation(): Observable<boolean> {
+  const user = this.authService.user();
+  if (!user) return of(false);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  return this.getMyReservations().pipe(
+    map((reservations) =>
+      reservations.some(
+        (r) =>
+          r.status === ReservationStatus.Confirmed &&
+          r.date >= today
+      )
+    )
+  );
+}
+
+checkIfMemberHasReservationThisWeekInClubRooms(): Observable<boolean> {
+  const user = this.authService.user();
+  if (!user) return of(false);
+
+  const today = new Date();
+  const day = today.getDay();
+
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return this.getMyReservations().pipe(
+    map((reservations) =>
+      reservations.some((r) => {
+        const resDate = new Date(r.date);
+        return (
+          [Rooms.Asgard, Rooms.Alfheim].includes(r.roomName) &&
+          resDate >= monday &&
+          resDate <= sunday
+        );
+      })
+    )
+  );
+}
+
 }
