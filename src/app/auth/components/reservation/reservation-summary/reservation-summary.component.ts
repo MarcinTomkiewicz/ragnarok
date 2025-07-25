@@ -1,5 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
-import { Rooms } from '../../../../core/enums/rooms';
+import { Component, computed, inject } from '@angular/core';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 
 @Component({
@@ -10,20 +9,21 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
   styleUrl: './reservation-summary.component.scss',
 })
 export class ReservationSummaryComponent {
-    readonly store = inject(ReservationStoreService);
+  readonly store = inject(ReservationStoreService);
+
+  readonly summary = computed(() => ({
+    room: this.store.selectedRoom(),
+    date: this.store.selectedDate(),
+    startTime: this.store.selectedStartTime(),
+    duration: this.store.selectedDuration(),
+    needsGm: this.store.needsGm(),
+    gmId: this.store.selectedGm(),
+    systemId: this.store.selectedSystemId(),
+  }));
 
   confirm() {
-    console.log('Rezerwacja złożona:', {
-      room: this.store.selectedRoom(),
-      date: this.store.selectedDate(),
-      startTime: this.store.selectedStartTime(),
-      duration: this.store.selectedDuration(),
-      needsGm: this.store.needsGm(),
-      gmId: this.store.selectedGm(),
-      systemId: this.store.selectedSystemId?.(),
-    });
-
-    // docelowy zapis do Supabase będzie tu
+    console.log('Rezerwacja:', this.summary());
+    // tu docelowo call do Supabase
   }
 
   handleBack() {

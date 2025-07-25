@@ -1,7 +1,10 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { IReservation } from '../../../../core/interfaces/i-reservation';
 import { ReservationService } from '../../../../core/services/reservation/reservation.service';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+
+const START_HOUR = 17;
+const END_HOUR = 23;
 
 @Component({
   selector: 'app-time-selection',
@@ -14,89 +17,78 @@ export class TimeSelectionComponent {
   private readonly store = inject(ReservationStoreService);
   private readonly reservationService = inject(ReservationService);
 
-  readonly selectedTime = signal<string | null>(null);
-  readonly selectedDuration = signal<number>(1);
-  readonly needsGm = signal(false);
+  // Lokalny stan tylko dla widoku
+  readonly selectedTime = signal(this.store.selectedStartTime() ?? null);
+  readonly selectedDuration = signal(this.store.selectedDuration() ?? 1);
+  readonly needsGm = signal(this.store.needsGm());
 
   readonly reservations = signal<IReservation[]>([]);
 
+  // Slots calculation
   readonly timeSlots = computed(() => {
-    const slots = Array(6).fill(true);
-    const dayReservations = this.reservations();
-
-    for (const res of dayReservations) {
-      const startHour = Number(res.startTime.split(':')[0]);
+    const slots = Array(END_HOUR - START_HOUR).fill(true);
+    for (const res of this.reservations()) {
+      const start = Number(res.startTime.split(':')[0]);
       for (let i = 0; i < res.durationHours; i++) {
-        const idx = startHour + i - 17;
-        if (idx >= 0 && idx < 6) slots[idx] = false;
+        const idx = start + i - START_HOUR;
+        if (idx >= 0 && idx < slots.length) slots[idx] = false;
       }
     }
-
-    return slots.map((available, i) => ({
-      hour: 17 + i,
-      available,
-    }));
+    return slots.map((available, i) => ({ hour: START_HOUR + i, available }));
   });
 
+  readonly canConfirm = computed(() =>
+    !!this.selectedTime() && this.selectedDuration() > 0
+  );
+
+  // === Lifecycle ===
   constructor() {
-    effect(() => {
-      const date = this.store.selectedDate();
-      const room = this.store.selectedRoom();
-
-      if (date && room) {
-        this.reservationService
-          .getReservationsForRoom(room, date)
-          .subscribe((res) => this.reservations.set(res));
-      }
-    });
-  }
-
-  getDurationsFrom(hour: number): number[] {
-    const taken = this.timeSlots();
-    const idx = hour - 17;
-
-    const availableDurations: number[] = [];
-    for (let len = 1; len <= 6 && idx + len <= 6; len++) {
-      const slice = taken.slice(idx, idx + len);
-      if (slice.every((s) => s.available)) availableDurations.push(len);
-      else break;
+    const date = this.store.selectedDate();
+    const room = this.store.selectedRoom();
+    if (date && room) {
+      this.reservationService
+        .getReservationsForRoom(room, date)
+        .subscribe((res) => this.reservations.set(res));
     }
-
-    return availableDurations;
   }
 
+  // === UI Logic ===
   selectTime(hour: number) {
-    const time = `${String(hour).padStart(2, '0')}:00`;
-    this.selectedTime.set(time);
-    this.selectedDuration.set(1);
+    this.selectedTime.set(`${String(hour).padStart(2, '0')}:00`);
+    this.selectedDuration.set(1); // reset
   }
 
   get selectedHour(): number | null {
-  const time = this.selectedTime();
-  return time ? +time.split(':')[0] : null;
-}
+    const [hourStr] = this.selectedTime()?.split(':') ?? [];
+    return hourStr ? parseInt(hourStr, 10) : null;
+  }
 
-
-  isTimeAndDurationSelected(): boolean {
-    return this.selectedTime() !== null && this.selectedDuration() > 0;
+  getDurationsFrom(hour: number): number[] {
+    const idx = hour - START_HOUR;
+    const availableDurations: number[] = [];
+    for (let len = 1; len <= 6 && idx + len <= 6; len++) {
+      const slice = this.timeSlots().slice(idx, idx + len);
+      if (slice.every((s) => s.available)) availableDurations.push(len);
+      else break;
+    }
+    return availableDurations;
   }
 
   toggleNeedsGm() {
     this.needsGm.update((v) => !v);
   }
 
+  // === Actions ===
   confirm() {
-    if (this.selectedTime()) {
-      this.store.selectedStartTime.set(this.selectedTime()!);
-      this.store.selectedDuration.set(this.selectedDuration());
-      this.store.needsGm.set(this.needsGm());
-      this.store.step.set(this.needsGm() ? 3 : 4);
-    }
+    if (!this.canConfirm()) return;
+
+    this.store.selectedStartTime.set(this.selectedTime()!);
+    this.store.selectedDuration.set(this.selectedDuration());
+    this.store.needsGm.set(this.needsGm());
+    this.store.step.set(this.needsGm() ? 3 : 4);
   }
 
   handleBack() {
     this.store.step.set(1);
-    this.store.selectedStartTime.set(null);
-    this.store.selectedDuration.set(null);
   }
 }

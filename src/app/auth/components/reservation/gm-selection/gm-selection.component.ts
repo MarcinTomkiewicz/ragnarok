@@ -20,18 +20,27 @@ export class GmSelectionComponent {
 
   readonly systems = signal<IRPGSystem[]>([]);
   readonly gms = signal<IGmData[]>([]);
-  readonly selectedGmId = signal<string | null>(null);
+
+  readonly selectedGmId = signal<string | null>(this.store.selectedGm());
+  readonly selectedSystemId = signal<string | null>(
+    this.store.selectedSystemId()
+  );
 
   readonly form: FormGroup = this.fb.group({
-    systemId: [null],
+    systemId: [this.selectedSystemId()],
   });
 
   constructor() {
     this.loadSystems();
 
+    const currentSystemId = this.selectedSystemId();
+    if (currentSystemId) this.loadGmsForSystem(currentSystemId);
+
     this.form
       .get('systemId')
       ?.valueChanges.subscribe((systemId: string | null) => {
+        this.selectedSystemId.set(systemId);
+
         if (systemId) {
           this.loadGmsForSystem(systemId);
         } else {
@@ -41,30 +50,34 @@ export class GmSelectionComponent {
       });
   }
 
-  loadSystems() {
-    this.backend.getAll<IRPGSystem>('systems', 'name').subscribe((systems) => {
-      this.systems.set(systems);
-    });
+  private loadSystems() {
+    this.backend
+      .getAll<IRPGSystem>('systems', 'name')
+      .subscribe((systems) => this.systems.set(systems));
   }
 
-  loadGmsForSystem(systemId: string) {
+  private loadGmsForSystem(systemId: string) {
     this.backend
       .getAll<IGmData>('v_gm_specialties_with_user')
       .subscribe((records) => {
         const filtered = records.filter((r) => r.systemId === systemId);
         this.gms.set(filtered);
+
+        const existingId = this.store.selectedGm();
+        const stillExists = filtered.some((g) => g.userId === existingId);
+        this.selectedGmId.set(stillExists ? existingId : null);
       });
   }
 
   confirm() {
-    const selectedId = this.selectedGmId();
-    const gm = this.gms().find((g) => g.userId === selectedId);
-    const selectedSystemId = this.form.get('systemId')?.value;
+    const id = this.selectedGmId();
+    const gm = this.gms().find((g) => g.userId === id);
+    const systemId = this.selectedSystemId();
 
-    if (selectedId && gm?.firstName) {
-      this.store.selectedGm.set(gm.userId);
+    if (id && gm?.firstName && systemId) {
+      this.store.selectedGm.set(id);
       this.store.gmFirstName.set(gm.firstName);
-      this.store.selectedSystemId?.set?.(selectedSystemId); // <- jeśli dodasz do store
+      this.store.selectedSystemId.set(systemId);
       this.store.step.set(4);
     }
   }
