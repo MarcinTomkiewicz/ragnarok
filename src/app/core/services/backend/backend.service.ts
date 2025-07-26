@@ -264,6 +264,49 @@ export class BackendService {
     );
   }
 
+  uploadImage(file: File, path: string): Observable<string> {
+    const fileName = `${Date.now()}.avif`;
+    const fullPath = `${path}/${fileName}`;
+
+    return from(
+      this.supabase.storage.from('images').upload(fullPath, file, {
+        contentType: 'image/avif',
+        upsert: true,
+      })
+    ).pipe(
+      map((response) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        return fullPath; // ścieżka wewnętrzna do zapisania w bazie
+      })
+    );
+  }
+
+  uploadOrReplaceImage(
+  file: File,
+  path: string,
+  previousPath?: string
+): Observable<string> {
+  const bucket = this.supabase.storage.from('images');
+
+  const fullPath = `${path}/${file.name}`;
+
+  const upload$ = from(bucket.upload(fullPath, file, { upsert: true }));
+
+  const remove$ = previousPath
+    ? from(bucket.remove([previousPath]))
+    : of(null);
+
+  return remove$.pipe(
+    switchMap(() => upload$),
+    map((res) => {
+      if (res.error) throw new Error(res.error.message);
+      return fullPath; // tylko ścieżka
+    })
+  );
+}
+
   private processImage<T extends { [key: string]: any }>(
     item: T,
     width: number = 600,

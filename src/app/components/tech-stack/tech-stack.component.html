@@ -15,7 +15,7 @@
     } @else {
       <div class="mg-grid">
         @for (gm of visibleGms(); track gm.userId) {
-          <div class="mg-card cursor-pointer" (click)="onCardClick(gm)">
+          <div class="mg-card" (click)="onCardClick(gm)">
             <img
               [src]="'/avatars/default.png'"
               [alt]="gm.firstName"
@@ -30,7 +30,7 @@
         }
       </div>
 
-      @if (!showAll()) {
+      @if (!showAll() && shouldShowMoreButton()) {
         <div class="mt-4 text-center">
           <button class="btn btn-outline" (click)="showAll.set(true)">
             Pokaż więcej

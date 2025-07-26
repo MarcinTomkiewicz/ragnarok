@@ -4,6 +4,7 @@ export interface IGmProfile {
   id: string;
   experience: string;
   specialties: IRPGSystem[];
+  image?: string;
   createdAt: string;
 }
 
@@ -16,4 +17,5 @@ export interface IGmData {
   firstName?: string;
   age?: number;
   shortDescription?: string;
+  image?: string;
 }

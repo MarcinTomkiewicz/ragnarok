@@ -30,6 +30,10 @@ export class TechStackComponent implements OnInit {
     this.showAll() ? this.gms() : this.gms().slice(0, 4)
   );
 
+  readonly shouldShowMoreButton = computed(() =>
+  !this.showAll() && this.gms().length > 4
+);
+
   readonly roleDisplay = RoleDisplay[CoworkerRoles.Gm];
 
   ngOnInit(): void {
