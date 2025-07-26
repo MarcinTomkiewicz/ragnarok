@@ -1,0 +1,13 @@
+<div class="upcoming-sessions-wrapper full-height">
+  <h2 class="section-title">Twoje nadchodzące sesje</h2>
+
+  <app-reservation-calendar
+    [reservationsMap]="reservationsMap()"
+    [selectedDate]="selectedDate()"
+    [selectionDisabled]="true"
+    [highlightOnlyGmId]="currentUser.id"
+    [room]="Rooms.Asgard"
+    (dateClicked)="onDateSelected($event)"
+    (monthChanged)="onMonthChanged($event)"
+  ></app-reservation-calendar>
+</div>

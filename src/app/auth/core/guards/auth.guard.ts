@@ -25,9 +25,7 @@ export class AuthGuard implements CanActivate {
     const requiredCoworkerRoles = route.data['coworkerRoles'] as
       | CoworkerRoles[]
       | undefined;
-    const minCoworkerRole = route.data['minCoworkerRole'] as
-      | CoworkerRoles
-      | undefined;
+    const minCoworkerRole = route.data['minCoworkerRole'] as CoworkerRoles | undefined;
     const minSystemRole = route.data['minSystemRole'] as SystemRole | undefined;
     const authOnly = route.data['authOnly'] as boolean | undefined;
 
@@ -45,22 +43,14 @@ export class AuthGuard implements CanActivate {
 
     if (user) {
       const hasSystemRole = !requiredRoles || requiredRoles.includes(user.role);
-      const hasMinSystemRole =
-        !minSystemRole || hasMinimumSystemRole(user.role, minSystemRole);
+      const hasMinSystemRole = !minSystemRole || hasMinimumSystemRole(user, minSystemRole);
       const hasExactCoworker =
         !requiredCoworkerRoles ||
+        user.role === SystemRole.Admin ||
         (user.coworker && requiredCoworkerRoles.includes(user.coworker));
-      const hasMinCoworker =
-        !minCoworkerRole ||
-        (user.coworker &&
-          hasMinimumCoworkerRole(user.coworker, minCoworkerRole));
+      const hasMinCoworker = !minCoworkerRole || hasMinimumCoworkerRole(user, minCoworkerRole);
 
-      if (
-        hasSystemRole &&
-        hasMinSystemRole &&
-        hasExactCoworker &&
-        hasMinCoworker
-      ) {
+      if (hasSystemRole && hasMinSystemRole && hasExactCoworker && hasMinCoworker) {
         return true;
       }
     }

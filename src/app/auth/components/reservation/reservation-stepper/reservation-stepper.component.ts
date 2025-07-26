@@ -51,13 +51,13 @@ export class ReservationStepperComponent {
   readonly maxStep = computed(() => (this.store.needsGm() ? 4 : 3));
 
   readonly canProceed = computed(() => {
-    console.log(this.store.gmFirstName(), this.store.selectedGm(), this.store.selectedSystemId());
-    
     switch (this.step()) {
       case 1:
         return !!this.store.selectedRoom() && !!this.store.selectedDate();
       case 2:
-        return !!this.store.selectedStartTime() && !!this.store.selectedDuration();
+        return (
+          !!this.store.selectedStartTime() && !!this.store.selectedDuration()
+        );
       case 3:
         return !!this.store.selectedSystemId() && !!this.store.selectedGm();
       case 4:
@@ -71,6 +71,13 @@ export class ReservationStepperComponent {
     if (!this.canProceed()) return;
 
     const current = this.step();
+    const needsGm = this.store.needsGm();
+
+    if (current === 2 && !needsGm) {
+      this.step.set(4);
+      return;
+    }
+
     if (current < this.maxStep()) {
       this.step.set(current + 1);
     } else {
@@ -79,7 +86,15 @@ export class ReservationStepperComponent {
   }
 
   goBack() {
-    const prev = this.step() - 1;
+    const current = this.step();
+    const needsGm = this.store.needsGm();
+
+    if (current === 4 && !needsGm) {
+      this.step.set(2);
+      return;
+    }
+
+    const prev = current - 1;
     if (prev >= 1) this.step.set(prev);
   }
 

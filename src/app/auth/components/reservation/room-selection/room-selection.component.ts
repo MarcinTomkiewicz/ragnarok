@@ -1,83 +1,85 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
-  addDays,
   addMonths,
   eachDayOfInterval,
   endOfMonth,
-  endOfWeek,
   format,
-  isSameMonth,
   startOfMonth,
-  startOfWeek,
 } from 'date-fns';
-import { pl } from 'date-fns/locale';
 import { forkJoin, map, of } from 'rxjs';
-
 import { CoworkerRoles } from '../../../../core/enums/roles';
 import { Rooms } from '../../../../core/enums/rooms';
 import { SystemRole } from '../../../../core/enums/systemRole';
-import { IReservation } from '../../../../core/interfaces/i-reservation';
-
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { rxComputed } from '../../../../core/utils/rx-computed';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { rxComputed } from '../../../../core/utils/rx-computed';
+import { ReservationCalendarComponent } from '../../../common/reservation-calendar/reservation-calendar.component';
+import { IReservation } from '../../../../core/interfaces/i-reservation';
 
 @Component({
   selector: 'app-room-selection',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReservationCalendarComponent],
   templateUrl: './room-selection.component.html',
 })
 export class RoomSelectionComponent {
-  // === Store & services ===
+  private readonly auth = inject(AuthService);
   readonly store = inject(ReservationStoreService);
   private readonly reservationService = inject(ReservationService);
-  private readonly auth = inject(AuthService);
 
-  // === Signals from store ===
   readonly selectedRoom = this.store.selectedRoom;
   readonly selectedDate = this.store.selectedDate;
   readonly confirmedTeam = this.store.confirmedTeam;
-
-  // === Calendar ===
-  readonly currentMonth = signal(new Date());
   readonly reservationsMap = signal(new Map<string, IReservation[]>());
 
-  readonly minMonth = startOfMonth(new Date());
-  readonly maxMonth = startOfMonth(addMonths(new Date(), 1));
+  constructor() {
+    effect(() => {
+      const room = this.selectedRoom();
+      if (!room) return;
 
-  readonly dayNames = Array.from({ length: 7 }, (_, i) =>
-    format(addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), i), 'ccc', {
-      locale: pl,
-    })
-  );
+      const start = startOfMonth(new Date());
+      const end = endOfMonth(new Date());
+      const dates = eachDayOfInterval({ start, end }).map((d) =>
+        format(d, 'yyyy-MM-dd')
+      );
 
-  readonly visibleDays = computed(() => {
-    const start = startOfWeek(startOfMonth(this.currentMonth()), {
-      weekStartsOn: 1,
+      forkJoin(
+        dates.map((date) =>
+          this.reservationService
+            .getReservationsForRoom(room, date)
+            .pipe(map((res) => [date, res] as const))
+        )
+      ).subscribe((pairs) => {
+        this.reservationsMap.set(new Map(pairs));
+      });
     });
-    const end = endOfWeek(endOfMonth(this.currentMonth()), { weekStartsOn: 1 });
-    return eachDayOfInterval({ start, end });
-  });
+  }
 
-  readonly formattedCurrentMonth = computed(() =>
-    format(this.currentMonth(), 'LLLL yyyy', { locale: pl })
+  onMonthChanged(dates: string[]) {
+    const room = this.selectedRoom();
+    if (!room) return;
+
+    forkJoin(
+      dates.map((date) =>
+        this.reservationService
+          .getReservationsForRoom(room, date)
+          .pipe(map((res) => [date, res] as const))
+      )
+    ).subscribe((pairs) => {
+      this.reservationsMap.set(new Map(pairs));
+    });
+  }
+  readonly isPrivilegedUser = computed(
+    () =>
+      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+        this.auth.userCoworkerRole()!
+      ) || this.auth.userSystemRole() === SystemRole.Admin
   );
 
-  readonly canGoPrev = computed(() => this.currentMonth() > this.maxMonth);
-  readonly canGoNext = computed(() => this.currentMonth() < this.maxMonth);
-
-  // === Roles & Access ===
-  readonly isPrivilegedUser = computed(() =>
-    [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
-      this.auth.userCoworkerRole()!
-    ) || this.auth.userSystemRole() === SystemRole.Admin
-  );
-
-  readonly isMember = computed(() =>
-    this.auth.userCoworkerRole() === CoworkerRoles.Member
+  readonly isMember = computed(
+    () => this.auth.userCoworkerRole() === CoworkerRoles.Member
   );
 
   readonly isGoldenBlocked = rxComputed([this.auth.userCoworkerRole], (role) =>
@@ -103,10 +105,11 @@ export class RoomSelectionComponent {
     [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom())
   );
 
-  readonly canProceed = computed(() =>
-    !this.isSelectionDisabled() &&
-    !!this.selectedDate() &&
-    (!this.requiresClubConfirmation() || this.confirmedTeam())
+  readonly canProceed = computed(
+    () =>
+      !this.isSelectionDisabled() &&
+      !!this.selectedDate() &&
+      (!this.requiresClubConfirmation() || this.confirmedTeam())
   );
 
   readonly rooms = computed(() =>
@@ -117,67 +120,10 @@ export class RoomSelectionComponent {
     )
   );
 
-  // === Hourly Availability ===
-  readonly hourlyAvailabilityMap = computed(() => {
-    const availability = new Map<string, boolean[]>();
-
-    const room = this.selectedRoom();
-    const startHour = [Rooms.Asgard, Rooms.Alfheim].includes(room) ? 15 : 17;
-    const endHour = 23;
-
-    for (const [dateStr, reservations] of this.reservationsMap()) {
-      const blocks = Array(endHour - startHour).fill(false);
-
-      for (const res of reservations) {
-        const start = parseInt(res.startTime.split(':')[0], 10);
-        const end = start + res.durationHours;
-        for (let h = start; h < end; h++) {
-          if (h >= startHour && h < endHour) blocks[h - startHour] = true;
-        }
-      }
-
-      availability.set(dateStr, blocks);
-    }
-
-    return availability;
-  });
-
-  getHourlyAvailability(date: Date): boolean[] {
-    const key = format(date, 'yyyy-MM-dd');
-    return this.hourlyAvailabilityMap().get(key) ?? [];
-  }
-
-  format(date: Date, pattern: string): string {
-    return format(date, pattern, { locale: pl });
-  }
-
-  isPastDay(date: Date): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  }
-
-  isSameMonth(date: Date, base: Date): boolean {
-    return isSameMonth(date, base);
-  }
-
-  isReserved(date: Date): boolean {
-    const key = format(date, 'yyyy-MM-dd');
-    const hourly = this.hourlyAvailabilityMap().get(key);
-    return hourly?.every((slot) => slot) ?? false;
-  }
-
-  canShowHours(date: Date): boolean {
-    return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
-  }
-
-  // === Actions ===
   selectRoom(room: Rooms) {
     if (this.selectedRoom() === room) return;
 
     this.store.selectedRoom.set(room);
-
-    // Resetujemy cały kontekst (poza pokojem)
     this.store.selectedDate.set(null);
     this.store.selectedStartTime.set(null);
     this.store.selectedDuration.set(null);
@@ -188,13 +134,14 @@ export class RoomSelectionComponent {
     this.store.confirmedTeam.set(false);
   }
 
-  selectDate(date: Date) {
+  selectDate(dateStr: string) {
+    const date = new Date(dateStr); // lub parse(dateStr, 'yyyy-MM-dd', new Date())
     if (this.isSelectionDisabled()) return;
     const formatted = format(date, 'yyyy-MM-dd');
     if (this.selectedDate() !== formatted) {
       this.store.selectedDate.set(formatted);
 
-      // Reset czasu, MG itd.
+      // Reset reszty
       this.store.selectedStartTime.set(null);
       this.store.selectedDuration.set(null);
       this.store.selectedGm.set(null);
@@ -207,44 +154,5 @@ export class RoomSelectionComponent {
   onClubCheckboxChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.store.confirmedTeam.set(input.checked);
-  }
-
-  prevMonth() {
-    const newMonth = addMonths(this.currentMonth(), -1);
-    if (startOfMonth(newMonth) >= this.minMonth) {
-      this.currentMonth.set(newMonth);
-    }
-  }
-
-  nextMonth() {
-    const newMonth = addMonths(this.currentMonth(), 1);
-    if (startOfMonth(newMonth) <= this.maxMonth) {
-      this.currentMonth.set(newMonth);
-    }
-  }
-
-  trackByDate(date: Date): string {
-    return format(date, 'yyyy-MM-dd');
-  }
-
-  // === Effects ===
-  constructor() {
-    effect(() => {
-      const room = this.selectedRoom();
-      const dates = this.visibleDays().map((d) => format(d, 'yyyy-MM-dd'));
-      this.fetchReservationsForRoom(room, dates);
-    });
-  }
-
-  private fetchReservationsForRoom(room: Rooms, dates: string[]) {
-    forkJoin(
-      dates.map((date) =>
-        this.reservationService
-          .getReservationsForRoom(room, date)
-          .pipe(map((res) => [date, res] as const))
-      )
-    ).subscribe((pairs) => {
-      this.reservationsMap.set(new Map(pairs));
-    });
   }
 }

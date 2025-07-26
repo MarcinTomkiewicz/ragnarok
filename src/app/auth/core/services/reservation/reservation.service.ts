@@ -4,12 +4,14 @@ import { map } from 'rxjs/operators';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { IReservation, ReservationStatus } from '../../../../core/interfaces/i-reservation';
+import {
+  IReservation,
+  ReservationStatus,
+} from '../../../../core/interfaces/i-reservation';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { Rooms } from '../../../../core/enums/rooms';
 import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 import { IUser } from '../../../../core/interfaces/i-user';
-
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
@@ -128,49 +130,64 @@ export class ReservationService {
   }
 
   checkIfUserHasActiveReservation(): Observable<boolean> {
-  const user = this.authService.user();
-  if (!user) return of(false);
+    const user = this.authService.user();
+    if (!user) return of(false);
 
-  const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toISOString().slice(0, 10);
 
-  return this.getMyReservations().pipe(
-    map((reservations) =>
-      reservations.some(
-        (r) =>
-          r.status === ReservationStatus.Confirmed &&
-          r.date >= today
+    return this.getMyReservations().pipe(
+      map((reservations) =>
+        reservations.some(
+          (r) => r.status === ReservationStatus.Confirmed && r.date >= today
+        )
       )
-    )
-  );
-}
+    );
+  }
 
-checkIfMemberHasReservationThisWeekInClubRooms(): Observable<boolean> {
-  const user = this.authService.user();
-  if (!user) return of(false);
+  checkIfMemberHasReservationThisWeekInClubRooms(): Observable<boolean> {
+    const user = this.authService.user();
+    if (!user) return of(false);
 
-  const today = new Date();
-  const day = today.getDay();
+    const today = new Date();
+    const day = today.getDay();
 
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
-  monday.setHours(0, 0, 0, 0);
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+    monday.setHours(0, 0, 0, 0);
 
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
 
-  return this.getMyReservations().pipe(
-    map((reservations) =>
-      reservations.some((r) => {
-        const resDate = new Date(r.date);
-        return (
-          [Rooms.Asgard, Rooms.Alfheim].includes(r.roomName) &&
-          resDate >= monday &&
-          resDate <= sunday
-        );
-      })
-    )
-  );
-}
+    return this.getMyReservations().pipe(
+      map((reservations) =>
+        reservations.some((r) => {
+          const resDate = new Date(r.date);
+          return (
+            [Rooms.Asgard, Rooms.Alfheim].includes(r.roomName) &&
+            resDate >= monday &&
+            resDate <= sunday
+          );
+        })
+      )
+    );
+  }
 
+  getReservationsForGm(gmId: string, date: string): Observable<IReservation[]> {
+    return this.backend.getAll<IReservation>(
+      'reservations',
+      'startTime',
+      'asc',
+      {
+        filters: {
+          gm_id: { value: gmId, operator: FilterOperator.EQ },
+          date: { value: date, operator: FilterOperator.EQ },
+          status: {
+            value: ReservationStatus.Confirmed,
+            operator: FilterOperator.EQ,
+          },
+        },
+      }
+    );
+  }
 }

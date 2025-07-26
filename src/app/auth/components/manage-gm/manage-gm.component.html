@@ -1,0 +1,51 @@
+<div class="form-panel gm-profile-panel full-height">
+  <h1 class="panel-title">Mój profil MG</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submitProfile()" class="w-100">
+    <div class="form-group">
+      <label for="experience">Doświadczenie</label>
+      <textarea
+        id="experience"
+        rows="5"
+        class="form-control"
+        formControlName="experience"
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Systemy RPG (maks. 5)</label>
+      <div class="d-flex flex-column gap-2" formArrayName="systems">
+        @for (i of systemControls.controls; let index = $index; track index) {
+          <select
+            class="form-select"
+            [formControlName]="index"
+          >
+            <option [ngValue]="''">-- wybierz system --</option>
+            @for (system of systems(); track system.id) {
+              <option
+                [value]="system.id"
+                [disabled]="isSystemSelectedElsewhere(system.id, index)"
+              >
+                {{ system.name }}
+              </option>
+            }
+          </select>
+        }
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="image">Zdjęcie (opcjonalnie)</label>
+      <input
+        type="file"
+        id="image"
+        class="form-control"
+        (change)="onFileSelected($event)"
+      />
+    </div>
+
+    <button class="btn btn-primary mt-3" type="submit">
+      Zapisz profil
+    </button>
+  </form>
+</div>

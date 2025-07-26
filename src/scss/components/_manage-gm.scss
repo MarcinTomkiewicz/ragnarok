@@ -1,0 +1,59 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.gm-profile-panel {
+  @include section-wrapper;
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .form-panel {
+    width: 100%;
+  }
+
+  .form-group {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .panel-title {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .system-checkboxes,
+  [formArrayName="systems"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem 1rem;
+    margin-top: 0.5rem;
+    width: 100%;
+
+    select.form-select {
+      width: 100%;
+    }
+
+    .form-check {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+  }
+
+  textarea.form-control {
+    resize: vertical;
+  }
+
+  input[type="file"].form-control {
+    padding: 0.5rem 0.75rem;
+  }
+
+  button[type="submit"] {
+    display: block;
+    margin: 2rem auto 0 auto;
+    min-width: 200px;
+  }
+}

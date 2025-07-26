@@ -7,6 +7,17 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { SystemRole } from '../../../../core/enums/systemRole';
 
+enum TimeSlots {
+  earlyStart = 15,
+  lateStart = 17,
+  end = 23,
+}
+
+enum DurationOptions {
+  ClubRoom = 4,
+  OtherRoom = 6,
+}
+
 @Component({
   selector: 'app-time-selection',
   standalone: true,
@@ -45,10 +56,10 @@ export class TimeSelectionComponent {
 
   // === Time logic ===
   readonly startHour = computed(() =>
-    this.isMemberRestrictedClubRoom() ? 15 : 17
+    this.isMemberRestrictedClubRoom() ? TimeSlots.earlyStart : TimeSlots.lateStart
   );
 
-  readonly endHour = computed(() => 23);
+  readonly endHour = computed(() => TimeSlots.end);
 
   readonly timeSlots = computed(() => {
     const start = this.startHour();
@@ -79,7 +90,7 @@ export class TimeSelectionComponent {
     if (hour === null) return [];
 
     const start = this.startHour();
-    const maxDur = this.isMemberRestrictedClubRoom() ? 4 : 6;
+    const maxDur = this.isMemberRestrictedClubRoom() ? DurationOptions.ClubRoom : DurationOptions.OtherRoom;
     const idx = hour - start;
     const availableDurations: number[] = [];
 

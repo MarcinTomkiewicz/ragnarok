@@ -31,7 +31,9 @@
 @import "components/gm-selection";
 @import "components/reservation-summary";
 @import "components/my-reservations";
-
+@import "components/manage-gm";
+@import "components/reservation-calendar";
+@import "components/upcoming-sessions";
 // Layouts
 @import "layouts/header";
 @import "layouts/footer";
@@ -58,6 +60,7 @@
 @import "vendors/tooltip";
 @import "vendors/list";
 @import "vendors/forms";
+@import "vendors/texts";
 
 @import "@fontsource/modern-antiqua/index.css";
 @import "@fontsource/cinzel/index.css";

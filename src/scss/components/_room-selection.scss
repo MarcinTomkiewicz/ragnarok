@@ -21,114 +21,114 @@
     }
   }
 
-  .calendar-nav {
-    @include flex-center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+  // .calendar-nav {
+  //   @include flex-center;
+  //   gap: 1rem;
+  //   margin-bottom: 1.5rem;
 
-    button {
-      width: 2.5rem;
-      height: 2.5rem;
-      padding: 0;
-      font-size: $font-size-lg;
-    }
+  //   button {
+  //     width: 2.5rem;
+  //     height: 2.5rem;
+  //     padding: 0;
+  //     font-size: $font-size-lg;
+  //   }
 
-    .calendar-title {
-      flex: 1;
-      text-align: center;
-      font-size: $font-size-xl;
-      @include gold-gradient-text;
-    }
-  }
+  //   .calendar-title {
+  //     flex: 1;
+  //     text-align: center;
+  //     font-size: $font-size-xl;
+  //     @include gold-gradient-text;
+  //   }
+  // }
 
-  .calendar {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    max-width: 810px;
-    width: 100%;
+  // .calendar {
+  //   display: flex;
+  //   flex-direction: column;
+  //   gap: 1rem;
+  //   max-width: 810px;
+  //   width: 100%;
 
-    .calendar-header {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      text-align: center;
-      font-weight: bold;
-      color: $secondary-text-color;
+  //   .calendar-header {
+  //     display: grid;
+  //     grid-template-columns: repeat(7, 1fr);
+  //     text-align: center;
+  //     font-weight: bold;
+  //     color: $secondary-text-color;
 
-      .day-name {
-        padding: 0.5rem 0;
-      }
-    }
+  //     .day-name {
+  //       padding: 0.5rem 0;
+  //     }
+  //   }
 
-    .calendar-body {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr); // dokładnie 7 kolumn
-      gap: 0.4rem;
-      width: 100%;
-      max-width: 100%;
-      box-sizing: border-box;
+  //   .calendar-body {
+  //     display: grid;
+  //     grid-template-columns: repeat(7, 1fr); // dokładnie 7 kolumn
+  //     gap: 0.4rem;
+  //     width: 100%;
+  //     max-width: 100%;
+  //     box-sizing: border-box;
 
-      .calendar-day {
-        background-color: $bg-color-light;
-        border: 1px solid $border-color;
-        padding: 0.5rem 0.25rem;
-        text-align: center;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: background-color 0.3s;
-        color: $text-color;
-        font-size: 0.85rem;
-        min-width: 0;
-        min-height: 60px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
+  //     .calendar-day {
+  //       background-color: $bg-color-light;
+  //       border: 1px solid $border-color;
+  //       padding: 0.5rem 0.25rem;
+  //       text-align: center;
+  //       cursor: pointer;
+  //       border-radius: 6px;
+  //       transition: background-color 0.3s;
+  //       color: $text-color;
+  //       font-size: 0.85rem;
+  //       min-width: 0;
+  //       min-height: 60px;
+  //       display: flex;
+  //       flex-direction: column;
+  //       align-items: center;
+  //       justify-content: flex-start;
 
-        &.outside-month {
-          visibility: hidden;
-        }
+  //       &.outside-month {
+  //         visibility: hidden;
+  //       }
 
-        &.reserved {
-          background-color: $secondary-button-color;
-          color: $danger-color;
-          cursor: not-allowed;
-        }
+  //       &.reserved {
+  //         background-color: $secondary-button-color;
+  //         color: $danger-color;
+  //         cursor: not-allowed;
+  //       }
 
-        &.selected {
-          background-color: $primary-color;
-          color: $button-text-color;
-        }
+  //       &.selected {
+  //         background-color: $primary-color;
+  //         color: $button-text-color;
+  //       }
 
-        &:hover:not(.reserved):not(.disabled) {
-          background-color: $hover-color;
-        }
+  //       &:hover:not(.reserved):not(.disabled) {
+  //         background-color: $hover-color;
+  //       }
 
-        &.disabled {
-          opacity: 0.4;
-          pointer-events: none;
-          cursor: not-allowed;
-        }
+  //       &.disabled {
+  //         opacity: 0.4;
+  //         pointer-events: none;
+  //         cursor: not-allowed;
+  //       }
 
-        .hour-grid {
-          display: flex;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: 1px;
-          margin-top: 0.25rem;
-        }
+  //       .hour-grid {
+  //         display: flex;
+  //         justify-content: center;
+  //         flex-wrap: wrap;
+  //         gap: 1px;
+  //         margin-top: 0.25rem;
+  //       }
 
-        .hour-block {
-          width: 6px;
-          height: 6px;
-          background-color: $success-color;
-          border-radius: 1px;
+  //       .hour-block {
+  //         width: 6px;
+  //         height: 6px;
+  //         background-color: $success-color;
+  //         border-radius: 1px;
 
-          &.taken {
-            background-color: $danger-color;
-          }
-        }
-      }
-    }
-  }
+  //         &.taken {
+  //           background-color: $danger-color;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 }

@@ -1,0 +1,7 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+.text-muted {
+  --bs-secondary-color: lighten($secondary-text-color, 15%)
+      
+}

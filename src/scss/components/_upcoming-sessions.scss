@@ -1,0 +1,43 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.upcoming-sessions-wrapper {
+  @include section-wrapper;
+  @include flex-wrapper(column, start, center);
+
+  .calendar {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .session-details {
+    margin-top: 2rem;
+    padding: 1rem 1.5rem;
+    background-color: $bg-color-light;
+    border-radius: $border-radius;
+    box-shadow: 0 2px 6px rgba($text-color, 0.1);
+
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .session-item {
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+
+      .label {
+        font-weight: bold;
+        color: $secondary-text-color;
+      }
+
+      .value {
+        flex: 1;
+        text-align: right;
+      }
+    }
+  }
+}

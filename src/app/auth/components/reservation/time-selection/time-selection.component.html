@@ -21,7 +21,7 @@
     <button
       class="btn btn-outline m-1"
       [class.active]="selectedDuration() === d"
-      (click)="selectedDuration.set(d)"
+      (click)="selectDuration(d)"
     >
       {{ d }}h
     </button>

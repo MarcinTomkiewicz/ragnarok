@@ -1,5 +1,4 @@
 import { IRPGSystem } from './i-rpg-system';
-import { IUser } from './i-user';
 
 export interface IGmProfile {
   id: string;
