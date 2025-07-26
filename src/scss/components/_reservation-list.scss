@@ -1,0 +1,16 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.reservations-grid {
+  @include mg-grid(3);
+}
+
+.centered-reservation {
+  display: flex;
+  justify-content: center;
+
+  .reservation-card {
+    max-width: 600px;
+    width: 100%;
+  }
+}

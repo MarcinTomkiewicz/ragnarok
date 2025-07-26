@@ -127,7 +127,9 @@ export class BackendService {
           throw new Error(response.error.message);
         }
 
-        return response.data ? this.processImage(response.data) : null;
+        return response.data
+          ? this.processImage(toCamelCase<T>(response.data))
+          : null;
       })
     );
   }
@@ -195,6 +197,18 @@ export class BackendService {
         );
       })
     );
+  }
+
+  getByIds<T extends object>(table: string, ids: string[]): Observable<T[]> {
+    if (!ids.length) return of([]);
+    return this.getAll<T>(table, undefined, 'asc', {
+      filters: {
+        id: {
+          operator: FilterOperator.IN,
+          value: ids,
+        },
+      },
+    });
   }
 
   /**

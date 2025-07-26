@@ -4,10 +4,23 @@
   <app-reservation-calendar
     [reservationsMap]="reservationsMap()"
     [selectedDate]="selectedDate()"
-    [selectionDisabled]="true"
+    [selectionDisabled]="false"
     [highlightOnlyGmId]="currentUser.id"
     [room]="Rooms.Asgard"
     (dateClicked)="onDateSelected($event)"
     (monthChanged)="onMonthChanged($event)"
   ></app-reservation-calendar>
+
+  @let selected = selectedDate(); @if (selected) { @let reservations =
+  filteredReservationsForSelectedDate(); @if (reservations.length > 0) {
+  <h3 class="mt-4">Sesje na {{ selected }}</h3>
+  <app-reservation-list
+    [reservations]="reservations"
+    [showDetailsButton]="true"
+    [showUserDetails]="true"
+    (showDetails)="onShowDetails($event.id)"
+  />
+  } @else {
+  <p class="mt-4">Brak sesji na ten dzień.</p>
+  } }
 </div>

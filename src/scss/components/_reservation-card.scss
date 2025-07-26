@@ -1,0 +1,61 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.card-dark {
+  background-color: $bg-color-light;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: 0.5rem;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: $font-size-sm;
+  margin-bottom: 0.75rem;
+
+  .reservation-date {
+    font-weight: bold;
+    color: $text-color;
+  }
+
+  .reservation-status {
+    font-weight: 600;
+
+    &.status-confirmed {
+      color: $success-color;
+    }
+
+    &.status-cancelled {
+      color: $danger-color;
+    }
+  }
+}
+
+.card-details {
+  font-size: $font-size-sm;
+
+  p {
+    margin: 0.25rem 0;
+  }
+}
+
+.reservation-id {
+  font-size: $font-size-xs;
+  color: $secondary-text-color;
+  margin-top: 0.5rem;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+
+  .btn {
+    font-size: $font-size-xs;
+    padding: 0.4rem 0.8rem;
+  }
+}

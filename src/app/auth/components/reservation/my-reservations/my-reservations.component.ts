@@ -23,11 +23,12 @@ import {
   IReservation,
 } from '../../../../core/interfaces/i-reservation';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { ReservationListComponent } from '../../../common/reservation-list/reservation-list.component';
 
 @Component({
   selector: 'app-my-reservations',
   standalone: true,
-  imports: [CommonModule, NgbTooltip],
+  imports: [CommonModule, ReservationListComponent],
   templateUrl: './my-reservations.component.html',
 })
 export class MyReservationsComponent {
@@ -139,5 +140,9 @@ export class MyReservationsComponent {
     this.reservationService.getMyReservations().subscribe((res) => {
       this.reservationsSignal.set(res ?? []);
     });
+  }
+
+  onManage(reservation: IReservation): void {
+    this.openCancelModal(reservation.id);
   }
 }

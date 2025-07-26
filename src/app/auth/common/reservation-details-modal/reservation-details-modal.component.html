@@ -1,0 +1,57 @@
+<div class="modal-header custom-modal-header">
+  <h4 class="modal-title">Szczegóły rezerwacji</h4>
+  <button
+    type="button"
+    class="btn-close"
+    aria-label="Close"
+    (click)="close()"
+  ></button>
+</div>
+
+<div class="modal-body custom-modal-body">
+  <div class="reservation-summary-wrapper">
+    <div class="summary-details">
+      <div class="summary-row">
+        <span class="label">Sala:</span>
+        <span class="value">{{ reservation.roomName }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Data:</span>
+        <span class="value">{{ formattedDate }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Godzina:</span>
+        <span class="value">{{ reservation.startTime }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Czas trwania:</span>
+        <span class="value">{{ reservation.durationHours }}h</span>
+      </div>
+      @if (system) {
+      <div class="summary-row">
+        <span class="label">System:</span>
+        <span class="value">{{ system.name }}</span>
+      </div>
+      } @if (user) {
+      <div class="summary-row">
+        <span class="label">Rezerwujący:</span>
+        <span class="value">{{ user.firstName }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Telefon:</span>
+        <span class="value">{{ user.phoneNumber }}</span>
+      </div>
+      }
+      <div class="summary-row">
+        <span class="label">Status:</span>
+        <span class="value">{{ displayStatus }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer custom-modal-footer">
+    <button type="button" class="btn btn-primary w-100" (click)="close()">
+      Zamknij
+    </button>
+  </div>
+</div>

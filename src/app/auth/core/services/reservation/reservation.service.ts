@@ -263,4 +263,21 @@ export class ReservationService {
       )
     );
   }
+
+  getReservationWithDetails(id: string): Observable<IReservation & { user: IUser, system: IRPGSystem }> {
+  return from(
+    this.supabase
+      .from('reservations')
+      .select(`*, user:user_id(*), system:system_id(*)`)
+      .eq('id', id)
+      .single()
+  ).pipe(
+    map((response) => {
+      if (response.error) throw new Error(response.error.message);
+      const data = response.data;
+      return toCamelCase(this.backend['processImage'](data));
+    })
+  );
+}
+
 }

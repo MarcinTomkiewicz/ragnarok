@@ -38,10 +38,12 @@ export class ReservationCalendarComponent {
   readonly highlightOnlyGmId = input<string | null>(null);
   readonly isPrivilegedUser = input<boolean>(false);
   readonly room = input<Rooms>();
+  readonly clickEmitsDateOnly = input<boolean>(false);
 
   // === Outputs ===
   readonly dateSelected = output<string>();
   readonly dateClicked = output<string>();
+  
 
   // === Calendar Logic ===
   readonly currentMonth = signal(new Date());
@@ -140,16 +142,16 @@ export class ReservationCalendarComponent {
   }
 
   // === Events ===
-  selectDate(date: Date) {
-    if (this.selectionDisabled()) return;
-    const formatted = format(date, 'yyyy-MM-dd');
+handleClick(date: Date) {
+  const formatted = format(date, 'yyyy-MM-dd');
+
+  if (!this.selectionDisabled()) {
     this.dateSelected.emit(formatted);
   }
 
-  clickDate(date: Date) {
-    const formatted = format(date, 'yyyy-MM-dd');
-    this.dateClicked.emit(formatted);
-  }
+  this.dateClicked.emit(formatted);
+}
+
 
   prevMonth() {
     const newMonth = addMonths(this.currentMonth(), -1);
