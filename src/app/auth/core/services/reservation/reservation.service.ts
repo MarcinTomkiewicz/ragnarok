@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { from, Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { forkJoin, from, Observable, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
 import { AuthService } from '../../../../core/services/auth/auth.service';
@@ -12,12 +12,42 @@ import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { Rooms } from '../../../../core/enums/rooms';
 import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 import { IUser } from '../../../../core/interfaces/i-user';
+import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
+import { IGmData } from '../../../../core/interfaces/i-gm-profile';
+
+// TODO: Refactor this service to separate GM logic from reservation logic
+// This service should focus on reservation management, while GM-related logic should be handled in a dedicated service.
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
   private readonly backend = inject(BackendService);
   private readonly supabase = inject(SupabaseService).getClient();
   private readonly authService = inject(AuthService);
+
+  // === UTILS ===
+  private isReservationActive(res: IReservation): boolean {
+    return (
+      res.status === ReservationStatus.Confirmed ||
+      res.status === ReservationStatus.Pending
+    );
+  }
+
+  private isTimeOverlapping(
+    startA: number,
+    durationA: number,
+    startB: number,
+    durationB: number
+  ): boolean {
+    const endA = startA + durationA;
+    const endB = startB + durationB;
+    return startA < endB && endA > startB;
+  }
+
+  private getActiveReservations(reservations: IReservation[]): IReservation[] {
+    return reservations.filter(this.isReservationActive);
+  }
+
+  // === PUBLIC METHODS ===
 
   getMyReservations(): Observable<IReservation[]> {
     const user = this.authService.user();
@@ -46,8 +76,133 @@ export class ReservationService {
     );
   }
 
-  getAllReservationsForReception(): Observable<IReservation[]> {
-    return this.backend.getAll<IReservation>('reservations', 'date', 'asc');
+  getReservationsForGm(gmId: string, date: string): Observable<IReservation[]> {
+    return this.backend.getAll<IReservation>(
+      'reservations',
+      'startTime',
+      'asc',
+      {
+        filters: {
+          gm_id: { value: gmId, operator: FilterOperator.EQ },
+          date: { value: date, operator: FilterOperator.EQ },
+          status: {
+            value: [ReservationStatus.Confirmed, ReservationStatus.Pending],
+            operator: FilterOperator.IN,
+          },
+        },
+      }
+    );
+  }
+
+  checkGmAvailability(
+    gmId: string,
+    date: string,
+    newStartHour: number,
+    newDuration: number
+  ): Observable<boolean> {
+    return this.getReservationsForGm(gmId, date).pipe(
+      map((reservations) =>
+        reservations.some((res) => {
+          const existingStart = parseInt(res.startTime.split(':')[0], 10);
+          return this.isTimeOverlapping(
+            newStartHour,
+            newDuration,
+            existingStart,
+            res.durationHours
+          );
+        })
+      )
+    );
+  }
+
+  getAvailableTimeSlots(
+    room: Rooms,
+    date: string
+  ): Observable<{ start: string; end: string }[]> {
+    return this.getReservationsForRoom(room, date).pipe(
+      map((reservations) => {
+        const OPEN = 17;
+        const CLOSE = 23;
+        const allSlots: { start: string; end: string }[] = [];
+
+        const sorted = this.getActiveReservations(reservations).sort((a, b) =>
+          a.startTime.localeCompare(b.startTime)
+        );
+
+        if (sorted.length === 0) {
+          return [{ start: '17:00', end: '23:00' }];
+        }
+
+        let current = OPEN;
+        for (const res of sorted) {
+          const start = parseInt(res.startTime.split(':')[0], 10);
+          if (current < start) {
+            allSlots.push({
+              start: `${String(current).padStart(2, '0')}:00`,
+              end: `${String(start).padStart(2, '0')}:00`,
+            });
+          }
+          current = Math.max(current, start + res.durationHours);
+        }
+
+        if (current < CLOSE) {
+          allSlots.push({
+            start: `${String(current).padStart(2, '0')}:00`,
+            end: '23:00',
+          });
+        }
+
+        return allSlots;
+      })
+    );
+  }
+
+  getAvailableGmsForSystem(
+    systemId: string,
+    date: string,
+    startHour: number,
+    duration: number
+  ): Observable<IGmData[]> {
+    return this.backend
+      .getAll<IGmData>('v_gm_specialties_with_user', undefined, 'asc', {
+        filters: {
+          systemId: { value: systemId, operator: FilterOperator.EQ },
+        },
+      })
+      .pipe(
+        switchMap((gms) => {
+          return forkJoin(
+            gms.map((gm) =>
+              this.checkGmAvailability(
+                gm.userId,
+                date,
+                startHour,
+                duration
+              ).pipe(map((isBusy) => (!isBusy ? gm : null)))
+            )
+          ).pipe(map((result) => result.filter((g): g is IGmData => !!g)));
+        })
+      );
+  }
+
+  getAllSystems(): Observable<IRPGSystem[]> {
+    return this.backend.getAll<IRPGSystem>('systems', 'name');
+  }
+
+  getGmCandidatesForSystem(systemId: string): Observable<IUser[]> {
+    return from(
+      this.supabase
+        .from('gm_specialties')
+        .select('gm_id, gm_profiles!inner(*), users(*)')
+        .eq('system_id', systemId)
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) throw new Error(error.message);
+        return (data || [])
+          .map((row) => toCamelCase<IUser>(row.users))
+          .filter(Boolean);
+      })
+    );
   }
 
   createReservation(data: Partial<IReservation>): Observable<IReservation> {
@@ -68,67 +223,6 @@ export class ReservationService {
     } as any);
   }
 
-  getAvailableTimeSlots(
-    room: Rooms,
-    date: string
-  ): Observable<{ start: string; end: string }[]> {
-    return this.getReservationsForRoom(room, date).pipe(
-      map((reservations) => {
-        const OPEN = 17;
-        const CLOSE = 23;
-        const allSlots: { start: string; end: string }[] = [];
-
-        reservations.sort((a, b) => a.startTime.localeCompare(b.startTime));
-
-        if (reservations.length === 0) {
-          allSlots.push({ start: '17:00', end: '23:00' });
-          return allSlots;
-        }
-
-        let current = OPEN;
-
-        for (const res of reservations) {
-          const [startHourStr] = res.startTime.split(':');
-          const startHour = Number(startHourStr);
-
-          if (current < startHour) {
-            allSlots.push({
-              start: `${String(current).padStart(2, '0')}:00`,
-              end: `${String(startHour).padStart(2, '0')}:00`,
-            });
-          }
-
-          current = Math.max(current, startHour + res.durationHours);
-        }
-
-        if (current < CLOSE) {
-          allSlots.push({
-            start: `${String(current).padStart(2, '0')}:00`,
-            end: '23:00',
-          });
-        }
-
-        return allSlots;
-      })
-    );
-  }
-
-  getGmCandidatesForSystem(systemId: string): Observable<IUser[]> {
-    return from(
-      this.supabase
-        .from('gm_specialties')
-        .select('gm_id, gm_profiles!inner(*), users(*)')
-        .eq('system_id', systemId)
-    ).pipe(
-      map(({ data, error }) => {
-        if (error) throw new Error(error.message);
-        return (data || [])
-          .map((row) => toCamelCase<IUser>(row.users))
-          .filter(Boolean);
-      })
-    );
-  }
-
   checkIfUserHasActiveReservation(): Observable<boolean> {
     const user = this.authService.user();
     if (!user) return of(false);
@@ -137,9 +231,7 @@ export class ReservationService {
 
     return this.getMyReservations().pipe(
       map((reservations) =>
-        reservations.some(
-          (r) => r.status === ReservationStatus.Confirmed && r.date >= today
-        )
+        reservations.some((r) => this.isReservationActive(r) && r.date >= today)
       )
     );
   }
@@ -149,10 +241,8 @@ export class ReservationService {
     if (!user) return of(false);
 
     const today = new Date();
-    const day = today.getDay();
-
     const monday = new Date(today);
-    monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
     monday.setHours(0, 0, 0, 0);
 
     const sunday = new Date(monday);
@@ -164,30 +254,13 @@ export class ReservationService {
         reservations.some((r) => {
           const resDate = new Date(r.date);
           return (
+            this.isReservationActive(r) &&
             [Rooms.Asgard, Rooms.Alfheim].includes(r.roomName) &&
             resDate >= monday &&
             resDate <= sunday
           );
         })
       )
-    );
-  }
-
-  getReservationsForGm(gmId: string, date: string): Observable<IReservation[]> {
-    return this.backend.getAll<IReservation>(
-      'reservations',
-      'startTime',
-      'asc',
-      {
-        filters: {
-          gm_id: { value: gmId, operator: FilterOperator.EQ },
-          date: { value: date, operator: FilterOperator.EQ },
-          status: {
-            value: ReservationStatus.Confirmed,
-            operator: FilterOperator.EQ,
-          },
-        },
-      }
     );
   }
 }

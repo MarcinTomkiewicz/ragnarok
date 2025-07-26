@@ -5,5 +5,6 @@ export enum FilterOperator {
     GT = 'gt',
     LT = 'lt',
     LIKE = 'like',
+    IN = 'in',
   }
   

@@ -331,6 +331,9 @@ export class BackendService {
             case FilterOperator.LIKE:
               query = query.like(toSnakeKey(key), filter.value);
               break;
+            case FilterOperator.IN:
+              query = query.in(toSnakeKey(key), filter.value);
+              break;
             default:
               throw new Error(`Unsupported filter operator: ${operator}`);
           }
