@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import {
   NgbAccordionModule,
   NgbDropdownModule,
@@ -9,6 +9,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { UserMenuComponent } from '../../common/user-menu/user-menu.component';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { IMenu } from '../../core/interfaces/i-menu';
+import { AuthService } from '../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -26,11 +27,15 @@ import { IMenu } from '../../core/interfaces/i-menu';
 export class NavbarComponent {
   private readonly offcanvasService = inject(NgbOffcanvas);
   private readonly platform = inject(PlatformService);
+  private readonly auth = inject(AuthService);
   
   isOffcanvasOpen = signal(false);
   mobileExpanded = new Map<string, boolean>();
+  readonly isGuest = computed(() => !this.auth.user());
 
-  menuLinks: IMenu[] = [
+
+readonly menuLinks = computed<IMenu[]>(() => {
+  const base: IMenu[] = [
     { label: 'O nas', path: '/about' },
     {
       label: 'Oferta',
@@ -46,6 +51,14 @@ export class NavbarComponent {
     { label: 'Nasz Zespół', path: '/tech-stack' },
     { label: 'Kontakt', path: '/contact' },
   ];
+
+  // Dodaj pozycję tylko dla niezalogowanego użytkownika
+  if (!this.auth.user()) {
+    base.push({ label: 'Załóż konto', path: '/auth/register' });
+  }
+
+  return base;
+});
 
   openOffcanvas(content: any) {
     if (this.platform.isBrowser) {

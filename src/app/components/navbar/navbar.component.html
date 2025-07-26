@@ -1,8 +1,8 @@
 <nav class="nav-bar">
   <a routerLink="/" class="navbar-brand">Ragnarok</a>
 
-  <ul class="nav-bar-nav d-none d-lg-flex">
-    @for (link of menuLinks; track link.label) {
+  <ul class="nav-bar-nav">
+    @for (link of menuLinks(); track link.label) {
       @if (!link.children) {
         <li><a [routerLink]="link.path">{{ link.label }}</a></li>
       } @else {
@@ -49,7 +49,7 @@
     <button class="close-btn" (click)="close()">✖</button>
     <h2 class="menu-title">Menu</h2>
     <ul class="offcanvas-links">
-      @for (link of menuLinks; track link.label) {
+      @for (link of menuLinks(); track link.label) {
         @if (!link.children) {
           <li>
             <a [routerLink]="link.path" (click)="close()">

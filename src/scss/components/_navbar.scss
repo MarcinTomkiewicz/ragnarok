@@ -14,6 +14,8 @@
   top: 0;
   z-index: 1000;
   box-shadow: 0 0 10px rgba($secondary-color, 0.2);
+  flex-wrap: wrap;
+  
 
   @media (max-width: $breakpoint-md) {
     padding: 0 0.5rem;
@@ -33,6 +35,7 @@
     margin: 0;
     padding: 0;
     align-items: center;
+    flex-wrap: wrap;
 
     li a {
       font-size: $font-size-xs;
@@ -40,7 +43,7 @@
       font-family: $font-family-base;
     }
 
-    @media (max-width: $breakpoint-mid) {
+    @media (max-width: $breakpoint-md) {
       display: none;
     }
   }
@@ -49,7 +52,7 @@
   .nav-bar-mobile {
     display: none;
 
-    @media (max-width: $breakpoint-mid) {
+    @media (max-width: $breakpoint-md) {
       display: flex;
       align-items: center;
       gap: 1rem;
