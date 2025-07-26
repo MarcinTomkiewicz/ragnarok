@@ -17,7 +17,7 @@
   @if (selectedTime()) {
   <div class="duration-picker mt-4">
     <h3 class="section-title">Wybierz długość rezerwacji</h3>
-    @for (d of getDurationsFrom(selectedHour!); track d) {
+    @for (d of durations(); track d) {
     <button
       class="btn btn-outline m-1"
       [class.active]="selectedDuration() === d"
@@ -42,14 +42,4 @@
   </div>
 
   }
-  <div class="d-flex justify-content-center gap-4 mt-4 w-100">
-    <button class="btn btn-primary mt-3" (click)="handleBack()">Wstecz</button>
-    <button
-      class="btn btn-primary mt-3"
-      (click)="confirm()"
-      [disabled]="!canConfirm()"
-    >
-      Dalej
-    </button>
-  </div>
 </div>

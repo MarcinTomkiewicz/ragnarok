@@ -30,15 +30,18 @@
     <li><app-user-menu></app-user-menu></li>
   </ul>
 
-  <button class="offcanvas-toggle d-lg-none" (click)="openOffcanvas(offcanvas)">
-    <img
-      ngSrc="icons/d20.svg"
-      alt="Kostka k20"
-      width="32"
-      height="32"
-      class="d20-icon"
-    />
-  </button>
+  <div class="nav-bar-mobile d-flex d-lg-none align-items-center gap-3">
+    <app-user-menu></app-user-menu>
+    <button class="offcanvas-toggle" (click)="openOffcanvas(offcanvas)">
+      <img
+        ngSrc="icons/d20.svg"
+        alt="Kostka k20"
+        width="32"
+        height="32"
+        class="d20-icon"
+      />
+    </button>
+  </div>
 </nav>
 
 <ng-template #offcanvas let-close="close">

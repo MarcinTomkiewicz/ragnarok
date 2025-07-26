@@ -1,11 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
-import { signal } from '@angular/core';
 
 @Component({
   selector: 'app-gm-selection',
@@ -26,23 +25,29 @@ export class GmSelectionComponent {
     systemId: [this.store.selectedSystemId()],
   });
 
+  readonly canProceed = computed(() => {
+    const gmId = this.store.selectedGm();
+    const gm = this.gms().find((g) => g.userId === gmId);
+    return !!gmId && !!gm?.firstName && !!this.form.value.systemId;
+  });
+
   constructor() {
     this.loadSystems();
 
     const currentSystemId = this.store.selectedSystemId();
-    if (currentSystemId) this.loadGmsForSystem(currentSystemId);
-
-    console.log(this.store.selectedGm(), this.gms());
-    
+    if (currentSystemId) {
+      this.form.get('systemId')?.setValue(currentSystemId, { emitEvent: false });
+      this.loadGmsForSystem(currentSystemId);
+    }
 
     this.form.get('systemId')?.valueChanges.subscribe((systemId: string | null) => {
       this.store.selectedSystemId.set(systemId);
-
       if (systemId) {
         this.loadGmsForSystem(systemId);
       } else {
         this.gms.set([]);
         this.store.selectedGm.set(null);
+        this.store.gmFirstName.set(null);
       }
     });
   }
@@ -62,22 +67,18 @@ export class GmSelectionComponent {
 
         const existingId = this.store.selectedGm();
         const stillExists = filtered.some((g) => g.userId === existingId);
-        if (!stillExists) this.store.selectedGm.set(null);
+        if (!stillExists) {
+          this.store.selectedGm.set(null);
+          this.store.gmFirstName.set(null);
+        }
       });
   }
 
-  confirm() {
-    const id = this.store.selectedGm();
-    const gm = this.gms().find((g) => g.userId === id);
-    const systemId = this.store.selectedSystemId();
-
-    if (id && gm?.firstName && systemId) {
+  selectGm(gmId: string) {
+    const gm = this.gms().find((g) => g.userId === gmId);
+    this.store.selectedGm.set(gmId);
+    if (gm?.firstName) {
       this.store.gmFirstName.set(gm.firstName);
-      this.store.step.set(4);
     }
-  }
-
-  handleBack() {
-    this.store.step.set(2);
   }
 }

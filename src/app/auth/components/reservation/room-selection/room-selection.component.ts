@@ -6,7 +6,7 @@ import {
   eachDayOfInterval,
   endOfMonth,
   endOfWeek,
-  format as formatFn,
+  format,
   isSameMonth,
   startOfMonth,
   startOfWeek,
@@ -36,7 +36,7 @@ export class RoomSelectionComponent {
   private readonly reservationService = inject(ReservationService);
   private readonly auth = inject(AuthService);
 
-  // === Store signals ===
+  // === Signals from store ===
   readonly selectedRoom = this.store.selectedRoom;
   readonly selectedDate = this.store.selectedDate;
   readonly confirmedTeam = this.store.confirmedTeam;
@@ -49,7 +49,7 @@ export class RoomSelectionComponent {
   readonly maxMonth = startOfMonth(addMonths(new Date(), 1));
 
   readonly dayNames = Array.from({ length: 7 }, (_, i) =>
-    formatFn(addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), i), 'ccc', {
+    format(addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), i), 'ccc', {
       locale: pl,
     })
   );
@@ -63,22 +63,21 @@ export class RoomSelectionComponent {
   });
 
   readonly formattedCurrentMonth = computed(() =>
-    formatFn(this.currentMonth(), 'LLLL yyyy', { locale: pl })
+    format(this.currentMonth(), 'LLLL yyyy', { locale: pl })
   );
 
   readonly canGoPrev = computed(() => this.currentMonth() > this.maxMonth);
   readonly canGoNext = computed(() => this.currentMonth() < this.maxMonth);
 
-  // === Roles & access ===
-  readonly isPrivilegedUser = computed(
-    () =>
-      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
-        this.auth.userCoworkerRole()!
-      ) || this.auth.userSystemRole() === SystemRole.Admin
+  // === Roles & Access ===
+  readonly isPrivilegedUser = computed(() =>
+    [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+      this.auth.userCoworkerRole()!
+    ) || this.auth.userSystemRole() === SystemRole.Admin
   );
 
-  readonly isMember = computed(
-    () => this.auth.userCoworkerRole() === CoworkerRoles.Member
+  readonly isMember = computed(() =>
+    this.auth.userCoworkerRole() === CoworkerRoles.Member
   );
 
   readonly isGoldenBlocked = rxComputed([this.auth.userCoworkerRole], (role) =>
@@ -104,11 +103,10 @@ export class RoomSelectionComponent {
     [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom())
   );
 
-  readonly canConfirm = computed(
-    () =>
-      !this.isSelectionDisabled() &&
-      !!this.selectedDate() &&
-      (!this.requiresClubConfirmation() || this.confirmedTeam())
+  readonly canProceed = computed(() =>
+    !this.isSelectionDisabled() &&
+    !!this.selectedDate() &&
+    (!this.requiresClubConfirmation() || this.confirmedTeam())
   );
 
   readonly rooms = computed(() =>
@@ -119,23 +117,7 @@ export class RoomSelectionComponent {
     )
   );
 
-  selectRoom(room: Rooms) {
-    if (this.store.selectedRoom() !== room) {
-      this.store.selectedRoom.set(room);
-
-      // czyścimy całą resztę
-      this.store.selectedDate.set(null);
-      this.store.selectedStartTime.set(null);
-      this.store.selectedDuration.set(null);
-      this.store.selectedGm.set(null);
-      this.store.selectedSystemId.set(null);
-      this.store.gmFirstName.set(null);
-      this.store.needsGm.set(false);
-      this.store.confirmedTeam.set(false);
-    }
-  }
-
-  // === Rezerwacje dzienne & godziny ===
+  // === Hourly Availability ===
   readonly hourlyAvailabilityMap = computed(() => {
     const availability = new Map<string, boolean[]>();
 
@@ -161,12 +143,12 @@ export class RoomSelectionComponent {
   });
 
   getHourlyAvailability(date: Date): boolean[] {
-    const key = formatFn(date, 'yyyy-MM-dd');
+    const key = format(date, 'yyyy-MM-dd');
     return this.hourlyAvailabilityMap().get(key) ?? [];
   }
 
   format(date: Date, pattern: string): string {
-    return formatFn(date, pattern, { locale: pl });
+    return format(date, pattern, { locale: pl });
   }
 
   isPastDay(date: Date): boolean {
@@ -180,21 +162,76 @@ export class RoomSelectionComponent {
   }
 
   isReserved(date: Date): boolean {
-    const key = formatFn(date, 'yyyy-MM-dd');
+    const key = format(date, 'yyyy-MM-dd');
     const hourly = this.hourlyAvailabilityMap().get(key);
-    if (!hourly) return false;
-
-    return hourly.every((slot) => slot === true);
+    return hourly?.every((slot) => slot) ?? false;
   }
+
   canShowHours(date: Date): boolean {
     return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
+  }
+
+  // === Actions ===
+  selectRoom(room: Rooms) {
+    if (this.selectedRoom() === room) return;
+
+    this.store.selectedRoom.set(room);
+
+    // Resetujemy cały kontekst (poza pokojem)
+    this.store.selectedDate.set(null);
+    this.store.selectedStartTime.set(null);
+    this.store.selectedDuration.set(null);
+    this.store.selectedGm.set(null);
+    this.store.gmFirstName.set(null);
+    this.store.selectedSystemId.set(null);
+    this.store.needsGm.set(false);
+    this.store.confirmedTeam.set(false);
+  }
+
+  selectDate(date: Date) {
+    if (this.isSelectionDisabled()) return;
+    const formatted = format(date, 'yyyy-MM-dd');
+    if (this.selectedDate() !== formatted) {
+      this.store.selectedDate.set(formatted);
+
+      // Reset czasu, MG itd.
+      this.store.selectedStartTime.set(null);
+      this.store.selectedDuration.set(null);
+      this.store.selectedGm.set(null);
+      this.store.gmFirstName.set(null);
+      this.store.selectedSystemId.set(null);
+      this.store.needsGm.set(false);
+    }
+  }
+
+  onClubCheckboxChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.store.confirmedTeam.set(input.checked);
+  }
+
+  prevMonth() {
+    const newMonth = addMonths(this.currentMonth(), -1);
+    if (startOfMonth(newMonth) >= this.minMonth) {
+      this.currentMonth.set(newMonth);
+    }
+  }
+
+  nextMonth() {
+    const newMonth = addMonths(this.currentMonth(), 1);
+    if (startOfMonth(newMonth) <= this.maxMonth) {
+      this.currentMonth.set(newMonth);
+    }
+  }
+
+  trackByDate(date: Date): string {
+    return format(date, 'yyyy-MM-dd');
   }
 
   // === Effects ===
   constructor() {
     effect(() => {
       const room = this.selectedRoom();
-      const dates = this.visibleDays().map((d) => formatFn(d, 'yyyy-MM-dd'));
+      const dates = this.visibleDays().map((d) => format(d, 'yyyy-MM-dd'));
       this.fetchReservationsForRoom(room, dates);
     });
   }
@@ -209,44 +246,5 @@ export class RoomSelectionComponent {
     ).subscribe((pairs) => {
       this.reservationsMap.set(new Map(pairs));
     });
-  }
-
-  // === Actions ===
-  selectDate(date: Date) {
-    if (this.isSelectionDisabled()) return;
-
-    const formatted = formatFn(date, 'yyyy-MM-dd');
-    if (this.selectedDate() === formatted) return;
-
-    this.store.selectedDate.set(formatted);
-
-    // Reset wszystkiego poza pokojem i datą
-    this.store.selectedStartTime.set(null);
-    this.store.selectedDuration.set(null);
-    this.store.selectedGm.set(null);
-    this.store.gmFirstName.set(null);
-    this.store.selectedSystemId.set(null);
-    this.store.needsGm.set(false);
-  }
-
-  prevMonth() {
-    const newMonth = addMonths(this.currentMonth(), -1);
-    if (startOfMonth(newMonth) >= this.minMonth)
-      this.currentMonth.set(newMonth);
-  }
-
-  nextMonth() {
-    const newMonth = addMonths(this.currentMonth(), 1);
-    if (startOfMonth(newMonth) <= this.maxMonth)
-      this.currentMonth.set(newMonth);
-  }
-
-  onClubCheckboxChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.confirmedTeam.set(input.checked);
-  }
-
-  trackByDate(date: Date): string {
-    return formatFn(date, 'yyyy-MM-dd');
   }
 }

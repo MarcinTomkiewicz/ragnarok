@@ -5,6 +5,7 @@ import { Rooms } from '../../../../core/enums/rooms';
 import { CoworkerRoles } from '../../../../core/enums/roles';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { SystemRole } from '../../../../core/enums/systemRole';
 
 @Component({
   selector: 'app-time-selection',
@@ -14,20 +15,22 @@ import { ReservationService } from '../../../core/services/reservation/reservati
   styleUrl: './time-selection.component.scss',
 })
 export class TimeSelectionComponent {
+  // === Dependencies ===
   private readonly store = inject(ReservationStoreService);
   private readonly reservationService = inject(ReservationService);
   private readonly auth = inject(AuthService);
 
-  readonly selectedTime = signal(this.store.selectedStartTime() ?? null);
-  readonly selectedDuration = signal(this.store.selectedDuration() ?? 1);
-  readonly needsGm = signal(this.store.needsGm());
+  // === Local state ===
+  readonly selectedTime = signal<string | null>(this.store.selectedStartTime() ?? null);
+  readonly selectedDuration = signal<number>(this.store.selectedDuration() ?? 1);
+  readonly needsGm = signal<boolean>(this.store.needsGm());
   readonly reservations = signal<IReservation[]>([]);
 
-  readonly isPrivilegedUser = computed(
-    () =>
-      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
-        this.auth.userCoworkerRole()!
-      ) || this.auth.userSystemRole() === 'admin'
+  // === Roles ===
+  readonly isPrivilegedUser = computed(() =>
+    [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+      this.auth.userCoworkerRole()!
+    ) || this.auth.userSystemRole() === SystemRole.Admin
   );
 
   readonly isMemberRestrictedClubRoom = computed(() => {
@@ -40,6 +43,7 @@ export class TimeSelectionComponent {
     );
   });
 
+  // === Time logic ===
   readonly startHour = computed(() =>
     this.isMemberRestrictedClubRoom() ? 15 : 17
   );
@@ -47,12 +51,6 @@ export class TimeSelectionComponent {
   readonly endHour = computed(() => 23);
 
   readonly timeSlots = computed(() => {
-    console.log(
-      this.startHour(),
-      this.endHour(),
-      this.isMemberRestrictedClubRoom()
-    );
-
     const start = this.startHour();
     const end = this.endHour();
     const slots = Array(end - start).fill(true);
@@ -71,31 +69,15 @@ export class TimeSelectionComponent {
     }));
   });
 
-  readonly canConfirm = computed(
-    () => !!this.selectedTime() && this.selectedDuration() > 0
-  );
-
-  constructor() {
-    const date = this.store.selectedDate();
-    const room = this.store.selectedRoom();
-    if (date && room) {
-      this.reservationService
-        .getReservationsForRoom(room, date)
-        .subscribe((res) => this.reservations.set(res));
-    }
-  }
-
-  selectTime(hour: number) {
-    this.selectedTime.set(`${String(hour).padStart(2, '0')}:00`);
-    this.selectedDuration.set(1);
-  }
-
-  get selectedHour(): number | null {
+  readonly selectedHour = computed(() => {
     const [hourStr] = this.selectedTime()?.split(':') ?? [];
     return hourStr ? parseInt(hourStr, 10) : null;
-  }
+  });
 
-  getDurationsFrom(hour: number): number[] {
+  readonly durations = computed(() => {
+    const hour = this.selectedHour();
+    if (hour === null) return [];
+
     const start = this.startHour();
     const maxDur = this.isMemberRestrictedClubRoom() ? 4 : 6;
     const idx = hour - start;
@@ -112,22 +94,43 @@ export class TimeSelectionComponent {
     }
 
     return availableDurations;
+  });
+
+  // === Sync with store when user acts ===
+  selectTime(hour: number) {
+    const time = `${String(hour).padStart(2, '0')}:00`;
+    this.selectedTime.set(time);
+    this.selectedDuration.set(1);
+
+    this.store.selectedStartTime.set(time);
+    this.store.selectedDuration.set(1);
+  }
+
+  selectDuration(duration: number) {
+    this.selectedDuration.set(duration);
+    this.store.selectedDuration.set(duration);
   }
 
   toggleNeedsGm() {
-    this.needsGm.update((v) => !v);
+    const updated = !this.needsGm();
+    this.needsGm.set(updated);
+    this.store.needsGm.set(updated);
   }
 
-  confirm() {
-    if (!this.canConfirm()) return;
+  // === Used by stepper ===
+  readonly canProceed = computed(() =>
+    !!this.store.selectedStartTime() && this.store.selectedDuration()
+  );
 
-    this.store.selectedStartTime.set(this.selectedTime()!);
-    this.store.selectedDuration.set(this.selectedDuration());
-    this.store.needsGm.set(this.needsGm());
-    this.store.step.set(this.needsGm() ? 3 : 4);
-  }
+  // === Init data ===
+  constructor() {
+    const date = this.store.selectedDate();
+    const room = this.store.selectedRoom();
 
-  handleBack() {
-    this.store.step.set(1);
+    if (date && room) {
+      this.reservationService
+        .getReservationsForRoom(room, date)
+        .subscribe((res) => this.reservations.set(res));
+    }
   }
 }

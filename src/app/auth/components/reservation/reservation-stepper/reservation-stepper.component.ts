@@ -1,4 +1,10 @@
-import { Component, inject } from '@angular/core';
+import {
+  Component,
+  inject,
+  TemplateRef,
+  viewChild,
+  computed,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -6,7 +12,12 @@ import { RoomSelectionComponent } from '../room-selection/room-selection.compone
 import { TimeSelectionComponent } from '../time-selection/time-selection.component';
 import { GmSelectionComponent } from '../gm-selection/gm-selection.component';
 import { ReservationSummaryComponent } from '../reservation-summary/reservation-summary.component';
+
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { ToastService } from '../../../../core/services/toast/toast.service';
+import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -23,32 +34,91 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
 })
 export class ReservationStepperComponent {
   readonly store = inject(ReservationStoreService);
+  private readonly reservationService = inject(ReservationService);
+  private readonly toastService = inject(ToastService);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly step = this.store.step;
 
-  goBack() {
-    const currentStep = this.store.step();
-    const previous = currentStep - 1;
+  readonly reservationSuccessToast = viewChild<TemplateRef<unknown>>(
+    'reservationSuccessToast'
+  );
+  readonly reservationErrorToast = viewChild<TemplateRef<unknown>>(
+    'reservationErrorToast'
+  );
 
-    if (previous >= 0) {
-      this.store.step.set(previous);
+  readonly maxStep = computed(() => (this.store.needsGm() ? 4 : 3));
+
+  readonly canProceed = computed(() => {
+    console.log(this.store.gmFirstName(), this.store.selectedGm(), this.store.selectedSystemId());
+    
+    switch (this.step()) {
+      case 1:
+        return !!this.store.selectedRoom() && !!this.store.selectedDate();
+      case 2:
+        return !!this.store.selectedStartTime() && !!this.store.selectedDuration();
+      case 3:
+        return !!this.store.selectedSystemId() && !!this.store.selectedGm();
+      case 4:
+        return true;
+      default:
+        return false;
+    }
+  });
+
+  goForward() {
+    if (!this.canProceed()) return;
+
+    const current = this.step();
+    if (current < this.maxStep()) {
+      this.step.set(current + 1);
     } else {
-      this.router.navigate(['/']);
+      this.confirmReservation();
     }
   }
 
-  submitReservation() {
-    console.log('Finalizing reservation:', {
-      room: this.store.selectedRoom(),
-      date: this.store.selectedDate(),
-      startTime: this.store.selectedStartTime(),
-      duration: this.store.selectedDuration(),
-      needsGm: this.store.needsGm(),
-      gm: this.store.selectedGm(),
-      systemId: this.store.selectedSystemId?.(),
-    });
+  goBack() {
+    const prev = this.step() - 1;
+    if (prev >= 1) this.step.set(prev);
+  }
 
-    // W przyszłości: call to Supabase
+  confirmReservation() {
+    const payload = {
+      userId: this.auth.user()?.id,
+      roomName: this.store.selectedRoom(),
+      date: this.store.selectedDate()!,
+      startTime: this.store.selectedStartTime()!,
+      durationHours: this.store.selectedDuration()!,
+      needsGm: this.store.needsGm(),
+      gmId: this.store.selectedGm(),
+      systemId: this.store.selectedSystemId(),
+      confirmedTeam: this.store.confirmedTeam(),
+      status: ReservationStatus.Confirmed,
+    };
+
+    this.reservationService.createReservation(payload).subscribe({
+      next: () => {
+        const template = this.reservationSuccessToast();
+        if (template) {
+          this.toastService.show({
+            template,
+            classname: 'bg-success text-white',
+            header: 'Utworzono rezerwację!',
+          });
+        }
+        this.router.navigate(['/auth/my-reservations']);
+      },
+      error: () => {
+        const template = this.reservationErrorToast();
+        if (template) {
+          this.toastService.show({
+            template,
+            classname: 'bg-danger text-white',
+            header: 'Nie udało się utworzyć rezerwacji',
+          });
+        }
+      },
+    });
   }
 }

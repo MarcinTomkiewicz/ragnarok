@@ -1,4 +1,4 @@
-<div class="gm-selection-wrapper full-height">
+<div class="gm-selection-wrapper">
   <h2 class="section-title">Wybierz system RPG</h2>
 
   <form [formGroup]="form">
@@ -19,7 +19,7 @@
       <button
         class="btn btn-outline"
         [class.active]="gm.userId === store.selectedGm()"
-        (click)="store.selectedGm.set(gm.userId)"
+        (click)="selectGm(gm.userId)"
       >
         {{ gm.firstName }}
       </button>
@@ -29,15 +29,4 @@
   } @else if (form.get('systemId')?.value) {
   <p class="text-danger mt-3">Brak dostępnych MG dla wybranego systemu.</p>
   }
-
-  <div class="d-flex justify-content-center gap-4 mt-4">
-    <button class="btn btn-primary" (click)="handleBack()">Wstecz</button>
-    <button
-      class="btn btn-primary"
-      (click)="confirm()"
-      [disabled]="!store.selectedGm()"
-    >
-      Dalej
-    </button>
-  </div>
 </div>
