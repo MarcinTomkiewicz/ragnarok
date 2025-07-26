@@ -12,20 +12,23 @@ import {
   hasMinimumCoworkerRole,
   hasMinimumSystemRole,
 } from '../../../core/utils/required-roles';
+import { LoaderService } from '../../../core/services/loader/loader.service';
+import { finalize, map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
-  private authService = inject(AuthService);
-  private router = inject(Router);
+  loader = inject(LoaderService);
+  router = inject(Router);
+  authService = inject(AuthService);
 
-  canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
-    const user = this.authService.user();
-
+  canActivate(route: ActivatedRouteSnapshot): Observable<boolean | UrlTree> {
     const requiredRoles = route.data['roles'] as SystemRole[] | undefined;
     const requiredCoworkerRoles = route.data['coworkerRoles'] as
       | CoworkerRoles[]
       | undefined;
-    const minCoworkerRole = route.data['minCoworkerRole'] as CoworkerRoles | undefined;
+    const minCoworkerRole = route.data['minCoworkerRole'] as
+      | CoworkerRoles
+      | undefined;
     const minSystemRole = route.data['minSystemRole'] as SystemRole | undefined;
     const authOnly = route.data['authOnly'] as boolean | undefined;
 
@@ -37,24 +40,41 @@ export class AuthGuard implements CanActivate {
       authOnly
     );
 
-    if (!user && requiresAuth) {
-      return this.router.parseUrl('/not-authorized');
-    }
+    this.loader.show();
 
-    if (user) {
-      const hasSystemRole = !requiredRoles || requiredRoles.includes(user.role);
-      const hasMinSystemRole = !minSystemRole || hasMinimumSystemRole(user, minSystemRole);
-      const hasExactCoworker =
-        !requiredCoworkerRoles ||
-        user.role === SystemRole.Admin ||
-        (user.coworker && requiredCoworkerRoles.includes(user.coworker));
-      const hasMinCoworker = !minCoworkerRole || hasMinimumCoworkerRole(user, minCoworkerRole);
+    return this.authService.loadUser().pipe(
+      map(() => {
+        const user = this.authService.user();
 
-      if (hasSystemRole && hasMinSystemRole && hasExactCoworker && hasMinCoworker) {
-        return true;
-      }
-    }
+        if (!user && requiresAuth) {
+          return this.router.parseUrl('/not-authorized');
+        }
 
-    return this.router.parseUrl('/not-authorized');
+        if (user) {
+          const hasSystemRole =
+            !requiredRoles || requiredRoles.includes(user.role);
+          const hasMinSystemRole =
+            !minSystemRole || hasMinimumSystemRole(user, minSystemRole);
+          const hasExactCoworker =
+            !requiredCoworkerRoles ||
+            user.role === SystemRole.Admin ||
+            (user.coworker && requiredCoworkerRoles.includes(user.coworker));
+          const hasMinCoworker =
+            !minCoworkerRole || hasMinimumCoworkerRole(user, minCoworkerRole);
+
+          if (
+            hasSystemRole &&
+            hasMinSystemRole &&
+            hasExactCoworker &&
+            hasMinCoworker
+          ) {
+            return true;
+          }
+        }
+
+        return this.router.parseUrl('/not-authorized');
+      }),
+      finalize(() => this.loader.hide())
+    );
   }
 }

@@ -13,8 +13,7 @@
   flex-direction: column;
 
   background-color: rgba($bg-color, 0.95);
-  // border-radius: 10px;
-  // box-shadow: $box-shadow;
+  z-index: 9999;
 
   text-align: center;
 }

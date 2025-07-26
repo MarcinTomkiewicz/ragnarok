@@ -5,3 +5,7 @@
 .registration-panel {
   @extend .form-panel;
 }
+
+.registration-form {
+  @include flex-wrapper(column, flex-start, center)
+}

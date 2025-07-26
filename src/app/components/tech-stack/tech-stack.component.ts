@@ -4,8 +4,8 @@ import { BackendService } from '../../core/services/backend/backend.service';
 import { LoaderService } from '../../core/services/loader/loader.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
-import { TechStack } from '../../core/interfaces/i-techStack';
-import { CoworkerRoles } from '../../core/enums/roles';
+import { CoworkerRoles, RoleDisplay } from '../../core/enums/roles';
+import { IGmData } from '../../core/interfaces/i-gm-profile';
 import { LoaderComponent } from '../../common/loader/loader.component';
 
 @Component({
@@ -13,49 +13,68 @@ import { LoaderComponent } from '../../common/loader/loader.component';
   standalone: true,
   imports: [CommonModule, LoaderComponent],
   templateUrl: './tech-stack.component.html',
-  styleUrl: './tech-stack.component.scss'
+  styleUrl: './tech-stack.component.scss',
 })
 export class TechStackComponent implements OnInit {
-  private readonly backendService = inject(BackendService);
-  private readonly loaderService = inject(LoaderService);
-  private readonly platformService = inject(PlatformService);
+  private readonly backend = inject(BackendService);
+  private readonly loader = inject(LoaderService);
+  private readonly platform = inject(PlatformService);
   private readonly seo = inject(SeoService);
 
-  techStack = signal<TechStack[]>([]);
-  isLoading = signal(true);
-  error = signal<string | null>(null);
-  showAll = signal(false);
+  readonly gms = signal<IGmData[]>([]);
+  readonly isLoading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly showAll = signal(false);
 
-  readonly visibleTechStack = computed(() =>
-    this.showAll() ? this.techStack() : this.techStack().slice(0, 4)
+  readonly visibleGms = computed(() =>
+    this.showAll() ? this.gms() : this.gms().slice(0, 4)
   );
 
+  readonly roleDisplay = RoleDisplay[CoworkerRoles.Gm];
+
   ngOnInit(): void {
-    this.seo.setTitleAndMeta('Nasz zespół');
-    if (this.platformService.isBrowser) {
-      this.loadTechStack();
+    this.seo.setTitleAndMeta('Nasi Mistrzowie Gry');
+    if (this.platform.isBrowser) {
+      this.loadData();
     }
   }
 
-  private loadTechStack(): void {
-    this.loaderService.show();
-    this.backendService.getAll<TechStack>('tech_stack', 'id', 'asc', undefined, { width: 234, height: 234 })
+  private loadData(): void {
+    this.loader.show();
+    this.backend
+      .getAll<IGmData>(
+        'v_gm_specialties_with_user',
+        'gmProfileCreatedAt',
+        'asc'
+      )
+
       .subscribe({
         next: (data) => {
-          const filtered = data.filter((item) => item.isActive && item.role === CoworkerRoles.Gm);
-          if (filtered.length === 0) {
-            this.error.set('Nie znaleziono żadnych aktywnych członków zespołu.');
-          } else {
-            this.techStack.set(filtered);
-          }
+          const uniqueByUser = this.deduplicateByUserId(data);
+          this.gms.set(uniqueByUser);
           this.isLoading.set(false);
         },
         error: (err) => {
-          console.error('Błąd podczas pobierania danych:', err);
-          this.error.set('Nie udało się załadować danych.');
+          console.error(err);
+          this.error.set('Nie udało się pobrać danych.');
           this.isLoading.set(false);
         },
-        complete: () => this.loaderService.hide()
+        complete: () => this.loader.hide(),
       });
+  }
+
+  private deduplicateByUserId(data: IGmData[]): IGmData[] {
+    const map = new Map<string, IGmData>();
+    for (const item of data) {
+      if (!map.has(item.userId)) {
+        map.set(item.userId, item);
+      }
+    }
+    return Array.from(map.values());
+  }
+
+  onCardClick(gm: IGmData): void {
+    console.log('Kliknięto kartę MG:', gm);
+    // Modal dodamy później
   }
 }

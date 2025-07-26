@@ -18,7 +18,7 @@ export class LoaderComponent implements OnInit, OnDestroy {
       next: (state) => {
         this.isLoading = state
       },
-    });
+    });    
   }
 
   ngOnDestroy() {
