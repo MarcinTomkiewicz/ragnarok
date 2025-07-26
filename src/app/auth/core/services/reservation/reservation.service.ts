@@ -1,17 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FilterOperator } from '../../enums/filterOperator';
-import { Rooms } from '../../enums/rooms';
-import {
-  IReservation,
-  ReservationStatus,
-} from '../../interfaces/i-reservation';
-import { IUser } from '../../interfaces/i-user';
-import { toCamelCase, toSnakeCase } from '../../utils/type-mappers';
-import { AuthService } from '../auth/auth.service';
-import { BackendService } from '../backend/backend.service';
-import { SupabaseService } from '../supabase/supabase.service';
+import { BackendService } from '../../../../core/services/backend/backend.service';
+import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { IReservation, ReservationStatus } from '../../../../core/interfaces/i-reservation';
+import { FilterOperator } from '../../../../core/enums/filterOperator';
+import { Rooms } from '../../../../core/enums/rooms';
+import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
+import { IUser } from '../../../../core/interfaces/i-user';
+
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {

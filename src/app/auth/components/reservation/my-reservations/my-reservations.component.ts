@@ -15,7 +15,6 @@ import { tap, switchMap, catchError } from 'rxjs/operators';
 import { isAfter, isToday } from 'date-fns';
 
 import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
-import { ReservationService } from '../../../../core/services/reservation/reservation.service';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 
 import {
@@ -23,6 +22,7 @@ import {
   ReservationStatusDisplay,
   IReservation,
 } from '../../../../core/interfaces/i-reservation';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-my-reservations',

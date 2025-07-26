@@ -9,8 +9,8 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
 import { format } from 'date-fns';
 import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { ReservationService } from '../../../../core/services/reservation/reservation.service';
 import { ToastService } from '../../../../core/services/toast/toast.service';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-reservation-summary',

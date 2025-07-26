@@ -1,10 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { IReservation } from '../../../../core/interfaces/i-reservation';
-import { ReservationService } from '../../../../core/services/reservation/reservation.service';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
-
-const START_HOUR = 17;
-const END_HOUR = 23;
+import { IReservation } from '../../../../core/interfaces/i-reservation';
+import { Rooms } from '../../../../core/enums/rooms';
+import { CoworkerRoles } from '../../../../core/enums/roles';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-time-selection',
@@ -16,32 +16,65 @@ const END_HOUR = 23;
 export class TimeSelectionComponent {
   private readonly store = inject(ReservationStoreService);
   private readonly reservationService = inject(ReservationService);
+  private readonly auth = inject(AuthService);
 
-  // Lokalny stan tylko dla widoku
   readonly selectedTime = signal(this.store.selectedStartTime() ?? null);
   readonly selectedDuration = signal(this.store.selectedDuration() ?? 1);
   readonly needsGm = signal(this.store.needsGm());
-
   readonly reservations = signal<IReservation[]>([]);
 
-  // Slots calculation
+  readonly isPrivilegedUser = computed(
+    () =>
+      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+        this.auth.userCoworkerRole()!
+      ) || this.auth.userSystemRole() === 'admin'
+  );
+
+  readonly isMemberRestrictedClubRoom = computed(() => {
+    const room = this.store.selectedRoom();
+    const role = this.auth.userCoworkerRole();
+
+    return (
+      [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
+      (role === CoworkerRoles.Member || this.isPrivilegedUser())
+    );
+  });
+
+  readonly startHour = computed(() =>
+    this.isMemberRestrictedClubRoom() ? 15 : 17
+  );
+
+  readonly endHour = computed(() => 23);
+
   readonly timeSlots = computed(() => {
-    const slots = Array(END_HOUR - START_HOUR).fill(true);
+    console.log(
+      this.startHour(),
+      this.endHour(),
+      this.isMemberRestrictedClubRoom()
+    );
+
+    const start = this.startHour();
+    const end = this.endHour();
+    const slots = Array(end - start).fill(true);
+
     for (const res of this.reservations()) {
-      const start = Number(res.startTime.split(':')[0]);
+      const startRes = Number(res.startTime.split(':')[0]);
       for (let i = 0; i < res.durationHours; i++) {
-        const idx = start + i - START_HOUR;
+        const idx = startRes + i - start;
         if (idx >= 0 && idx < slots.length) slots[idx] = false;
       }
     }
-    return slots.map((available, i) => ({ hour: START_HOUR + i, available }));
+
+    return slots.map((available, i) => ({
+      hour: start + i,
+      available,
+    }));
   });
 
-  readonly canConfirm = computed(() =>
-    !!this.selectedTime() && this.selectedDuration() > 0
+  readonly canConfirm = computed(
+    () => !!this.selectedTime() && this.selectedDuration() > 0
   );
 
-  // === Lifecycle ===
   constructor() {
     const date = this.store.selectedDate();
     const room = this.store.selectedRoom();
@@ -52,10 +85,9 @@ export class TimeSelectionComponent {
     }
   }
 
-  // === UI Logic ===
   selectTime(hour: number) {
     this.selectedTime.set(`${String(hour).padStart(2, '0')}:00`);
-    this.selectedDuration.set(1); // reset
+    this.selectedDuration.set(1);
   }
 
   get selectedHour(): number | null {
@@ -64,13 +96,21 @@ export class TimeSelectionComponent {
   }
 
   getDurationsFrom(hour: number): number[] {
-    const idx = hour - START_HOUR;
+    const start = this.startHour();
+    const maxDur = this.isMemberRestrictedClubRoom() ? 4 : 6;
+    const idx = hour - start;
     const availableDurations: number[] = [];
-    for (let len = 1; len <= 6 && idx + len <= 6; len++) {
+
+    for (
+      let len = 1;
+      len <= maxDur && idx + len <= this.timeSlots().length;
+      len++
+    ) {
       const slice = this.timeSlots().slice(idx, idx + len);
       if (slice.every((s) => s.available)) availableDurations.push(len);
       else break;
     }
+
     return availableDurations;
   }
 
@@ -78,7 +118,6 @@ export class TimeSelectionComponent {
     this.needsGm.update((v) => !v);
   }
 
-  // === Actions ===
   confirm() {
     if (!this.canConfirm()) return;
 

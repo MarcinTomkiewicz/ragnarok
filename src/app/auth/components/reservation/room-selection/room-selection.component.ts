@@ -20,9 +20,9 @@ import { SystemRole } from '../../../../core/enums/systemRole';
 import { IReservation } from '../../../../core/interfaces/i-reservation';
 
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { ReservationService } from '../../../../core/services/reservation/reservation.service';
 import { rxComputed } from '../../../../core/utils/rx-computed';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-room-selection',
@@ -138,7 +138,9 @@ export class RoomSelectionComponent {
   // === Rezerwacje dzienne & godziny ===
   readonly hourlyAvailabilityMap = computed(() => {
     const availability = new Map<string, boolean[]>();
-    const startHour = 17;
+
+    const room = this.selectedRoom();
+    const startHour = [Rooms.Asgard, Rooms.Alfheim].includes(room) ? 15 : 17;
     const endHour = 23;
 
     for (const [dateStr, reservations] of this.reservationsMap()) {
