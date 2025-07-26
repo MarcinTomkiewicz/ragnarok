@@ -2,10 +2,13 @@
   <div class="container">
     <h2 class="section-title">Moje Rezerwacje</h2>
 
-    @let reservations = reservations$ | async; @if (reservations) { @if
-    (reservations.length > 0) {
-    <div class="reservations-grid">
-      @for (res of reservations; track res.id) {
+    @let filtered = filteredReservations(); @if (filtered) { @if
+    (filtered.length > 0) {
+    <div
+      class="reservations-grid"
+      [ngClass]="{ 'centered-reservation': filtered.length === 1 }"
+    >
+      @for (res of filtered; track res.id) {
       <div class="card card-dark reservation-card">
         <div class="card-body">
           <div class="card-meta">
@@ -45,7 +48,15 @@
                 Zarządzaj rezerwacją
               </button>
             </span>
-            <button class="btn btn-danger" (click)="openCancelModal(res.id)">
+            <button
+              class="btn"
+              [ngClass]="{
+                'btn-danger': res.status !== statusEnum.Cancelled,
+                'btn-outline-danger': res.status === statusEnum.Cancelled
+              }"
+              [disabled]="res.status === statusEnum.Cancelled"
+              (click)="openCancelModal(res.id)"
+            >
               Odwołaj rezerwację
             </button>
           </div>
@@ -59,4 +70,15 @@
     <p>Ładowanie rezerwacji...</p>
     }
   </div>
+  <ng-template #cancelSuccessToast>
+    <strong>Sukces!</strong> Rezerwacja została odwołana.
+  </ng-template>
+
+  <ng-template #cancelAbortToast>
+    <strong>Przerwano!</strong> Odwoływanie rezerwacji zostało przerwane.
+  </ng-template>
+
+  <ng-template #cancelErrorToast>
+    <strong>Błąd!</strong> Wystąpił problem podczas odwoływania rezerwacji.
+  </ng-template>
 </div>

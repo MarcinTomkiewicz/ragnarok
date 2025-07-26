@@ -127,7 +127,7 @@
 
   &.btn-danger {
     background-color: $danger-color;
-    color: $bg-color;
+    color: $button-text-color;
 
     &:hover:not(:disabled) {
       @include btn-hover($danger-color);
@@ -136,6 +136,23 @@
     &:disabled {
       background-color: lighten($danger-color, 15%);
       color: lighten($bg-color, 10%);
+    }
+  }
+
+  &.btn-outline-danger {
+    background-color: transparent;
+    border: 1px solid $danger-color;
+    color: $danger-color;
+
+    &:hover:not(:disabled) {
+      background-color: $danger-color;
+      color: $bg-color;
+    }
+
+    &:disabled {
+      border-color: lighten($danger-color, 25%);
+      color: lighten($danger-color, 25%);
+      background-color: transparent;
     }
   }
 }

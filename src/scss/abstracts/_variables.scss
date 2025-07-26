@@ -36,6 +36,7 @@ $icon-filter-dark: brightness(0) invert(20%) sepia(30%) saturate(800%)
 $info-color: #0dcaf0;
 $danger-color: #dc3545;
 $success-color: #198754;
+$danger-text-color: lighten($border-color, 35%);
 
 $border-radius: 10px; // Zaokrąglenie rogów
 $box-shadow: 0 0 20px rgba($secondary-color, 0.4);

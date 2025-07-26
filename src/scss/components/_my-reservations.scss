@@ -69,3 +69,13 @@
     padding: 0.4rem 0.8rem;
   }
 }
+
+.centered-reservation {
+  display: flex;
+  justify-content: center;
+
+  .reservation-card {
+    max-width: 400px;
+    width: 100%;
+  }
+}
