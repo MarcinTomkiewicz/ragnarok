@@ -12,73 +12,85 @@ export class ViewResolverService {
   private readonly imageService = inject(ImageStorageService);
 
   resolveBySlug<T>(table: string, slug: string): Observable<T | null> {
-    if (table === 'club_memberships') {
-      return from(
-        this.supabase
-          .from(table)
-          .select('*, membership_perks(*)')
-          .eq('slug', slug)
-          .single()
-      ).pipe(
-        map((response) => {
-          if (response.error) throw new Error(response.error.message);
-          return response.data ? toCamelCase<T>(response.data) : null;
-        })
-      );
-    }
+    const handlers: Record<string, () => Observable<T | null>> = {
+      club_memberships: () => this.resolveClubMembership<T>(slug),
+      offer_pages: () => this.resolveOfferPage<T>(slug),
+    };
 
-    if (table === 'offer_pages') {
-      return from(
-        this.supabase.from(table).select('*').eq('slug', slug).single()
-      ).pipe(
-        switchMap((response) => {
-          if (response.error) throw new Error(response.error.message);
-          const data = response.data
-            ? this.imageService.processImage(response.data)
-            : null;
+    const handler = handlers[table];
+    return handler ? handler() : this.resolveDefault<T>(table, slug);
+  }
 
-          if (!data?.sections?.length) {
-            return of(toCamelCase<T>(data));
-          }
+  private resolveClubMembership<T>(slug: string): Observable<T | null> {
+    return from(
+      this.supabase
+        .from('club_memberships')
+        .select('*, membership_perks(*)')
+        .eq('slug', slug)
+        .single()
+    ).pipe(
+      map((res) => {
+        if (res.error) throw new Error(res.error.message);
+        return res.data ? toCamelCase<T>(res.data) : null;
+      })
+    );
+  }
 
-          const allIds = data.sections.flatMap((s: any) =>
-            Array.isArray(s.services) ? s.services : []
-          );
-          const uniqueIds = [...new Set(allIds)];
+  private resolveOfferPage<T>(slug: string): Observable<T | null> {
+    return from(
+      this.supabase.from('offer_pages').select('*').eq('slug', slug).single()
+    ).pipe(
+      switchMap((res) => {
+        if (res.error) throw new Error(res.error.message);
+        const data = res.data
+          ? this.imageService.processImage(res.data)
+          : null;
 
-          return from(
-            this.supabase.from('offer_items').select('*').in('id', uniqueIds)
-          ).pipe(
-            map((itemsResponse) => {
-              if (itemsResponse.error) throw new Error(itemsResponse.error.message);
-              const itemsMap = new Map(
-                (itemsResponse.data || []).map((item) => [
-                  item.id,
-                  toCamelCase(item),
-                ])
-              );
+        if (!data?.sections?.length) {
+          return of(toCamelCase<T>(data));
+        }
 
-              const resolvedSections = data.sections.map((s: any) => ({
-                ...s,
-                services: (s.services || [])
-                  .map((id: number) => itemsMap.get(id))
-                  .filter(Boolean),
-              }));
+        const allIds = data.sections.flatMap((s: any) =>
+          Array.isArray(s.services) ? s.services : []
+        );
+        const uniqueIds = [...new Set(allIds)];
 
-              return toCamelCase<T>({ ...data, sections: resolvedSections });
-            })
-          );
-        })
-      );
-    }
+        return from(
+          this.supabase.from('offer_items').select('*').in('id', uniqueIds)
+        ).pipe(
+          map((itemsRes) => {
+            if (itemsRes.error) throw new Error(itemsRes.error.message);
 
-    // Default fetch
+            const itemsMap = new Map(
+              (itemsRes.data || []).map((item) => [
+                item.id,
+                toCamelCase(item),
+              ])
+            );
+
+            const resolvedSections = data.sections.map((s: any) => ({
+              ...s,
+              services: (s.services || [])
+                .map((id: number) => itemsMap.get(id))
+                .filter(Boolean),
+            }));
+
+            return toCamelCase<T>({ ...data, sections: resolvedSections });
+          })
+        );
+      })
+    );
+  }
+
+  private resolveDefault<T>(table: string, slug: string): Observable<T | null> {
     return from(
       this.supabase.from(table).select('*').eq('slug', slug).single()
     ).pipe(
-      map((response) => {
-        if (response.error) throw new Error(response.error.message);
-        return response.data ? toCamelCase<T>(response.data) : null;
+      map((res) => {
+        if (res.error) throw new Error(res.error.message);
+        return res.data
+          ? toCamelCase<T>(this.imageService.processImage(res.data))
+          : null;
       })
     );
   }
