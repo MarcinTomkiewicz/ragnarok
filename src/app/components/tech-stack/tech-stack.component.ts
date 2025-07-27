@@ -56,6 +56,8 @@ export class TechStackComponent implements OnInit {
         next: (data) => {
           const uniqueByUser = this.deduplicateByUserId(data);
           this.gms.set(uniqueByUser);
+          console.log(this.gms());
+          
           this.isLoading.set(false);
         },
         error: (err) => {

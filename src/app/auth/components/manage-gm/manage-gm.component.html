@@ -16,10 +16,7 @@
       <label>Systemy RPG (maks. 5)</label>
       <div class="d-flex flex-column gap-2" formArrayName="systems">
         @for (i of systemControls.controls; let index = $index; track index) {
-          <select
-            class="form-select"
-            [formControlName]="index"
-          >
+          <select class="form-select" [formControlName]="index">
             <option [ngValue]="''">-- wybierz system --</option>
             @for (system of systems(); track system.id) {
               <option
@@ -44,8 +41,24 @@
       />
     </div>
 
+    <div *ngIf="imagePreview()" class="mt-3">
+      <label>Podgląd zdjęcia:</label>
+      <img
+        [src]="imagePreview()"
+        alt="Podgląd zdjęcia"
+        width="250"
+        height="250"
+        style="object-fit: cover; border-radius: 8px; border: 1px solid #ccc"
+      />
+    </div>
+
     <button class="btn btn-primary mt-3" type="submit">
       Zapisz profil
     </button>
   </form>
+
+  <!-- Toast template -->
+  <ng-template #editDataSuccess>
+    <strong>Sukces!</strong> Dane zostały zaktualizowane.
+  </ng-template>
 </div>

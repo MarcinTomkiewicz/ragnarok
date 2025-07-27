@@ -17,7 +17,7 @@
         @for (gm of visibleGms(); track gm.userId) {
           <div class="mg-card" (click)="onCardClick(gm)">
             <img
-              [src]="'/avatars/default.png'"
+              [src]="gm.image"
               [alt]="gm.firstName"
               class="mg-avatar"
             />

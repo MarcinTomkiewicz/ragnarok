@@ -249,6 +249,33 @@ export class BackendService {
   }
 
   /**
+   * Tworzy lub aktualizuje rekord w wybranej tabeli.
+   * @param table - Nazwa tabeli w Supabase
+   * @param data - Dane do zapisania
+   * @param conflictTarget - Kolumna (lub kolumny), po której następuje konflikt (domyślnie 'id')
+   * @returns Observable z odpowiedzią od Supabase
+   */
+  upsert<T>(
+    table: string,
+    data: T,
+    conflictTarget: string = 'id'
+  ): Observable<T> {
+    return from(
+      this.supabase
+        .from(table)
+        .upsert(data, { onConflict: conflictTarget })
+        .single()
+    ).pipe(
+      map((response: PostgrestSingleResponse<T>) => {
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+        return response.data;
+      })
+    );
+  }
+
+  /**
    * Usuwa rekord z wybranej tabeli.
    * @param table - Nazwa tabeli w Supabase
    * @param id - ID rekordu do usunięcia
@@ -268,6 +295,8 @@ export class BackendService {
     const fileName = `${Date.now()}.avif`;
     const fullPath = `${path}/${fileName}`;
 
+    console.log(fullPath);
+
     return from(
       this.supabase.storage.from('images').upload(fullPath, file, {
         contentType: 'image/avif',
@@ -284,28 +313,39 @@ export class BackendService {
   }
 
   uploadOrReplaceImage(
-  file: File,
-  path: string,
-  previousPath?: string
-): Observable<string> {
-  const bucket = this.supabase.storage.from('images');
+    file: File,
+    path: string,
+    previousPath: string | null
+  ): Observable<string> {
+    const bucket = this.supabase.storage.from('images');
+    const fullPath = `${path}/${file.name}`;
 
-  const fullPath = `${path}/${file.name}`;
+    console.log(fullPath);
+    this.supabase.auth.getSession().then(({ data, error }) => {
+      console.log('SESSION DATA:', data?.session);
+    });
 
-  const upload$ = from(bucket.upload(fullPath, file, { upsert: true }));
+    const upload$ = from(
+      bucket.upload(fullPath, file, {
+        contentType: 'image/avif',
+        upsert: true,
+      })
+    );
 
-  const remove$ = previousPath
-    ? from(bucket.remove([previousPath]))
-    : of(null);
+    // Zamieniamy wynik remove$ na Observable<void>
+    const remove$: Observable<void> = previousPath
+      ? from(bucket.remove([previousPath])).pipe(map(() => void 0))
+      : of(void 0);
 
-  return remove$.pipe(
-    switchMap(() => upload$),
-    map((res) => {
-      if (res.error) throw new Error(res.error.message);
-      return fullPath; // tylko ścieżka
-    })
-  );
-}
+    return remove$.pipe(
+      switchMap(() => upload$),
+      map((res) => {
+        console.log('UPLOAD RESPONSE:', res);
+        if (res.error) throw new Error(res.error.message);
+        return fullPath;
+      })
+    );
+  }
 
   private processImage<T extends { [key: string]: any }>(
     item: T,

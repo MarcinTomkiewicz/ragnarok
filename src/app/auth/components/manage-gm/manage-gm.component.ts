@@ -1,21 +1,28 @@
-import { Component, inject, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  TemplateRef,
+  viewChild,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
-  FormControl,
   FormArray,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Observable, of } from 'rxjs';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { ToastService } from '../../../core/services/toast/toast.service';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
-import { Observable, of } from 'rxjs';
 
 @Component({
   selector: 'app-manage-gm',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './manage-gm.component.html',
   styleUrl: './manage-gm.component.scss',
 })
@@ -23,11 +30,14 @@ export class ManageGmComponent {
   private readonly backend = inject(BackendService);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly toastService = inject(ToastService);
 
   readonly user = this.auth.user()!;
   readonly systems = signal<IRPGSystem[]>([]);
-
+  readonly previousImagePath = signal<string | null>(null);
   imagePreview = signal<string | null>(null);
+
+  readonly successToast = viewChild<TemplateRef<unknown>>('editDataSuccess');
 
   readonly form: FormGroup = this.fb.group({
     experience: [''],
@@ -81,7 +91,6 @@ export class ManageGmComponent {
 
     if (!file) return;
 
-    // Walidacja rozmiaru
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.src = url;
@@ -92,50 +101,55 @@ export class ManageGmComponent {
         return;
       }
 
-      // Walidacja typu
       if (file.type !== 'image/avif') {
         alert('Dozwolony format to tylko .avif.');
         return;
       }
 
-      // OK – ustawiamy preview i zapisujemy do formularza
       this.imagePreview.set(url);
       this.form.get('image')?.setValue(file);
     };
   }
 
-submitProfile() {
-  const experience = this.form.get('experience')?.value;
-  const systems = this.systemControls.value.filter(Boolean);
-  const file: File | null = this.form.get('image')?.value;
+  submitProfile() {
+    const experience = this.form.get('experience')?.value;
+    const systems = this.systemControls.value.filter(Boolean);
+    const file: File | null = this.form.get('image')?.value;
 
-  const upload$: Observable<string | null> = file
-    ? this.backend.uploadImage(file, `gms/${this.user.id}`)
-    : of(null);
+    const previous = this.previousImagePath();
 
-  upload$.subscribe({
-    next: (imagePath) => {
-      const profilePayload = {
-        id: this.user.id,
-        experience,
-        image: imagePath, // ścieżka jak `gms/uuid/123456.avif`
-      };
 
-      // Zapisz profil
-      this.backend.create('gm_profiles', profilePayload).subscribe({
-        next: () => {
-          // Zapisz specialties – zostawmy to osobno
-          console.log('✔️ Profil MG zapisany');
-        },
-        error: (err) => {
-          console.error('❌ Błąd podczas zapisu profilu:', err);
-        },
-      });
-    },
-    error: (err) => {
-      console.error('❌ Błąd przy uploadzie obrazka:', err);
-    },
-  });
-}
+    const upload$: Observable<string | null> = file
+      ? this.backend.uploadOrReplaceImage(file, `gms/${this.user.id}`, previous)
+      : of(previous);
 
+    upload$.subscribe({
+      next: (imagePath) => {
+        const profilePayload = {
+          id: this.user.id,
+          experience,
+          image: imagePath,
+        };
+
+        this.backend.upsert('gm_profiles', profilePayload).subscribe({
+          next: () => {
+            const template = this.successToast();
+            if (template) {
+              this.toastService.show({
+                template,
+                classname: 'bg-success text-white',
+                header: 'Zaktualizowano!',
+              });
+            }
+          },
+          error: (err) => {
+            console.error('❌ Błąd podczas zapisu profilu:', err);
+          },
+        });
+      },
+      error: (err) => {
+        console.error('❌ Błąd przy uploadzie obrazka:', err);
+      },
+    });
+  }
 }
