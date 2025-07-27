@@ -38,49 +38,47 @@ export class GmSelectionComponent {
 
     const currentSystemId = this.store.selectedSystemId();
     if (currentSystemId) {
-      this.form.get('systemId')?.setValue(currentSystemId, { emitEvent: false });
+      this.form
+        .get('systemId')
+        ?.setValue(currentSystemId, { emitEvent: false });
       this.loadGms(currentSystemId);
     }
 
-    this.form.get('systemId')?.valueChanges.subscribe((systemId: string | null) => {
-      this.store.selectedSystemId.set(systemId);
-      if (systemId) {
-        this.loadGms(systemId);
-      } else {
-        this.gms.set([]);
-        this.store.selectedGm.set(null);
-        this.store.gmFirstName.set(null);
-      }
-    });
+    this.form
+      .get('systemId')
+      ?.valueChanges.subscribe((systemId: string | null) => {
+        this.store.selectedSystemId.set(systemId);
+        if (systemId) {
+          this.loadGms(systemId);
+        } else {
+          this.gms.set([]);
+          this.store.selectedGm.set(null);
+          this.store.gmFirstName.set(null);
+        }
+      });
   }
 
-private loadGms(systemId: string) {
-  const date = this.store.selectedDate();
-  const startTime = this.store.selectedStartTime();
-  const duration = this.store.selectedDuration();
+  private loadGms(systemId: string) {
+    const date = this.store.selectedDate();
+    const startTime = this.store.selectedStartTime();
+    const duration = this.store.selectedDuration();
 
-  if (!date || !startTime || duration == null) {
-    // Brakuje danych – nie wywołujemy serwisu
     this.gms.set([]);
-    return;
+    this.store.selectedGm.set(null);
+    this.store.gmFirstName.set(null);
+
+    if (!date || !startTime || duration == null) {
+      return;
+    }
+
+    const startHour = parseInt(startTime, 10);
+
+    this.reservationService
+      .getAvailableGmsForSystem(systemId, date, startHour, duration)
+      .subscribe((gms) => {
+        this.gms.set(gms);
+      });
   }
-
-  const startHour = parseInt(startTime, 10);
-
-  this.reservationService
-    .getAvailableGmsForSystem(systemId, date, startHour, duration)
-    .subscribe((gms) => {
-      this.gms.set(gms);
-
-      const existingId = this.store.selectedGm();
-      const stillExists = gms.some((g) => g.userId === existingId);
-      if (!stillExists) {
-        this.store.selectedGm.set(null);
-        this.store.gmFirstName.set(null);
-      }
-    });
-}
-
 
   selectGm(gmId: string) {
     const gm = this.gms().find((g) => g.userId === gmId);

@@ -85,7 +85,10 @@ export class ManageGmComponent {
   private loadAvailableSystems() {
     this.backend
       .getAll<IRPGSystem>('systems', 'name')
-      .subscribe((systems) => this.systems.set(systems));
+      .subscribe((systems) => {
+        console.log(systems);
+        
+        this.systems.set(systems)});
   }
 
   private loadExistingGmProfile() {
