@@ -152,7 +152,7 @@ export class ManageGmComponent {
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file) return;    
 
     const img = new Image();
     const url = URL.createObjectURL(file);
