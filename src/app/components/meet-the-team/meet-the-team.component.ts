@@ -18,6 +18,8 @@ export class MeetTheTeamComponent implements OnInit {
     this.teamService.getCoreTeam().subscribe({
       next: (members) => {
         this.team = members.slice(0, 4);        
+        console.log(this.team);
+        
       },
       error: (err) => console.error('Błąd ładowania zespołu:', err),
     });
