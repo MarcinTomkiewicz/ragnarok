@@ -7,6 +7,7 @@ import { IOfferCategory } from '../../core/interfaces/i-offer-category';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { SeoService } from '../../core/services/seo/seo.service';
 import { RegulationsComponent } from '../regulations/regulations.component';
+import { ViewResolverService } from '../../core/services/backend/view-resolver/view-resolver.service';
 
 @Component({
   selector: 'app-offers-page',
@@ -18,6 +19,7 @@ import { RegulationsComponent } from '../regulations/regulations.component';
 export class OffersPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly backend = inject(BackendService);
+  private readonly resolver = inject(ViewResolverService);
   private readonly modal = inject(NgbModal);
   private readonly seo = inject(SeoService);
   private readonly destroyRef = inject(DestroyRef);
@@ -25,18 +27,20 @@ export class OffersPageComponent implements OnInit {
   offerCategory?: IOfferCategory;
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      const slug = params.get('slug');
-      if (!slug) return;
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const slug = params.get('slug');
+        if (!slug) return;
 
-      this.backend
-        .getBySlug<IOfferCategory>('offer_pages', slug)
-        .subscribe((data) => {
-          if (!data) return;
-          this.offerCategory = data;
-          this.seo.setTitleAndMeta(data.title, data.subtitle || '');
-        });
-    });
+        this.resolver
+          .resolveBySlug<IOfferCategory>('offer_pages', slug)
+          .subscribe((data) => {
+            if (!data) return;
+            this.offerCategory = data;
+            this.seo.setTitleAndMeta(data.title, data.subtitle || '');
+          });
+      });
   }
 
   openRules(type: 'rent' | 'pass') {

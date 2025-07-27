@@ -14,6 +14,7 @@ import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 import { IUser } from '../../../../core/interfaces/i-user';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
+import { ImageStorageService } from '../../../../core/services/backend/image-storage/image-storage.service';
 
 // TODO: Refactor this service to separate GM logic from reservation logic
 // This service should focus on reservation management, while GM-related logic should be handled in a dedicated service.
@@ -21,6 +22,7 @@ import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
   private readonly backend = inject(BackendService);
+  private readonly imageService = inject(ImageStorageService);
   private readonly supabase = inject(SupabaseService).getClient();
   private readonly authService = inject(AuthService);
 
@@ -264,20 +266,22 @@ export class ReservationService {
     );
   }
 
-  getReservationWithDetails(id: string): Observable<IReservation & { user: IUser, system: IRPGSystem }> {
-  return from(
-    this.supabase
-      .from('reservations')
-      .select(`*, user:user_id(*), system:system_id(*)`)
-      .eq('id', id)
-      .single()
-  ).pipe(
-    map((response) => {
-      if (response.error) throw new Error(response.error.message);
-      const data = response.data;
-      return toCamelCase(this.backend['processImage'](data));
-    })
-  );
-}
-
+  getReservationWithDetails(
+    id: string
+  ): Observable<IReservation & { user: IUser; system: IRPGSystem }> {
+    return from(
+      this.supabase
+        .from('reservations')
+        .select(`*, user:user_id(*), system:system_id(*)`)
+        .eq('id', id)
+        .single()
+    ).pipe(
+      map((response) => {
+        if (response.error) throw new Error(response.error.message);
+        const data = response.data;
+        const withImage = this.imageService.processImage(data); // ⬅️ tu używamy nowego serwisu
+        return toCamelCase(withImage);
+      })
+    );
+  }
 }

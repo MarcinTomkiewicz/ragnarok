@@ -12,12 +12,14 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
+import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
+import { GmService } from '../../core/services/gm/gm.service';
 
 @Component({
   selector: 'app-manage-gm',
@@ -28,6 +30,8 @@ import { IGmData } from '../../../core/interfaces/i-gm-profile';
 })
 export class ManageGmComponent {
   private readonly backend = inject(BackendService);
+  private readonly imageStorage = inject(ImageStorageService);
+  private readonly gmService = inject(GmService);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly toastService = inject(ToastService);
@@ -61,23 +65,28 @@ export class ManageGmComponent {
   }
 
   private loadExistingGmProfile() {
-    this.backend
-      .getAll<IGmData>('v_gm_specialties_with_user')
-      .subscribe((records) => {
-        const userRecords = records.filter((r) => r.userId === this.user.id);
-        if (!userRecords.length) return;
+  this.backend
+    .getAll<IGmData>('v_gm_specialties_with_user')
+    .subscribe((records) => {
+      const userRecords = records.filter((r) => r.userId === this.user.id);
+      if (!userRecords.length) return;
 
-        const profile = userRecords[0];
-        if (profile.experience) {
-          this.form.get('experience')?.setValue(profile.experience);
-        }
+      // Zakładamy, że `processImage` był już wywołany w BackendService.getAll
+      const profile = userRecords[0];
 
-        const ids = userRecords.map((r) => r.systemId);
-        ids
-          .slice(0, 5)
-          .forEach((id, i) => this.systemControls.at(i)?.setValue(id));
+      this.form.get('experience')?.setValue(profile.experience ?? '');
+
+      if (profile.image) {
+        this.previousImagePath.set(profile.image);
+        this.imagePreview.set(profile.image); // już zoptymalizowane URL przez processImage
+      }
+
+      const ids = userRecords.map((r) => r.systemId);
+      ids.slice(0, 5).forEach((id, i) => {
+        this.systemControls.at(i)?.setValue(id);
       });
-  }
+    });
+}
 
   isSystemSelectedElsewhere(systemId: string, currentIndex: number): boolean {
     return this.systemControls.controls.some(
@@ -88,7 +97,6 @@ export class ManageGmComponent {
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-
     if (!file) return;
 
     const img = new Image();
@@ -115,41 +123,41 @@ export class ManageGmComponent {
     const experience = this.form.get('experience')?.value;
     const systems = this.systemControls.value.filter(Boolean);
     const file: File | null = this.form.get('image')?.value;
-
     const previous = this.previousImagePath();
 
-
     const upload$: Observable<string | null> = file
-      ? this.backend.uploadOrReplaceImage(file, `gms/${this.user.id}`, previous)
+      ? this.imageStorage.uploadOrReplaceImage(file, `gms/${this.user.id}`, previous)
       : of(previous);
 
-    upload$.subscribe({
-      next: (imagePath) => {
-        const profilePayload = {
-          id: this.user.id,
-          experience,
-          image: imagePath,
-        };
+    upload$
+      .pipe(
+        switchMap((imagePath) => {
+          const payload: any = {
+            id: this.user.id,
+            experience,
+          };
 
-        this.backend.upsert('gm_profiles', profilePayload).subscribe({
-          next: () => {
-            const template = this.successToast();
-            if (template) {
-              this.toastService.show({
-                template,
-                classname: 'bg-success text-white',
-                header: 'Zaktualizowano!',
-              });
-            }
-          },
-          error: (err) => {
-            console.error('❌ Błąd podczas zapisu profilu:', err);
-          },
-        });
-      },
-      error: (err) => {
-        console.error('❌ Błąd przy uploadzie obrazka:', err);
-      },
-    });
+          // tylko jeśli obrazek był przesłany lub już był – dołącz go
+          if (imagePath) payload.image = imagePath;
+
+          return this.backend.upsert('gm_profiles', payload);
+        }),
+        switchMap(() => this.gmService.updateSpecialties(this.user.id, systems))
+      )
+      .subscribe({
+        next: () => {
+          const template = this.successToast();
+          if (template) {
+            this.toastService.show({
+              template,
+              classname: 'bg-success text-white',
+              header: 'Zaktualizowano!',
+            });
+          }
+        },
+        error: (err) => {
+          console.error('❌ Błąd przy zapisie profilu lub specjalizacji:', err);
+        },
+      });
   }
 }
