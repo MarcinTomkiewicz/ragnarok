@@ -1,0 +1,47 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ gm.firstName }}</h5>
+  <button
+    type="button"
+    class="btn-close"
+    (click)="close()"
+    aria-label="Zamknij"
+  ></button>
+</div>
+
+<div class="modal-body">
+  <div class="gm-card-modal">
+    <div class="gm-card-avatar">
+      <img [src]="gm.image" [alt]="gm.firstName" />
+    </div>
+
+    <div class="gm-card-grid">
+      <div class="gm-card-section">
+        <h6 class="gm-card-label">Wiek</h6>
+        <p>{{ gm.age ?? "Nie podano" }}</p>
+      </div>
+
+      <div class="gm-card-section">
+        <h6 class="gm-card-label">Opis skrócony</h6>
+        <p>{{ gm.shortDescription }}</p>
+      </div>
+
+      <div class="gm-card-section gm-card-span">
+        <h6 class="gm-card-label">Doświadczenie</h6>
+        <p>{{ gm.experience }}</p>
+      </div>
+
+      <div class="gm-card-section gm-card-span">
+        <h6 class="gm-card-label">Systemy RPG</h6>
+        @if (!isLoading()) {
+        <div class="gm-card-tags">
+          @for (system of systems(); track system.id) {
+          <span class="gm-card-tag">{{ system.name }}</span>
+          }
+        </div>
+        } @else {
+        <p>Ładowanie...</p>
+        }
+      </div>
+    </div>
+  </div>
+</div>

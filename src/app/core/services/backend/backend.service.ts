@@ -30,7 +30,8 @@ export class BackendService {
     sortOrder: 'asc' | 'desc' = 'asc',
     pagination?: IPagination,
     imageConfig?: { width?: number; height?: number },
-    joins?: string
+    joins?: string,
+    processImages = true
   ): Observable<T[]> {
     let select = '*';
     if (joins) {
@@ -54,13 +55,16 @@ export class BackendService {
     return from(query).pipe(
       map((response: PostgrestResponse<any>) => {
         if (response.error) throw new Error(response.error.message);
-        return (response.data || []).map((item) =>
-          this.imageService.processImage(
-            toCamelCase<T>(item),
-            imageConfig?.width,
-            imageConfig?.height
-          )
-        );
+        return (response.data || []).map((item) => {
+          const camel = toCamelCase<T>(item);
+          return processImages
+            ? this.imageService.processImage(
+                camel,
+                imageConfig?.width,
+                imageConfig?.height
+              )
+            : camel;
+        });
       })
     );
   }
@@ -69,16 +73,18 @@ export class BackendService {
     table: string,
     id: string | number,
     width?: number,
-    height?: number
+    height?: number,
+    processImages = true
   ): Observable<T | null> {
     return from(
       this.supabase.from(table).select('*').eq('id', id).single()
     ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
-        return response.data
-          ? this.imageService.processImage(toCamelCase<T>(response.data), width, height)
-          : null;
+        const camel = response.data ? toCamelCase<T>(response.data) : null;
+        return camel && processImages
+          ? this.imageService.processImage(camel, width, height)
+          : camel;
       })
     );
   }

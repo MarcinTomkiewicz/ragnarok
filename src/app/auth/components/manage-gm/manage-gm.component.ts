@@ -65,28 +65,37 @@ export class ManageGmComponent {
   }
 
   private loadExistingGmProfile() {
-  this.backend
-    .getAll<IGmData>('v_gm_specialties_with_user')
-    .subscribe((records) => {
-      const userRecords = records.filter((r) => r.userId === this.user.id);
-      if (!userRecords.length) return;
+    this.backend
+      .getAll<IGmData>(
+        'v_gm_specialties_with_user',
+        undefined,
+        'asc',
+        undefined,
+        undefined,
+        undefined,
+        false
+      )
+      .subscribe((records) => {
+        const userRecords = records.filter((r) => r.userId === this.user.id);
+        if (!userRecords.length) return;
 
-      // Zakładamy, że `processImage` był już wywołany w BackendService.getAll
-      const profile = userRecords[0];
+        const profile = userRecords[0];
 
-      this.form.get('experience')?.setValue(profile.experience ?? '');
+        this.form.get('experience')?.setValue(profile.experience ?? '');
 
-      if (profile.image) {
-        this.previousImagePath.set(profile.image);
-        this.imagePreview.set(profile.image); // już zoptymalizowane URL przez processImage
-      }
+        if (profile.image) {
+          this.previousImagePath.set(profile.image); // <-- to będzie RELATYWNA ścieżka
+          this.imagePreview.set(
+            this.imageStorage.getOptimizedPublicUrl(profile.image, 250, 250)
+          );
+        }
 
-      const ids = userRecords.map((r) => r.systemId);
-      ids.slice(0, 5).forEach((id, i) => {
-        this.systemControls.at(i)?.setValue(id);
+        const ids = userRecords.map((r) => r.systemId);
+        ids.slice(0, 5).forEach((id, i) => {
+          this.systemControls.at(i)?.setValue(id);
+        });
       });
-    });
-}
+  }
 
   isSystemSelectedElsewhere(systemId: string, currentIndex: number): boolean {
     return this.systemControls.controls.some(
@@ -125,8 +134,14 @@ export class ManageGmComponent {
     const file: File | null = this.form.get('image')?.value;
     const previous = this.previousImagePath();
 
+    console.log(previous);
+
     const upload$: Observable<string | null> = file
-      ? this.imageStorage.uploadOrReplaceImage(file, `gms/${this.user.id}`, previous)
+      ? this.imageStorage.uploadOrReplaceImage(
+          file,
+          `gms/${this.user.id}`,
+          previous
+        )
       : of(previous);
 
     upload$
@@ -137,7 +152,6 @@ export class ManageGmComponent {
             experience,
           };
 
-          // tylko jeśli obrazek był przesłany lub już był – dołącz go
           if (imagePath) payload.image = imagePath;
 
           return this.backend.upsert('gm_profiles', payload);

@@ -36,6 +36,8 @@
 @import "components/upcoming-sessions";
 @import "components/reservation-card";
 @import "components/reservation-list";
+@import "components/gm-details-modal";
+
 // Layouts
 @import "layouts/header";
 @import "layouts/footer";
@@ -57,7 +59,7 @@
 @import "vendors/dropdown-menu";
 @import "vendors/table";
 @import "vendors/pagination";
-@import "vendors/modals"; 
+@import "vendors/modals";
 @import "vendors/typeahead";
 @import "vendors/tooltip";
 @import "vendors/list";
@@ -72,7 +74,6 @@
 @import "@fontsource/material-icons-two-tone";
 
 @import "@fontsource-variable/material-symbols-rounded";
-
 
 @import "base/base";
 @import "base/a";

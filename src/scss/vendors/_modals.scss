@@ -9,5 +9,9 @@
 }
 
 .modal-header > .btn-close {
-    filter: $icon-filter;
-  }
+  filter: $icon-filter;
+}
+
+.modal-title {
+  @include gold-gradient-text;
+}

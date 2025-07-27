@@ -7,6 +7,8 @@ import { SeoService } from '../../core/services/seo/seo.service';
 import { CoworkerRoles, RoleDisplay } from '../../core/enums/roles';
 import { IGmData } from '../../core/interfaces/i-gm-profile';
 import { LoaderComponent } from '../../common/loader/loader.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { GmDetailsModalComponent } from '../../common/gm-details-modal/gm-details-modal.component';
 
 @Component({
   selector: 'app-tech-stack',
@@ -20,6 +22,7 @@ export class TechStackComponent implements OnInit {
   private readonly loader = inject(LoaderService);
   private readonly platform = inject(PlatformService);
   private readonly seo = inject(SeoService);
+  private readonly modal = inject(NgbModal);
 
   readonly gms = signal<IGmData[]>([]);
   readonly isLoading = signal(true);
@@ -31,8 +34,8 @@ export class TechStackComponent implements OnInit {
   );
 
   readonly shouldShowMoreButton = computed(() =>
-  !this.showAll() && this.gms().length > 4
-);
+    !this.showAll() && this.gms().length > 4
+  );
 
   readonly roleDisplay = RoleDisplay[CoworkerRoles.Gm];
 
@@ -46,18 +49,11 @@ export class TechStackComponent implements OnInit {
   private loadData(): void {
     this.loader.show();
     this.backend
-      .getAll<IGmData>(
-        'v_gm_specialties_with_user',
-        'gmProfileCreatedAt',
-        'asc'
-      )
-
+      .getAll<IGmData>('v_gm_specialties_with_user', 'gmProfileCreatedAt', 'asc')
       .subscribe({
         next: (data) => {
           const uniqueByUser = this.deduplicateByUserId(data);
           this.gms.set(uniqueByUser);
-          console.log(this.gms());
-          
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -80,7 +76,10 @@ export class TechStackComponent implements OnInit {
   }
 
   onCardClick(gm: IGmData): void {
-    console.log('Kliknięto kartę MG:', gm);
-    // Modal dodamy później
+    const modalRef = this.modal.open(GmDetailsModalComponent, {
+      size: 'lg',
+      centered: true,
+    });
+    modalRef.componentInstance.gm = gm;
   }
 }

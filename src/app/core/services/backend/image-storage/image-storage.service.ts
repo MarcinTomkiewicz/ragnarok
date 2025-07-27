@@ -65,6 +65,15 @@ export class ImageStorageService {
     return `${imageUrl}?width=${width}&height=${height}`;
   }
 
+  getPublicUrl(path: string): string {
+    const { data } = this.supabase.storage.from('images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  getOptimizedPublicUrl(path: string, width = 600, height = 400): string {
+    return `${this.getPublicUrl(path)}?width=${width}&height=${height}`;
+  }
+
   processImage<T extends { [key: string]: any }>(
     item: T,
     width = 600,
