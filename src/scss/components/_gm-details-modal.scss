@@ -2,85 +2,95 @@
 @import "abstracts/mixins";
 
 .gm-card-modal {
-  @include flex-wrapper(column, center, center);
-  text-align: center;
-  padding: 1rem 1.5rem;
+  @include flex-wrapper(column, flex-start, center);
+  gap: 2rem;
 
-  .gm-card-avatar {
-    margin-bottom: 2rem;
-
-    img {
-      width: 180px;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 50%;
-      border: 3px solid $primary-color;
-      box-shadow: 0 0 12px rgba($primary-color, 0.3);
-    }
-  }
-
-  .gm-card-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+  .gm-top-row {
+    @include flex-wrapper(row, flex-start, stretch);
+    gap: 1rem;
     width: 100%;
 
-    @media (max-width: $breakpoint-sm) {
-      grid-template-columns: 1fr;
-    }
-  }
+    .avatar-card {
+      padding: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: unset;
 
-  .gm-card-section {
-    background-color: $bg-color-light;
-    padding: 1rem;
-    border-radius: $border-radius;
-    box-shadow: $card-shadow;
-    text-align: left;
-
-    p {
-      margin: 0;
-      color: $text-color;
-      font-size: $font-size-sm;
-      line-height: 1.5;
+      .gm-card-avatar {
+        width: 250px;
+        height: 250px;
+      }
     }
 
-    &.gm-card-span {
-      grid-column: span 2;
+    .info-card {
+      flex-grow: 1;
+      padding: 1rem;
+      height: auto;
+      @include flex-wrapper(column, flex-start, flex-start);
 
-      @media (max-width: $breakpoint-sm) {
-        grid-column: span 1;
+      .card-text-dark {
+        margin-bottom: 0.5rem;
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
       }
     }
   }
 
-  .gm-card-label {
-    font-size: $font-size-md;
-    font-weight: bold;
-    color: $primary-color;
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
+  .gm-mid-row {
+    @include flex-wrapper(row, flex-start, flex-start);
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+
+    > div {
+      flex: 1 1 300px;
+      padding: 1rem;
+    }
+
+    .card-dark {
+      min-height: 120px;
+    }
+  }
+
+  .gm-bottom-row {
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .gm-card-avatar {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid $border-color;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 
   .gm-card-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.5rem;
+
+    .gm-card-tag {
+      background-color: $primary-color;
+      color: $bg-color;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+    }
   }
 
-  .gm-card-tag {
-    background-color: $secondary-button-color;
-    color: $text-color;
-    padding: 0.4rem 0.75rem;
-    border-radius: 999px;
-    font-size: $font-size-xs;
-    text-transform: uppercase;
-    border: 1px solid $border-color;
-    box-shadow: $card-shadow;
-    transition: background-color 0.3s ease;
-
-    &:hover {
-      background-color: $secondary-button-hover-color;
-    }
+  .truncate-3 {
+    @include truncate-lines(3);
   }
 }

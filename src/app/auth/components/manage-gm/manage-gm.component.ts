@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {
   Component,
   inject,
@@ -6,19 +7,24 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  FormArray,
   FormBuilder,
   FormGroup,
-  FormArray,
   ReactiveFormsModule,
+  ValidatorFn,
+  Validators,
 } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 import { Observable, of, switchMap } from 'rxjs';
-import { BackendService } from '../../../core/services/backend/backend.service';
-import { AuthService } from '../../../core/services/auth/auth.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
+import {
+  GmStyleTag,
+  GmStyleTagLabels,
+  IGmData,
+} from '../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
-import { IGmData } from '../../../core/interfaces/i-gm-profile';
+import { AuthService } from '../../../core/services/auth/auth.service';
+import { BackendService } from '../../../core/services/backend/backend.service';
 import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
+import { ToastService } from '../../../core/services/toast/toast.service';
 import { GmService } from '../../core/services/gm/gm.service';
 
 @Component({
@@ -41,16 +47,34 @@ export class ManageGmComponent {
   readonly previousImagePath = signal<string | null>(null);
   imagePreview = signal<string | null>(null);
 
+  readonly GmStyleTag = GmStyleTag;
+  readonly GmStyleTagLabels = GmStyleTagLabels;
+
   readonly successToast = viewChild<TemplateRef<unknown>>('editDataSuccess');
+
+  maxThreeStyles: ValidatorFn = (control) => {
+    const array = control as FormArray;
+    return array.length > 3 ? { maxTags: true } : null;
+  };
 
   readonly form: FormGroup = this.fb.group({
     experience: [''],
+    quote: ['', Validators.maxLength(160)],
     image: [null],
     systems: this.fb.array([...Array(5)].map(() => this.fb.control(''))),
+    styleTags: this.fb.array([], this.maxThreeStyles),
   });
 
   get systemControls(): FormArray {
     return this.form.get('systems') as FormArray;
+  }
+
+  get styleTagControls(): FormArray {
+    return this.form.get('styleTags') as FormArray;
+  }
+
+  get gmStyleTagValues(): GmStyleTag[] {
+    return Object.values(GmStyleTag) as GmStyleTag[];
   }
 
   constructor() {
@@ -82,12 +106,20 @@ export class ManageGmComponent {
         const profile = userRecords[0];
 
         this.form.get('experience')?.setValue(profile.experience ?? '');
+        this.form.get('quote')?.setValue(profile.quote ?? '');
 
         if (profile.image) {
-          this.previousImagePath.set(profile.image); // <-- to będzie RELATYWNA ścieżka
+          this.previousImagePath.set(profile.image);
           this.imagePreview.set(
             this.imageStorage.getOptimizedPublicUrl(profile.image, 250, 250)
           );
+        }
+
+        if (profile.styleTags?.length) {
+          const array = this.form.get('styleTags') as FormArray;
+          profile.styleTags
+            .slice(0, 3)
+            .forEach((tag) => array.push(this.fb.control(tag)));
         }
 
         const ids = userRecords.map((r) => r.systemId);
@@ -95,6 +127,20 @@ export class ManageGmComponent {
           this.systemControls.at(i)?.setValue(id);
         });
       });
+  }
+
+  toggleStyleTag(tag: GmStyleTag) {
+    const array = this.styleTagControls;
+    const idx = array.value.indexOf(tag);
+    if (idx >= 0) {
+      array.removeAt(idx);
+    } else if (array.length < 3) {
+      array.push(this.fb.control(tag));
+    }
+  }
+
+  enumKeys(obj: any): string[] {
+    return Object.keys(obj).filter((k) => isNaN(Number(k)));
   }
 
   isSystemSelectedElsewhere(systemId: string, currentIndex: number): boolean {
@@ -130,11 +176,11 @@ export class ManageGmComponent {
 
   submitProfile() {
     const experience = this.form.get('experience')?.value;
+    const quote = this.form.get('quote')?.value;
     const systems = this.systemControls.value.filter(Boolean);
+    const styleTags = this.styleTagControls.value;
     const file: File | null = this.form.get('image')?.value;
     const previous = this.previousImagePath();
-
-    console.log(previous);
 
     const upload$: Observable<string | null> = file
       ? this.imageStorage.uploadOrReplaceImage(
@@ -150,6 +196,8 @@ export class ManageGmComponent {
           const payload: any = {
             id: this.user.id,
             experience,
+            quote,
+            style_tags: styleTags,
           };
 
           if (imagePath) payload.image = imagePath;

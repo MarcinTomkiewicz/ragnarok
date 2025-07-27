@@ -10,38 +10,68 @@
 
 <div class="modal-body">
   <div class="gm-card-modal">
-    <div class="gm-card-avatar">
-      <img [src]="gm.image" [alt]="gm.firstName" />
+    <!-- Sekcja 1 -->
+    <div class="gm-top-row">
+      <!-- Avatar -->
+      <div class="card-dark avatar-card">
+        <div class="gm-card-avatar">
+          <img [src]="gm.image" [alt]="gm.firstName" />
+        </div>
+      </div>
+      <!-- Informacje -->
+      <div class="card-dark info-card">
+        <h5>Informacje podstawowe</h5>
+        <div class="card-text-dark mb-2">
+          <strong>Wiek:</strong> {{ gm.age ?? "Nie podano" }}
+        </div>
+
+        <div class="card-text-dark mb-2">
+          <strong>Styl: </strong>
+          @if (gm.styleTags.length) { @for (tag of gm.styleTags; track tag) {
+          <span class="badge bg-secondary me-1">{{
+            GmStyleTagLabels[tag]
+          }}</span>
+          } } @else {
+          <em>Brak</em>
+          }
+        </div>
+
+        <div class="card-text-dark mb-2">
+          <strong>Cytat:</strong>
+          @if (gm.quote) {
+          <em>“{{ gm.quote }}”</em>
+          } @else {
+          <em>Brak</em>
+          }
+        </div>
+      </div>
     </div>
 
-    <div class="gm-card-grid">
-      <div class="gm-card-section">
-        <h6 class="gm-card-label">Wiek</h6>
-        <p>{{ gm.age ?? "Nie podano" }}</p>
+    <!-- Sekcja 2 -->
+    <div class="gm-mid-row">
+      <div class="card-dark">
+        <h6 class="title-dark">Opis skrócony</h6>
+        <div class="card-text-dark truncate-3">{{ gm.shortDescription }}</div>
       </div>
 
-      <div class="gm-card-section">
-        <h6 class="gm-card-label">Opis skrócony</h6>
-        <p>{{ gm.shortDescription }}</p>
-      </div>
-
-      <div class="gm-card-section gm-card-span">
-        <h6 class="gm-card-label">Doświadczenie</h6>
-        <p>{{ gm.experience }}</p>
-      </div>
-
-      <div class="gm-card-section gm-card-span">
-        <h6 class="gm-card-label">Systemy RPG</h6>
+      <div class="card-dark">
+        <h5>Systemy RPG</h5>
         @if (!isLoading()) {
-        <div class="gm-card-tags">
+        <div class="gm-card-tags mt-2">
           @for (system of systems(); track system.id) {
           <span class="gm-card-tag">{{ system.name }}</span>
           }
         </div>
         } @else {
-        <p>Ładowanie...</p>
+        <div class="card-text-dark">Ładowanie...</div>
         }
       </div>
+    </div>
+
+    <!-- Sekcja 3 -->
+    <div class="card-dark gm-bottom-row">
+      <h5>Doświadczenie</h5>
+      <div class="card-text-dark">{{ gm.experience }}</div>
     </div>
   </div>
 </div>

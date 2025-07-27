@@ -14,6 +14,17 @@
     }
 
     <div class="form-group">
+      <label for="quote">Cytat przewodni (opcjonalny, max. 160 znaków)</label>
+      <input
+        id="quote"
+        type="text"
+        maxlength="160"
+        formControlName="quote"
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-group">
       <label for="experience">Doświadczenie</label>
       <textarea
         id="experience"
@@ -38,6 +49,37 @@
           </option>
           }
         </select>
+        }
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Styl prowadzenia (maks. 3)</label>
+      <div class="d-flex flex-wrap gap-2">
+        @for (tag of gmStyleTagValues; track tag) {
+        <div
+          class="style-checkbox"
+          [class.disabled]="
+            !styleTagControls.value.includes(tag) &&
+            styleTagControls.length >= 3
+          "
+        >
+          <input
+            class="style-checkbox-input"
+            type="checkbox"
+            [checked]="styleTagControls.value.includes(tag)"
+            [disabled]="
+              !styleTagControls.value.includes(tag) &&
+              styleTagControls.length >= 3
+            "
+            (change)="toggleStyleTag(tag)"
+            id="style_{{ tag }}"
+          />
+          <label class="style-checkbox-label" [for]="'style_' + tag">
+            {{ GmStyleTagLabels[tag] }}
+          </label>
+        </div>
+
         }
       </div>
     </div>
