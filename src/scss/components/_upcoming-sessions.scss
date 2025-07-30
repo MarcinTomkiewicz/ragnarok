@@ -3,7 +3,8 @@
 
 .upcoming-sessions-wrapper {
   @include section-wrapper;
-  @include flex-wrapper(column, start, center);
+  @include flex-wrapper(column, flex-start, stretch);
+  gap: 1rem;
 
   .calendar {
     max-width: 820px;

@@ -24,14 +24,15 @@
   </div>
   }
 
-  <app-reservation-calendar
-    [reservationsMap]="reservationsMap()"
-    [room]="store.selectedRoom()"
-    [selectedDate]="store.selectedDate()"
-    [selectionDisabled]="isSelectionDisabled()"
-    (dateSelected)="selectDate($event)"
-    (monthChanged)="onMonthChanged($event)"
-  />
+<app-universal-calendar
+  [dailyDataMap]="reservationsMap()"
+  [mapDailyToHourlyAvailability]="mapReservationToHours()"
+  [selectedDate]="selectedDate()"
+  [selectionDisabled]="isSelectionDisabled()"
+  [room]="selectedRoom()"
+  (dateSelected)="selectDate($event)"
+  (monthChanged)="onMonthChanged($event)"
+></app-universal-calendar>
 
   @if (requiresClubConfirmation()) {
   <div class="form-check mt-3">

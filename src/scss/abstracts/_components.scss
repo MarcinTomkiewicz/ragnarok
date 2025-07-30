@@ -25,6 +25,7 @@
     font-size: $font-size-xxl;
     margin-bottom: 1rem;
     @include gold-gradient-text;
+    margin: 0 auto;
   }
 
   .section-subtitle {

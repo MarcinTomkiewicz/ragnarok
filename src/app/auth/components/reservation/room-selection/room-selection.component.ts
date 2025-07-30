@@ -17,11 +17,12 @@ import { ReservationService } from '../../../core/services/reservation/reservati
 import { rxComputed } from '../../../../core/utils/rx-computed';
 import { ReservationCalendarComponent } from '../../../common/reservation-calendar/reservation-calendar.component';
 import { IReservation } from '../../../../core/interfaces/i-reservation';
+import { UniversalCalendarComponent } from '../../../common/universal-calendar/universal-calendar.component';
 
 @Component({
   selector: 'app-room-selection',
   standalone: true,
-  imports: [CommonModule, ReservationCalendarComponent],
+  imports: [CommonModule, UniversalCalendarComponent],
   templateUrl: './room-selection.component.html',
 })
 export class RoomSelectionComponent {
@@ -134,22 +135,38 @@ export class RoomSelectionComponent {
     this.store.confirmedTeam.set(false);
   }
 
-  selectDate(dateStr: string) {
-    const date = new Date(dateStr); // lub parse(dateStr, 'yyyy-MM-dd', new Date())
+  selectDate(dateStr: string | null) {
     if (this.isSelectionDisabled()) return;
-    const formatted = format(date, 'yyyy-MM-dd');
-    if (this.selectedDate() !== formatted) {
-      this.store.selectedDate.set(formatted);
 
-      // Reset reszty
-      this.store.selectedStartTime.set(null);
-      this.store.selectedDuration.set(null);
-      this.store.selectedGm.set(null);
-      this.store.gmFirstName.set(null);
-      this.store.selectedSystemId.set(null);
-      this.store.needsGm.set(false);
-    }
+    const current = this.selectedDate();
+    const isSame = current === dateStr;
+
+    this.store.selectedDate.set(isSame ? null : dateStr);
+
+    // Reset zawsze — niezależnie od tego, czy zaznaczasz, czy odznaczasz
+    this.store.selectedStartTime.set(null);
+    this.store.selectedDuration.set(null);
+    this.store.selectedGm.set(null);
+    this.store.gmFirstName.set(null);
+    this.store.selectedSystemId.set(null);
+    this.store.needsGm.set(false);
   }
+
+  mapReservationToHours = () => (reservations: IReservation[]) => {
+    const startHour = [Rooms.Asgard, Rooms.Alfheim].includes(
+      this.selectedRoom()
+    )
+      ? 15
+      : 17;
+    const blocks = Array(23 - startHour).fill(false);
+    for (const r of reservations) {
+      const hStart = parseInt(r.startTime.split(':')[0], 10);
+      for (let h = hStart; h < hStart + r.durationHours; h++) {
+        if (h >= startHour && h < 23) blocks[h - startHour] = true;
+      }
+    }
+    return blocks;
+  };
 
   onClubCheckboxChange(event: Event) {
     const input = event.target as HTMLInputElement;

@@ -12,20 +12,20 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ReservationDetailsModalComponent } from '../../common/reservation-details-modal/reservation-details-modal.component';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { IUser } from '../../../core/interfaces/i-user';
+import { UniversalCalendarComponent } from '../../common/universal-calendar/universal-calendar.component';
 
 @Component({
   selector: 'app-upcoming-sessions',
   standalone: true,
   imports: [
     CommonModule,
-    ReservationCalendarComponent,
+    UniversalCalendarComponent,
     ReservationListComponent,
   ],
   templateUrl: './upcoming-sessions.component.html',
   styleUrl: './upcoming-sessions.component.scss',
 })
 export class UpcomingSessionsComponent {
-  private readonly backend = inject(BackendService);
   private readonly reservationService = inject(ReservationService);
   private readonly auth = inject(AuthService);
   readonly modal = inject(NgbModal);
@@ -70,6 +70,18 @@ export class UpcomingSessionsComponent {
       this.reservationsMap.set(new Map(pairs));
     });
   }
+
+  mapGmReservationToHours = () => (reservations: IReservation[]) => {
+    const blocks = Array(6).fill(false); // 17–23
+    for (const r of reservations) {
+      if (r.gmId !== this.currentUser.id) continue;
+      const hStart = parseInt(r.startTime.split(':')[0], 10);
+      for (let h = hStart; h < hStart + r.durationHours; h++) {
+        if (h >= 17 && h < 23) blocks[h - 17] = true;
+      }
+    }
+    return blocks;
+  };
 
   onMonthChanged(dates: string[]) {
     forkJoin(

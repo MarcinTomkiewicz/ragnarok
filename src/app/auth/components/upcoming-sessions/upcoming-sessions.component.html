@@ -1,15 +1,15 @@
 <div class="upcoming-sessions-wrapper full-height">
   <h2 class="section-title">Twoje nadchodzące sesje</h2>
 
-  <app-reservation-calendar
-    [reservationsMap]="reservationsMap()"
-    [selectedDate]="selectedDate()"
-    [selectionDisabled]="false"
-    [highlightOnlyGmId]="currentUser.id"
-    [room]="Rooms.Asgard"
-    (dateClicked)="onDateSelected($event)"
-    (monthChanged)="onMonthChanged($event)"
-  ></app-reservation-calendar>
+<app-universal-calendar
+  [dailyDataMap]="reservationsMap()"
+  [mapDailyToHourlyAvailability]="mapGmReservationToHours()"
+  [selectedDate]="selectedDate()"
+  [selectionDisabled]="false"
+  [room]="Rooms.Asgard"
+  (dateClicked)="onDateSelected($event)"
+  (monthChanged)="onMonthChanged($event)"
+></app-universal-calendar>
 
   @let selected = selectedDate(); @if (selected) { @let reservations =
   filteredReservationsForSelectedDate(); @if (reservations.length > 0) {
@@ -21,6 +21,6 @@
     (showDetails)="onShowDetails($event.id)"
   />
   } @else {
-  <p class="mt-4">Brak sesji na ten dzień.</p>
+  <p class="mt-4 mx-auto">Brak sesji na ten dzień.</p>
   } }
 </div>
