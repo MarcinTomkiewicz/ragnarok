@@ -65,7 +65,7 @@
   gap: 2rem;
   margin-top: 2rem;
 
-  @media (max-width: $breakpoint-lg) {
+  @media (max-width: $breakpoint-md) {
     grid-template-columns: repeat(2, 1fr);
   }
 
