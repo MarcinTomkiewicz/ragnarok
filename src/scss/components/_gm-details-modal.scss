@@ -7,15 +7,23 @@
 
   .gm-top-row {
     @include flex-wrapper(row, flex-start, stretch);
+    flex-wrap: wrap;
     gap: 1rem;
     width: 100%;
 
     .avatar-card {
+      flex: 0 0 250px;
+      min-width: 250px;
+      max-width: 100%;
       padding: 0.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: unset;
+
+      @media (max-width: $breakpoint-md) {
+        width: 100%;
+        flex: 1;
+      }
 
       .gm-card-avatar {
         width: 250px;
@@ -24,7 +32,7 @@
     }
 
     .info-card {
-      flex-grow: 1;
+      flex: 2 1 0;
       padding: 1rem;
       height: auto;
       @include flex-wrapper(column, flex-start, flex-start);
@@ -60,6 +68,10 @@
   .gm-bottom-row {
     padding: 1rem;
     width: 100%;
+
+    .empty:not(:last-of-type) {
+      height: 1rem;
+    }
   }
 
   .gm-card-avatar {

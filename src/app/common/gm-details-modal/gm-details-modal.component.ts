@@ -4,11 +4,12 @@ import { GmStyleTagLabels, IGmData } from '../../core/interfaces/i-gm-profile';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { IRPGSystem } from '../../core/interfaces/i-rpg-system';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { LinkifyPipe } from '../../core/pipes/linkify.pipe';
 
 @Component({
   selector: 'app-gm-details-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LinkifyPipe],
   templateUrl: './gm-details-modal.component.html',
   styleUrl: './gm-details-modal.component.scss',
 })
@@ -21,6 +22,8 @@ export class GmDetailsModalComponent implements OnInit {
   readonly systems = signal<IRPGSystem[]>([]);
   readonly isLoading = signal(true);
   GmStyleTagLabels = GmStyleTagLabels;
+
+  experienceParagraphs: string[] = [];
 
   ngOnInit(): void {
     this.backend.getAll<IGmData>('v_gm_specialties_with_user').subscribe({
@@ -49,6 +52,9 @@ export class GmDetailsModalComponent implements OnInit {
         this.isLoading.set(false);
       },
     });
+    if (this.gm.experience) {
+      this.experienceParagraphs = this.gm.experience.split(/\n/);
+    }
   }
 
   close(): void {

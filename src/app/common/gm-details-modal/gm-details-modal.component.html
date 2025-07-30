@@ -71,7 +71,12 @@
     <!-- Sekcja 3 -->
     <div class="card-dark gm-bottom-row">
       <h5>Doświadczenie</h5>
-      <div class="card-text-dark">{{ gm.experience }}</div>
+      @for (experience of experienceParagraphs; track $index) {
+      <div
+        [innerHTML]="experience | linkify"
+        [class.empty]="!experience.trim()"
+      ></div>
+      }
     </div>
   </div>
 </div>
