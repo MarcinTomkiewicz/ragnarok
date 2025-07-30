@@ -54,6 +54,39 @@
     width: 100%;
     box-sizing: border-box;
 
+    &.calendar-mode-availability {
+      .hour-block {
+        background-color: $danger-color; // niedostępny default
+
+        &.taken {
+          background-color: $success-color; // dostępny
+        }
+      }
+
+      .calendar-day.reserved {
+        background-color: $bg-color-light;
+        color: $text-color;
+        cursor: pointer;
+      }
+    }
+
+    &.calendar-mode-reservation,
+    &.calendar-mode-readonly {
+      .hour-block {
+        background-color: $success-color; // wolne domyślnie
+
+        &.taken {
+          background-color: $danger-color; // zajęte
+        }
+      }
+
+      .calendar-day.reserved {
+        background-color: $secondary-button-color;
+        color: $danger-color;
+        cursor: not-allowed;
+      }
+    }
+
     .calendar-day {
       background-color: $bg-color-light;
       border: 1px solid $border-color;
@@ -73,12 +106,6 @@
 
       &.outside-month {
         visibility: hidden;
-      }
-
-      &.reserved {
-        background-color: $secondary-button-color;
-        color: $danger-color;
-        cursor: not-allowed;
       }
 
       &.selected {
@@ -107,12 +134,7 @@
       .hour-block {
         width: 6px;
         height: 6px;
-        background-color: $success-color;
         border-radius: 1px;
-
-        &.taken {
-          background-color: $danger-color;
-        }
       }
     }
   }

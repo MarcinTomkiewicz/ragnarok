@@ -1,0 +1,78 @@
+<div class="time-selection-wrapper">
+  <h2 class="section-title">Twoja dostępność</h2>
+
+<app-universal-calendar
+  [dailyDataMap]="availabilityMap()"
+  [mapDailyToHourlyAvailability]="mapToAvailabilityBlocks()"
+  [selectedDate]="selectedDate()"
+  [editMode]="true"
+  [room]="null"
+  (hourClicked)="onHourClicked($event)"
+  (dateSelected)="onDaySelected($event)"
+  (monthChanged)="fetchAvailability()"
+/>
+
+  @if (selectedDate()) {
+    <div class="date-label">
+      <h3>Dostępność dla: {{ selectedDate() }}</h3>
+    </div>
+
+    <div class="hour-picker-row">
+      <div class="picker">
+        <div class="picker-label">Od:</div>
+        <div class="hour-grid">
+          @for (hour of allHours; track hour) {
+            <button
+              class="btn btn-outline btn-sm"
+              [class.active]="startHour() === hour"
+              (click)="selectStartHour(hour)"
+            >
+              {{ hour }}:00
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (startHour() !== null) {
+        <div class="picker">
+          <div class="picker-label">Do:</div>
+          <div class="hour-grid">
+            @for (hour of endHourOptions(); track hour) {
+              <button
+                class="btn btn-outline btn-sm"
+                [class.active]="endHour() === hour"
+                (click)="selectEndHour(hour)"
+              >
+                {{ hour }}:00
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="whole-day-row">
+      <button class="btn btn-outline" (click)="selectWholeDay()">
+        Cały dzień (12:00–23:00)
+      </button>
+    </div>
+
+    <div class="day-controls">
+      <button class="btn btn-secondary" (click)="changeDay(dayDirection.Prev)">
+        Poprzedni dzień
+      </button>
+      <button class="btn btn-primary" (click)="applyAvailability()">
+        Zapisz dzień
+      </button>
+      <button class="btn btn-secondary" (click)="changeDay(dayDirection.Next)">
+        Następny dzień
+      </button>
+    </div>
+  }
+
+  <div class="save-button">
+    <button class="btn btn-success" (click)="saveAvailability()">
+      Aktualizuj dostępność
+    </button>
+  </div>
+</div>

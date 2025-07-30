@@ -25,7 +25,7 @@
     }
   </div>
 
-  <div class="calendar-body">
+  <div class="calendar-body" [class]="modeClass()">
     @for (day of visibleDays(); track trackByDate(day)) {
     <div
       class="calendar-day"
@@ -35,8 +35,7 @@
       [class.disabled]="
         isPastDay(day) ||
         !isSameMonth(day, currentMonth()) ||
-        selectionDisabled() ||
-        isReserved(day)
+        (!editMode() && (selectionDisabled() || isReserved(day)))
       "
       (click)="handleClick(day)"
     >
@@ -49,7 +48,9 @@
           class="hour-block"
           [class.taken]="isTaken"
           [title]="17 + i + ':00 - ' + (18 + i) + ':00'"
+          (click)="onHourClick(day, i)"
         ></div>
+
         }
       </div>
       }

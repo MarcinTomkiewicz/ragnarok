@@ -40,12 +40,19 @@ export class UniversalCalendarComponent {
   // === Outputs ===
   readonly dateSelected = output<string | null>();
   readonly dateClicked = output<string>();
+  readonly hourClicked = output<{ date: string; hour: number }>();
 
   // === Calendar Logic ===
   readonly currentMonth = signal(new Date());
   readonly minMonth = startOfMonth(new Date());
   readonly maxMonth = startOfMonth(addMonths(new Date(), 1));
   readonly monthChanged = output<string[]>();
+
+  readonly modeClass = computed(() => {
+    if (this.editMode()) return 'calendar-mode-availability';
+    if (this.room()) return 'calendar-mode-reservation';
+    return 'calendar-mode-readonly';
+  });
 
   constructor() {
     effect(() => {
@@ -77,7 +84,7 @@ export class UniversalCalendarComponent {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   });
 
-  readonly canGoPrev = computed(() => this.currentMonth() > this.minMonth);
+  readonly canGoPrev = computed(() => this.currentMonth() > this.maxMonth);
   readonly canGoNext = computed(() => this.currentMonth() < this.maxMonth);
 
   readonly hourlyAvailabilityMap = computed(() => {
@@ -94,6 +101,23 @@ export class UniversalCalendarComponent {
   getHourlyAvailability(date: Date): boolean[] {
     const key = format(date, 'yyyy-MM-dd');
     return this.hourlyAvailabilityMap().get(key) ?? [];
+  }
+
+  setMonthView(date: Date) {
+    const newMonth = startOfMonth(date);
+    if (newMonth >= this.minMonth && newMonth <= this.maxMonth) {
+      this.currentMonth.set(newMonth);
+    }
+  }
+
+  onHourClick(day: Date, hourIndex: number) {
+    if (!this.editMode()) return;
+
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const baseHour = 12;
+    const hour = baseHour + hourIndex;
+
+    this.hourClicked.emit({ date: dateStr, hour });
   }
 
   format(date: Date, pattern: string): string {
@@ -120,20 +144,26 @@ export class UniversalCalendarComponent {
     return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
   }
 
+  canEditDay(date: Date): boolean {
+    if (!this.editMode()) return false;
+    return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
+  }
+
   handleClick(date: Date) {
     const formatted = format(date, 'yyyy-MM-dd');
+    const isReservedDay = this.isReserved(date);
 
-    if (
+    const canEdit = this.editMode();
+    const isDisabled =
       this.selectionDisabled() ||
-      this.isReserved(date) ||
-      this.isPastDay(date)
-    ) {
+      this.isPastDay(date) ||
+      !this.isSameMonth(date, this.currentMonth());
+
+    if (!canEdit && (isDisabled || isReservedDay)) {
       return;
     }
 
-    const currentlySelected = this.selectedDate();
-    const isSameDate = currentlySelected === formatted;
-
+    const isSameDate = this.selectedDate() === formatted;
     this.dateSelected.emit(isSameDate ? null : formatted);
     this.dateClicked.emit(formatted);
   }

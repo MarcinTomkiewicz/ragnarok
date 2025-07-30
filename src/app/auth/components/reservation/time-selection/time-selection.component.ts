@@ -6,12 +6,7 @@ import { CoworkerRoles } from '../../../../core/enums/roles';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { SystemRole } from '../../../../core/enums/systemRole';
-
-enum TimeSlots {
-  earlyStart = 15,
-  lateStart = 17,
-  end = 23,
-}
+import { TimeSlots } from '../../../../core/enums/hours';
 
 enum DurationOptions {
   ClubRoom = 4,

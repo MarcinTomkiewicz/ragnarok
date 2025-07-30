@@ -13,7 +13,7 @@
 
   @let selected = selectedDate(); @if (selected) { @let reservations =
   filteredReservationsForSelectedDate(); @if (reservations.length > 0) {
-  <h3 class="mt-4">Sesje na {{ selected }}</h3>
+  <h3 class="mt-4 mx-auto">Sesje na {{ selected }}</h3>
   <app-reservation-list
     [reservations]="reservations"
     [showDetailsButton]="true"

@@ -1,0 +1,89 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.time-selection-wrapper {
+  @include section-wrapper;
+  text-align: center;
+
+  .section-title {
+    margin-bottom: 2rem;
+  }
+
+  .date-label {
+    margin-top: 2rem;
+
+    h3 {
+      font-size: $font-size-lg;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      @include gold-gradient-text;
+    }
+  }
+
+  .hour-picker-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 1.5rem;
+
+    .picker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .picker-label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        font-size: $font-size-md;
+      }
+
+      .hour-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .btn {
+        min-width: 70px;
+
+        &.active {
+          background-color: $primary-color;
+          color: $button-text-color;
+        }
+      }
+    }
+  }
+
+  .whole-day-row {
+    margin-top: 2.5rem;
+
+    .btn {
+      min-width: 220px;
+      font-weight: bold;
+    }
+  }
+
+  .day-controls {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+
+    .btn {
+      min-width: 150px;
+    }
+  }
+
+  .save-button {
+    margin-top: 3rem;
+
+    .btn {
+      padding: 0.75rem 2.5rem;
+      font-size: $font-size-md;
+      font-weight: bold;
+    }
+  }
+}

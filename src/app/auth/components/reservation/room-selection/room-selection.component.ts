@@ -1,23 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
-  addMonths,
   eachDayOfInterval,
   endOfMonth,
   format,
-  startOfMonth,
+  startOfMonth
 } from 'date-fns';
 import { forkJoin, map, of } from 'rxjs';
 import { CoworkerRoles } from '../../../../core/enums/roles';
 import { Rooms } from '../../../../core/enums/rooms';
 import { SystemRole } from '../../../../core/enums/systemRole';
+import { IReservation } from '../../../../core/interfaces/i-reservation';
 import { AuthService } from '../../../../core/services/auth/auth.service';
+import { rxComputed } from '../../../../core/utils/rx-computed';
+import { UniversalCalendarComponent } from '../../../common/universal-calendar/universal-calendar.component';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
-import { rxComputed } from '../../../../core/utils/rx-computed';
-import { ReservationCalendarComponent } from '../../../common/reservation-calendar/reservation-calendar.component';
-import { IReservation } from '../../../../core/interfaces/i-reservation';
-import { UniversalCalendarComponent } from '../../../common/universal-calendar/universal-calendar.component';
 
 @Component({
   selector: 'app-room-selection',

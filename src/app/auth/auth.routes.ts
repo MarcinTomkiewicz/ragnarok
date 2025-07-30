@@ -55,4 +55,15 @@ export const AUTH_ROUTES: Routes = [
     minCoworkerRole: CoworkerRoles.Gm,
   },
 },
+{
+  path: 'availability',
+  loadComponent: () =>
+    import('./components/gm-availability/gm-availability.component').then(
+      (m) => m.GmAvailabilityComponent
+    ),
+  canActivate: [AuthGuard],
+  data: {
+    minCoworkerRole: CoworkerRoles.Gm,
+  },
+},
 ];

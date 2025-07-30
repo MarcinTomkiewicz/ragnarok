@@ -45,3 +45,10 @@ export const GmStyleTagLabels: Record<GmStyleTag, string> = {
   [GmStyleTag.BeginnerFriendly]: 'Dla początkujących',
   [GmStyleTag.DarkAtmosphere]: 'Mroczny klimat',
 };
+
+export interface IAvailabilitySlot {
+  gmId: string;
+  date: string;
+  hour: number;
+  available: boolean;
+}
