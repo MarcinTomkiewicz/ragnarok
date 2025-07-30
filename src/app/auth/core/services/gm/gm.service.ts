@@ -1,8 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of, from } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { BackendService } from '../../../../core/services/backend/backend.service';
-import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
 import { IAvailabilitySlot } from '../../../../core/interfaces/i-gm-profile';
@@ -10,7 +9,6 @@ import { IAvailabilitySlot } from '../../../../core/interfaces/i-gm-profile';
 @Injectable({ providedIn: 'root' })
 export class GmService {
   private readonly backend = inject(BackendService);
-  private readonly supabase = inject(SupabaseService).getClient();
 
   getAvailability(
     gmId: string,
@@ -35,50 +33,67 @@ export class GmService {
     return this.backend.upsert<IAvailabilitySlot>(
       'gm_availability',
       toSnakeCase(entry),
-      'gm_id,date,hour'
+      'gm_id,date'
     );
   }
 
   upsertMany(entries: IAvailabilitySlot[]): Observable<IAvailabilitySlot[]> {
     if (!entries.length) return of([]);
 
-    const payload = entries.map((e) => toSnakeCase(e));
-    return from(
-      this.supabase
-        .from('gm_availability')
-        .upsert(payload, {
-          onConflict: 'gm_id,date,hour',
-        })
-        .select('*')
-    ).pipe(
-      map((response) => {
-        if (response.error) throw new Error(response.error.message);
-        return response.data.map((e: any) => e as IAvailabilitySlot);
-      })
-    );
+    const withId = entries.filter((e) => !!e.id);
+    const withoutId = entries.filter((e) => !e.id);
+
+    const requests: Observable<IAvailabilitySlot[]>[] = [];
+
+    // Rekordy z ID – upsert po ID
+    if (withId.length) {
+      const withIdPayload = withId.map((e) => toSnakeCase(e));
+      requests.push(
+        this.backend.upsertMany<IAvailabilitySlot>(
+          'gm_availability',
+          toSnakeCase(withIdPayload),
+          'id'
+        )
+      );
+    }
+
+    // Rekordy bez ID – usuń ID i upsert po gm_id,date
+    if (withoutId.length) {
+      const withoutIdPayload = withoutId.map((entry) => {
+        const { id, ...rest } = entry;
+        return toSnakeCase(rest);
+      });
+
+      requests.push(
+        this.backend.upsertMany<IAvailabilitySlot>(
+          'gm_availability',
+          toSnakeCase(withoutIdPayload),
+          'gm_id,date'
+        )
+      );
+    }
+
+    return requests.length === 1
+      ? requests[0]
+      : forkJoin(requests).pipe(map((results) => results.flat()));
   }
 
   updateSpecialties(gmId: string, systemIds: string[]): Observable<void> {
-    const delete$ = this.supabase
-      .from('gm_specialties')
-      .delete()
-      .eq('gm_id', gmId);
+    const table = 'gm_specialties';
 
-    const insertPayload = systemIds.map((systemId) => ({
-      gm_id: gmId,
-      system_id: systemId,
-    }));
+    const delete$ = this.backend.delete(table, { gm_id: gmId });
 
-    const insert$ = this.supabase.from('gm_specialties').insert(insertPayload);
+    const insertPayload = systemIds.map((systemId) =>
+      toSnakeCase({ gmId, systemId })
+    );
 
-    return from(delete$).pipe(
-      switchMap((res) => {
-        if (res.error) throw new Error(res.error.message);
-        return from(insert$);
-      }),
-      map((res) => {
-        if (res.error) throw new Error(res.error.message);
-      })
+    const insert$ = systemIds.length
+      ? this.backend.createMany(table, insertPayload)
+      : of([]);
+
+    return delete$.pipe(
+      switchMap(() => insert$),
+      map(() => {})
     );
   }
 }

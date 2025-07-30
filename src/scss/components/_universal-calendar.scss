@@ -4,11 +4,9 @@
 .calendar-nav {
   @include flex-center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
+  margin: 0 auto 1.5rem;
   max-width: 810px;
   padding: 1rem 0;
-  margin: 0 auto;
 
   button {
     width: 2.5rem;
@@ -54,9 +52,10 @@
     width: 100%;
     box-sizing: border-box;
 
+    // === MODE: GM AVAILABILITY ===
     &.calendar-mode-availability {
       .hour-block {
-        background-color: $danger-color; // niedostępny default
+        background-color: $danger-color; // domyślnie niedostępny
 
         &.taken {
           background-color: $success-color; // dostępny
@@ -70,10 +69,11 @@
       }
     }
 
+    // === MODE: RESERVATION OR READONLY ===
     &.calendar-mode-reservation,
     &.calendar-mode-readonly {
       .hour-block {
-        background-color: $success-color; // wolne domyślnie
+        background-color: $success-color; // domyślnie wolne
 
         &.taken {
           background-color: $danger-color; // zajęte
@@ -91,18 +91,18 @@
       background-color: $bg-color-light;
       border: 1px solid $border-color;
       padding: 0.5rem 0.25rem;
-      text-align: center;
-      cursor: pointer;
       border-radius: 6px;
-      transition: background-color 0.3s;
-      color: $text-color;
+      text-align: center;
       font-size: 0.85rem;
-      min-width: 0;
-      min-height: 60px;
+      color: $text-color;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      cursor: pointer;
+      min-width: 0;
+      min-height: 60px;
+      transition: background-color 0.3s;
 
       &.outside-month {
         visibility: hidden;
@@ -125,8 +125,8 @@
 
       .hour-grid {
         display: flex;
-        justify-content: center;
         flex-wrap: wrap;
+        justify-content: center;
         gap: 1px;
         margin-top: 0.25rem;
       }

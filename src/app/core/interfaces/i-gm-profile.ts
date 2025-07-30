@@ -47,8 +47,9 @@ export const GmStyleTagLabels: Record<GmStyleTag, string> = {
 };
 
 export interface IAvailabilitySlot {
+  id?: string;
   gmId: string;
   date: string;
-  hour: number;
-  available: boolean;
+  fromHour: number;
+  toHour: number;
 }

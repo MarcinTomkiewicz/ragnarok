@@ -83,12 +83,9 @@ export class ManageGmComponent {
   }
 
   private loadAvailableSystems() {
-    this.backend
-      .getAll<IRPGSystem>('systems', 'name')
-      .subscribe((systems) => {
-        console.log(systems);
-        
-        this.systems.set(systems)});
+    this.backend.getAll<IRPGSystem>('systems', 'name').subscribe((systems) => {
+      this.systems.set(systems);
+    });
   }
 
   private loadExistingGmProfile() {
@@ -155,7 +152,7 @@ export class ManageGmComponent {
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    if (!file) return;    
+    if (!file) return;
 
     const img = new Image();
     const url = URL.createObjectURL(file);

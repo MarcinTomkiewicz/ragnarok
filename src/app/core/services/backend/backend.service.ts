@@ -50,6 +50,8 @@ export class BackendService {
       const fromIndex = (pagination.page - 1) * pagination.pageSize;
       const toIndex = fromIndex + pagination.pageSize - 1;
       query = query.range(fromIndex, toIndex);
+    } else {
+      query = query.range(0, 999);
     }
 
     return from(query).pipe(
@@ -128,6 +130,17 @@ export class BackendService {
     );
   }
 
+  createMany<T>(table: string, data: T[]): Observable<T[]> {
+    if (!data.length) return of([]);
+
+    return from(this.supabase.from(table).insert(data).select('*')).pipe(
+      map((response) => {
+        if (response.error) throw new Error(response.error.message);
+        return (response.data || []).map((item) => toCamelCase<T>(item));
+      })
+    );
+  }
+
   update<T>(table: string, id: string | number, data: T): Observable<T> {
     return from(
       this.supabase.from(table).update(data).eq('id', id).single()
@@ -157,8 +170,41 @@ export class BackendService {
     );
   }
 
-  delete(table: string, id: string | number): Observable<void> {
-    return from(this.supabase.from(table).delete().eq('id', id)).pipe(
+  upsertMany<T>(
+    table: string,
+    data: T[],
+    conflictTarget: string = 'id'
+  ): Observable<T[]> {
+    if (!data.length) return of([]);
+
+    return from(
+      this.supabase
+        .from(table)
+        .upsert(data, { onConflict: conflictTarget })
+        .select()
+    ).pipe(
+      map((response: PostgrestResponse<T>) => {
+        if (response.error) throw new Error(response.error.message);
+        return (response.data || []).map((item) => toCamelCase<T>(item));
+      })
+    );
+  }
+
+  delete(
+    table: string,
+    id: string | number | Record<string, any>
+  ): Observable<void> {
+    let query = this.supabase.from(table).delete();
+
+    if (typeof id === 'object') {
+      for (const [key, value] of Object.entries(id)) {
+        query = query.eq(toSnakeKey(key), value);
+      }
+    } else {
+      query = query.eq('id', id);
+    }
+
+    return from(query).pipe(
       map((response) => {
         if (response.error) throw new Error(response.error.message);
       })
