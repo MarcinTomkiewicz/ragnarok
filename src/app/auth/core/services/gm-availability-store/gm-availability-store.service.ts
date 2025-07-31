@@ -28,6 +28,12 @@ export class GmAvailabilityStoreService {
     return Array.from(this.data().values());
   }
 
+  removeDay(date: string) {
+  const map = new Map(this.data());
+  map.delete(date);
+  this.data.set(map);
+}
+
   clear() {
     this.data.set(new Map());
   }

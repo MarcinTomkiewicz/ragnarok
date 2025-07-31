@@ -58,6 +58,8 @@
   }
 
   .whole-day-row {
+    @include flex-wrapper(row, center);
+    gap: 2rem;
     margin-top: 2.5rem;
 
     .btn {

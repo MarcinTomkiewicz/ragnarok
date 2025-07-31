@@ -42,7 +42,7 @@
 
   &.btn-secondary {
     background-color: $secondary-color;
-    color: $bg-color;
+    color: $text-color;
 
     &:hover:not(:disabled) {
       @include btn-hover($secondary-color);

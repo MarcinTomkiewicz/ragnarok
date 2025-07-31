@@ -7,7 +7,6 @@
     [selectedDate]="selectedDate()"
     [editMode]="true"
     [room]="null"
-    (hourClicked)="onHourClicked($event)"
     (dateSelected)="onDaySelected($event)"
     (monthChanged)="fetchAvailability()"
   />
@@ -54,6 +53,9 @@
   <div class="whole-day-row">
     <button class="btn btn-outline" (click)="selectWholeDay()">
       Cały dzień (12:00–23:00)
+    </button>
+    <button class="btn btn-outline btn-error" (click)="resetDayAvailability()">
+      Resetuj dostępność (niedostępny)
     </button>
   </div>
 

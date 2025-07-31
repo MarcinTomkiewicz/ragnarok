@@ -128,9 +128,14 @@ export class GmAvailabilityComponent {
     });
   }
 
-  selectStartHour(hour: number) {
+  selectStartHour(hour: number | null) {
     const date = this.selectedDate();
     if (!date) return;
+
+    if (hour === null) {
+      this.resetDayAvailability();
+      return;
+    }
 
     const current = this.availabilityStore.getDay(date) ?? {
       gmId: this.gmId,
@@ -160,7 +165,7 @@ export class GmAvailabilityComponent {
     this.availabilityStore.setDay(date, {
       ...current,
       fromHour: Math.min(current.fromHour, hour - 1),
-      toHour: hour,
+      toHour: hour ?? TimeSlots.end,
     });
   }
 
@@ -173,6 +178,12 @@ export class GmAvailabilityComponent {
       fromHour: TimeSlots.noonStart,
       toHour: TimeSlots.end,
     });
+  }
+
+  resetDayAvailability() {
+    const date = this.selectedDate();
+    if (!date) return;
+    this.availabilityStore.removeDay(date);
   }
 
   getStartHour(): number | null {
