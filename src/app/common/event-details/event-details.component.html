@@ -22,7 +22,7 @@
 
     <div class="event-description">
       @let paragraphs = eventData.longDescription.split('\n');
-      @for (paragraph of paragraphs; track paragraph) {
+      @for (paragraph of paragraphs; let i = $index; track i) {
         <p class="event-paragraph">{{ paragraph }}</p>
       }
     </div>

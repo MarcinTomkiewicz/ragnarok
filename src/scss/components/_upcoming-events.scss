@@ -1,9 +1,16 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
 .upcoming-events-section {
   @include section-wrapper;
 }
 
 .events-grid {
-  @include mg-grid(3);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  align-items: stretch;
 }
 
 .event-card {
@@ -17,7 +24,6 @@
   box-shadow: 0 0 10px rgba($secondary-color, 0.2);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
 
   &:hover {
     transform: translateY(-5px);
@@ -26,19 +32,70 @@
 
   .image-wrapper {
     position: relative;
+    margin-bottom: 1rem;
+
+    img {
+      width: 100%;
+      border-radius: 8px;
+      object-fit: cover;
+    }
   }
 
   .beginner-label {
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 8px;
+    right: 8px;
     background-color: lighten($bg-color, 10%);
     color: $success-color;
     font-size: $font-size-xs;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 999px;
     font-weight: 600;
     box-shadow: 0 0 5px rgba($success-color, 0.3);
     z-index: 3;
+  }
+
+  .event-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+
+    h3 {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      min-height: 4.5rem;
+      @include truncate-lines(3)
+    }
+
+    .event-date {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+
+      img {
+        width: 16px;
+        height: 16px;
+      }
+
+      span {
+        font-size: $font-size-sm;
+      }
+    }
+
+    p {
+      flex-grow: 0;
+      margin-bottom: 1rem;
+    }
+
+    .event-actions {
+      margin-top: auto;
+
+      .btn {
+        margin-top: 1rem;
+        padding: 0.5rem 1.25rem;
+      }
+    }
   }
 }

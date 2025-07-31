@@ -6,7 +6,7 @@
     </p>
 
     <div class="events-grid">
-      @for (event of upcomingEvents; track event.eventDate) {
+      @for (event of upcomingEvents; let i = $index; track i) {
       <div class="event-card">
         <div class="image-wrapper">
           <img [src]="event.image" [alt]="event.name" />
@@ -22,9 +22,9 @@
           </div>
           <p>{{ event.shortDescription }}</p>
           <div class="event-actions">
-            <a [routerLink]="['/event', event.id]" class="btn btn-outline"
-              >Szczegóły</a
-            >
+            <a [routerLink]="['/event', event.id]" class="btn btn-outline">
+              Szczegóły
+            </a>
           </div>
         </div>
       </div>
