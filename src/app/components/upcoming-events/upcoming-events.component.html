@@ -18,7 +18,7 @@
           <h3>{{ event.name }}</h3>
           <div class="event-date">
             <img src="/icons/calendar.svg" alt="calendar" />
-            <span>{{ event.eventDate }}</span>
+            <span>{{ event.eventDate | date: 'dd.MM.yyyy'}}</span>
           </div>
           <p>{{ event.shortDescription }}</p>
           <div class="event-actions">

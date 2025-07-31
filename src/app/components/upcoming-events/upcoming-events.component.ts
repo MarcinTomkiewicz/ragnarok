@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { EventsService } from '../../core/services/events/events.service';
 import { EventData } from '../../core/interfaces/i-event';
 import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-upcoming-events',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CommonModule],
   templateUrl: './upcoming-events.component.html',
   styleUrl: './upcoming-events.component.scss'
 })

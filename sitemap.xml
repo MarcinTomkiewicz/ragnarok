@@ -32,13 +32,32 @@
   <priority>0.80</priority>
 </url>
 <url>
+  <loc>https://ragnarok-rooms.pl/offers/rooms</loc>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://ragnarok-rooms.pl/offers/vouchers</loc>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://ragnarok-rooms.pl/offers/courses</loc>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://ragnarok-rooms.pl/memberships</loc>
+  <priority>0.80</priority>
+</url>
+<url>
   <loc>https://ragnarok-rooms.pl/our-rooms</loc>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://ragnarok-rooms.pl/register</loc>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/contact</loc>
   <priority>0.80</priority>
 </url>
-
 
 </urlset>
