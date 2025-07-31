@@ -87,16 +87,19 @@ export class UniversalCalendarComponent {
   readonly canGoPrev = computed(() => this.currentMonth() > this.maxMonth);
   readonly canGoNext = computed(() => this.currentMonth() < this.maxMonth);
 
-  readonly hourlyAvailabilityMap = computed(() => {
-    const availability = new Map<string, boolean[]>();
+readonly hourlyAvailabilityMap = computed(() => {
+  const availability = new Map<string, boolean[]>();
+  const mapFn = this.mapDailyToHourlyAvailability();
 
-    for (const [dateStr, items] of this.dailyDataMap()) {
-      const blocks = this.mapDailyToHourlyAvailability()?.(items) ?? [];
-      availability.set(dateStr, blocks);
-    }
+  for (const date of this.visibleDays()) {
+    const key = format(date, 'yyyy-MM-dd');
+    const items = this.dailyDataMap().get(key) ?? [];
+    const blocks = mapFn?.(items) ?? [];
+    availability.set(key, blocks);
+  }
 
-    return availability;
-  });
+  return availability;
+});
 
   getHourlyAvailability(date: Date): boolean[] {
     const key = format(date, 'yyyy-MM-dd');

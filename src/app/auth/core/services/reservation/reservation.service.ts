@@ -159,6 +159,30 @@ export class ReservationService {
     );
   }
 
+  private isAvailableDuringTimeRange(
+    gmId: string,
+    date: string,
+    startHour: number,
+    duration: number
+  ): Observable<boolean> {
+    const endHour = startHour + duration;
+
+    return this.backend
+      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', {
+        gmId,
+        date,
+      })
+      .pipe(
+        map((availability) => {
+          // Brak wpisu = brak dostępności na dany dzień
+          if (!availability) return false;
+          return (
+            availability.fromHour <= startHour && availability.toHour >= endHour
+          );
+        })
+      );
+  }
+
   getAvailableGmsForSystem(
     systemId: string,
     date: string,
@@ -172,18 +196,25 @@ export class ReservationService {
         },
       })
       .pipe(
-        switchMap((gms) => {
-          return forkJoin(
+        switchMap((gms) =>
+          forkJoin(
             gms.map((gm) =>
-              this.checkGmAvailability(
-                gm.userId,
-                date,
-                startHour,
-                duration
-              ).pipe(map((isBusy) => (!isBusy ? gm : null)))
+              forkJoin([
+                this.checkGmAvailability(gm.userId, date, startHour, duration),
+                this.isAvailableDuringTimeRange(
+                  gm.userId,
+                  date,
+                  startHour,
+                  duration
+                ),
+              ]).pipe(
+                map(([isBusy, isAvailable]) =>
+                  !isBusy && isAvailable ? gm : null
+                )
+              )
             )
-          ).pipe(map((result) => result.filter((g): g is IGmData => !!g)));
-        })
+          ).pipe(map((result) => result.filter((g): g is IGmData => !!g)))
+        )
       );
   }
 

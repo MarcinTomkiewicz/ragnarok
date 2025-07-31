@@ -121,6 +121,24 @@ export class BackendService {
     );
   }
 
+  getOneByFields<T extends object>(
+    table: string,
+    filters: Record<string, any>
+  ): Observable<T | null> {
+    let query = this.supabase.from(table).select('*');
+
+    for (const [key, value] of Object.entries(filters)) {
+      query = query.eq(toSnakeKey(key), value);
+    }
+
+    return from(query.single()).pipe(
+      map((response: PostgrestSingleResponse<any>) => {
+        if (response.error || !response.data) return null;
+        return toCamelCase<T>(response.data);
+      })
+    );
+  }
+
   create<T>(table: string, data: T): Observable<T> {
     return from(this.supabase.from(table).insert(data).single()).pipe(
       map((response: PostgrestSingleResponse<T>) => {

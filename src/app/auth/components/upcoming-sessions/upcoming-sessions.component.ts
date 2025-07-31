@@ -13,6 +13,7 @@ import { ReservationDetailsModalComponent } from '../../common/reservation-detai
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { IUser } from '../../../core/interfaces/i-user';
 import { UniversalCalendarComponent } from '../../common/universal-calendar/universal-calendar.component';
+import { TimeSlots } from '../../../core/enums/hours';
 
 @Component({
   selector: 'app-upcoming-sessions',
@@ -72,12 +73,12 @@ export class UpcomingSessionsComponent {
   }
 
   mapGmReservationToHours = () => (reservations: IReservation[]) => {
-    const blocks = Array(6).fill(false); // 17–23
+    const blocks = Array(TimeSlots.end - TimeSlots.earlyStart).fill(false);
     for (const r of reservations) {
       if (r.gmId !== this.currentUser.id) continue;
       const hStart = parseInt(r.startTime.split(':')[0], 10);
       for (let h = hStart; h < hStart + r.durationHours; h++) {
-        if (h >= 17 && h < 23) blocks[h - 17] = true;
+        if (h >= TimeSlots.earlyStart && h < TimeSlots.end) blocks[h - TimeSlots.earlyStart] = true;
       }
     }
     return blocks;

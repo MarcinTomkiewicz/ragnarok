@@ -1,11 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import {
-  eachDayOfInterval,
-  endOfMonth,
-  format,
-  startOfMonth
-} from 'date-fns';
+import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { forkJoin, map, of } from 'rxjs';
 import { CoworkerRoles } from '../../../../core/enums/roles';
 import { Rooms } from '../../../../core/enums/rooms';
@@ -16,6 +11,7 @@ import { rxComputed } from '../../../../core/utils/rx-computed';
 import { UniversalCalendarComponent } from '../../../common/universal-calendar/universal-calendar.component';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { TimeSlots } from '../../../../core/enums/hours';
 
 @Component({
   selector: 'app-room-selection',
@@ -154,13 +150,13 @@ export class RoomSelectionComponent {
     const startHour = [Rooms.Asgard, Rooms.Alfheim].includes(
       this.selectedRoom()
     )
-      ? 15
-      : 17;
+      ? TimeSlots.earlyStart
+      : TimeSlots.lateStart;
     const blocks = Array(23 - startHour).fill(false);
     for (const r of reservations) {
       const hStart = parseInt(r.startTime.split(':')[0], 10);
       for (let h = hStart; h < hStart + r.durationHours; h++) {
-        if (h >= startHour && h < 23) blocks[h - startHour] = true;
+        if (h >= startHour && h < TimeSlots.end) blocks[h - startHour] = true;
       }
     }
     return blocks;
