@@ -1,18 +1,14 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, ViewportScroller } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import {
-  Event,
-  NavigationEnd,
-  Router,
-  RouterOutlet,
-} from '@angular/router';
+import { Event, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { FooterComponent } from './components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { PlatformService } from './core/services/platform/platform.service';
 import { SeoService } from './core/services/seo/seo.service'; // Wstrzykiwanie SeoService
 import { ToastContainerComponent } from './common/toast-container/toast-container.component';
-import { LoaderComponent } from "./common/loader/loader.component";
+import { LoaderComponent } from './common/loader/loader.component';
+import { scrollToElementWithOffset } from './core/utils/scroll-to-top';
 
 declare let fbq: Function;
 declare let gtag: Function;
@@ -27,8 +23,8 @@ declare let gtag: Function;
     NavbarComponent,
     HeaderComponent,
     ToastContainerComponent,
-    LoaderComponent
-],
+    LoaderComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -45,6 +41,20 @@ export class AppComponent {
       this.router.events.subscribe((event: Event) => {
         if (event instanceof NavigationEnd) {
           this.trackPageView(event.urlAfterRedirects);
+
+          if (
+            event.urlAfterRedirects === '/' ||
+            event.urlAfterRedirects.startsWith('/#')
+          ) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            // Używamy uniwersalnej funkcji scrollującej
+            scrollToElementWithOffset(
+              'router-outlet',
+              60,
+              this.platformService
+            );
+          }
         }
       });
     }

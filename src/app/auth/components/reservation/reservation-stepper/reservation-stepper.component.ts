@@ -21,6 +21,8 @@ import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
 import { UserInfoFormComponent } from '../user-info-form/user-info-form.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
+import { scrollToElementWithOffset } from '../../../../core/utils/scroll-to-top';
+import { PlatformService } from '../../../../core/services/platform/platform.service';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -44,6 +46,7 @@ export class ReservationStepperComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly modalService = inject(NgbModal);
+  private readonly platformService = inject(PlatformService);
 
   readonly step = this.store.step;
 
@@ -68,6 +71,10 @@ export class ReservationStepperComponent {
   );
 
   readonly maxStep = computed(() => 4);
+
+  private scrollToStepperTop(): void {
+    scrollToElementWithOffset('reservation-stepper', 60, this.platformService);
+  }
 
   readonly canProceed = computed(() => {
     if (this.store.isReceptionMode() && this.step() === 0) {
@@ -102,6 +109,7 @@ export class ReservationStepperComponent {
 
     if (current < this.maxStep()) {
       this.step.set(current + 1);
+      this.scrollToStepperTop();
     } else {
       this.confirmReservation();
     }
@@ -113,11 +121,15 @@ export class ReservationStepperComponent {
 
     if (current === 4 && !needsGm) {
       this.step.set(2);
+      this.scrollToStepperTop();
       return;
     }
 
     const prev = current - 1;
-    if (prev >= 1) this.step.set(prev);
+    if (prev >= 1) {
+      this.step.set(prev);
+      this.scrollToStepperTop();
+    }
   }
 
   goBackDisabled() {

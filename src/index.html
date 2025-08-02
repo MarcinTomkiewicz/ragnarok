@@ -1,46 +1,53 @@
 <!DOCTYPE html>
 <html lang="pl">
   <head>
-    <meta charset="utf-8" />
-    <title>Ragnarok - pokoje do sesji RPG w Poznaniu</title>
-    <base href="/" />
+      <meta charset="utf-8" />
+      <title>Ragnarok | Centrum Gier Fabularnych</title>
+      <base href="/" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="theme-color" content="#e8bc58" />
+      <meta name="description" content="Ragnarok to przestrzeń dla fanów RPG w Poznaniu. Wynajem sal na sesje, sprzedaż podręczników i akcesoriów oraz wydarzenia dla miłośników gier fabularnych." />
 
-    <!-- ✅ Cookiebot -->
-    <script
-      id="Cookiebot"
-      src="https://consent.cookiebot.com/uc.js"
-      data-cbid="1d8ccadf-618f-4df5-8913-9f1bf2d6ed32"
-      data-blockingmode="auto"
-      type="text/javascript"
-      async
-    ></script>
+      <link
+        rel="apple-touch-icon"
+        sizes="180x180"
+        href="/apple-touch-icon.png"
+      />
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href="/favicon-32x32.png"
+      />
+      <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href="/favicon-16x16.png"
+      />
+      <link rel="icon" href="/favicon.ico" />
+      <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Other -->
-    <link
-      rel="preconnect"
-      href="https://iqkltypxuzmchvxuzlcd.supabase.co"
-      crossorigin="anonymous"
-    />
-    <link rel="dns-prefetch" href="https://iqkltypxuzmchvxuzlcd.supabase.co" />
-    <link rel="preload" as="image" href="ragnarok.avif" type="image/avif" />
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#e8bc58" />
-    <link rel="canonical" href="https://ragnarok-rooms.pl/" />
-    <meta
-      name="keywords"
-      content="RPG, rpg, rpg Poznań, Ragnarok, pokoje RPG, sesje RPG, wynajem sal RPG, gry fabularne, Zew Cthulhu, Dungeons and Dragons, Warhammer, RPG Poznań, przestrzeń do RPG, Poznań"
-    />
-    <meta
-      name="description"
-      content="Ragnarok – epickie sesje RPG w klimatycznych salach w Poznaniu. Gry fabularne, wynajem pokoi RPG i niezapomniane przygody. Zbierz drużynę i graj!"
-    />
-    <meta name="author" content="Ragnarok - Pokoje do sesji RPG" />
-    <meta name="robots" content="index, follow" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link
+        rel="preconnect"
+        href="https://iqkltypxuzmchvxuzlcd.supabase.co"
+        crossorigin="anonymous"
+      />
+      <link
+        rel="dns-prefetch"
+        href="https://iqkltypxuzmchvxuzlcd.supabase.co"
+      />
+      <link rel="preload" as="image" href="ragnarok.avif" type="image/avif" />
+
+      <!-- Cookiebot -->
+      <script
+        id="Cookiebot"
+        src="https://consent.cookiebot.com/uc.js"
+        data-cbid="1d8ccadf-618f-4df5-8913-9f1bf2d6ed32"
+        data-blockingmode="auto"
+        type="text/javascript"
+        async
+      ></script>
 
     <!-- Social Media / Open Graph -->
     <meta
@@ -91,8 +98,10 @@
 
     <!-- Google Maps API (nie objęty przez Cookiebot, bez zmian) -->
     <script>
-      (g => {
-        var h, a, k,
+      ((g) => {
+        var h,
+          a,
+          k,
           p = "The Google Maps JavaScript API",
           c = "google",
           l = "importLibrary",
@@ -110,7 +119,7 @@
               e.set("libraries", [...r] + "");
               for (k in g)
                 e.set(
-                  k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()),
+                  k.replace(/[A-Z]/g, (t) => "_" + t[0].toLowerCase()),
                   g[k]
                 );
               e.set("callback", c + ".maps." + q);

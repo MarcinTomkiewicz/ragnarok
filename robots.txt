@@ -1,5 +1,4 @@
 User-agent: *
-Disallow: 
 Disallow: /auth/
 Disallow: /admin/
-Sitemap: rangarok-rooms.pl/sitemap.xml
+Sitemap: https://ragnarok-rooms.pl/sitemap.xml
