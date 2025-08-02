@@ -63,6 +63,8 @@ export class GmSelectionComponent {
     const startTime = this.store.selectedStartTime();
     const duration = this.store.selectedDuration();
 
+    console.log('loadGms', { systemId, date, startTime, duration });
+
     this.gms.set([]);
     this.store.selectedGm.set(null);
     this.store.gmFirstName.set(null);

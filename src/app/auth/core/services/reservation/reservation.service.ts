@@ -165,6 +165,12 @@ export class ReservationService {
     startHour: number,
     duration: number
   ): Observable<boolean> {
+    console.log('Checking availability for', {
+      gmId,
+      date,
+      startHour,
+      duration,
+    });
     const endHour = startHour + duration;
 
     return this.backend
@@ -174,7 +180,6 @@ export class ReservationService {
       })
       .pipe(
         map((availability) => {
-          // Brak wpisu = brak dostępności na dany dzień
           if (!availability) return false;
           return (
             availability.fromHour <= startHour && availability.toHour >= endHour
@@ -337,7 +342,7 @@ export class ReservationService {
       map((response) => {
         if (response.error) throw new Error(response.error.message);
         const data = response.data;
-        const withImage = this.imageService.processImage(data); // ⬅️ tu używamy nowego serwisu
+        const withImage = this.imageService.processImage(data);
         return toCamelCase(withImage);
       })
     );

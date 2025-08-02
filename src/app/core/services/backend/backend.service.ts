@@ -131,7 +131,7 @@ export class BackendService {
       query = query.eq(toSnakeKey(key), value);
     }
 
-    return from(query.single()).pipe(
+    return from(query.maybeSingle()).pipe(
       map((response: PostgrestSingleResponse<any>) => {
         if (response.error || !response.data) return null;
         return toCamelCase<T>(response.data);
