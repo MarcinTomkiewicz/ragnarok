@@ -1,0 +1,8 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'layouts/form-panel';
+
+.user-form {
+  @extend .form-panel;
+  width: 600px;
+}

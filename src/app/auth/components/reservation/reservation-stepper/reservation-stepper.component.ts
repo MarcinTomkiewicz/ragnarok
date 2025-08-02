@@ -80,9 +80,18 @@ export class ReservationStepperComponent {
     if (this.store.isReceptionMode() && this.step() === 0) {
       return this.store.isExternalInfoValid();
     }
+
     switch (this.step()) {
-      case 1:
-        return !!this.store.selectedRoom() && !!this.store.selectedDate();
+      case 1: {
+        const room = this.store.selectedRoom();
+        const isClubOnlyRoom = room === 'Asgard' || room === 'Alfheim';
+        const hasClubConfirmed = this.store.confirmedTeam();
+        return (
+          !!room &&
+          !!this.store.selectedDate() &&
+          (!isClubOnlyRoom || hasClubConfirmed)
+        );
+      }
       case 2:
         return (
           !!this.store.selectedStartTime() && !!this.store.selectedDuration()
@@ -95,7 +104,6 @@ export class ReservationStepperComponent {
         return false;
     }
   });
-
   goForward() {
     if (!this.canProceed()) return;
 
@@ -126,7 +134,7 @@ export class ReservationStepperComponent {
     }
 
     const prev = current - 1;
-    if (prev >= 1) {
+    if (prev >= 0) {
       this.step.set(prev);
       this.scrollToStepperTop();
     }

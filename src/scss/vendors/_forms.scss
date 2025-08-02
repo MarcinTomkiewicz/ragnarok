@@ -83,3 +83,25 @@
     cursor: not-allowed;
   }
 }
+
+.user-info-form {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.centered-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  label {
+    align-self: flex-start;
+    margin-left: 0.25rem;
+  }
+
+  .form-control {
+    max-width: 100%;
+    width: 100%;
+  }
+}

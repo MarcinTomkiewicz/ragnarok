@@ -73,12 +73,12 @@ export class UpcomingSessionsComponent {
   }
 
   mapGmReservationToHours = () => (reservations: IReservation[]) => {
-    const blocks = Array(TimeSlots.end - TimeSlots.earlyStart).fill(false);
+    const blocks = Array(TimeSlots.end - TimeSlots.noonStart).fill(false);
     for (const r of reservations) {
       if (r.gmId !== this.currentUser.id) continue;
       const hStart = parseInt(r.startTime.split(':')[0], 10);
       for (let h = hStart; h < hStart + r.durationHours; h++) {
-        if (h >= TimeSlots.earlyStart && h < TimeSlots.end) blocks[h - TimeSlots.earlyStart] = true;
+        if (h >= TimeSlots.noonStart && h < TimeSlots.end) blocks[h - TimeSlots.noonStart] = true;
       }
     }
     return blocks;

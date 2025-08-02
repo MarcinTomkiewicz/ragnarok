@@ -9,25 +9,30 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <form [formGroup]="form">
-      <div class="form-group">
+    <form [formGroup]="form" class="user-info-form mx-auto mt-3">
+      <div class="form-group centered-input">
         <label>Imię lub pseudonim</label>
         <input class="form-control" formControlName="name" />
       </div>
 
-      <div class="form-group">
+      <div class="form-group centered-input">
         <label>Numer telefonu</label>
         <input class="form-control" formControlName="phone" />
       </div>
 
       <div class="form-check mt-3">
-        <input type="checkbox" class="form-check-input" id="isMember" formControlName="isMember" />
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="isMember"
+          formControlName="isMember"
+        />
         <label class="form-check-label" for="isMember">
           Członek Klubu Gier Fabularnych
         </label>
       </div>
     </form>
-  `
+  `,
 })
 export class UserInfoFormComponent implements OnInit, OnDestroy {
   private readonly store = inject(ReservationStoreService);
@@ -44,17 +49,17 @@ export class UserInfoFormComponent implements OnInit, OnDestroy {
     });
 
     this.sub.add(
-      this.form.get('name')!.valueChanges.subscribe(value => {
+      this.form.get('name')!.valueChanges.subscribe((value) => {
         this.store.externalName.set(value);
       })
     );
     this.sub.add(
-      this.form.get('phone')!.valueChanges.subscribe(value => {
+      this.form.get('phone')!.valueChanges.subscribe((value) => {
         this.store.externalPhone.set(value);
       })
     );
     this.sub.add(
-      this.form.get('isMember')!.valueChanges.subscribe(value => {
+      this.form.get('isMember')!.valueChanges.subscribe((value) => {
         this.store.externalIsClubMember.set(value);
       })
     );

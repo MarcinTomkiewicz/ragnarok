@@ -1,6 +1,9 @@
 import { Component, inject, Input, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IReservation, ReservationStatusDisplay } from '../../../core/interfaces/i-reservation';
+import {
+  IReservation,
+  ReservationStatusDisplay,
+} from '../../../core/interfaces/i-reservation';
 import { IUser } from '../../../core/interfaces/i-user';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { format } from 'date-fns';
@@ -20,12 +23,28 @@ export class ReservationDetailsModalComponent {
 
   readonly activeModal = inject(NgbActiveModal);
 
+  ngOnInit(): void {
+    console.log(this.reservation, this.user, this.system);
+  }
+
   get formattedDate(): string {
     return format(new Date(this.reservation.date), 'dd.MM.yyyy');
   }
 
   get displayStatus(): string {
     return ReservationStatusDisplay[this.reservation.status];
+  }
+
+  get displayName(): string {
+    return (
+      this.reservation.externalName || this.user?.firstName || 'Brak danych'
+    );
+  }
+
+  get displayPhone(): string {
+    return (
+      this.reservation.externalPhone || this.user?.phoneNumber || 'Brak danych'
+    );
   }
 
   close(): void {

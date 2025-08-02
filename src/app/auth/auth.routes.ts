@@ -44,6 +44,17 @@ export const AUTH_ROUTES: Routes = [
     },
   },
   {
+    path: 'reservations-calendar',
+    loadComponent: () =>
+      import(
+        './components/room-reservation-overview/room-reservation-overview.component'
+      ).then((m) => m.RoomReservationsOverviewComponent),
+    canActivate: [AuthGuard],
+    data: {
+      minCoworkerRole: CoworkerRoles.Reception,
+    },
+  },
+  {
     path: 'my-reservations',
     loadComponent: () =>
       import(

@@ -3,7 +3,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from 'date-fns';
 import { forkJoin, map, of } from 'rxjs';
 import { CoworkerRoles } from '../../../../core/enums/roles';
-import { Rooms } from '../../../../core/enums/rooms';
+import { Rooms, SortedRooms } from '../../../../core/enums/rooms';
 import { SystemRole } from '../../../../core/enums/systemRole';
 import { IReservation } from '../../../../core/interfaces/i-reservation';
 import { AuthService } from '../../../../core/services/auth/auth.service';
@@ -107,13 +107,26 @@ export class RoomSelectionComponent {
       (!this.requiresClubConfirmation() || this.confirmedTeam())
   );
 
-  readonly rooms = computed(() =>
-    Object.values(Rooms).filter((room) =>
-      [Rooms.Asgard, Rooms.Alfheim].includes(room)
-        ? this.isPrivilegedUser() || this.isMember()
-        : true
-    )
-  );
+  readonly rooms = computed(() => {
+    const isReceptionMode = this.store.isReceptionMode();
+    const isExternalClubMember = this.store.externalIsClubMember();
+    const userRole = this.auth.userCoworkerRole();
+    const systemRole = this.auth.userSystemRole();
+
+    return Object.values(SortedRooms).filter((room) => {
+      const isClubOnly = [Rooms.Asgard, Rooms.Alfheim].includes(room);
+
+      if (systemRole === SystemRole.Admin) return true;
+
+      if (!isClubOnly) return true;
+
+      if (isReceptionMode) {
+        return isExternalClubMember === true;
+      }
+
+      return userRole === CoworkerRoles.Member;
+    });
+  });
 
   selectRoom(room: Rooms) {
     if (this.selectedRoom() === room) return;

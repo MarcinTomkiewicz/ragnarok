@@ -1,0 +1,46 @@
+@if (isPrivilegedUser()) {
+<div class="room-selection-wrapper full-height">
+  <h2 class="section-title">Przegląd rezerwacji sal</h2>
+
+  <div class="room-buttons mx-auto">
+    @for (room of SortedRooms; track $index) {
+    <button
+      class="btn btn-outline-light"
+      [class.active]="selectedRoom() === room"
+      (click)="onSelectRoom(room)"
+    >
+      {{ room }}
+    </button>
+
+    }
+  </div>
+
+  <app-universal-calendar
+    [dailyDataMap]="reservationsMap()"
+    [mapDailyToHourlyAvailability]="mapReservationToHours()"
+    [selectedDate]="selectedDate()"
+    [selectionDisabled]="false"
+    [room]="selectedRoom()"
+    [editMode]="false"
+    (dateClicked)="onDateSelected($event)"
+    (monthChanged)="onMonthChanged($event)"
+  ></app-universal-calendar>
+
+  @if (selectedDate()) { @let reservations =
+  filteredReservationsForSelectedDate();
+  <h3 class="mx-auto mt-4">
+    Rezerwacje w salce {{ selectedRoom() }} na
+    {{ selectedDate() | date : "dd.MM.yyyy" }}
+  </h3>
+  @if (reservations.length > 0) {
+  <app-reservation-list
+    [reservations]="reservations"
+    [showDetailsButton]="true"
+    [showUserDetails]="true"
+    (showDetails)="onShowDetails($event.id)"
+  />
+  } @else {
+  <p class="mx-auto mt-3">Brak rezerwacji na ten dzień.</p>
+  } }
+</div>
+}
