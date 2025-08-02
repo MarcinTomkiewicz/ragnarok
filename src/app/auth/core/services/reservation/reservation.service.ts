@@ -238,6 +238,33 @@ export class ReservationService {
     );
   }
 
+  checkIfUserHasConflictingReservation(
+    date: string,
+    newStartHour: number,
+    newDuration: number
+  ): Observable<boolean> {
+    const user = this.authService.user();
+    if (!user) return of(false);
+
+    return this.getMyReservations().pipe(
+      map((reservations) =>
+        reservations.some((r) => {
+          if (!this.isReservationActive(r) || r.date !== date) return false;
+
+          const existingStart = parseInt(r.startTime.split(':')[0], 10);
+          const existingDuration = r.durationHours;
+
+          return this.isTimeOverlapping(
+            newStartHour,
+            newDuration,
+            existingStart,
+            existingDuration
+          );
+        })
+      )
+    );
+  }
+
   createReservation(data: Partial<IReservation>): Observable<IReservation> {
     const payload = toSnakeCase({
       ...data,

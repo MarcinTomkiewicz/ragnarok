@@ -19,6 +19,8 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
 import { UserInfoFormComponent } from '../user-info-form/user-info-form.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -41,6 +43,7 @@ export class ReservationStepperComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly modalService = inject(NgbModal);
 
   readonly step = this.store.step;
 
@@ -64,7 +67,7 @@ export class ReservationStepperComponent {
     'reservationErrorToast'
   );
 
-  readonly maxStep = computed(() => (this.store.needsGm() ? 4 : 3));
+  readonly maxStep = computed(() => 4);
 
   readonly canProceed = computed(() => {
     if (this.store.isReceptionMode() && this.step() === 0) {
@@ -113,15 +116,15 @@ export class ReservationStepperComponent {
       return;
     }
 
-    const prev = current - 1;    
-    if (prev >= 0) this.step.set(prev);
+    const prev = current - 1;
+    if (prev >= 1) this.step.set(prev);
   }
 
   goBackDisabled() {
-    return this.step() === 1 && !this.store.isReceptionMode()
+    return this.step() === 1 && !this.store.isReceptionMode();
   }
 
-  confirmReservation() {
+  private finalizeReservation() {
     const payload = {
       userId: this.auth.user()?.id,
       roomName: this.store.selectedRoom(),
@@ -167,5 +170,38 @@ export class ReservationStepperComponent {
         }
       },
     });
+  }
+
+  confirmReservation() {
+    const isReception = this.store.isReceptionMode();
+    const date = this.store.selectedDate()!;
+    const startHour = parseInt(this.store.selectedStartTime()!, 10);
+    const duration = this.store.selectedDuration()!;
+
+    if (!isReception) {
+      this.reservationService
+        .checkIfUserHasConflictingReservation(date, startHour, duration)
+        .subscribe((hasConflict) => {
+          if (hasConflict) {
+            this.showUserAlreadyHasReservationModal();
+            return;
+          } else {
+            this.finalizeReservation();
+          }
+        });
+    } else {
+      this.finalizeReservation();
+    }
+  }
+
+  private showUserAlreadyHasReservationModal(): void {
+    const modalRef = this.modalService.open(InfoModalComponent, {
+      backdrop: 'static',
+      centered: false,
+    });
+    modalRef.componentInstance.header = 'Rezerwacja istnieje!';
+    modalRef.componentInstance.message =
+      'Masz już aktywną rezerwację, która pokrywa się godzinowo z tą. Aby zarezerwować nowy termin, najpierw anuluj poprzednią rezerwację.';
+    modalRef.componentInstance.showCancel = false;
   }
 }

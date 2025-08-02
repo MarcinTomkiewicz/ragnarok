@@ -147,11 +147,13 @@ export class RoomSelectionComponent {
   }
 
   mapReservationToHours = () => (reservations: IReservation[]) => {
-    const startHour = [Rooms.Asgard, Rooms.Alfheim].includes(
-      this.selectedRoom()
-    )
+    const isReceptionMode = this.store.isReceptionMode();
+    const startHour = isReceptionMode
+      ? TimeSlots.noonStart
+      : [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom())
       ? TimeSlots.earlyStart
       : TimeSlots.lateStart;
+
     const blocks = Array(23 - startHour).fill(false);
     for (const r of reservations) {
       const hStart = parseInt(r.startTime.split(':')[0], 10);

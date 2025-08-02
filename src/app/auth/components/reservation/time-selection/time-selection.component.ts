@@ -11,6 +11,7 @@ import { TimeSlots } from '../../../../core/enums/hours';
 enum DurationOptions {
   ClubRoom = 4,
   OtherRoom = 6,
+  FullTime = 11,
 }
 
 @Component({
@@ -27,16 +28,21 @@ export class TimeSelectionComponent {
   private readonly auth = inject(AuthService);
 
   // === Local state ===
-  readonly selectedTime = signal<string | null>(this.store.selectedStartTime() ?? null);
-  readonly selectedDuration = signal<number>(this.store.selectedDuration() ?? 1);
+  readonly selectedTime = signal<string | null>(
+    this.store.selectedStartTime() ?? null
+  );
+  readonly selectedDuration = signal<number>(
+    this.store.selectedDuration() ?? 1
+  );
   readonly needsGm = signal<boolean>(this.store.needsGm());
   readonly reservations = signal<IReservation[]>([]);
 
   // === Roles ===
-  readonly isPrivilegedUser = computed(() =>
-    [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
-      this.auth.userCoworkerRole()!
-    ) || this.auth.userSystemRole() === SystemRole.Admin
+  readonly isPrivilegedUser = computed(
+    () =>
+      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+        this.auth.userCoworkerRole()!
+      ) || this.auth.userSystemRole() === SystemRole.Admin
   );
 
   readonly isMemberRestrictedClubRoom = computed(() => {
@@ -50,9 +56,23 @@ export class TimeSelectionComponent {
   });
 
   // === Time logic ===
-  readonly startHour = computed(() =>
-    this.isMemberRestrictedClubRoom() ? TimeSlots.earlyStart : TimeSlots.lateStart
-  );
+  readonly startHour = computed(() => {
+    if (this.store.isReceptionMode()) {
+      return TimeSlots.noonStart;
+    }
+    return this.isMemberRestrictedClubRoom()
+      ? TimeSlots.earlyStart
+      : TimeSlots.lateStart;
+  });
+
+  readonly maxDur = computed(() => {
+    if (this.store.isReceptionMode()) {
+      return DurationOptions.FullTime;
+    }
+    return this.isMemberRestrictedClubRoom()
+      ? DurationOptions.ClubRoom
+      : DurationOptions.OtherRoom;
+  });
 
   readonly endHour = computed(() => TimeSlots.end);
 
@@ -85,13 +105,13 @@ export class TimeSelectionComponent {
     if (hour === null) return [];
 
     const start = this.startHour();
-    const maxDur = this.isMemberRestrictedClubRoom() ? DurationOptions.ClubRoom : DurationOptions.OtherRoom;
+
     const idx = hour - start;
     const availableDurations: number[] = [];
 
     for (
       let len = 1;
-      len <= maxDur && idx + len <= this.timeSlots().length;
+      len <= this.maxDur() && idx + len <= this.timeSlots().length;
       len++
     ) {
       const slice = this.timeSlots().slice(idx, idx + len);
@@ -124,8 +144,8 @@ export class TimeSelectionComponent {
   }
 
   // === Used by stepper ===
-  readonly canProceed = computed(() =>
-    !!this.store.selectedStartTime() && this.store.selectedDuration()
+  readonly canProceed = computed(
+    () => !!this.store.selectedStartTime() && this.store.selectedDuration()
   );
 
   // === Init data ===
