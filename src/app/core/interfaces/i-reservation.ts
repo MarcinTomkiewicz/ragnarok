@@ -11,6 +11,8 @@ export interface IReservation {
   gmId?: string | null;
   systemId?: string | null;
   confirmedTeam?: boolean | null;
+  externalName: string | null;
+  externalPhone: string | null;
   status: ReservationStatus;
   createdAt: string;
 }

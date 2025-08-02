@@ -6,7 +6,7 @@ import {
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { RoomSelectionComponent } from '../room-selection/room-selection.component';
 import { TimeSelectionComponent } from '../time-selection/time-selection.component';
@@ -18,12 +18,14 @@ import { ReservationService } from '../../../core/services/reservation/reservati
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
+import { UserInfoFormComponent } from '../user-info-form/user-info-form.component';
 
 @Component({
   selector: 'app-reservation-stepper',
   standalone: true,
   imports: [
     CommonModule,
+    UserInfoFormComponent,
     RoomSelectionComponent,
     TimeSelectionComponent,
     GmSelectionComponent,
@@ -38,8 +40,22 @@ export class ReservationStepperComponent {
   private readonly toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly step = this.store.step;
+
+  constructor() {
+    const initialStep = this.route.snapshot.data['initialStep'];
+    const receptionMode = this.route.snapshot.data['receptionMode'];
+
+    if (typeof initialStep === 'number') {
+      this.store.step.set(initialStep);
+    }
+
+    if (receptionMode === true) {
+      this.store.isReceptionMode.set(true);
+    }
+  }
 
   readonly reservationSuccessToast = viewChild<TemplateRef<unknown>>(
     'reservationSuccessToast'
@@ -51,6 +67,9 @@ export class ReservationStepperComponent {
   readonly maxStep = computed(() => (this.store.needsGm() ? 4 : 3));
 
   readonly canProceed = computed(() => {
+    if (this.store.isReceptionMode() && this.step() === 0) {
+      return this.store.isExternalInfoValid();
+    }
     switch (this.step()) {
       case 1:
         return !!this.store.selectedRoom() && !!this.store.selectedDate();
@@ -94,8 +113,12 @@ export class ReservationStepperComponent {
       return;
     }
 
-    const prev = current - 1;
-    if (prev >= 1) this.step.set(prev);
+    const prev = current - 1;    
+    if (prev >= 0) this.step.set(prev);
+  }
+
+  goBackDisabled() {
+    return this.step() === 1 && !this.store.isReceptionMode()
   }
 
   confirmReservation() {
@@ -109,6 +132,15 @@ export class ReservationStepperComponent {
       gmId: this.store.selectedGm(),
       systemId: this.store.selectedSystemId(),
       confirmedTeam: this.store.confirmedTeam(),
+      external_name: this.store.isReceptionMode()
+        ? this.store.externalName()
+        : null,
+      external_phone: this.store.isReceptionMode()
+        ? this.store.externalPhone()
+        : null,
+      external_is_member: this.store.isReceptionMode()
+        ? this.store.externalIsClubMember()
+        : null,
       status: ReservationStatus.Confirmed,
     };
 

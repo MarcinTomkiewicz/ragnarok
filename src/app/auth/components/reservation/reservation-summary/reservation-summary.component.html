@@ -2,6 +2,22 @@
   <h2 class="section-title">Podsumowanie rezerwacji</h2>
 
   <div class="summary-details">
+    @if (store.isReceptionMode()) {
+    <div class="summary-row">
+      <span class="label">Imię użytkownika:</span>
+      <span class="value">{{ store.externalName() }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Numer telefonu:</span>
+      <span class="value">{{ store.externalPhone() }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">Członek Klubu:</span>
+      <span class="value">{{
+        store.externalIsClubMember() ? "Tak" : "Nie"
+      }}</span>
+    </div>
+    }
     <div class="summary-row">
       <span class="label">Sala:</span>
       <span class="value">{{ store.selectedRoom() }}</span>
@@ -20,7 +36,7 @@
     </div>
     <div class="summary-row">
       <span class="label">MG potrzebny:</span>
-      <span class="value">{{ store.needsGm() ? 'Tak' : 'Nie' }}</span>
+      <span class="value">{{ store.needsGm() ? "Tak" : "Nie" }}</span>
     </div>
     @if (store.needsGm() && store.gmFirstName()) {
     <div class="summary-row">

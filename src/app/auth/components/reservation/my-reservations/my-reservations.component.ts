@@ -4,26 +4,25 @@ import {
   computed,
   inject,
   signal,
+  TemplateRef,
   viewChild,
   WritableSignal,
-  TemplateRef,
 } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
-import { NgbModal, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { from } from 'rxjs';
-import { tap, switchMap, catchError } from 'rxjs/operators';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { isAfter, isToday } from 'date-fns';
+import { from } from 'rxjs';
+import { catchError, switchMap, tap } from 'rxjs/operators';
 
 import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
 import { ToastService } from '../../../../core/services/toast/toast.service';
 
 import {
+  IReservation,
   ReservationStatus,
   ReservationStatusDisplay,
-  IReservation,
 } from '../../../../core/interfaces/i-reservation';
-import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { ReservationListComponent } from '../../../common/reservation-list/reservation-list.component';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-my-reservations',
