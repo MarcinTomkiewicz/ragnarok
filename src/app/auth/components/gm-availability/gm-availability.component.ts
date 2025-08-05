@@ -263,7 +263,7 @@ export class GmAvailabilityComponent {
     forkJoin([delete$, upsert$]).subscribe({
       next: () => {
         this.availabilityStore.clear();
-        this.fetchAvailability(); // 🔁 pobierz świeże dane z serwera
+        this.fetchAvailability();
 
         const template = this.availabilitySuccessToast();
         if (template) {
@@ -282,7 +282,7 @@ export class GmAvailabilityComponent {
           this.toastService.show({
             template,
             classname: 'bg-danger text-white',
-            header: `Błąd`,
+            header: `Błąd aktualizacji!`,
           });
         }
       },
