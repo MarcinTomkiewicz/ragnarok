@@ -74,4 +74,13 @@
       Aktualizuj dostępność
     </button>
   </div>
+
+    <ng-template #availabilitySuccessToast>
+    <strong>Sukces!</strong> Zaktualizowano dostępność.
+  </ng-template>
+
+  <ng-template #availabilityErrorToast>
+    <strong>Błąd!</strong> Nie udało się zaktualizować dostępności.<br />
+    {{ lastError().message || lastError()  }}
+  </ng-template>
 </div>

@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   signal,
+  TemplateRef,
   viewChild,
 } from '@angular/core';
 import {
@@ -25,6 +26,7 @@ import { TimeSlots } from '../../../core/enums/hours';
 import { DayDirection } from '../../../core/enums/days';
 import { GmAvailabilityStoreService } from '../../core/services/gm-availability-store/gm-availability-store.service';
 import { forkJoin, of } from 'rxjs';
+import { ToastService } from '../../../core/services/toast/toast.service';
 
 @Component({
   selector: 'app-gm-availability',
@@ -35,13 +37,25 @@ import { forkJoin, of } from 'rxjs';
 export class GmAvailabilityComponent {
   private readonly auth = inject(AuthService);
   private readonly gmService = inject(GmService);
-  private readonly calendar = viewChild(UniversalCalendarComponent);
+  private readonly toastService = inject(ToastService);
   readonly availabilityStore = inject(GmAvailabilityStoreService);
+
+  private readonly calendar = viewChild(UniversalCalendarComponent);
 
   readonly gmId = this.auth.user()?.id!;
   readonly selectedDate = signal<string | null>(null);
   readonly dayDirection = DayDirection;
   private originalDates = signal<Set<string>>(new Set());
+
+  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>(
+    'availabilitySuccessToast'
+  );
+  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>(
+    'availabilityErrorToast'
+  );
+
+  readonly lastError = signal<any | null>(null);
+
 
   readonly allHours = Array.from(
     { length: TimeSlots.end - TimeSlots.noonStart + 1 },
@@ -247,8 +261,31 @@ export class GmAvailabilityComponent {
     const upsert$ = this.gmService.upsertMany(current);
 
     forkJoin([delete$, upsert$]).subscribe({
-      next: () => console.log('✅ Zapisano!'),
-      error: (err) => console.error('❌ Błąd zapisu:', err),
+      next: () => {
+        this.availabilityStore.clear();
+        this.fetchAvailability(); // 🔁 pobierz świeże dane z serwera
+
+        const template = this.availabilitySuccessToast();
+        if (template) {
+          this.toastService.show({
+            template,
+            classname: 'bg-success text-white',
+            header: 'Zaktualizowano!',
+          });
+        }
+      },
+      error: (err) => {
+        this.lastError.set(err);
+
+        const template = this.availabilityErrorToast();
+        if (template) {
+          this.toastService.show({
+            template,
+            classname: 'bg-danger text-white',
+            header: `Błąd`,
+          });
+        }
+      },
     });
   }
 }
