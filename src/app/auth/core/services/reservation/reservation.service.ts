@@ -1,20 +1,20 @@
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, from, Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { BackendService } from '../../../../core/services/backend/backend.service';
-import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
-import { AuthService } from '../../../../core/services/auth/auth.service';
+import { FilterOperator } from '../../../../core/enums/filterOperator';
+import { Rooms } from '../../../../core/enums/rooms';
+import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 import {
   IReservation,
   ReservationStatus,
 } from '../../../../core/interfaces/i-reservation';
-import { FilterOperator } from '../../../../core/enums/filterOperator';
-import { Rooms } from '../../../../core/enums/rooms';
-import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
-import { IUser } from '../../../../core/interfaces/i-user';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
-import { IGmData } from '../../../../core/interfaces/i-gm-profile';
+import { IUser } from '../../../../core/interfaces/i-user';
+import { AuthService } from '../../../../core/services/auth/auth.service';
+import { BackendService } from '../../../../core/services/backend/backend.service';
 import { ImageStorageService } from '../../../../core/services/backend/image-storage/image-storage.service';
+import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
+import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 
 // TODO: Refactor this service to separate GM logic from reservation logic
 // This service should focus on reservation management, while GM-related logic should be handled in a dedicated service.
@@ -165,12 +165,6 @@ export class ReservationService {
     startHour: number,
     duration: number
   ): Observable<boolean> {
-    console.log('Checking availability for', {
-      gmId,
-      date,
-      startHour,
-      duration,
-    });
     const endHour = startHour + duration;
 
     return this.backend

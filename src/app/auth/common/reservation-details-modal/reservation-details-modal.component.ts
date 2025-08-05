@@ -23,10 +23,6 @@ export class ReservationDetailsModalComponent {
 
   readonly activeModal = inject(NgbActiveModal);
 
-  ngOnInit(): void {
-    console.log(this.reservation, this.user, this.system);
-  }
-
   get formattedDate(): string {
     return format(new Date(this.reservation.date), 'dd.MM.yyyy');
   }
