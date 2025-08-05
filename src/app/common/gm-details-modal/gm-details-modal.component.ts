@@ -1,10 +1,11 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GmStyleTagLabels, IGmData } from '../../core/interfaces/i-gm-profile';
+import { IGmData } from '../../core/interfaces/i-gm-profile';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { IRPGSystem } from '../../core/interfaces/i-rpg-system';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { LinkifyPipe } from '../../core/pipes/linkify.pipe';
+import { GmStyleTagLabels } from '../../core/enums/gm-styles';
 
 @Component({
   selector: 'app-gm-details-modal',

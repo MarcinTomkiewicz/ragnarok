@@ -16,8 +16,6 @@ import {
 } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
 import {
-  GmStyleTag,
-  GmStyleTagLabels,
   IGmData,
 } from '../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
@@ -26,6 +24,7 @@ import { BackendService } from '../../../core/services/backend/backend.service';
 import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { GmService } from '../../core/services/gm/gm.service';
+import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 
 @Component({
   selector: 'app-manage-gm',

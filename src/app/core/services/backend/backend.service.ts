@@ -159,7 +159,7 @@ export class BackendService {
     );
   }
 
-  update<T>(table: string, id: string | number, data: T): Observable<T> {
+  update<T>(table: string, id: string | number, data: Partial<T>): Observable<T> {
     return from(
       this.supabase.from(table).update(data).eq('id', id).single()
     ).pipe(
