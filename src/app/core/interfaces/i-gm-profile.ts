@@ -5,7 +5,9 @@ export interface IGmProfile {
   id: string;
   experience: string;
   specialties: IRPGSystem[];
-  image?: string;
+  image: string | null;
+  quote: string | null;
+  styleTags: GmStyleTag[];
   createdAt: string;
 }
 

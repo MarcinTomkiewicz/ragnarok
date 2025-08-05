@@ -4,11 +4,19 @@ import { map, switchMap } from 'rxjs/operators';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
-import { IAvailabilitySlot } from '../../../../core/interfaces/i-gm-profile';
+import {
+  IAvailabilitySlot,
+  IGmData,
+  IGmProfile,
+} from '../../../../core/interfaces/i-gm-profile';
 
 @Injectable({ providedIn: 'root' })
 export class GmService {
   private readonly backend = inject(BackendService);
+
+getAllGms(): Observable<IGmData[]> {
+  return this.backend.getAll<IGmData>('v_gm_basic_info');
+}
 
   getAvailability(
     gmId: string,

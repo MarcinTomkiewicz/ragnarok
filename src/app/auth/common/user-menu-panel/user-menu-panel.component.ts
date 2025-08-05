@@ -19,6 +19,7 @@ export class UserMenuPanelComponent implements OnInit {
   readonly auth = inject(AuthService);
   username: string | null = null;
 
+  isMember = false;
   isGm = false;
   isAdminSection = false;
 
@@ -27,6 +28,7 @@ export class UserMenuPanelComponent implements OnInit {
     this.username = user?.firstName || null;
 
     this.isGm = hasStrictCoworkerRole(user, CoworkerRoles.Gm);
+    this.isMember = hasStrictCoworkerRole(user, CoworkerRoles.Member)
     this.isAdminSection =
       hasMinimumCoworkerRole(user, CoworkerRoles.Reception);
   }

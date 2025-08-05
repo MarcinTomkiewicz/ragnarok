@@ -8,6 +8,16 @@
     <a class="menu-item w-100 text-center" href="/auth/my-reservations">Moje rezerwacje</a>
   </div>
 
+  @if (isMember) {
+  <hr class="menu-divider w-100 my-3" />
+  <div class="w-100">
+    <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
+      Strefa Klubowicza
+    </div>
+    <a class="menu-item w-100 text-center" href="/auth/create-team">Załóż drużynę</a>
+  </div>
+}
+
 @if (isGm) {
   <hr class="menu-divider w-100 my-3" />
   <div class="w-100">

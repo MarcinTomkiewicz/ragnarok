@@ -1,0 +1,12 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import 'layouts/form-panel';
+
+.create-team-panel {
+    @include section-wrapper
+}
+
+.user-form {
+  @extend .form-panel;
+  width: 600px;
+}

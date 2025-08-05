@@ -1,0 +1,97 @@
+<div class="form-panel gm-profile-panel full-height">
+  <div class="container">
+    <h2 class="panel-title">Stwórz drużynę</h2>
+
+    <form [formGroup]="teamForm" (ngSubmit)="onSubmit()" class="w-100">
+      <div class="form-group">
+        <label class="text-start">Założyciel</label>
+        <div class="text-start">{{ user()?.firstName }}</div>
+      </div>
+
+      <div class="form-group">
+        <label for="teamName" class="text-start">Nazwa drużyny</label>
+        <input
+          id="teamName"
+          type="text"
+          formControlName="name"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="gmSelect" class="text-start">Mistrz Gry</label>
+        <select id="gmSelect" formControlName="gmId" class="form-select">
+          <option [ngValue]="null">Bez Mistrza Gry</option>
+          @for (gm of gmsList(); track $index) {
+          <option [ngValue]="gm.userId">
+            {{ gm.firstName }}
+          </option>
+          }
+        </select>
+      </div>
+
+      @if (isReceptionField()) {
+      <div class="form-group form-check">
+        <input
+          id="startProgram"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="startProgram"
+        />
+        <label class="form-check-label" for="startProgram">
+          Start program
+        </label>
+      </div>
+
+      <div class="form-group form-check">
+        <input
+          id="finishedProgram"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="finishedProgram"
+        />
+        <label class="form-check-label" for="finishedProgram">
+          Finished program
+        </label>
+      </div>
+      }
+
+      <div class="form-group">
+        <label for="notes" class="text-start">Notatki</label>
+        <textarea
+          id="notes"
+          class="form-control"
+          formControlName="notes"
+        ></textarea>
+      </div>
+
+      <div class="form-group form-check">
+        <input
+          id="isOpen"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="isOpen"
+        />
+        <label class="form-check-label" for="isOpen">
+          Dostępna dla innych
+        </label>
+      </div>
+
+      @if (isReceptionField()) {
+      <div class="form-group form-check">
+        <input
+          id="isForBeginners"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="isForBeginners"
+        />
+        <label class="form-check-label" for="isForBeginners">
+          Dla początkujących
+        </label>
+      </div>
+      }
+
+      <button type="submit" class="btn btn-primary mt-3">Utwórz drużynę</button>
+    </form>
+  </div>
+</div>

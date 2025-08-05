@@ -1,103 +1,105 @@
 <div class="form-panel gm-profile-panel full-height">
-  <h1 class="panel-title">Mój profil Mistrza Gry</h1>
+  <div class="container">
+    <h1 class="panel-title">Mój profil Mistrza Gry</h1>
 
-  <form [formGroup]="form" (ngSubmit)="submitProfile()" class="w-100">
-    @if (imagePreview()){
-    <div class="form-group text-center">
-      <label class="form-label d-block mb-2">Podgląd zdjęcia:</label>
-      <img
-        [src]="imagePreview()"
-        alt="Podgląd zdjęcia"
-        class="mg-avatar-preview"
-      />
-    </div>
-    }
-
-    <div class="form-group">
-      <label for="quote">Cytat przewodni (opcjonalny, max. 160 znaków)</label>
-      <input
-        id="quote"
-        type="text"
-        maxlength="160"
-        formControlName="quote"
-        class="form-control"
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="experience">Doświadczenie</label>
-      <textarea
-        id="experience"
-        rows="5"
-        class="form-control"
-        formControlName="experience"
-      ></textarea>
-    </div>
-
-    <div class="form-group">
-      <label>Systemy RPG (maks. 5)</label>
-      <div class="d-flex flex-column gap-2" formArrayName="systems">
-        @for (i of systemControls.controls; let index = $index; track index) {
-        <select class="form-select" [formControlName]="index">
-          <option [ngValue]="''">-- wybierz system --</option>
-          @for (system of systems(); track system.id) {
-          <option
-            [value]="system.id"
-            [disabled]="isSystemSelectedElsewhere(system.id, index)"
-          >
-            {{ system.name }}
-          </option>
-          }
-        </select>
-        }
+    <form [formGroup]="form" (ngSubmit)="submitProfile()" class="w-100">
+      @if (imagePreview()){
+      <div class="form-group text-center">
+        <label class="form-label d-block mb-2">Podgląd zdjęcia:</label>
+        <img
+          [src]="imagePreview()"
+          alt="Podgląd zdjęcia"
+          class="mg-avatar-preview"
+        />
       </div>
-    </div>
+      }
 
-    <div class="form-group">
-      <label>Styl prowadzenia (maks. 3)</label>
-      <div class="d-flex flex-wrap gap-2">
-        @for (tag of gmStyleTagValues; track tag) {
-        <div
-          class="style-checkbox"
-          [class.disabled]="
-            !styleTagControls.value.includes(tag) &&
-            styleTagControls.length >= 3
-          "
-        >
-          <input
-            class="style-checkbox-input"
-            type="checkbox"
-            [checked]="styleTagControls.value.includes(tag)"
-            [disabled]="
+      <div class="form-group">
+        <label for="quote">Cytat przewodni (opcjonalny, max. 160 znaków)</label>
+        <input
+          id="quote"
+          type="text"
+          maxlength="160"
+          formControlName="quote"
+          class="form-control"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="experience">Doświadczenie</label>
+        <textarea
+          id="experience"
+          rows="5"
+          class="form-control"
+          formControlName="experience"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Systemy RPG (maks. 5)</label>
+        <div class="d-flex flex-column gap-2" formArrayName="systems">
+          @for (i of systemControls.controls; let index = $index; track index) {
+          <select class="form-select" [formControlName]="index">
+            <option [ngValue]="''">-- wybierz system --</option>
+            @for (system of systems(); track system.id) {
+            <option
+              [value]="system.id"
+              [disabled]="isSystemSelectedElsewhere(system.id, index)"
+            >
+              {{ system.name }}
+            </option>
+            }
+          </select>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Styl prowadzenia (maks. 3)</label>
+        <div class="d-flex flex-wrap gap-2">
+          @for (tag of gmStyleTagValues; track tag) {
+          <div
+            class="style-checkbox"
+            [class.disabled]="
               !styleTagControls.value.includes(tag) &&
               styleTagControls.length >= 3
             "
-            (change)="toggleStyleTag(tag)"
-            id="style_{{ tag }}"
-          />
-          <label class="style-checkbox-label" [for]="'style_' + tag">
-            {{ GmStyleTagLabels[tag] }}
-          </label>
+          >
+            <input
+              class="style-checkbox-input"
+              type="checkbox"
+              [checked]="styleTagControls.value.includes(tag)"
+              [disabled]="
+                !styleTagControls.value.includes(tag) &&
+                styleTagControls.length >= 3
+              "
+              (change)="toggleStyleTag(tag)"
+              id="style_{{ tag }}"
+            />
+            <label class="style-checkbox-label" [for]="'style_' + tag">
+              {{ GmStyleTagLabels[tag] }}
+            </label>
+          </div>
+
+          }
         </div>
-
-        }
       </div>
-    </div>
 
-    <div class="form-group">
-      <label for="image">Zmień zdjęcie (opcjonalnie)</label>
-      <input
-        type="file"
-        id="image"
-        class="form-control"
-        (change)="onFileSelected($event)"
-      />
-    </div>
+      <div class="form-group">
+        <label for="image">Zmień zdjęcie (opcjonalnie)</label>
+        <input
+          type="file"
+          id="image"
+          class="form-control"
+          (change)="onFileSelected($event)"
+        />
+      </div>
 
-    <button class="btn btn-primary mt-3" type="submit">Zapisz profil</button>
-  </form>
+      <button class="btn btn-primary mt-3" type="submit">Zapisz profil</button>
+    </form>
 
-  <ng-template #editDataSuccess>
-    <strong>Sukces!</strong> Dane zostały zaktualizowane.
-  </ng-template>
+    <ng-template #editDataSuccess>
+      <strong>Sukces!</strong> Dane zostały zaktualizowane.
+    </ng-template>
+  </div>
 </div>

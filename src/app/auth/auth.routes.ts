@@ -96,4 +96,15 @@ export const AUTH_ROUTES: Routes = [
       minCoworkerRole: CoworkerRoles.Gm,
     },
   },
+    {
+    path: 'create-team',
+    loadComponent: () =>
+      import('./components/create-team/create-team.component').then(
+        (m) => m.CreateTeamComponent
+      ),
+    canActivate: [AuthGuard],
+    data: {
+      minCoworkerRole: CoworkerRoles.Member,
+    },
+  },
 ];
