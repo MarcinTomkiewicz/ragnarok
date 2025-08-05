@@ -210,16 +210,14 @@ export class BackendService {
 
   delete(
     table: string,
-    id: string | number | Record<string, any>
+    filters: string | number | Record<string, any>
   ): Observable<void> {
     let query = this.supabase.from(table).delete();
 
-    if (typeof id === 'object') {
-      for (const [key, value] of Object.entries(id)) {
-        query = query.eq(toSnakeKey(key), value);
-      }
+    if (typeof filters === 'object') {
+      query = applyFilters(query, filters);
     } else {
-      query = query.eq('id', id);
+      query = query.eq('id', filters);
     }
 
     return from(query).pipe(

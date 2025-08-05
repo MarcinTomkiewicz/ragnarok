@@ -78,6 +78,15 @@ export class GmService {
       : forkJoin(requests).pipe(map((results) => results.flat()));
   }
 
+  deleteAvailability(gmId: string, dates: string[]): Observable<void> {
+    if (!dates.length) return of();
+
+    return this.backend.delete('gm_availability', {
+      gm_id: { value: gmId, operator: FilterOperator.EQ },
+      date: { value: dates, operator: FilterOperator.IN },
+    });
+  }
+
   updateSpecialties(gmId: string, systemIds: string[]): Observable<void> {
     const table = 'gm_specialties';
 

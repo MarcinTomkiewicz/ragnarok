@@ -24,6 +24,7 @@ import { IAvailabilitySlot } from '../../../core/interfaces/i-gm-profile';
 import { TimeSlots } from '../../../core/enums/hours';
 import { DayDirection } from '../../../core/enums/days';
 import { GmAvailabilityStoreService } from '../../core/services/gm-availability-store/gm-availability-store.service';
+import { forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-gm-availability',
@@ -40,6 +41,7 @@ export class GmAvailabilityComponent {
   readonly gmId = this.auth.user()?.id!;
   readonly selectedDate = signal<string | null>(null);
   readonly dayDirection = DayDirection;
+  private originalDates = signal<Set<string>>(new Set());
 
   readonly allHours = Array.from(
     { length: TimeSlots.end - TimeSlots.noonStart + 1 },
@@ -73,14 +75,12 @@ export class GmAvailabilityComponent {
     for (const slot of this.availabilityStore.getAll()) {
       const blocks = Array(this.allHours.length).fill(false);
 
-      // 💡 Pętla półotwarta – toHour nie jest wliczany
       for (let h = slot.fromHour; h < slot.toHour; h++) {
         const idx = h - TimeSlots.noonStart;
         if (idx >= 0 && idx < blocks.length) {
           blocks[idx] = true;
         }
       }
-      console.log(map.set(slot.date, blocks));
 
       map.set(slot.date, blocks);
     }
@@ -94,7 +94,10 @@ export class GmAvailabilityComponent {
 
   fetchAvailability() {
     this.gmService.getAvailability(this.gmId, this.visibleDates()).subscribe({
-      next: (slots) => this.availabilityStore.setBulk(slots),
+      next: (slots) => {
+        this.availabilityStore.setBulk(slots);
+        this.originalDates.set(new Set(slots.map((s) => s.date)));
+      },
       error: (err) => console.error('❌ Błąd ładowania dostępności:', err),
     });
   }
@@ -229,8 +232,21 @@ export class GmAvailabilityComponent {
   }
 
   saveAvailability() {
-    const all = this.availabilityStore.getAll();
-    this.gmService.upsertMany(all).subscribe({
+    const current = this.availabilityStore.getAll();
+    const currentDates = new Set(current.map((s) => s.date));
+    const original = this.originalDates();
+
+    const datesToDelete = Array.from(original).filter(
+      (d) => !currentDates.has(d)
+    );
+
+    const delete$ = datesToDelete.length
+      ? this.gmService.deleteAvailability(this.gmId, datesToDelete)
+      : of(null);
+
+    const upsert$ = this.gmService.upsertMany(current);
+
+    forkJoin([delete$, upsert$]).subscribe({
       next: () => console.log('✅ Zapisano!'),
       error: (err) => console.error('❌ Błąd zapisu:', err),
     });
