@@ -10,15 +10,14 @@ import {
 } from '@angular/core';
 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ITeam } from '../../../core/interfaces/teams/i-team';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { TeamService } from '../../core/services/team/team.service';
-import { AuthService } from '../../../core/services/auth/auth.service';
-import { TeamListComponent } from '../../common/team-list/team-list.component';
-import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
-import { ITeamSystem } from '../../../core/interfaces/teams/i-team-system';
+import { forkJoin } from 'rxjs';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
-import { first, forkJoin } from 'rxjs';
+import { ITeam } from '../../../core/interfaces/teams/i-team';
+import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
+import { AuthService } from '../../../core/services/auth/auth.service';
+import { ToastService } from '../../../core/services/toast/toast.service';
+import { TeamListComponent } from '../../common/team-list/team-list.component';
+import { TeamService } from '../../core/services/team/team.service';
 
 @Component({
   selector: 'app-my-teams',
@@ -51,19 +50,18 @@ export class MyTeamsComponent {
   }
 
   onShowDetails(team: ITeam): void {
-    console.log('Szczegóły drużyny:', team);
-
-    // Używamy forkJoin, żeby poczekać na pobranie członków i systemów drużyny
     forkJoin([
-      this.teamService.getTeamMembers(team.id), // Pobieramy członków drużyny
+      this.teamService.getTeamMembers(team.id),
       this.teamService.getTeamSystems(team.id),
-      this.teamService.getTeamProfile(team.id), // Pobieramy systemy drużyny
+      this.teamService.getTeamProfile(team.id),
+      this.teamService.getTeamOwnerData(team.ownerId),
     ]).subscribe({
-      next: ([members, systems, profile]) => {
-        // Po załadowaniu danych wyświetlamy je w konsoli
+      next: ([members, systems, profile, owner]) => {
+        console.log('Szczegóły drużyny:', team);
         console.log('Członkowie drużyny:', members);
         console.log('Systemy drużyny:', systems);
         console.log('Profil drużyny:', profile);
+        console.log('Właściciel drużyny:', owner);
       },
       error: (err) => {
         console.error('Błąd podczas ładowania danych drużyny:', err);

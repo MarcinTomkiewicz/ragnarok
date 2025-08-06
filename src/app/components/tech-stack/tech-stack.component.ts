@@ -33,8 +33,11 @@ export class TechStackComponent implements OnInit {
     this.showAll() ? this.gms() : this.gms().slice(0, 4)
   );
 
-  readonly shouldShowMoreButton = computed(() =>
-    !this.showAll() && this.gms().length > 4
+  readonly shouldShowMoreButton = computed(() => {
+    console.log(this.gms());
+    
+    return !this.showAll() && this.gms().length > 4
+  }
   );
 
   readonly roleDisplay = RoleDisplay[CoworkerRoles.Gm];
@@ -54,6 +57,8 @@ export class TechStackComponent implements OnInit {
         next: (data) => {
           const uniqueByUser = this.deduplicateByUserId(data);
           this.gms.set(uniqueByUser);
+          console.log(this.gms());
+          
           this.isLoading.set(false);
         },
         error: (err) => {

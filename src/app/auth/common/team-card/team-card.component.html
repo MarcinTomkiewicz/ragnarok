@@ -1,21 +1,40 @@
 <div class="card card-dark reservation-card">
   <div class="card-body">
     <div class="card-meta">
-      
-      <h5>{{ team()?.name }}</h5>
+      <h3>{{ team().name }}</h3>
     </div>
-    <div class="card-details">
-  <span class="reservation-id">ID: <code>{{ team()?.id }}</code></span>
-  </div>
 
-    <!-- <div class="card-details">
-      <p>{{ team()?.description }}</p>
-    </div> -->
+    <div class="card-body text-start">
+      <p>
+        <strong>Właściciel:</strong> {{ owner() ? owner()!.firstName : "Brak" }}
+      </p>
+      <p><strong>Rola: </strong>{{ TeamRoleLabels[TeamRole.Owner] }}</p>
+      <div class="card-text-dark mb-2">
+        <strong>Styl gry: </strong>
+        @if (showStyle()) { @for (tag of profile()!.styleTags; track tag) {
+        <span class="badge bg-secondary me-1">{{ GmStyleTagLabels[tag] }}</span>
+        } } @else {
+        <em>Brak stylów</em>
+        }
+      </div>
 
-    <div class="card-actions">
-      @if (showDetailsButton()) {
-        <button class="btn btn-warning" (click)="onShowDetails()">Szczegóły drużyny</button>
-      }
+      <div class="card-text-dark mb-2">
+        <strong>Systemy: </strong>
+        @if (systems().length > 0) { @for (system of systems(); track system.id)
+        {
+        <span class="badge bg-primary me-1">{{ system.name }}</span>
+        } } @else {
+        <em>Brak systemów</em>
+        }
+      </div>
+
+      <div class="card-actions">
+        @if (showDetailsButton()) {
+        <button class="btn btn-info" (click)="onShowDetails()">
+          Zobacz szczegóły
+        </button>
+        }
+      </div>
     </div>
   </div>
 </div>

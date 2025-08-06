@@ -17,6 +17,7 @@ import {
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
+import { IUser } from '../../../../core/interfaces/i-user';
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
@@ -40,6 +41,10 @@ export class TeamService {
 
   getTeamById(id: string): Observable<ITeam | null> {
     return this.backend.getById<ITeam>('teams', id);
+  }
+
+    getTeamOwnerData(ownerId: string): Observable<IUser | null> {
+    return this.backend.getById<IUser>('users', ownerId);
   }
 
   createTeam(

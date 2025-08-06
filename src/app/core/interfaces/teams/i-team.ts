@@ -3,7 +3,7 @@ export interface ITeam {
   name: string;
   createdAt: string;
   gmId: string | null;
-  ownerId: string | null;
+  ownerId: string;
   startProgram: boolean;
   finishedProgram: boolean;
   notes: string | null;

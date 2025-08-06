@@ -14,9 +14,9 @@ import {
 export class GmService {
   private readonly backend = inject(BackendService);
 
-getAllGms(): Observable<IGmData[]> {
-  return this.backend.getAll<IGmData>('v_gm_basic_info');
-}
+  getAllGms(): Observable<IGmData[]> {
+    return this.backend.getAll<IGmData>('v_gm_basic_info');
+  }
 
   getAvailability(
     gmId: string,
@@ -98,7 +98,9 @@ getAllGms(): Observable<IGmData[]> {
   updateSpecialties(gmId: string, systemIds: string[]): Observable<void> {
     const table = 'gm_specialties';
 
-    const delete$ = this.backend.delete(table, { gm_id: gmId });
+    const delete$ = this.backend.delete(table, {
+      gm_id: { value: gmId, operator: FilterOperator.EQ },
+    });
 
     const insertPayload = systemIds.map((systemId) =>
       toSnakeCase({ gmId, systemId })

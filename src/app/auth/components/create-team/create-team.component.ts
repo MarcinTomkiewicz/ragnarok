@@ -4,6 +4,7 @@ import {
   DestroyRef,
   inject,
   signal,
+  TemplateRef,
   viewChild,
 } from '@angular/core';
 import {
@@ -28,6 +29,8 @@ import { BehaviorSubject, debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
 import { stringToSlug } from '../../../core/utils/type-mappers';
+import { Router } from '@angular/router';
+import { ToastService } from '../../../core/services/toast/toast.service';
 
 @Component({
   selector: 'app-create-team',
@@ -43,6 +46,8 @@ export class CreateTeamComponent {
   private readonly auth = inject(AuthService);
   private readonly gmService = inject(GmService);
   private readonly systemService = inject(SystemService);
+  private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
 
   readonly user = this.auth.user;
   gmsList = signal<IGmData[]>([]);
@@ -54,6 +59,10 @@ export class CreateTeamComponent {
 
   searchTerm$: BehaviorSubject<string> = new BehaviorSubject('');
   private destroyRef = inject(DestroyRef);
+
+  readonly partySuccessToast =
+    viewChild<TemplateRef<unknown>>('partySuccessToast');
+  readonly partyErrorToast = viewChild<TemplateRef<unknown>>('partyErrorToast');
 
   constructor() {
     this.teamForm = this.fb.group({
@@ -171,17 +180,31 @@ export class CreateTeamComponent {
       delete teamData.description;
       delete teamData.systems;
       delete teamData.styleTags;
-      console.log(teamData, systems, styleTags, description, members);
 
       // Wysyłamy dane do serwisu
       this.teamService
         .createTeam(teamData, systems, styleTags, description, members)
         .subscribe({
           next: (team) => {
-            console.log('Drużyna stworzona:', team);
+            const template = this.partySuccessToast();
+            if (template) {
+              this.toastService.show({
+                template,
+                classname: 'bg-success text-white',
+                header: 'Utworzono drużynę!',
+              });
+            }
+            this.router.navigate(['/auth/my-teams']);
           },
-          error: (err) => {
-            console.error('Błąd tworzenia drużyny:', err);
+          error: () => {
+            const template = this.partyErrorToast();
+            if (template) {
+              this.toastService.show({
+                template,
+                classname: 'bg-danger text-white',
+                header: 'Nie udało się utworzyć drużyny',
+              });
+            }
           },
         });
     }
