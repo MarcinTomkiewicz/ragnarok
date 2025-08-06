@@ -15,6 +15,10 @@ import { ToastService } from '../../../core/services/toast/toast.service';
 import { TeamService } from '../../core/services/team/team.service';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { TeamListComponent } from '../../common/team-list/team-list.component';
+import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
+import { ITeamSystem } from '../../../core/interfaces/teams/i-team-system';
+import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
+import { first, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-my-teams',
@@ -39,14 +43,32 @@ export class MyTeamsComponent {
   // === Signals ===
   private readonly teamsSignal: WritableSignal<ITeam[]> = signal([]);
   readonly filteredTeams = computed(() => this.teamsSignal());
+  readonly teamMembers: WritableSignal<ITeamMember[]> = signal([]);
+  readonly teamSystems: WritableSignal<IRPGSystem[]> = signal([]);
 
   constructor() {
     this.loadTeams();
   }
-  
+
   onShowDetails(team: ITeam): void {
     console.log('Szczegóły drużyny:', team);
-    // Możesz tu dodać logikę otwierania modalu lub nawigacji do strony szczegółów drużyny
+
+    // Używamy forkJoin, żeby poczekać na pobranie członków i systemów drużyny
+    forkJoin([
+      this.teamService.getTeamMembers(team.id), // Pobieramy członków drużyny
+      this.teamService.getTeamSystems(team.id),
+      this.teamService.getTeamProfile(team.id), // Pobieramy systemy drużyny
+    ]).subscribe({
+      next: ([members, systems, profile]) => {
+        // Po załadowaniu danych wyświetlamy je w konsoli
+        console.log('Członkowie drużyny:', members);
+        console.log('Systemy drużyny:', systems);
+        console.log('Profil drużyny:', profile);
+      },
+      error: (err) => {
+        console.error('Błąd podczas ładowania danych drużyny:', err);
+      },
+    });
   }
 
   // openLeaveModal(teamId: string): void {
@@ -123,11 +145,9 @@ export class MyTeamsComponent {
   private loadTeams(): void {
     if (!this.auth.user()) return;
     const userId = this.auth.user()?.id;
-    this.teamService
-      .getTeamsByUser(userId!!)
-      .subscribe((teams) => {
-        this.teamsSignal.set(teams ?? []);
-      });
+    this.teamService.getTeamsByUser(userId!!).subscribe((teams) => {
+      this.teamsSignal.set(teams ?? []);
+    });
   }
 
   // onManage(team: ITeam): void {

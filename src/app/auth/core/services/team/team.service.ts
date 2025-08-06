@@ -16,6 +16,7 @@ import {
   IPagination,
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
+import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
@@ -41,74 +42,76 @@ export class TeamService {
     return this.backend.getById<ITeam>('teams', id);
   }
 
-createTeam(
-  team: ITeam,
-  systems: string[],
-  styleTags: GmStyleTag[],
-  description: string,
-  members: ITeamMember[]
-): Observable<ITeam> {
-  const data = toSnakeCase<ITeam>(team); // Przekształcamy dane drużyny
+  createTeam(
+    team: ITeam,
+    systems: string[],
+    styleTags: GmStyleTag[],
+    description: string,
+    members: ITeamMember[]
+  ): Observable<ITeam> {
+    const data = toSnakeCase<ITeam>(team); // Przekształcamy dane drużyny
 
-  // Tworzymy drużynę (najpierw, aby uzyskać ID)
-  return this.backend.create<ITeam>('teams', data).pipe(
-    switchMap(() => {
-      // Po utworzeniu drużyny, wykonujemy zapytanie, aby uzyskać ID drużyny
-      return this.backend
-        .getOneByFields<ITeam>('teams', { slug: team.slug })
-        .pipe(
-          switchMap((createdTeam) => {
-            if (!createdTeam) {
-              throw new Error('Błąd: nie udało się uzyskać ID drużyny');
-            }
+    // Tworzymy drużynę (najpierw, aby uzyskać ID)
+    return this.backend.create<ITeam>('teams', data).pipe(
+      switchMap(() => {
+        // Po utworzeniu drużyny, wykonujemy zapytanie, aby uzyskać ID drużyny
+        return this.backend
+          .getOneByFields<ITeam>('teams', { slug: team.slug })
+          .pipe(
+            switchMap((createdTeam) => {
+              if (!createdTeam) {
+                throw new Error('Błąd: nie udało się uzyskać ID drużyny');
+              }
 
-            // Tworzymy profil drużyny
-            const profileData: ITeamProfile = {
-              id: createdTeam.id, // ID stworzonej drużyny
-              description: description,
-              styleTags: styleTags,
-              createdAt: new Date().toISOString(),
-            };
+              // Tworzymy profil drużyny
+              const profileData: ITeamProfile = {
+                id: createdTeam.id, // ID stworzonej drużyny
+                description: description,
+                styleTags: styleTags,
+                createdAt: new Date().toISOString(),
+              };
 
-            // Tworzymy profil drużyny
-            return this.backend
-              .create<ITeamProfile>('team_profiles', toSnakeCase(profileData))
-              .pipe(
-                switchMap(() => {
-                  // Tworzymy zapisy w tabeli team_systems - Zmieniamy na createMany
-                  const systemRequests = systems.map((systemId) => ({
-                    teamId: createdTeam.id,
-                    systemId,
-                  }));
+              // Tworzymy profil drużyny
+              return this.backend
+                .create<ITeamProfile>('team_profiles', toSnakeCase(profileData))
+                .pipe(
+                  switchMap(() => {
+                    // Tworzymy zapisy w tabeli team_systems - Zmieniamy na createMany
+                    const systemRequests = systems.map((systemId) => ({
+                      teamId: createdTeam.id,
+                      systemId,
+                    }));
 
-                  return this.backend
-                    .createMany<ITeamSystem>('team_systems', toSnakeCase(systemRequests))
-                    .pipe(
-                      switchMap(() => {
-                        // Tworzymy zapisy członków drużyny - Zmieniamy na createMany
-                        const memberRequests = members.map((member) => ({
-                          teamId: createdTeam.id,
-                          userId: member.userId,
-                          role: member.role,
-                          joinedAt: new Date().toISOString(),
-                          leftAt: null,
-                        }));
+                    return this.backend
+                      .createMany<ITeamSystem>(
+                        'team_systems',
+                        toSnakeCase(systemRequests)
+                      )
+                      .pipe(
+                        switchMap(() => {
+                          // Tworzymy zapisy członków drużyny - Zmieniamy na createMany
+                          const memberRequests = members.map((member) => ({
+                            teamId: createdTeam.id,
+                            userId: member.userId,
+                            role: member.role,
+                            joinedAt: new Date().toISOString(),
+                            leftAt: null,
+                          }));
 
-                        return this.backend.createMany<Partial<ITeamMember>>(
-                          'team_members',
-                          toSnakeCase(memberRequests)
-                        );
-                      }),
-                      map(() => createdTeam) // Zwracamy stworzoną drużynę po wykonaniu wszystkich operacji
-                    );
-                })
-              );
-          })
-        );
-    })
-  );
-}
-
+                          return this.backend.createMany<Partial<ITeamMember>>(
+                            'team_members',
+                            toSnakeCase(memberRequests)
+                          );
+                        }),
+                        map(() => createdTeam) // Zwracamy stworzoną drużynę po wykonaniu wszystkich operacji
+                      );
+                  })
+                );
+            })
+          );
+      })
+    );
+  }
 
   updateTeam(id: string, team: Partial<ITeam>): Observable<ITeam> {
     const data = toSnakeCase<ITeam>(team);
@@ -130,6 +133,23 @@ createTeam(
     return this.backend.getAll<ITeamMember>('team_members', undefined, 'asc', {
       filters: combinedFilters,
     });
+  }
+
+  getTeamSystems(teamId: string): Observable<IRPGSystem[]> {
+    return this.backend
+      .getAll<ITeamSystem>('team_systems', 'teamId', 'asc', {
+        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
+      })
+      .pipe(
+        switchMap((teamSystems) => {
+          const systemIds = teamSystems.map((ts) => ts.systemId);
+          return this.backend.getByIds<IRPGSystem>('systems', systemIds);
+        })
+      );
+  }
+
+  getTeamProfile(teamId: string): Observable<ITeamProfile | null> {
+    return this.backend.getById<ITeamProfile>('team_profiles', teamId);
   }
 
   getPendingRequests(teamId: string): Observable<ITeamMember[]> {
@@ -175,19 +195,22 @@ createTeam(
       ();
   }
 
-getTeamsByUser(userId: string): Observable<ITeam[]> {
-  return forkJoin([
-    this.backend.getAll<ITeam>('teams', 'name', 'asc', {
-      filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
-    }),
-    this.backend.getAll<ITeamMember>('team_members', 'teamId', 'asc', {
-      filters: { userId: { operator: FilterOperator.EQ, value: userId } },
-    })
-  ]).pipe(
-    map(([ownedTeams, memberTeams]) => {
-      const memberTeamIds = memberTeams.map((member) => member.teamId);
-      return [...ownedTeams, ...ownedTeams.filter((team) => memberTeamIds.includes(team.id))];
-    })
-  );
-}
+  getTeamsByUser(userId: string): Observable<ITeam[]> {
+    return forkJoin([
+      this.backend.getAll<ITeam>('teams', 'name', 'asc', {
+        filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+      this.backend.getAll<ITeamMember>('team_members', 'teamId', 'asc', {
+        filters: { userId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+    ]).pipe(
+      map(([ownedTeams, memberTeams]) => {
+        const memberTeamIds = memberTeams.map((member) => member.teamId);
+        return [
+          ...ownedTeams,
+          ...ownedTeams.filter((team) => memberTeamIds.includes(team.id)),
+        ];
+      })
+    );
+  }
 }
