@@ -155,4 +155,10 @@
       background-color: transparent;
     }
   }
+
+  &.btn-close-x{
+    padding: 0.10rem 0.35rem;
+    font-size: $font-size-xs;
+    text-align: center;
+  }
 }

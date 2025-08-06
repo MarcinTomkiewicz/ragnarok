@@ -1,4 +1,6 @@
-export type TeamMemberRole = 'player' | 'gm';
+import { TeamRole } from "../../enums/team-role";
+
+export type TeamMemberRole = TeamRole;
 
 export interface ITeamMember {
   id: string;

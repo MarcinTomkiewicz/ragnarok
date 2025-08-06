@@ -1,14 +1,33 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TeamService } from '../../core/services/team/team.service';
-import { ITeam } from '../../../core/interfaces/teams/i-team';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+  FormArray,
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { TeamService } from '../../core/services/team/team.service';
+import { maxThreeStyles } from '../../../core/utils/tag-limiter';
+import { SystemService } from '../../../core/services/system/system.service';
+import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
+import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { AuthService } from '../../../core/services/auth/auth.service';
-import { stringToSlug } from '../../../core/utils/type-mappers';
-import { IGmData, IGmProfile } from '../../../core/interfaces/i-gm-profile';
 import { GmService } from '../../core/services/gm/gm.service';
-import { CoworkerRoles } from '../../../core/enums/roles';
+import { IGmData } from '../../../core/interfaces/i-gm-profile';
 import { hasMinimumCoworkerRole } from '../../../core/utils/required-roles';
+import { CoworkerRoles } from '../../../core/enums/roles';
+import { BehaviorSubject, debounceTime, Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
+import { stringToSlug } from '../../../core/utils/type-mappers';
 
 @Component({
   selector: 'app-create-team',
@@ -22,29 +41,68 @@ export class CreateTeamComponent {
   private readonly fb = inject(FormBuilder);
   private readonly teamService = inject(TeamService);
   private readonly auth = inject(AuthService);
-  private readonly gmService = inject(GmService)
+  private readonly gmService = inject(GmService);
+  private readonly systemService = inject(SystemService);
 
   readonly user = this.auth.user;
   gmsList = signal<IGmData[]>([]);
+
+  systemsList = computed(() => this.systemService.systems());
+  GmStyleTag = GmStyleTag;
+  GmStyleTagLabels = GmStyleTagLabels;
+  filteredSystems: IRPGSystem[] = [];
+
+  searchTerm$: BehaviorSubject<string> = new BehaviorSubject('');
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
     this.teamForm = this.fb.group({
       name: ['', Validators.required],
       gmId: [null],
+      description: [''],
       startProgram: [false],
       finishedProgram: [false],
       notes: [''],
+      systems: this.fb.array([]),
+      styleTags: this.fb.array([], maxThreeStyles),
       isOpen: [true],
       isForBeginners: [false],
     });
+
+    this.systemService.loadAvailableSystems();
   }
 
-    ngOnInit(): void {
+  ngOnInit(): void {
     this.gmService.getAllGms().subscribe((gms) => {
-      this.gmsList.set(gms)
-      console.log(this.gmsList());
-      
+      this.gmsList.set(gms);
     });
+
+    this.filteredSystems = this.systemsList();
+
+    // Subscribe to search term with debounce
+    this.searchTerm$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => this.filterSystems(term));
+  }
+
+  filterSystems(term: string): void {
+    if (term.length >= 3) {
+      this.filteredSystems = this.systemsList().filter((system) =>
+        system.name.toLowerCase().includes(term.toLowerCase())
+      );
+    } else {
+      this.filteredSystems = this.systemsList(); // Reset results if less than 3 characters
+    }
+  }
+
+  onSearchChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm$.next(input.value); // Emit new search term to trigger filtering
+  }
+
+  // Funkcja pomocnicza do wyświetlania nazw tagów
+  get gmStyleTagValues(): GmStyleTag[] {
+    return Object.values(GmStyleTag) as GmStyleTag[];
   }
 
   isReceptionField(): boolean {
@@ -52,17 +110,80 @@ export class CreateTeamComponent {
     return hasMinimumCoworkerRole(this.user(), CoworkerRoles.Reception);
   }
 
+  get systemControls(): FormArray {
+    return this.teamForm.get('systems') as FormArray;
+  }
+
+  get styleTagControls(): FormArray {
+    return this.teamForm.get('styleTags') as FormArray;
+  }
+
+  onSystemChange(event: Event): void {
+    const selectedValues = Array.from(
+      (event.target as HTMLSelectElement).selectedOptions
+    ).map((option) => option.value); // Pobieramy wartości wybranych systemów
+
+    selectedValues.forEach((systemId) => {
+      if (
+        this.systemControls.value.length < 5 &&
+        !this.systemControls.value.includes(systemId)
+      ) {
+        this.systemControls.push(this.fb.control(systemId));
+      }
+    });
+  }
+
+  getSystemNameById(systemId: string): string | undefined {
+    const system = this.systemsList().find((s) => s.id === systemId);
+    return system?.name;
+  }
+
+  removeSystem(systemId: string): void {
+    const systems = this.systemControls.controls;
+    const index = systems.findIndex((ctrl) => ctrl.value === systemId);
+    if (index > -1) {
+      this.systemControls.removeAt(index);
+    }
+  }
+
+  toggleStyleTag(tag: GmStyleTag): void {
+    const array = this.styleTagControls;
+    const idx = array.value.indexOf(tag);
+
+    if (idx === -1 && array.length < 3) {
+      array.push(this.fb.control(tag));
+    } else if (idx >= 0) {
+      array.removeAt(idx);
+    }
+  }
+
   onSubmit() {
-    
     if (this.teamForm.valid) {
-      const slug = stringToSlug(this.teamForm.get('name')?.value);
-      const teamData: Partial<ITeam> = {...this.teamForm.value, slug, ownerId: this.user()?.id}
-      console.log(teamData);
-      
-      this.teamService.createTeam(teamData).subscribe({
-        next: (team) => console.log('Utworzono drużynę:', team),
-        error: (err) => console.error('Błąd podczas tworzenia drużyny:', err),
-      });
+      const teamData = {
+        ...this.teamForm.value,
+        slug: stringToSlug(this.teamForm.get('name')?.value),
+      };
+      const systems = this.systemControls.value;
+      const styleTags = this.styleTagControls.value;
+      const description = teamData.description;
+      const members: ITeamMember[] = [];
+
+      delete teamData.description;
+      delete teamData.systems;
+      delete teamData.styleTags;
+      console.log(teamData, systems, styleTags, description, members);
+
+      // Wysyłamy dane do serwisu
+      this.teamService
+        .createTeam(teamData, systems, styleTags, description, members)
+        .subscribe({
+          next: (team) => {
+            console.log('Drużyna stworzona:', team);
+          },
+          error: (err) => {
+            console.error('Błąd tworzenia drużyny:', err);
+          },
+        });
     }
   }
 }

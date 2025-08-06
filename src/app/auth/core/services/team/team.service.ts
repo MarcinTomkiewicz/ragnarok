@@ -1,18 +1,21 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import {
-  BackendService,
-  IPagination,
-} from '../../../../core/services/backend/backend.service';
+import { inject, Injectable } from '@angular/core';
+import { forkJoin, map, Observable, switchMap } from 'rxjs';
+import { FilterOperator } from '../../../../core/enums/filterOperator';
+import { GmStyleTag } from '../../../../core/enums/gm-styles';
+import { TeamRole } from '../../../../core/enums/team-role';
+import { IFilter } from '../../../../core/interfaces/i-filters';
 import { ITeam } from '../../../../core/interfaces/teams/i-team';
-import { toSnakeCase } from '../../../../core/utils/type-mappers';
 import {
   ITeamMember,
   TeamMemberRole,
 } from '../../../../core/interfaces/teams/i-team-member';
-import { FilterOperator } from '../../../../core/enums/filterOperator';
-import { TeamRole } from '../../../../core/enums/team-role';
-import { IFilter } from '../../../../core/interfaces/i-filters';
+import { ITeamProfile } from '../../../../core/interfaces/teams/i-team-profile';
+import { ITeamSystem } from '../../../../core/interfaces/teams/i-team-system';
+import {
+  BackendService,
+  IPagination,
+} from '../../../../core/services/backend/backend.service';
+import { toSnakeCase } from '../../../../core/utils/type-mappers';
 
 @Injectable({ providedIn: 'root' })
 export class TeamService {
@@ -38,10 +41,74 @@ export class TeamService {
     return this.backend.getById<ITeam>('teams', id);
   }
 
-  createTeam(team: Partial<ITeam>): Observable<ITeam> {
-    const data = toSnakeCase<ITeam>(team);
-    return this.backend.create<ITeam>('teams', data);
-  }
+createTeam(
+  team: ITeam,
+  systems: string[],
+  styleTags: GmStyleTag[],
+  description: string,
+  members: ITeamMember[]
+): Observable<ITeam> {
+  const data = toSnakeCase<ITeam>(team); // Przekształcamy dane drużyny
+
+  // Tworzymy drużynę (najpierw, aby uzyskać ID)
+  return this.backend.create<ITeam>('teams', data).pipe(
+    switchMap(() => {
+      // Po utworzeniu drużyny, wykonujemy zapytanie, aby uzyskać ID drużyny
+      return this.backend
+        .getOneByFields<ITeam>('teams', { slug: team.slug })
+        .pipe(
+          switchMap((createdTeam) => {
+            if (!createdTeam) {
+              throw new Error('Błąd: nie udało się uzyskać ID drużyny');
+            }
+
+            // Tworzymy profil drużyny
+            const profileData: ITeamProfile = {
+              id: createdTeam.id, // ID stworzonej drużyny
+              description: description,
+              styleTags: styleTags,
+              createdAt: new Date().toISOString(),
+            };
+
+            // Tworzymy profil drużyny
+            return this.backend
+              .create<ITeamProfile>('team_profiles', toSnakeCase(profileData))
+              .pipe(
+                switchMap(() => {
+                  // Tworzymy zapisy w tabeli team_systems - Zmieniamy na createMany
+                  const systemRequests = systems.map((systemId) => ({
+                    teamId: createdTeam.id,
+                    systemId,
+                  }));
+
+                  return this.backend
+                    .createMany<ITeamSystem>('team_systems', toSnakeCase(systemRequests))
+                    .pipe(
+                      switchMap(() => {
+                        // Tworzymy zapisy członków drużyny - Zmieniamy na createMany
+                        const memberRequests = members.map((member) => ({
+                          teamId: createdTeam.id,
+                          userId: member.userId,
+                          role: member.role,
+                          joinedAt: new Date().toISOString(),
+                          leftAt: null,
+                        }));
+
+                        return this.backend.createMany<Partial<ITeamMember>>(
+                          'team_members',
+                          toSnakeCase(memberRequests)
+                        );
+                      }),
+                      map(() => createdTeam) // Zwracamy stworzoną drużynę po wykonaniu wszystkich operacji
+                    );
+                })
+              );
+          })
+        );
+    })
+  );
+}
+
 
   updateTeam(id: string, team: Partial<ITeam>): Observable<ITeam> {
     const data = toSnakeCase<ITeam>(team);
@@ -108,39 +175,19 @@ export class TeamService {
       ();
   }
 
-  getTeamsByUser(userId: string): Observable<ITeam[]> {
-    return new Observable<ITeam[]>((subscriber) => {
-      this.backend
-        .getAll<ITeamMember>('team_members', undefined, 'asc', {
-          filters: {
-            userId: { operator: FilterOperator.EQ, value: userId },
-            leftAt: { operator: FilterOperator.EQ, value: null }, // tylko aktywne członkostwa
-          },
-        })
-        .subscribe({
-          next: (members) => {
-            if (!members.length) {
-              subscriber.next([]);
-              subscriber.complete();
-              return;
-            }
-            const teamIds = members.map((m) => m.teamId);
-            this.backend
-              .getAll<ITeam>('teams', undefined, 'asc', {
-                filters: {
-                  id: { operator: FilterOperator.IN, value: teamIds },
-                },
-              })
-              .subscribe({
-                next: (teams) => {
-                  subscriber.next(teams);
-                  subscriber.complete();
-                },
-                error: (err) => subscriber.error(err),
-              });
-          },
-          error: (err) => subscriber.error(err),
-        });
-    });
-  }
+getTeamsByUser(userId: string): Observable<ITeam[]> {
+  return forkJoin([
+    this.backend.getAll<ITeam>('teams', 'name', 'asc', {
+      filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
+    }),
+    this.backend.getAll<ITeamMember>('team_members', 'teamId', 'asc', {
+      filters: { userId: { operator: FilterOperator.EQ, value: userId } },
+    })
+  ]).pipe(
+    map(([ownedTeams, memberTeams]) => {
+      const memberTeamIds = memberTeams.map((member) => member.teamId);
+      return [...ownedTeams, ...ownedTeams.filter((team) => memberTeamIds.includes(team.id))];
+    })
+  );
+}
 }

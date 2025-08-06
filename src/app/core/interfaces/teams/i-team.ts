@@ -9,4 +9,5 @@ export interface ITeam {
   notes: string | null;
   isOpen: boolean;
   isForBeginners: boolean;
+  slug: string;
 }

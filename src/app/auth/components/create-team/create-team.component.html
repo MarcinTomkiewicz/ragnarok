@@ -5,7 +5,7 @@
     <form [formGroup]="teamForm" (ngSubmit)="onSubmit()" class="w-100">
       <div class="form-group">
         <label class="text-start">Założyciel</label>
-        <div class="text-start">{{ user()?.firstName }}</div>
+        <div class="text-start font-size-medium">{{ user()?.firstName }}</div>
       </div>
 
       <div class="form-group">
@@ -23,11 +23,91 @@
         <select id="gmSelect" formControlName="gmId" class="form-select">
           <option [ngValue]="null">Bez Mistrza Gry</option>
           @for (gm of gmsList(); track $index) {
-          <option [ngValue]="gm.userId">
-            {{ gm.firstName }}
+          <option [ngValue]="gm.userId">{{ gm.firstName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="text-start">Opis</label>
+        <textarea
+          id="description"
+          class="form-control"
+          formControlName="description"
+        ></textarea>
+      </div>
+
+      <!-- Systemy RPG (maks. 5) -->
+      <div class="form-group text-start">
+        <input
+          type="text"
+          class="form-control mb-2"
+          placeholder="Wyszukaj system"
+          (input)="onSearchChange($event)"
+        />
+        <label for="systemsSelect">Systemy RPG (maks. 5)</label>
+        <select
+          id="systemsSelect"
+          class="form-select mb-2"
+          multiple
+          size="5"
+          (change)="onSystemChange($event)"
+        >
+          @for (system of filteredSystems; track system.id) {
+          <option
+            [value]="system.id"
+            [disabled]="
+              systemControls.value.length >= 5 &&
+              !systemControls.value.includes(system.id)
+            "
+          >
+            {{ system.name }}
           </option>
           }
         </select>
+        @if (systemControls.value.length > 0) {
+        <label>Wybrane systemy:</label>
+        <ul class="list-group">
+          @for (systemId of systemControls.value; track systemId) {
+          <li class="text-start list-group-item">
+            <div class="flex-row-align-start">
+              {{ getSystemNameById(systemId) }}
+              <button
+                type="button"
+                class="btn btn-danger btn-close-x"
+                (click)="removeSystem(systemId)"
+              >
+                x
+              </button>
+            </div>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+
+      <div class="form-group text-start">
+        <label>Styl drużyny (maks. 3)</label>
+        <div class="d-flex flex-wrap gap-2">
+          @for (tag of gmStyleTagValues; track tag) {
+          <div class="style-checkbox">
+            <input
+              class="style-checkbox-input"
+              type="checkbox"
+              [checked]="styleTagControls.value.includes(tag)"
+              [disabled]="
+                styleTagControls.value.length >= 3 &&
+                !styleTagControls.value.includes(tag)
+              "
+              (change)="toggleStyleTag(tag)"
+              id="style_{{ tag }}"
+            />
+            <label class="style-checkbox-label" [for]="'style_' + tag">
+              {{ GmStyleTagLabels[tag] }}
+            </label>
+          </div>
+          }
+        </div>
       </div>
 
       @if (isReceptionField()) {

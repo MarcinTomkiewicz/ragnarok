@@ -25,6 +25,7 @@ import { ImageStorageService } from '../../../core/services/backend/image-storag
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { GmService } from '../../core/services/gm/gm.service';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
+import { maxThreeStyles } from '../../../core/utils/tag-limiter';
 
 @Component({
   selector: 'app-manage-gm',
@@ -51,17 +52,12 @@ export class ManageGmComponent {
 
   readonly successToast = viewChild<TemplateRef<unknown>>('editDataSuccess');
 
-  maxThreeStyles: ValidatorFn = (control) => {
-    const array = control as FormArray;
-    return array.length > 3 ? { maxTags: true } : null;
-  };
-
   readonly form: FormGroup = this.fb.group({
     experience: [''],
     quote: ['', Validators.maxLength(160)],
     image: [null],
     systems: this.fb.array([...Array(5)].map(() => this.fb.control(''))),
-    styleTags: this.fb.array([], this.maxThreeStyles),
+    styleTags: this.fb.array([], maxThreeStyles),
   });
 
   get systemControls(): FormArray {

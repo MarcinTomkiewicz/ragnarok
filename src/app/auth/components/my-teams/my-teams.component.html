@@ -1,0 +1,27 @@
+<div class="my-reservations-wrapper full-height">
+  <div class="container">
+    <h2 class="section-title">Moje Drużyny</h2>
+
+    @let filtered = filteredTeams(); @if (filtered) {
+      @if (filtered.length > 0) {
+        <app-team-list
+          [teams]="filtered"
+          [showDetailsButton]="true"
+          (showDetails)="onShowDetails($event)"
+          />
+      } @else {
+        <p>Nie należysz do żadnej drużyny.</p>
+      }
+    } @else {
+      <p>Ładowanie drużyn...</p>
+    }
+  </div>
+
+  <ng-template #leaveSuccessToast>
+    <strong>Sukces!</strong> Opuszczenie drużyny zakończone powodzeniem.
+  </ng-template>
+
+  <ng-template #leaveErrorToast>
+    <strong>Błąd!</strong> Wystąpił problem przy opuszczaniu drużyny.
+  </ng-template>
+</div>

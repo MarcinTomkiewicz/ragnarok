@@ -1,0 +1,21 @@
+<div class="card card-dark reservation-card">
+  <div class="card-body">
+    <div class="card-meta">
+      
+      <h5>{{ team()?.name }}</h5>
+    </div>
+    <div class="card-details">
+  <span class="reservation-id">ID: <code>{{ team()?.id }}</code></span>
+  </div>
+
+    <!-- <div class="card-details">
+      <p>{{ team()?.description }}</p>
+    </div> -->
+
+    <div class="card-actions">
+      @if (showDetailsButton()) {
+        <button class="btn btn-warning" (click)="onShowDetails()">Szczegóły drużyny</button>
+      }
+    </div>
+  </div>
+</div>
