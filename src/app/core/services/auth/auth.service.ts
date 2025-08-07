@@ -6,10 +6,11 @@ import { toCamelCase, toSnakeCase } from '../../utils/type-mappers';
 import { PlatformService } from '../platform/platform.service';
 import { Responses } from '../../enums/responses';
 import { IUser } from '../../interfaces/i-user';
-import { AuthError } from '@supabase/supabase-js';
+import { AuthError, isAuthApiError } from '@supabase/supabase-js';
 import { Router } from '@angular/router';
 import { SystemRole } from '../../enums/systemRole';
 import { CoworkerRoles } from '../../enums/roles';
+import { getSupabaseErrorMessage } from '../../utils/supabase-error-handling';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -59,28 +60,37 @@ export class AuthService {
     );
   }
 
-  login(email: string, password: string) {
-    return from(
-      this.supabase.auth.signInWithPassword({ email, password })
-    ).pipe(
-      switchMap(({ data, error }) => {
-        if (error) return of(error.message);
-        return from(
-          this.supabase
-            .from('users')
-            .select('*')
-            .eq('id', data.user.id)
-            .single()
-        ).pipe(
-          switchMap((response) => {
-            if (response.error) return of(response.error.message);
-            this._user.set(toCamelCase<IUser>(response.data));
-            return of(Responses.Success);
-          })
-        );
-      })
-    );
-  }
+login(email: string, password: string): Observable<string | Responses> {
+  return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
+    switchMap(({ data, error }) => {
+      if (error) {
+        const errorMessage = getSupabaseErrorMessage(error.code);
+        throw new Error(errorMessage.replace(/^Error: /, ''));
+      }
+
+      return from(
+        this.supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+      ).pipe(
+        switchMap((response) => {
+          if (response.error) {
+            throw new Error(response.error.message.replace(/^Error: /, ''));
+          }
+
+          this._user.set(toCamelCase<IUser>(response.data));
+          return of(Responses.Success);
+        })
+      );
+    }),
+    catchError((err) => {
+      throw err.message.replace(/^Error: /, '')
+    })
+  );
+}
+
 
   register(
     email: string,

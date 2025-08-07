@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 import { LoaderService } from '../../../core/services/loader/loader.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { Responses } from '../../../core/enums/responses';
+import { getSupabaseErrorMessage } from '../../../core/utils/supabase-error-handling';
 
 @Component({
   selector: 'app-login',
@@ -29,6 +30,7 @@ export class LoginComponent {
   private readonly loaderService = inject(LoaderService);
   private readonly toastService = inject(ToastService);
   readonly successToast = viewChild<TemplateRef<unknown>>('loginSuccessToast');
+  readonly errorToast = viewChild<TemplateRef<unknown>>('loginErrorToast');
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -54,6 +56,20 @@ export class LoginComponent {
               });
             }
             this.router.navigate(['/']);
+          }
+        },
+        error: (errorMessage) => {
+          this.loaderService.hide();
+
+          this.errorMessage = errorMessage;
+
+          const template = this.errorToast();
+          if (template) {
+            this.toastService.show({
+              template,
+              classname: 'bg-danger text-white',
+              header: 'Błąd logowania',
+            });
           }
         },
       });

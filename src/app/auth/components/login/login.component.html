@@ -48,6 +48,9 @@
     <ng-template #loginSuccessToast>
       <strong>Sukces!</strong> Zalogowano pomyślnie.
     </ng-template>
+    <ng-template #loginErrorToast>
+      <strong>Błąd!</strong> {{ errorMessage }}
+    </ng-template>
   </form>
 
   @if (errorMessage) {
