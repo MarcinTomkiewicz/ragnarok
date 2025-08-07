@@ -4,13 +4,13 @@ import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { GmStyleTag } from '../../../../core/enums/gm-styles';
 import { TeamRole } from '../../../../core/enums/team-role';
 import { IFilter } from '../../../../core/interfaces/i-filters';
-import { ITeam } from '../../../../core/interfaces/teams/i-team';
+import { IParty } from '../../../../core/interfaces/teams/i-team';
 import {
-  ITeamMember,
+  IPartyMember,
   TeamMemberRole,
 } from '../../../../core/interfaces/teams/i-team-member';
-import { ITeamProfile } from '../../../../core/interfaces/teams/i-team-profile';
-import { ITeamSystem } from '../../../../core/interfaces/teams/i-team-system';
+import { IPartyProfile } from '../../../../core/interfaces/teams/i-team-profile';
+import { IPartySystem } from '../../../../core/interfaces/teams/i-team-system';
 import {
   BackendService,
   IPagination,
@@ -25,11 +25,11 @@ export class TeamService {
 
   getTeams(
     pagination?: IPagination,
-    sortBy?: keyof ITeam,
+    sortBy?: keyof IParty,
     sortOrder: 'asc' | 'desc' = 'asc',
     joins?: string
-  ): Observable<ITeam[]> {
-    return this.backend.getAll<ITeam>(
+  ): Observable<IParty[]> {
+    return this.backend.getAll<IParty>(
       'parties',
       sortBy,
       sortOrder,
@@ -39,8 +39,8 @@ export class TeamService {
     );
   }
 
-  getTeamById(id: string): Observable<ITeam | null> {
-    return this.backend.getById<ITeam>('parties', id);
+  getTeamById(id: string): Observable<IParty | null> {
+    return this.backend.getById<IParty>('parties', id);
   }
 
     getTeamOwnerData(ownerId: string): Observable<IUser | null> {
@@ -48,20 +48,20 @@ export class TeamService {
   }
 
   CreateParty(
-    team: ITeam,
+    team: IParty,
     systems: string[],
     styleTags: GmStyleTag[],
     description: string,
-    members: ITeamMember[]
-  ): Observable<ITeam> {
-    const data = toSnakeCase<ITeam>(team); // Przekształcamy dane drużyny
+    members: IPartyMember[]
+  ): Observable<IParty> {
+    const data = toSnakeCase<IParty>(team); // Przekształcamy dane drużyny
 
     // Tworzymy drużynę (najpierw, aby uzyskać ID)
-    return this.backend.create<ITeam>('parties', data).pipe(
+    return this.backend.create<IParty>('parties', data).pipe(
       switchMap(() => {
         // Po utworzeniu drużyny, wykonujemy zapytanie, aby uzyskać ID drużyny
         return this.backend
-          .getOneByFields<ITeam>('parties', { slug: team.slug })
+          .getOneByFields<IParty>('parties', { slug: team.slug })
           .pipe(
             switchMap((createdTeam) => {
               if (!createdTeam) {
@@ -69,7 +69,7 @@ export class TeamService {
               }
 
               // Tworzymy profil drużyny
-              const profileData: ITeamProfile = {
+              const profileData: IPartyProfile = {
                 id: createdTeam.id, // ID stworzonej drużyny
                 description: description,
                 styleTags: styleTags,
@@ -78,7 +78,7 @@ export class TeamService {
 
               // Tworzymy profil drużyny
               return this.backend
-                .create<ITeamProfile>('party_profiles', toSnakeCase(profileData))
+                .create<IPartyProfile>('party_profiles', toSnakeCase(profileData))
                 .pipe(
                   switchMap(() => {
                     // Tworzymy zapisy w tabeli team_systems - Zmieniamy na createMany
@@ -88,7 +88,7 @@ export class TeamService {
                     }));
 
                     return this.backend
-                      .createMany<ITeamSystem>(
+                      .createMany<IPartySystem>(
                         'party_systems',
                         toSnakeCase(systemRequests)
                       )
@@ -103,7 +103,7 @@ export class TeamService {
                             leftAt: null,
                           }));
 
-                          return this.backend.createMany<Partial<ITeamMember>>(
+                          return this.backend.createMany<Partial<IPartyMember>>(
                             'party_members',
                             toSnakeCase(memberRequests)
                           );
@@ -118,9 +118,9 @@ export class TeamService {
     );
   }
 
-  updateTeam(id: string, team: Partial<ITeam>): Observable<ITeam> {
-    const data = toSnakeCase<ITeam>(team);
-    return this.backend.update<ITeam>('parties', id, data);
+  updateTeam(id: string, team: Partial<IParty>): Observable<IParty> {
+    const data = toSnakeCase<IParty>(team);
+    return this.backend.update<IParty>('parties', id, data);
   }
 
   deleteTeam(id: string): Observable<void> {
@@ -130,19 +130,19 @@ export class TeamService {
   getTeamMembers(
     teamId: string,
     filters?: { [key: string]: IFilter }
-  ): Observable<ITeamMember[]> {
+  ): Observable<IPartyMember[]> {
     const combinedFilters = {
       teamId: { operator: FilterOperator.EQ, value: teamId },
       ...filters,
     };
-    return this.backend.getAll<ITeamMember>('party_members', undefined, 'asc', {
+    return this.backend.getAll<IPartyMember>('party_members', undefined, 'asc', {
       filters: combinedFilters,
     });
   }
 
   getTeamSystems(teamId: string): Observable<IRPGSystem[]> {
     return this.backend
-      .getAll<ITeamSystem>('party_systems', 'teamId', 'asc', {
+      .getAll<IPartySystem>('party_systems', 'teamId', 'asc', {
         filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
       })
       .pipe(
@@ -153,16 +153,16 @@ export class TeamService {
       );
   }
 
-  getTeamProfile(teamId: string): Observable<ITeamProfile | null> {
-    return this.backend.getById<ITeamProfile>('party_profiles', teamId);
+  getTeamProfile(teamId: string): Observable<IPartyProfile | null> {
+    return this.backend.getById<IPartyProfile>('party_profiles', teamId);
   }
 
-  getPendingRequests(teamId: string): Observable<ITeamMember[]> {
+  getPendingRequests(teamId: string): Observable<IPartyMember[]> {
     const filters = {
       teamId: { operator: FilterOperator.EQ, value: teamId },
       status: { operator: FilterOperator.EQ, value: 'pending' }, // jeśli status istnieje w bazie
     };
-    return this.backend.getAll<ITeamMember>('party_members', undefined, 'asc', {
+    return this.backend.getAll<IPartyMember>('party_members', undefined, 'asc', {
       filters,
     });
   }
@@ -171,21 +171,21 @@ export class TeamService {
     teamId: string,
     userId: string,
     role: TeamMemberRole = TeamRole.Player
-  ): Observable<ITeamMember> {
-    const data: Partial<ITeamMember> = {
+  ): Observable<IPartyMember> {
+    const data: Partial<IPartyMember> = {
       teamId,
       userId,
       role,
       joinedAt: new Date().toISOString(),
       leftAt: null,
     };
-    return this.backend.create<ITeamMember>('party_members', toSnakeCase(data));
+    return this.backend.create<IPartyMember>('party_members', toSnakeCase(data));
   }
 
-  acceptRequest(requestId: string): Observable<ITeamMember> {
+  acceptRequest(requestId: string): Observable<IPartyMember> {
     // Zmiana np. statusu lub innego pola, jeśli status jest
     // W interfejsie brak status, więc może usunięcie pending po prostu oznacza joinedAt + brak leftAt
-    return this.backend.update<ITeamMember>('party_members', requestId, {
+    return this.backend.update<IPartyMember>('party_members', requestId, {
       leftAt: null,
     });
   }
@@ -200,12 +200,12 @@ export class TeamService {
       ();
   }
 
-  getTeamsByUser(userId: string): Observable<ITeam[]> {
+  getTeamsByUser(userId: string): Observable<IParty[]> {
     return forkJoin([
-      this.backend.getAll<ITeam>('parties', 'name', 'asc', {
+      this.backend.getAll<IParty>('parties', 'name', 'asc', {
         filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
       }),
-      this.backend.getAll<ITeamMember>('party_members', 'teamId', 'asc', {
+      this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
         filters: { userId: { operator: FilterOperator.EQ, value: userId } },
       }),
     ]).pipe(

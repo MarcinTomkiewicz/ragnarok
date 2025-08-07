@@ -27,7 +27,7 @@ import { hasMinimumCoworkerRole } from '../../../core/utils/required-roles';
 import { CoworkerRoles } from '../../../core/enums/roles';
 import { BehaviorSubject, debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
+import { IPartyMember } from '../../../core/interfaces/teams/i-team-member';
 import { stringToSlug } from '../../../core/utils/type-mappers';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../core/services/toast/toast.service';
@@ -175,7 +175,7 @@ export class CreatePartyComponent {
       const systems = this.systemControls.value;
       const styleTags = this.styleTagControls.value;
       const description = teamData.description;
-      const members: ITeamMember[] = [];
+      const members: IPartyMember[] = [];
 
       delete teamData.description;
       delete teamData.systems;

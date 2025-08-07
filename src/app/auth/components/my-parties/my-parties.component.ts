@@ -12,8 +12,8 @@ import {
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { forkJoin } from 'rxjs';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
-import { ITeam } from '../../../core/interfaces/teams/i-team';
-import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
+import { IParty } from '../../../core/interfaces/teams/i-team';
+import { IPartyMember } from '../../../core/interfaces/teams/i-team-member';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { PartyListComponent } from '../../common/party-list/party-list.component';
@@ -40,16 +40,16 @@ export class MyTeamsComponent {
   readonly leaveErrorToast = viewChild<TemplateRef<unknown>>('leaveErrorToast');
 
   // === Signals ===
-  private readonly teamsSignal: WritableSignal<ITeam[]> = signal([]);
+  private readonly teamsSignal: WritableSignal<IParty[]> = signal([]);
   readonly filteredTeams = computed(() => this.teamsSignal());
-  readonly teamMembers: WritableSignal<ITeamMember[]> = signal([]);
+  readonly teamMembers: WritableSignal<IPartyMember[]> = signal([]);
   readonly teamSystems: WritableSignal<IRPGSystem[]> = signal([]);
 
   constructor() {
     this.loadTeams();
   }
 
-  onShowDetails(team: ITeam): void {
+  onShowDetails(team: IParty): void {
     forkJoin([
       this.teamService.getTeamMembers(team.id),
       this.teamService.getTeamSystems(team.id),
@@ -148,7 +148,7 @@ export class MyTeamsComponent {
     });
   }
 
-  // onManage(team: ITeam): void {
+  // onManage(team: IParty): void {
   //   this.openLeaveModal(team.id);
   // }
 }

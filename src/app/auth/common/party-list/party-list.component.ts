@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, output } from '@angular/core';
-import { ITeam } from '../../../core/interfaces/teams/i-team';
+import { IParty } from '../../../core/interfaces/teams/i-team';
 import { PartyCardComponent } from '../party-card/party-card.component';
 
 @Component({
@@ -11,12 +11,12 @@ import { PartyCardComponent } from '../party-card/party-card.component';
   styleUrl: './party-list.component.scss',
 })
 export class PartyListComponent {
-  teams = input<ITeam[]>([]); 
+  teams = input<IParty[]>([]); 
   showDetailsButton = input(false); 
 
-  showDetails = output<ITeam>();
+  showDetails = output<IParty>();
 
-  onShowDetails(team: ITeam): void {
+  onShowDetails(team: IParty): void {
     this.showDetails.emit(team);
   }
 }

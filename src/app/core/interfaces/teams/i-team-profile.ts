@@ -1,6 +1,6 @@
 import { GmStyleTag } from "../../enums/gm-styles";
 
-export interface ITeamProfile {
+export interface IPartyProfile {
   id: string;
   description: string | null;
   styleTags: GmStyleTag[];

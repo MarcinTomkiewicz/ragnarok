@@ -8,12 +8,12 @@ import {
   signal,
   WritableSignal,
 } from '@angular/core';
-import { ITeam } from '../../../core/interfaces/teams/i-team';
+import { IParty } from '../../../core/interfaces/teams/i-team';
 import { forkJoin } from 'rxjs';
 import { TeamService } from '../../core/services/team/team.service';
-import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
+import { IPartyMember } from '../../../core/interfaces/teams/i-team-member';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
-import { ITeamProfile } from '../../../core/interfaces/teams/i-team-profile';
+import { IPartyProfile } from '../../../core/interfaces/teams/i-team-profile';
 import { IUser } from '../../../core/interfaces/i-user';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
@@ -28,7 +28,7 @@ import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 export class PartyCardComponent {
   private readonly teamService = inject(TeamService);
 
-  team = input.required<ITeam>({});
+  team = input.required<IParty>({});
   showDetailsButton = input(false);
 
   public readonly GmStyleTagLabels = GmStyleTagLabels;
@@ -39,9 +39,9 @@ export class PartyCardComponent {
     return profile && profile.styleTags && profile.styleTags.length > 0;
   });
 
-  members: WritableSignal<ITeamMember[]> = signal<ITeamMember[]>([]);
+  members: WritableSignal<IPartyMember[]> = signal<IPartyMember[]>([]);
   systems: WritableSignal<IRPGSystem[]> = signal<IRPGSystem[]>([]);
-  profile: WritableSignal<ITeamProfile | null> = signal<ITeamProfile | null>(
+  profile: WritableSignal<IPartyProfile | null> = signal<IPartyProfile | null>(
     null
   );
   owner: WritableSignal<IUser | null> = signal<IUser | null>(null);
