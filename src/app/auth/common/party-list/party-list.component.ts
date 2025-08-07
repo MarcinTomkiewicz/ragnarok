@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, output } from '@angular/core';
-import { IParty } from '../../../core/interfaces/teams/i-team';
+import { IParty } from '../../../core/interfaces/parties/i-party';
 import { PartyCardComponent } from '../party-card/party-card.component';
 
 @Component({

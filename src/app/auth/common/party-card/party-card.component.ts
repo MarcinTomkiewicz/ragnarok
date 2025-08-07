@@ -8,12 +8,12 @@ import {
   signal,
   WritableSignal,
 } from '@angular/core';
-import { IParty } from '../../../core/interfaces/teams/i-team';
+import { IParty } from '../../../core/interfaces/parties/i-party';
 import { forkJoin } from 'rxjs';
 import { TeamService } from '../../core/services/team/team.service';
-import { IPartyMember } from '../../../core/interfaces/teams/i-team-member';
+import { IPartyMember } from '../../../core/interfaces/parties/i-party-member';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
-import { IPartyProfile } from '../../../core/interfaces/teams/i-team-profile';
+import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile';
 import { IUser } from '../../../core/interfaces/i-user';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';

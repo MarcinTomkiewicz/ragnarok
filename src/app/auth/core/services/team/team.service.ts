@@ -4,13 +4,13 @@ import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { GmStyleTag } from '../../../../core/enums/gm-styles';
 import { TeamRole } from '../../../../core/enums/team-role';
 import { IFilter } from '../../../../core/interfaces/i-filters';
-import { IParty } from '../../../../core/interfaces/teams/i-team';
+import { IParty } from '../../../../core/interfaces/parties/i-party';
 import {
   IPartyMember,
   TeamMemberRole,
-} from '../../../../core/interfaces/teams/i-team-member';
-import { IPartyProfile } from '../../../../core/interfaces/teams/i-team-profile';
-import { IPartySystem } from '../../../../core/interfaces/teams/i-team-system';
+} from '../../../../core/interfaces/parties/i-party-member';
+import { IPartyProfile } from '../../../../core/interfaces/parties/i-party-profile';
+import { IPartySystem } from '../../../../core/interfaces/parties/i-party-system';
 import {
   BackendService,
   IPagination,
