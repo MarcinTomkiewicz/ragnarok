@@ -17,7 +17,7 @@ import { IPartyMember } from '../../../core/interfaces/parties/i-party-member';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { PartyListComponent } from '../../common/party-list/party-list.component';
-import { TeamService } from '../../core/services/team/team.service';
+import { PartyService } from '../../core/services/party/party.service';
 
 @Component({
   selector: 'app-my-parties',
@@ -27,7 +27,7 @@ import { TeamService } from '../../core/services/team/team.service';
 })
 export class MyTeamsComponent {
   // === DI ===
-  private readonly teamService = inject(TeamService);
+  private readonly PartyService = inject(PartyService);
   private readonly modal = inject(NgbModal);
   private readonly toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
@@ -51,10 +51,10 @@ export class MyTeamsComponent {
 
   onShowDetails(team: IParty): void {
     forkJoin([
-      this.teamService.getTeamMembers(team.id),
-      this.teamService.getTeamSystems(team.id),
-      this.teamService.getTeamProfile(team.id),
-      this.teamService.getTeamOwnerData(team.ownerId),
+      this.PartyService.getPartyMembers(team.id),
+      this.PartyService.getPartySystems(team.id),
+      this.PartyService.getPartyProfile(team.id),
+      this.PartyService.getPartyOwnerData(team.ownerId),
     ]).subscribe({
       next: ([members, systems, profile, owner]) => {
         console.log('Szczegóły drużyny:', team);
@@ -89,7 +89,7 @@ export class MyTeamsComponent {
   //           return [];
   //         }
 
-  //         return this.teamService.leaveTeam(teamId).pipe(
+  //         return this.PartyService.leaveTeam(teamId).pipe(
   //           tap(() => this.showLeaveSuccessToast()),
   //           catchError(() => {
   //             this.showLeaveErrorToast();
@@ -143,7 +143,7 @@ export class MyTeamsComponent {
   private loadTeams(): void {
     if (!this.auth.user()) return;
     const userId = this.auth.user()?.id;
-    this.teamService.getTeamsByUser(userId!!).subscribe((teams) => {
+    this.PartyService.getPartiesByUser(userId!!).subscribe((teams) => {
       this.teamsSignal.set(teams ?? []);
     });
   }

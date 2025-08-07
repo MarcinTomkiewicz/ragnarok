@@ -8,7 +8,7 @@ import { CoworkerRoles } from '../../enums/roles';
 @Injectable({
   providedIn: 'root',
 })
-export class TeamService {
+export class PartyService {
   constructor(private backendService: BackendService) {}
 
   getCoreTeam(): Observable<TechStack[]> {

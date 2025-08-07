@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { IParty } from '../../../core/interfaces/parties/i-party';
 import { forkJoin } from 'rxjs';
-import { TeamService } from '../../core/services/team/team.service';
+import { PartyService } from '../../core/services/party/party.service';
 import { IPartyMember } from '../../../core/interfaces/parties/i-party-member';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile';
@@ -26,7 +26,7 @@ import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
   styleUrl: './party-card.component.scss',
 })
 export class PartyCardComponent {
-  private readonly teamService = inject(TeamService);
+  private readonly PartyService = inject(PartyService);
 
   team = input.required<IParty>({});
   showDetailsButton = input(false);
@@ -50,10 +50,10 @@ export class PartyCardComponent {
 
   ngOnInit(): void {
     forkJoin([
-      this.teamService.getTeamMembers(this.team().id),
-      this.teamService.getTeamSystems(this.team().id),
-      this.teamService.getTeamProfile(this.team().id),
-      this.teamService.getTeamOwnerData(this.team().ownerId),
+      this.PartyService.getPartyMembers(this.team().id),
+      this.PartyService.getPartySystems(this.team().id),
+      this.PartyService.getPartyProfile(this.team().id),
+      this.PartyService.getPartyOwnerData(this.team().ownerId),
     ]).subscribe({
       next: ([members, systems, profile, owner]) => {
         this.members.set(members);

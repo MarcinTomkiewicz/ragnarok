@@ -34,24 +34,74 @@
           id="description"
           class="form-control"
           formControlName="description"
+          rows="7"
         ></textarea>
       </div>
 
-      <!-- Systemy RPG (maks. 5) -->
       <div class="form-group text-start">
+        <label for="membersSelect">Dodaj członków drużyny (maks. 5)</label>
+        <input
+          type="text"
+          class="form-control mb-2"
+          placeholder="Wyszukaj użytkowników"
+          (input)="onSearchChange($event, 'members')"
+        />
+        <select
+          id="membersSelect"
+          class="form-select mb-2 w-100"
+          multiple
+          size="5"
+          (change)="onItemChange($event, 'members')"
+        >
+          @for (member of filteredMembers; track member.id) {
+          <option
+            [value]="member.id"
+            [disabled]="
+              membersControls.value.length >= 5 &&
+              !membersControls.value.includes(member.id)
+            "
+          >
+            {{ member.firstName }} - {{ member.email }}
+          </option>
+          }
+        </select>
+
+        @if (membersControls?.value.length > 0) {
+        <label>Wybrani członkowie:</label>
+        <ul class="list-group">
+          @for (memberId of membersControls.value; track memberId) {
+          <li class="text-start list-group-item">
+            <div class="flex-row-align-start">
+              {{ getMemberNameById(memberId) }}
+              <button
+                type="button"
+                class="btn btn-danger btn-close-x"
+                (click)="removeItem(memberId, 'members')"
+              >
+                x
+              </button>
+            </div>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+
+      <!-- Systemy RPG -->
+      <div class="form-group text-start">
+        <label for="systemsSelect">Systemy RPG (maks. 5)</label>
         <input
           type="text"
           class="form-control mb-2"
           placeholder="Wyszukaj system"
-          (input)="onSearchChange($event)"
+          (input)="onSearchChange($event, 'systems')"
         />
-        <label for="systemsSelect">Systemy RPG (maks. 5)</label>
         <select
           id="systemsSelect"
-          class="form-select mb-2"
+          class="form-select mb-2 w-100"
           multiple
           size="5"
-          (change)="onSystemChange($event)"
+          (change)="onItemChange($event, 'systems')"
         >
           @for (system of filteredSystems; track system.id) {
           <option
@@ -65,6 +115,7 @@
           </option>
           }
         </select>
+
         @if (systemControls.value.length > 0) {
         <label>Wybrane systemy:</label>
         <ul class="list-group">
@@ -75,7 +126,7 @@
               <button
                 type="button"
                 class="btn btn-danger btn-close-x"
-                (click)="removeSystem(systemId)"
+                (click)="removeItem(systemId, 'systems')"
               >
                 x
               </button>
@@ -110,34 +161,8 @@
         </div>
       </div>
 
-      @if (isReceptionField()) {
-      <div class="form-group form-check">
-        <input
-          id="startProgram"
-          class="form-check-input"
-          type="checkbox"
-          formControlName="startProgram"
-        />
-        <label class="form-check-label" for="startProgram">
-          Start program
-        </label>
-      </div>
-
-      <div class="form-group form-check">
-        <input
-          id="finishedProgram"
-          class="form-check-input"
-          type="checkbox"
-          formControlName="finishedProgram"
-        />
-        <label class="form-check-label" for="finishedProgram">
-          Finished program
-        </label>
-      </div>
-      }
-
-      <div class="form-group">
-        <label for="notes" class="text-start">Notatki</label>
+      <div class="form-group text-start">
+        <label for="notes">Notatki</label>
         <textarea
           id="notes"
           class="form-control"
@@ -157,28 +182,15 @@
         </label>
       </div>
 
-      @if (isReceptionField()) {
-      <div class="form-group form-check">
-        <input
-          id="isForBeginners"
-          class="form-check-input"
-          type="checkbox"
-          formControlName="isForBeginners"
-        />
-        <label class="form-check-label" for="isForBeginners">
-          Dla początkujących
-        </label>
-      </div>
-      }
-
       <button type="submit" class="btn btn-primary mt-3">Utwórz drużynę</button>
     </form>
   </div>
-    <ng-template #partySuccessToast>
-    <strong>Sukces!</strong> Drużyna została utworzona.
+
+  <ng-template #partySuccessToast>
+    <strong>Sukces!</strong> Drużyna została {{ modeSuccessMessage }}.
   </ng-template>
 
   <ng-template #partyErrorToast>
-    <strong>Błąd!</strong> Nie udało się utworzyć drużyny.
+    <strong>Błąd!</strong> Nie udało się {{ modeFailMessage }} drużyny.
   </ng-template>
 </div>

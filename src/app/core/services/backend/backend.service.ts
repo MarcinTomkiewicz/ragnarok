@@ -37,7 +37,7 @@ export class BackendService {
     if (joins) {
       select = `*, ${joins}`;
     }
-
+    
     let query = this.supabase.from(table).select(select);
     query = applyFilters(query, pagination?.filters);
 
