@@ -189,7 +189,13 @@ export class CreatePartyComponent {
           if (profile) {
             this.teamForm.patchValue({
               description: profile.description,
-              styleTags: profile.styleTags,
+            });
+
+            const styleTags = profile.styleTags || [];
+            styleTags.forEach((tag: GmStyleTag) => {
+              if (!this.styleTagControls.value.includes(tag)) {
+                this.styleTagControls.push(this.fb.control(tag));
+              }
             });
           }
 
