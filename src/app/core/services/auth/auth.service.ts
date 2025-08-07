@@ -60,53 +60,70 @@ export class AuthService {
     );
   }
 
-login(email: string, password: string): Observable<string | Responses> {
-  return from(this.supabase.auth.signInWithPassword({ email, password })).pipe(
-    switchMap(({ data, error }) => {
+  login(email: string, password: string): Observable<string | Responses> {
+    return from(
+      this.supabase.auth.signInWithPassword({ email, password })
+    ).pipe(
+      switchMap(({ data, error }) => {
+        if (error) {
+          const errorMessage = getSupabaseErrorMessage(error.code);
+          throw new Error(errorMessage.replace(/^Error: /, ''));
+        }
+
+        return from(
+          this.supabase
+            .from('users')
+            .select('*')
+            .eq('id', data.user.id)
+            .single()
+        ).pipe(
+          switchMap((response) => {
+            if (response.error) {
+              throw new Error(response.error.message.replace(/^Error: /, ''));
+            }
+
+            this._user.set(toCamelCase<IUser>(response.data));
+            return of(Responses.Success);
+          })
+        );
+      }),
+      catchError((err) => {
+        throw err.message.replace(/^Error: /, '');
+      })
+    );
+  }
+
+register(
+  email: string,
+  password: string,
+  userData: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>
+): Observable<string | null> {
+  return from(
+    this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData,
+      },
+    })
+  ).pipe(
+    map(({ data, error }) => {
+      console.log('Supabase Response:', { data, error }); // Dodajemy logowanie całej odpowiedzi
+
       if (error) {
-        const errorMessage = getSupabaseErrorMessage(error.code);
-        throw new Error(errorMessage.replace(/^Error: /, ''));
+        const errorMessage = getSupabaseErrorMessage(error.code); // Przekształcamy kod błędu w komunikat
+        throw new Error(errorMessage); // Rzucamy błąd
       }
 
-      return from(
-        this.supabase
-          .from('users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single()
-      ).pipe(
-        switchMap((response) => {
-          if (response.error) {
-            throw new Error(response.error.message.replace(/^Error: /, ''));
-          }
-
-          this._user.set(toCamelCase<IUser>(response.data));
-          return of(Responses.Success);
-        })
-      );
+      // Jeśli brak błędu, zwracamy null (sukces)
+      return null;
     }),
     catchError((err) => {
-      throw err.message.replace(/^Error: /, '')
+      console.error('Register error:', err); // Logowanie błędu
+      throw err; // Ponownie rzucamy błąd, aby dotarł do komponentu
     })
   );
 }
-
-
-  register(
-    email: string,
-    password: string,
-    userData: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>
-  ): Observable<string | null> {
-    return from(
-      this.supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData,
-        },
-      })
-    ).pipe(map(({ error }) => (error ? error.message : null)));
-  }
 
   updateUserData(data: Partial<IUser>): Observable<string | null> {
     const user = this.user();

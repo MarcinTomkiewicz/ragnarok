@@ -97,10 +97,10 @@ export const AUTH_ROUTES: Routes = [
     },
   },
     {
-    path: 'create-team',
+    path: 'create-party',
     loadComponent: () =>
-      import('./components/create-team/create-team.component').then(
-        (m) => m.CreateTeamComponent
+      import('./components/create-party/create-party.component').then(
+        (m) => m.CreatePartyComponent
       ),
     canActivate: [AuthGuard],
     data: {
@@ -108,9 +108,9 @@ export const AUTH_ROUTES: Routes = [
     },
   },
     {
-    path: 'my-teams',
+    path: 'my-parties',
     loadComponent: () =>
-      import('./components/my-teams/my-teams.component').then(
+      import('./components/my-parties/my-parties.component').then(
         (m) => m.MyTeamsComponent
       ),
     canActivate: [AuthGuard],

@@ -16,14 +16,14 @@ import { ITeam } from '../../../core/interfaces/teams/i-team';
 import { ITeamMember } from '../../../core/interfaces/teams/i-team-member';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { TeamListComponent } from '../../common/team-list/team-list.component';
+import { PartyListComponent } from '../../common/party-list/party-list.component';
 import { TeamService } from '../../core/services/team/team.service';
 
 @Component({
-  selector: 'app-my-teams',
+  selector: 'app-my-parties',
   standalone: true,
-  imports: [CommonModule, TeamListComponent],
-  templateUrl: './my-teams.component.html',
+  imports: [CommonModule, PartyListComponent],
+  templateUrl: './my-parties.component.html',
 })
 export class MyTeamsComponent {
   // === DI ===

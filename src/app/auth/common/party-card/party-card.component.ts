@@ -22,10 +22,10 @@ import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
   selector: 'app-team-card',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './team-card.component.html',
-  styleUrl: './team-card.component.scss',
+  templateUrl: './party-card.component.html',
+  styleUrl: './party-card.component.scss',
 })
-export class TeamCardComponent {
+export class PartyCardComponent {
   private readonly teamService = inject(TeamService);
 
   team = input.required<ITeam>({});

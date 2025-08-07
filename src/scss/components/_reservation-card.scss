@@ -15,6 +15,7 @@
   align-items: center;
   font-size: $font-size-sm;
   margin-bottom: 0.75rem;
+  height: calc(2*$font-size-xl);
 
   .reservation-date {
     font-weight: bold;

@@ -27,6 +27,9 @@
         <span>Sprawdź swoją skrzynkę e-mail, aby aktywować konto.</span>
       </div>
     </ng-template>
+        <ng-template #registrationErrorToast>
+      <strong>Błąd!</strong> {{ errorMessage }}
+    </ng-template>
   </form>
 
   @if (errorMessage) {

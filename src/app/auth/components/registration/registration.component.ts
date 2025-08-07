@@ -33,51 +33,63 @@ export class RegistrationComponent {
   private readonly toastService = inject(ToastService);
 
   readonly successToast = viewChild<TemplateRef<unknown>>('registrationSuccessToast');
+  readonly errorToast = viewChild<TemplateRef<unknown>>('registrationErrorToast');
 
   readonly registerForm = createUserForm(this.fb, true, true);
 
   errorMessage: string | null = null;
 
   register(): void {
-    if (this.registerForm.invalid) return;
+  if (this.registerForm.invalid) return;
 
-    this.loaderService.show();
+  this.loaderService.show();
 
-    const { email, password, ...rest } = this.registerForm.value;
+  const { email, password, ...rest } = this.registerForm.value;
 
-    const rawUser: Partial<IUser> = {
-      email: email!,
-      role: 'user',
-      coworker: 'user',
-      ...rest,
-    };
+  const rawUser: Partial<IUser> = {
+    email: email!,
+    role: 'user',
+    coworker: 'user',
+    ...rest,
+  };
 
-    const sanitizedUser = sanitizeUserData(rawUser);
+  const sanitizedUser = sanitizeUserData(rawUser);
 
-    this.authService.register(email!, password!, sanitizedUser).subscribe({
-      next: (error) => {
-        this.loaderService.hide();
-        if (error) {
-          this.errorMessage = error;
-          return;
-        }
+  this.authService.register(email!, password!, sanitizedUser).subscribe({
+    next: (error) => {
+      this.loaderService.hide();
 
-        const template = this.successToast();
-        if (template) {
-          this.toastService.show({
-            template,
-            classname: 'bg-success text-white',
-            header: 'Zarejestrowano!',
-          });
-        }
+      if (error) {
+        // Obsługujemy błąd rejestracji
+        this.errorMessage = error;
+        return;
+      }
 
-        this.router.navigate(['/']);
-      },
-      error: (err) => {
-        this.loaderService.hide();
-        this.errorMessage = 'Wystąpił błąd rejestracji.';
-        console.error(err);
-      },
-    });
-  }
+      const template = this.successToast();
+      if (template) {
+        this.toastService.show({
+          template,
+          classname: 'bg-success text-white',
+          header: 'Zarejestrowano!',
+        });
+      }
+
+      // this.router.navigate(['/']);
+    },
+        error: (errorMessage) => {
+          this.loaderService.hide();
+
+          this.errorMessage = errorMessage;
+
+          const template = this.errorToast();
+          if (template) {
+            this.toastService.show({
+              template,
+              classname: 'bg-danger text-white',
+              header: 'Błąd logowania',
+            });
+          }
+        },
+  });
+}
 }

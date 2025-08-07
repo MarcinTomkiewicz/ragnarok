@@ -33,13 +33,13 @@ import { Router } from '@angular/router';
 import { ToastService } from '../../../core/services/toast/toast.service';
 
 @Component({
-  selector: 'app-create-team',
+  selector: 'app-create-party',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './create-team.component.html',
-  styleUrl: './create-team.component.scss',
+  templateUrl: './create-party.component.html',
+  styleUrl: './create-party.component.scss',
 })
-export class CreateTeamComponent {
+export class CreatePartyComponent {
   readonly teamForm: FormGroup;
   private readonly fb = inject(FormBuilder);
   private readonly teamService = inject(TeamService);
@@ -130,7 +130,7 @@ export class CreateTeamComponent {
   onSystemChange(event: Event): void {
     const selectedValues = Array.from(
       (event.target as HTMLSelectElement).selectedOptions
-    ).map((option) => option.value); // Pobieramy wartości wybranych systemów
+    ).map((option) => option.value);
 
     selectedValues.forEach((systemId) => {
       if (
@@ -181,9 +181,8 @@ export class CreateTeamComponent {
       delete teamData.systems;
       delete teamData.styleTags;
 
-      // Wysyłamy dane do serwisu
       this.teamService
-        .createTeam(teamData, systems, styleTags, description, members)
+        .CreateParty(teamData, systems, styleTags, description, members)
         .subscribe({
           next: (team) => {
             const template = this.partySuccessToast();

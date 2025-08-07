@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { ITeam } from '../../../core/interfaces/teams/i-team';
-import { TeamCardComponent } from '../team-card/team-card.component';
+import { PartyCardComponent } from '../party-card/party-card.component';
 
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [CommonModule, TeamCardComponent],
-  templateUrl: './team-list.component.html',
-  styleUrl: './team-list.component.scss',
+  imports: [CommonModule, PartyCardComponent],
+  templateUrl: './party-list.component.html',
+  styleUrl: './party-list.component.scss',
 })
-export class TeamListComponent {
+export class PartyListComponent {
   teams = input<ITeam[]>([]); 
   showDetailsButton = input(false); 
 
