@@ -66,10 +66,10 @@
           }
         </select>
 
-        @if (membersControls?.value.length > 0) {
+        @if (membersControls.value.length > 0) {
         <label>Wybrani członkowie:</label>
         <ul class="list-group">
-          @for (memberId of membersControls.value; track memberId) {
+          @for (memberId of membersControls.value; track $index) {
           <li class="text-start list-group-item">
             <div class="flex-row-align-start">
               {{ getMemberNameById(memberId) }}
@@ -119,7 +119,7 @@
         @if (systemControls.value.length > 0) {
         <label>Wybrane systemy:</label>
         <ul class="list-group">
-          @for (systemId of systemControls.value; track systemId) {
+          @for (systemId of systemControls.value; track $index) {
           <li class="text-start list-group-item">
             <div class="flex-row-align-start">
               {{ getSystemNameById(systemId) }}

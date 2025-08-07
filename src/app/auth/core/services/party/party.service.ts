@@ -1,9 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, Observable, switchMap } from 'rxjs';
+import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { GmStyleTag } from '../../../../core/enums/gm-styles';
 import { TeamRole } from '../../../../core/enums/team-role';
 import { IFilter } from '../../../../core/interfaces/i-filters';
+import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
+import { IUser } from '../../../../core/interfaces/i-user';
 import { IParty } from '../../../../core/interfaces/parties/i-party';
 import {
   IPartyMember,
@@ -16,8 +18,6 @@ import {
   IPagination,
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
-import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
-import { IUser } from '../../../../core/interfaces/i-user';
 
 @Injectable({ providedIn: 'root' })
 export class PartyService {
@@ -43,97 +43,25 @@ export class PartyService {
     return this.backend.getById<IParty>('parties', id);
   }
 
+  getPartyBySlug(slug: string): Observable<IParty | null> {
+    return this.backend.getBySlug<IParty>('parties', slug);
+  }
+
   getPartyOwnerData(ownerId: string): Observable<IUser | null> {
     return this.backend.getById<IUser>('users', ownerId);
   }
 
-  // createParty(
-  //   team: IParty,
-  //   systems: string[],
-  //   styleTags: GmStyleTag[],
-  //   description: string,
-  //   members: IPartyMember[]
-  // ): Observable<IParty> {
-  //   const data = toSnakeCase<IParty>(team); // Przekształcamy dane drużyny
-
-  //   // Tworzymy drużynę (najpierw, aby uzyskać ID)
-  //   return this.backend.create<IParty>('parties', data).pipe(
-  //     switchMap(() => {
-  //       // Po utworzeniu drużyny, wykonujemy zapytanie, aby uzyskać ID drużyny
-  //       return this.backend
-  //         .getOneByFields<IParty>('parties', { slug: team.slug })
-  //         .pipe(
-  //           switchMap((createdTeam) => {
-  //             if (!createdTeam) {
-  //               throw new Error('Błąd: nie udało się uzyskać ID drużyny');
-  //             }
-
-  //             // Tworzymy profil drużyny
-  //             const profileData: IPartyProfile = {
-  //               id: createdTeam.id, // ID stworzonej drużyny
-  //               description: description,
-  //               styleTags: styleTags,
-  //               createdAt: new Date().toISOString(),
-  //             };
-
-  //             // Tworzymy profil drużyny
-  //             return this.backend
-  //               .create<IPartyProfile>(
-  //                 'party_profiles',
-  //                 toSnakeCase(profileData)
-  //               )
-  //               .pipe(
-  //                 switchMap(() => {
-  //                   // Tworzymy zapisy w tabeli team_systems - Zmieniamy na createMany
-  //                   const systemRequests = systems.map((systemId) => ({
-  //                     teamId: createdTeam.id,
-  //                     systemId,
-  //                   }));
-
-  //                   return this.backend
-  //                     .createMany<IPartySystem>(
-  //                       'party_systems',
-  //                       toSnakeCase(systemRequests)
-  //                     )
-  //                     .pipe(
-  //                       switchMap(() => {
-  //                         // Tworzymy zapisy członków drużyny - Zmieniamy na createMany
-  //                         const memberRequests = members.map((member) => ({
-  //                           teamId: createdTeam.id,
-  //                           userId: member.userId,
-  //                           role: member.role,
-  //                           joinedAt: new Date().toISOString(),
-  //                           leftAt: null,
-  //                         }));
-
-  //                         return this.backend.createMany<Partial<IPartyMember>>(
-  //                           'party_members',
-  //                           toSnakeCase(memberRequests)
-  //                         );
-  //                       }),
-  //                       map(() => createdTeam) // Zwracamy stworzoną drużynę po wykonaniu wszystkich operacji
-  //                     );
-  //                 })
-  //               );
-  //           })
-  //         );
-  //     })
-  //   );
-  // }
-
   createOrUpdateParty(
-    team: IParty, // Drużyna (pełne dane)
-    systems: string[], // Systemy przypisane do drużyny
-    styleTags: GmStyleTag[], // Style tagi
-    description: string, // Opis drużyny
-    members: IPartyMember[] // Członkowie drużyny
+    team: IParty,
+    systems: string[],
+    styleTags: GmStyleTag[],
+    description: string,
+    members: string[]
   ): Observable<IParty> {
-    const teamData = toSnakeCase<IParty>(team); // Zamiana danych drużyny na snake_case
+    const teamData = toSnakeCase<IParty>(team);
 
-    // Tworzymy lub aktualizujemy drużynę za pomocą upsert
     return this.backend.upsert<IParty>('parties', teamData, 'slug').pipe(
       switchMap(() => {
-        // Po upsercie drużyny, musimy pobrać pełne dane drużyny
         return this.backend
           .getOneByFields<IParty>('parties', { slug: team.slug })
           .pipe(
@@ -144,7 +72,6 @@ export class PartyService {
                 );
               }
 
-              // Tworzymy lub aktualizujemy profil drużyny
               const profileData: IPartyProfile = {
                 id: updatedTeam.id,
                 description: description,
@@ -160,45 +87,117 @@ export class PartyService {
                 )
                 .pipe(
                   switchMap(() => {
-                    // Tworzymy lub aktualizujemy systemy drużyny
                     const systemRequests = systems.map((systemId) => ({
                       teamId: updatedTeam.id,
                       systemId,
                     }));
-                    console.log(toSnakeCase(systemRequests));
 
-                    return this.backend
-                      .upsertMany<IPartySystem>(
-                        'party_systems',
-                        toSnakeCase(systemRequests),
-                        'team_id, system_id'
-                      )
-                      .pipe(
-                        switchMap(() => {
-                          // Tworzymy lub aktualizujemy członków drużyny
-                          const memberRequests = members.map((member) => ({
-                            teamId: updatedTeam.id,
-                            userId: member.userId,
-                            role: member.role,
-                            joinedAt:
-                              member.joinedAt ?? new Date().toISOString(),
-                            leftAt: member.leftAt,
-                          }));
+                    return this.removeDeletedSystems(
+                      updatedTeam.id,
+                      systems
+                    ).pipe(
+                      switchMap(() => {
+                        return this.backend.upsertMany<IPartySystem>(
+                          'party_systems',
+                          toSnakeCase(systemRequests),
+                          'team_id, system_id'
+                        );
+                      }),
+                      switchMap(() => {
+                        return this.removeDeletedMembers(
+                          updatedTeam.id,
+                          members
+                        ).pipe(
+                          switchMap(() => {
+                            console.log(members);
+                            const memberRequests = members.map((member) => ({
+                              teamId: updatedTeam.id,
+                              userId: member,
+                              role: null,
+                              joinedAt: new Date().toISOString(),
+                              leftAt: null,
+                            }));
 
-                          return this.backend.upsertMany<IPartyMember>(
-                            'party_members',
-                            toSnakeCase(memberRequests),
-                            'team_id,user_id'
-                          );
-                        }),
-                        map(() => updatedTeam)
-                      );
-                  })
+                            return this.backend.upsertMany<IPartyMember>(
+                              'party_members',
+                              toSnakeCase(memberRequests),
+                              'team_id,user_id'
+                            );
+                          })
+                        );
+                      })
+                    );
+                  }),
+                  map(() => updatedTeam)
                 );
             })
           );
       })
     );
+  }
+
+  private removeDeletedSystems(
+    teamId: string,
+    systems: string[]
+  ): Observable<void> {
+    return this.backend
+      .getAll<IPartySystem>('party_systems', 'teamId', 'asc', {
+        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
+      })
+      .pipe(
+        switchMap((existingSystems) => {
+          const existingSystemIds = existingSystems.map(
+            (system) => system.systemId
+          );
+          const systemsToDelete = existingSystemIds.filter(
+            (id) => !systems.includes(id)
+          );
+
+          if (systemsToDelete.length > 0) {
+            return forkJoin(
+              systemsToDelete.map((systemId) =>
+                this.backend.delete('party_systems', {
+                  teamId: { value: teamId, operator: FilterOperator.EQ },
+                  systemId: { value: systemId, operator: FilterOperator.EQ },
+                })
+              )
+            ).pipe(map(() => {}));
+          }
+          return of(undefined);
+        })
+      );
+  }
+
+  private removeDeletedMembers(
+    teamId: string,
+    members: string[]
+  ): Observable<void> {
+    return this.backend
+      .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
+      })
+      .pipe(
+        switchMap((existingMembers) => {
+          const existingMemberIds = existingMembers.map(
+            (member) => member.userId
+          );
+          const membersToDelete = existingMemberIds.filter(
+            (id) => !members.includes(id)
+          );
+
+          if (membersToDelete.length > 0) {
+            return forkJoin(
+              membersToDelete.map((userId) =>
+                this.backend.delete('party_members', {
+                  teamId: { value: teamId, operator: FilterOperator.EQ },
+                  userId: { value: userId, operator: FilterOperator.EQ },
+                })
+              )
+            ).pipe(map(() => {}));
+          }
+          return of(undefined);
+        })
+      );
   }
 
   deleteParty(id: string): Observable<void> {

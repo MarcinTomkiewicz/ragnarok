@@ -103,6 +103,17 @@ export class BackendService {
     });
   }
 
+  getBySlug<T extends object>(table: string, slug: string): Observable<T | null> {
+  return from(
+    this.supabase.from(table).select('*').eq('slug', slug).single()
+  ).pipe(
+    map((response: PostgrestSingleResponse<T>) => {
+      if (response.error || !response.data) return null;
+      return toCamelCase<T>(response.data); // Konwertujemy na camelCase, jak to robimy w innych metodach
+    })
+  );
+}
+
   getCount<T extends object>(
     table: string,
     filters?: { [key: string]: any }

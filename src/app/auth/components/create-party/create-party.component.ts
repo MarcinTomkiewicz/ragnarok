@@ -16,14 +16,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
-import { BehaviorSubject, debounceTime } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject, debounceTime, forkJoin } from 'rxjs';
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { CoworkerRoles } from '../../../core/enums/roles';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../core/interfaces/i-user';
+import { IParty } from '../../../core/interfaces/parties/i-party';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { SystemService } from '../../../core/services/system/system.service';
@@ -46,7 +47,7 @@ enum FailModes {
 
 enum SuccessModes {
   Edit = 'zaktualizowana',
-  Create = 'utworzona'
+  Create = 'utworzona',
 }
 
 @Component({
@@ -66,6 +67,7 @@ export class CreatePartyComponent {
   private readonly systemService = inject(SystemService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly user = this.auth.user;
   gmsList = signal<IGmData[]>([]);
@@ -77,8 +79,10 @@ export class CreatePartyComponent {
   filteredSystems: IRPGSystem[] = [];
   filteredMembers: IUser[] = [];
 
+  partySlug: string | null = null;
   editMode = false;
-  partyId: string | null = null;
+  partyData!: IParty;
+
   modeMessage = this.editMode ? Modes.Edit : Modes.Create;
   modeFailMessage = this.editMode ? FailModes.Edit : FailModes.Create;
   modeSuccessMessage = this.editMode ? SuccessModes.Edit : SuccessModes.Create;
@@ -107,10 +111,19 @@ export class CreatePartyComponent {
     });
 
     this.systemService.loadAvailableSystems();
+
+    this.route.data.subscribe((data) => {
+      if (data['party']) {
+        this.partyData = data['party'];
+        this.partySlug = this.partyData.slug;
+        this.editMode = true;
+        this.loadPartyData();
+      }
+    });
   }
 
   ngOnInit(): void {
-    if (this.editMode && this.partyId) {
+    if (this.editMode && this.partySlug) {
       this.loadPartyData();
     }
 
@@ -131,7 +144,7 @@ export class CreatePartyComponent {
         this.membersList.set(users);
       });
 
-    if (this.partyId) {
+    if (this.partySlug) {
       this.editMode = true;
       this.loadPartyData();
     }
@@ -150,10 +163,12 @@ export class CreatePartyComponent {
   }
 
   loadPartyData(): void {
-    if (!this.partyId) return;
+    if (!this.partySlug || this.teamForm.dirty) return;
 
-    this.partyService.getPartyById(this.partyId).subscribe((party) => {
+    this.partyService.getPartyBySlug(this.partySlug).subscribe((party) => {
       if (party) {
+        if (this.teamForm.get('name')?.value) return;
+
         // Wypełniamy dane drużyny
         this.teamForm.patchValue({
           name: party.name,
@@ -165,28 +180,30 @@ export class CreatePartyComponent {
           isForBeginners: party.isForBeginners,
         });
 
-        // Wczytujemy profil drużyny
-        this.partyService.getPartyProfile(party.id).subscribe((profile) => {
+        // Używamy forkJoin do równoczesnego ładowania wszystkich danych
+        forkJoin([
+          this.partyService.getPartyProfile(party.id),
+          this.partyService.getPartySystems(party.id),
+          this.partyService.getPartyMembers(party.id),
+        ]).subscribe(([profile, systems, members]) => {
           if (profile) {
             this.teamForm.patchValue({
               description: profile.description,
               styleTags: profile.styleTags,
             });
           }
-        });
 
-        // Wczytujemy systemy drużyny
-        this.partyService.getPartySystems(party.id).subscribe((systems) => {
-          systems.forEach((system) => {
-            this.systemControls.push(this.fb.control(system.id));
-          });
-        });
+          if (systems) {
+            systems.forEach((system) => {
+              this.systemControls.push(this.fb.control(system.id));
+            });
+          }
 
-        // Wczytujemy członków drużyny
-        this.partyService.getPartyMembers(party.id).subscribe((members) => {
-          members.forEach((member) => {
-            this.membersControls.push(this.fb.control(member.userId));
-          });
+          if (members) {
+            members.forEach((member) => {
+              this.membersControls.push(this.fb.control(member.userId));
+            });
+          }
         });
       }
     });
@@ -264,6 +281,7 @@ export class CreatePartyComponent {
   }
 
   getMemberNameById(memberId: string): string | undefined {
+    if (!this.filteredMembers.length) return;
     const member = this.filteredMembers.find((m) => m.id === memberId);
     return member ? `${member.firstName} ${member.email}` : '';
   }
@@ -290,33 +308,6 @@ export class CreatePartyComponent {
       delete teamData.systems;
       delete teamData.styleTags;
       delete teamData.members;
-
-      // if (this.editMode && this.partyId) {
-      //   // Jeśli edytujemy, wywołujemy updateParty
-      //   this.partyService.updateParty(this.partyId, teamData).subscribe({
-      //     next: (team) => {
-      //       const template = this.partySuccessToast();
-      //       if (template) {
-      //         this.toastService.show({
-      //           template,
-      //           classname: 'bg-success text-white',
-      //           header: 'Zaktualizowano drużynę!',
-      //         });
-      //       }
-      //       this.router.navigate(['/auth/my-teams']);
-      //     },
-      //     error: () => {
-      //       const template = this.partyErrorToast();
-      //       if (template) {
-      //         this.toastService.show({
-      //           template,
-      //           classname: 'bg-danger text-white',
-      //           header: 'Nie udało się zaktualizować drużyny',
-      //         });
-      //       }
-      //     },
-      //   });
-      // } else {
 
       this.partyService
         .createOrUpdateParty(teamData, systems, styleTags, description, members)
