@@ -367,4 +367,8 @@ export class CreatePartyComponent {
   get styleTagControls(): FormArray {
     return this.teamForm.get('styleTags') as FormArray;
   }
+
+  createButtonText(): string {
+    return this.editMode ? 'Zapisz zmiany' : 'Utwórz drużynę'
+  }
 }

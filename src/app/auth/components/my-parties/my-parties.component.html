@@ -8,6 +8,7 @@
           [teams]="filtered"
           [showDetailsButton]="true"
           (showDetails)="onShowDetails($event)"
+          (editParty)="onEditParty($event)"
           />
       } @else {
         <p>Nie należysz do żadnej drużyny.</p>

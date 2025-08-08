@@ -15,8 +15,13 @@ export class PartyListComponent {
   showDetailsButton = input(false); 
 
   showDetails = output<IParty>();
+  editParty = output<IParty>();
 
   onShowDetails(team: IParty): void {
     this.showDetails.emit(team);
+  }
+
+  onEditParty(team: IParty): void {
+    this.editParty.emit(team);
   }
 }

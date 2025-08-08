@@ -109,7 +109,6 @@ export class PartyService {
                           members
                         ).pipe(
                           switchMap(() => {
-                            console.log(members);
                             const memberRequests = members.map((member) => ({
                               teamId: updatedTeam.id,
                               userId: member,

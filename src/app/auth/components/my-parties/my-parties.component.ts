@@ -18,6 +18,7 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { PartyListComponent } from '../../common/party-list/party-list.component';
 import { PartyService } from '../../core/services/party/party.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-my-parties',
@@ -31,6 +32,7 @@ export class MyTeamsComponent {
   private readonly modal = inject(NgbModal);
   private readonly toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router)
 
   readonly user = this.auth.user()!;
 
@@ -67,6 +69,10 @@ export class MyTeamsComponent {
         console.error('Błąd podczas ładowania danych drużyny:', err);
       },
     });
+  }
+
+  onEditParty(team: IParty): void {
+    this.router.navigate([`auth/edit-party/${team.slug}`])
   }
 
   // openLeaveModal(teamId: string): void {

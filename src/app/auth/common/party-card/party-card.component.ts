@@ -17,6 +17,7 @@ import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile'
 import { IUser } from '../../../core/interfaces/i-user';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 @Component({
   selector: 'app-team-card',
@@ -27,7 +28,9 @@ import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 })
 export class PartyCardComponent {
   private readonly PartyService = inject(PartyService);
+  private readonly auth = inject(AuthService);
 
+  readonly user = this.auth.user;
   team = input.required<IParty>({});
   showDetailsButton = input(false);
 
@@ -47,6 +50,7 @@ export class PartyCardComponent {
   owner: WritableSignal<IUser | null> = signal<IUser | null>(null);
 
   showDetails = output<void>();
+  editParty = output<void>();
 
   ngOnInit(): void {
     forkJoin([
@@ -66,6 +70,14 @@ export class PartyCardComponent {
 
   onShowDetails(): void {
     this.showDetails.emit();
+  }
+
+  onEditParty(): void {
+    this.editParty.emit();
+  }
+
+  canEditParty(): boolean {
+    return this.user()?.id === this.owner()?.id
   }
 
   trackTag(index: number, tag: string): string {

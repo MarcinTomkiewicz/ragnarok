@@ -28,11 +28,14 @@
       </div>
 
       <div class="card-actions">
-        @if (showDetailsButton()) {
+        @if (canEditParty()) {
+        <button class="btn btn-primary" (click)="onEditParty()">
+          Edytuj drużynę
+        </button>
+        }
         <button class="btn btn-info" (click)="onShowDetails()">
           Zobacz szczegóły
         </button>
-        }
       </div>
     </div>
   </div>
