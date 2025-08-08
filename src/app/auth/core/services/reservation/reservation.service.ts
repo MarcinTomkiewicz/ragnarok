@@ -344,7 +344,6 @@ export class ReservationService {
             map((reservations) =>
               reservations.some((r) => {
                 const resDate = new Date(r.date);
-                console.log(this.isReservationActive(r));
 
                 return (
                   this.isReservationActive(r) &&

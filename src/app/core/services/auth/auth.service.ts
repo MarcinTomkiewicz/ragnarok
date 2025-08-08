@@ -108,7 +108,6 @@ register(
     })
   ).pipe(
     map(({ data, error }) => {
-      console.log('Supabase Response:', { data, error }); // Dodajemy logowanie całej odpowiedzi
 
       if (error) {
         const errorMessage = getSupabaseErrorMessage(error.code); // Przekształcamy kod błędu w komunikat

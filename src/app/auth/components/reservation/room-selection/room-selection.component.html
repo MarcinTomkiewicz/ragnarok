@@ -22,10 +22,6 @@
     W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
     Alfheim). Możesz zarezerwować inną salę.
   </div>
-  } @if (requiresClubConfirmation() && !store.confirmedParty()) {
-  <div class="alert alert-warning">
-    Aby zarezerwować salę klubową, musisz wybrać drużynę.
-  </div>
   } @if (requiresClubConfirmation()) {
   <div ngbDropdown class="category-dropdown">
     <button
@@ -44,6 +40,11 @@
       }
     </div>
   </div>
+  @if (requiresClubConfirmation() && !store.confirmedParty()) {
+  <div class="text-danger">
+    Aby zarezerwować salę klubową, musisz wybrać drużynę.
+  </div>
+  }
 
   @if (selectedPartyId()) {
   <div class="flex-row-align-center">

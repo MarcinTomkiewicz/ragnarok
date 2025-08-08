@@ -52,13 +52,10 @@ export class RoomSelectionComponent {
         this.reservationService
           .checkIfMemberHasReservationThisWeekInClubRooms()
           .subscribe((result) => {
-            console.log('isMemberClubBlocked result:', result);
             this.isMemberClubBlocked = result;
           });
       } else {
-        console.log(room);
         this.isMemberClubBlocked = false;
-        console.log(this.isMemberClubBlocked);
       }
 
       const start = startOfMonth(new Date());
@@ -209,7 +206,6 @@ export class RoomSelectionComponent {
     if (userId) {
       this.partyService.getUserParties(userId).subscribe((parties) => {
         this.userParties.set(parties);
-        console.log(this.userParties());
       });
     }
   }
