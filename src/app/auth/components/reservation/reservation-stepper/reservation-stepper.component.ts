@@ -1,28 +1,26 @@
+import { CommonModule } from '@angular/common';
 import {
   Component,
+  computed,
   inject,
   TemplateRef,
   viewChild,
-  computed,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-
-import { RoomSelectionComponent } from '../room-selection/room-selection.component';
-import { TimeSelectionComponent } from '../time-selection/time-selection.component';
-import { GmSelectionComponent } from '../gm-selection/gm-selection.component';
-import { ReservationSummaryComponent } from '../reservation-summary/reservation-summary.component';
-
-import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
-import { ReservationService } from '../../../core/services/reservation/reservation.service';
-import { AuthService } from '../../../../core/services/auth/auth.service';
-import { ToastService } from '../../../../core/services/toast/toast.service';
-import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
-import { UserInfoFormComponent } from '../user-info-form/user-info-form.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
-import { scrollToElementWithOffset } from '../../../../core/utils/scroll-to-top';
+import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 import { PlatformService } from '../../../../core/services/platform/platform.service';
+import { ToastService } from '../../../../core/services/toast/toast.service';
+import { scrollToElementWithOffset } from '../../../../core/utils/scroll-to-top';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { GmSelectionComponent } from '../gm-selection/gm-selection.component';
+import { ReservationSummaryComponent } from '../reservation-summary/reservation-summary.component';
+import { RoomSelectionComponent } from '../room-selection/room-selection.component';
+import { TimeSelectionComponent } from '../time-selection/time-selection.component';
+import { UserInfoFormComponent } from '../user-info-form/user-info-form.component';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -40,13 +38,13 @@ import { PlatformService } from '../../../../core/services/platform/platform.ser
 })
 export class ReservationStepperComponent {
   readonly store = inject(ReservationStoreService);
+  readonly platformService = inject(PlatformService);
+  readonly toastService = inject(ToastService);
+  readonly router = inject(Router);
+  readonly route = inject(ActivatedRoute);
+  readonly auth = inject(AuthService);
   private readonly reservationService = inject(ReservationService);
-  private readonly toastService = inject(ToastService);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly modalService = inject(NgbModal);
-  private readonly platformService = inject(PlatformService);
 
   readonly step = this.store.step;
 
@@ -104,6 +102,8 @@ export class ReservationStepperComponent {
         return false;
     }
   });
+
+  // Przechodzenie do następnego kroku
   goForward() {
     if (!this.canProceed()) return;
 
@@ -121,8 +121,12 @@ export class ReservationStepperComponent {
     } else {
       this.confirmReservation();
     }
+
+    // Zapisz dane do sessionStorage po przejściu do następnego kroku
+    this.store.saveToStorage();
   }
 
+  // Powrót do poprzedniego kroku
   goBack() {
     const current = this.step();
     const needsGm = this.store.needsGm();
@@ -138,8 +142,12 @@ export class ReservationStepperComponent {
       this.step.set(prev);
       this.scrollToStepperTop();
     }
+
+    // Zapisz dane do sessionStorage po powrocie do poprzedniego kroku
+    this.store.saveToStorage();
   }
 
+  // Zablokowanie przycisku "Powrót", jeśli użytkownik nie jest w trybie recepcji
   goBackDisabled() {
     return this.step() === 1 && !this.store.isReceptionMode();
   }
@@ -169,6 +177,7 @@ export class ReservationStepperComponent {
 
     this.reservationService.createReservation(payload).subscribe({
       next: () => {
+        // Po udanej rezerwacji, wyświetl sukces
         const template = this.reservationSuccessToast();
         if (template) {
           this.toastService.show({
@@ -177,9 +186,24 @@ export class ReservationStepperComponent {
             header: 'Utworzono rezerwację!',
           });
         }
+
+        // Wyczyść dane z sessionStorage, ponieważ rezerwacja została już zapisana
+        if (this.platformService.isBrowser) {
+          sessionStorage.removeItem('selectedRoom');
+          sessionStorage.removeItem('selectedDate');
+          sessionStorage.removeItem('selectedStartTime');
+          sessionStorage.removeItem('selectedDuration');
+          sessionStorage.removeItem('selectedGm');
+          sessionStorage.removeItem('needsGm');
+          sessionStorage.removeItem('externalName');
+          sessionStorage.removeItem('externalPhone');
+          sessionStorage.removeItem('externalIsClubMember');
+        }
+
         this.router.navigate(['/auth/my-reservations']);
       },
       error: () => {
+        // W przypadku błędu, pokaż komunikat o niepowodzeniu
         const template = this.reservationErrorToast();
         if (template) {
           this.toastService.show({
