@@ -122,11 +122,9 @@ export class ReservationStepperComponent {
       this.confirmReservation();
     }
 
-    // Zapisz dane do sessionStorage po przejściu do następnego kroku
     this.store.saveToStorage();
   }
 
-  // Powrót do poprzedniego kroku
   goBack() {
     const current = this.step();
     const needsGm = this.store.needsGm();
@@ -143,11 +141,9 @@ export class ReservationStepperComponent {
       this.scrollToStepperTop();
     }
 
-    // Zapisz dane do sessionStorage po powrocie do poprzedniego kroku
     this.store.saveToStorage();
   }
 
-  // Zablokowanie przycisku "Powrót", jeśli użytkownik nie jest w trybie recepcji
   goBackDisabled() {
     return this.step() === 1 && !this.store.isReceptionMode();
   }
@@ -173,11 +169,11 @@ export class ReservationStepperComponent {
         ? this.store.externalIsClubMember()
         : null,
       status: ReservationStatus.Confirmed,
+      teamId: this.store.selectedPartyId(), // Przypisanie ID drużyny
     };
 
     this.reservationService.createReservation(payload).subscribe({
       next: () => {
-        // Po udanej rezerwacji, wyświetl sukces
         const template = this.reservationSuccessToast();
         if (template) {
           this.toastService.show({
@@ -187,7 +183,6 @@ export class ReservationStepperComponent {
           });
         }
 
-        // Wyczyść dane z sessionStorage, ponieważ rezerwacja została już zapisana
         if (this.platformService.isBrowser) {
           sessionStorage.removeItem('selectedRoom');
           sessionStorage.removeItem('selectedDate');
@@ -203,7 +198,6 @@ export class ReservationStepperComponent {
         this.router.navigate(['/auth/my-reservations']);
       },
       error: () => {
-        // W przypadku błędu, pokaż komunikat o niepowodzeniu
         const template = this.reservationErrorToast();
         if (template) {
           this.toastService.show({

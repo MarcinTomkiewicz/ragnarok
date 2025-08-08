@@ -14,6 +14,7 @@ export interface IReservation {
   externalName: string | null;
   externalPhone: string | null;
   status: ReservationStatus;
+  teamId?: string | null;
   createdAt: string;
 }
 

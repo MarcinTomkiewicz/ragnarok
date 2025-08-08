@@ -15,6 +15,7 @@ import { BackendService } from '../../../../core/services/backend/backend.servic
 import { ImageStorageService } from '../../../../core/services/backend/image-storage/image-storage.service';
 import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
 import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
+import { PartyService } from '../party/party.service';
 
 // TODO: Refactor this service to separate GM logic from reservation logic
 // This service should focus on reservation management, while GM-related logic should be handled in a dedicated service.
@@ -25,6 +26,7 @@ export class ReservationService {
   private readonly imageService = inject(ImageStorageService);
   private readonly supabase = inject(SupabaseService).getClient();
   private readonly authService = inject(AuthService);
+  private readonly partyService = inject(PartyService);
 
   // === UTILS ===
   private isReservationActive(res: IReservation): boolean {
@@ -76,6 +78,16 @@ export class ReservationService {
         },
       }
     );
+  }
+
+  getReservationsForTeams(teamIds: string[]): Observable<IReservation[]> {
+    return this.backend
+      .getAll<IReservation>('reservations', 'date', 'asc', {
+        filters: {
+          team_id: { value: teamIds, operator: FilterOperator.IN }, // Filtrujemy po team_id
+        },
+      })
+      .pipe(map((reservations) => reservations));
   }
 
   getReservationsForGm(gmId: string, date: string): Observable<IReservation[]> {
@@ -308,18 +320,41 @@ export class ReservationService {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
 
-    return this.getMyReservations().pipe(
-      map((reservations) =>
-        reservations.some((r) => {
-          const resDate = new Date(r.date);
-          return (
-            this.isReservationActive(r) &&
-            [Rooms.Asgard, Rooms.Alfheim].includes(r.roomName) &&
-            resDate >= monday &&
-            resDate <= sunday
+    return this.partyService.getUserParties(user.id).pipe(
+      switchMap((parties) => {
+        const teamIds = parties.map((party) => party.id);
+
+        if (teamIds.length === 0) return of(false);
+
+        return this.backend
+          .getAll<IReservation>('reservations', 'date', 'asc', {
+            filters: {
+              team_id: { operator: FilterOperator.IN, value: teamIds },
+              room_name: {
+                operator: FilterOperator.IN,
+                value: [Rooms.Asgard, Rooms.Alfheim],
+              },
+              date: {
+                operator: FilterOperator.GTE,
+                value: monday.toISOString().split('T')[0],
+              },
+            },
+          })
+          .pipe(
+            map((reservations) =>
+              reservations.some((r) => {
+                const resDate = new Date(r.date);
+                console.log(this.isReservationActive(r));
+
+                return (
+                  this.isReservationActive(r) &&
+                  resDate >= monday &&
+                  resDate <= sunday
+                );
+              })
+            )
           );
-        })
-      )
+      })
     );
   }
 

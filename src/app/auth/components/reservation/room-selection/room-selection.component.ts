@@ -35,11 +35,31 @@ export class RoomSelectionComponent {
   readonly reservationsMap = signal(new Map<string, IReservation[]>());
   userParties = signal<IParty[]>([]);
 
+  isMemberClubBlocked = false;
+
   constructor() {
     this.loadUserParties();
     effect(() => {
       const room = this.selectedRoom();
       if (!room) return;
+
+      const role = this.auth.userCoworkerRole();
+
+      if (
+        [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
+        role === CoworkerRoles.Member
+      ) {
+        this.reservationService
+          .checkIfMemberHasReservationThisWeekInClubRooms()
+          .subscribe((result) => {
+            console.log('isMemberClubBlocked result:', result);
+            this.isMemberClubBlocked = result;
+          });
+      } else {
+        console.log(room);
+        this.isMemberClubBlocked = false;
+        console.log(this.isMemberClubBlocked);
+      }
 
       const start = startOfMonth(new Date());
       const end = endOfMonth(new Date());
@@ -90,33 +110,28 @@ export class RoomSelectionComponent {
       : of(false)
   );
 
-  readonly isMemberClubBlocked = rxComputed(
-    [this.selectedRoom, this.auth.userCoworkerRole],
-    (room, role) =>
-      [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
-      role === CoworkerRoles.Member
-        ? this.reservationService.checkIfMemberHasReservationThisWeekInClubRooms()
-        : of(false)
-  );
+  readonly isSelectionDisabled = computed(() => {
+    const room = this.selectedRoom();
+    const isClubRoom = [Rooms.Asgard, Rooms.Alfheim].includes(room);
+    const isMember = this.auth.userCoworkerRole() === CoworkerRoles.Member;
 
-  readonly isSelectionDisabled = computed(
-    () =>
+    return (
       this.isGoldenBlocked() ||
-      this.isMemberClubBlocked() ||
-      !this.selectedPartyId()
-  );
+      (isClubRoom && isMember && !this.selectedPartyId())
+    );
+  });
 
   readonly requiresClubConfirmation = computed(() =>
     [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom())
   );
 
-readonly canProceed = computed(
-  () =>
-    !this.isSelectionDisabled() &&
-    !!this.selectedDate() &&
-    // (!!this.selectedPartyId() || !this.requiresClubConfirmation()) &&
-    (!this.requiresClubConfirmation() || (this.confirmedTeam() && this.selectedPartyId()))
-);
+  readonly canProceed = computed(
+    () =>
+      !this.isSelectionDisabled() &&
+      !!this.selectedDate() &&
+      (!this.requiresClubConfirmation() ||
+        (this.confirmedTeam() && this.selectedPartyId()))
+  );
 
   readonly rooms = computed(() => {
     const isReceptionMode = this.store.isReceptionMode();
@@ -192,29 +207,30 @@ readonly canProceed = computed(
   private loadUserParties(): void {
     const userId = this.auth.user()?.id;
     if (userId) {
-      this.partyService.getUserTeams(userId).subscribe((parties) => {
-        
+      this.partyService.getUserParties(userId).subscribe((parties) => {
         this.userParties.set(parties);
         console.log(this.userParties());
       });
     }
   }
 
-selectParty(partyId: string) {
-  this.store.selectedPartyId.set(partyId);
-  this.store.confirmedParty.set(!!partyId);
-}
+  selectParty(partyId: string) {
+    this.store.selectedPartyId.set(partyId);
+    this.store.confirmedParty.set(!!partyId);
+  }
 
-getSelectedPartyName(): string | null {
-  const selectedPartyId = this.store.selectedPartyId();
-  const selectedParty = this.userParties().find(party => party.id === selectedPartyId);
-  return selectedParty ? selectedParty.name : null;
-}
+  getSelectedPartyName(): string | null {
+    const selectedPartyId = this.store.selectedPartyId();
+    const selectedParty = this.userParties().find(
+      (party) => party.id === selectedPartyId
+    );
+    return selectedParty ? selectedParty.name : null;
+  }
 
-removeSelectedParty() {
-  this.store.selectedPartyId.set(null); // Usuwamy wybraną drużynę z store
-  this.store.confirmedParty.set(false); // Resetujemy potwierdzenie drużyny
-}
+  removeSelectedParty() {
+    this.store.selectedPartyId.set(null);
+    this.store.confirmedParty.set(false);
+  }
 
   onClubCheckboxChange(event: Event) {
     const input = event.target as HTMLInputElement;

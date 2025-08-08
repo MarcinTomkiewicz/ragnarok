@@ -21,7 +21,9 @@ import {
   ReservationStatus,
   ReservationStatusDisplay,
 } from '../../../../core/interfaces/i-reservation';
+import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ReservationListComponent } from '../../../common/reservation-list/reservation-list.component';
+import { PartyService } from '../../../core/services/party/party.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
@@ -33,8 +35,10 @@ import { ReservationService } from '../../../core/services/reservation/reservati
 export class MyReservationsComponent {
   // === DI ===
   private readonly reservationService = inject(ReservationService);
-  private readonly modal = inject(NgbModal);
+  private readonly partyService = inject(PartyService);
   private readonly toastService = inject(ToastService);
+  private readonly auth = inject(AuthService);
+  private readonly modal = inject(NgbModal);
 
   // === Toast templates ===
   readonly cancelSuccessToast =
@@ -136,9 +140,18 @@ export class MyReservationsComponent {
   }
 
   private loadReservations(): void {
-    this.reservationService.getMyReservations().subscribe((res) => {
-      this.reservationsSignal.set(res ?? []);
-    });
+    const userId = this.auth.user()?.id;
+    if (userId) {
+      this.partyService.getUserParties(userId).subscribe((parties) => {
+        const teamIds = parties.map((party) => party.id);
+
+        this.reservationService
+          .getReservationsForTeams(teamIds)
+          .subscribe((res) => {
+            this.reservationsSignal.set(res ?? []);
+          });
+      });
+    }
   }
 
   onManage(reservation: IReservation): void {

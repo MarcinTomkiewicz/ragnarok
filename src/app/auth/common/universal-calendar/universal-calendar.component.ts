@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
+  computed,
+  effect,
   input,
   output,
   signal,
-  computed,
-  effect,
 } from '@angular/core';
 import {
   addDays,
@@ -36,6 +36,7 @@ export class UniversalCalendarComponent {
   readonly selectionDisabled = input<boolean>(false);
   readonly room = input<Rooms | null>(null);
   readonly editMode = input<boolean>(false);
+  readonly isMemberClubBlocked = input<boolean>(false);
 
   // === Outputs ===
   readonly dateSelected = output<string | null>();
@@ -87,19 +88,19 @@ export class UniversalCalendarComponent {
   readonly canGoPrev = computed(() => this.currentMonth() > this.maxMonth);
   readonly canGoNext = computed(() => this.currentMonth() < this.maxMonth);
 
-readonly hourlyAvailabilityMap = computed(() => {
-  const availability = new Map<string, boolean[]>();
-  const mapFn = this.mapDailyToHourlyAvailability();
+  readonly hourlyAvailabilityMap = computed(() => {
+    const availability = new Map<string, boolean[]>();
+    const mapFn = this.mapDailyToHourlyAvailability();
 
-  for (const date of this.visibleDays()) {
-    const key = format(date, 'yyyy-MM-dd');
-    const items = this.dailyDataMap().get(key) ?? [];
-    const blocks = mapFn?.(items) ?? [];
-    availability.set(key, blocks);
-  }
+    for (const date of this.visibleDays()) {
+      const key = format(date, 'yyyy-MM-dd');
+      const items = this.dailyDataMap().get(key) ?? [];
+      const blocks = mapFn?.(items) ?? [];
+      availability.set(key, blocks);
+    }
 
-  return availability;
-});
+    return availability;
+  });
 
   getHourlyAvailability(date: Date): boolean[] {
     const key = format(date, 'yyyy-MM-dd');
@@ -137,11 +138,29 @@ readonly hourlyAvailabilityMap = computed(() => {
     return isSameMonth(date, base);
   }
 
-  isReserved(date: Date): boolean {
+  readonly blockedDatesForThisWeek = computed(() => {
+    if (this.isMemberClubBlocked()) {
+      const today = new Date();
+      const start = startOfWeek(today, { weekStartsOn: 1 });
+      const end = endOfWeek(today, { weekStartsOn: 1 });
+      const blockedDates: string[] = [];
+
+      let currentDate = start;
+      while (currentDate <= end) {
+        blockedDates.push(format(currentDate, 'yyyy-MM-dd'));
+        currentDate = addDays(currentDate, 1);
+      }
+      return blockedDates;
+    }
+    return [];
+  });
+
+  readonly isReserved = (date: Date): boolean => {
     const key = format(date, 'yyyy-MM-dd');
     const hourly = this.hourlyAvailabilityMap().get(key);
-    return hourly?.every((slot) => slot) ?? false;
-  }
+    const isBlockedDay = this.blockedDatesForThisWeek().includes(key);
+    return isBlockedDay || (hourly?.every((slot) => slot) ?? false);
+  };
 
   canShowHours(date: Date): boolean {
     return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());

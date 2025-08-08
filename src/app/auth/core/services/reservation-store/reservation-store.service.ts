@@ -47,8 +47,11 @@ export class ReservationStoreService {
       const externalPhone = sessionStorage.getItem('externalPhone');
       if (externalPhone) this.externalPhone.set(externalPhone);
 
-      const externalIsClubMember = sessionStorage.getItem('externalIsClubMember');
-      if (externalIsClubMember) this.externalIsClubMember.set(JSON.parse(externalIsClubMember));
+      const externalIsClubMember = sessionStorage.getItem(
+        'externalIsClubMember'
+      );
+      if (externalIsClubMember)
+        this.externalIsClubMember.set(JSON.parse(externalIsClubMember));
 
       const selectedPartyId = sessionStorage.getItem('selectedPartyId');
       if (selectedPartyId) this.selectedPartyId.set(selectedPartyId);
@@ -60,24 +63,29 @@ export class ReservationStoreService {
     if (this.platformService.isBrowser) {
       sessionStorage.setItem('selectedRoom', this.selectedRoom() ?? '');
       sessionStorage.setItem('selectedDate', this.selectedDate() ?? '');
-      sessionStorage.setItem('selectedStartTime', this.selectedStartTime() ?? '');
-      sessionStorage.setItem('selectedDuration', (this.selectedDuration() ?? 0).toString());
+      sessionStorage.setItem(
+        'selectedStartTime',
+        this.selectedStartTime() ?? ''
+      );
+      sessionStorage.setItem(
+        'selectedDuration',
+        (this.selectedDuration() ?? 0).toString()
+      );
       sessionStorage.setItem('selectedGm', this.selectedGm() ?? '');
       sessionStorage.setItem('needsGm', JSON.stringify(this.needsGm()));
       sessionStorage.setItem('externalName', this.externalName() ?? '');
       sessionStorage.setItem('externalPhone', this.externalPhone() ?? '');
-      sessionStorage.setItem('externalIsClubMember', JSON.stringify(this.externalIsClubMember()));
+      sessionStorage.setItem(
+        'externalIsClubMember',
+        JSON.stringify(this.externalIsClubMember())
+      );
       sessionStorage.setItem('selectedPartyId', this.selectedPartyId() ?? '');
     }
-  }
+  };
 
   readonly isExternalInfoValid = computed(() => {
     const phone = this.externalPhone();
-    return (
-      this.externalName() !== null &&
-      phone !== null &&
-      phone.length === 9
-    );
+    return this.externalName() !== null && phone !== null && phone.length === 9;
   });
 
   readonly isDateValid = computed(

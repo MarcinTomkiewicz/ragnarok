@@ -13,14 +13,20 @@
     }
   </div>
 
-  @if (requiresClubConfirmation() && !store.confirmedParty()) {
+  @if (isGoldenBlocked()) {
+  <div class="alert alert-warning">
+    Masz już aktywną rezerwację. Nie możesz dokonać kolejnej.
+  </div>
+  } @if (isMemberClubBlocked) {
+  <div class="alert alert-warning">
+    W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
+    Alfheim). Możesz zarezerwować inną salę.
+  </div>
+  } @if (requiresClubConfirmation() && !store.confirmedParty()) {
   <div class="alert alert-warning">
     Aby zarezerwować salę klubową, musisz wybrać drużynę.
   </div>
-  }
-
-  <!-- Dropdown drużyn dla sal klubowych -->
-@if (requiresClubConfirmation()) {
+  } @if (requiresClubConfirmation()) {
   <div ngbDropdown class="category-dropdown">
     <button
       type="button"
@@ -32,38 +38,27 @@
     </button>
     <div ngbDropdownMenu aria-labelledby="PartyDropdown">
       @for (party of userParties(); track $index) {
-        <button ngbDropdownItem (click)="selectParty(party.id)">
-          {{ party.name }}
-        </button>
+      <button ngbDropdownItem (click)="selectParty(party.id)">
+        {{ party.name }}
+      </button>
       }
     </div>
   </div>
 
-  <!-- Wyświetlanie aktualnie wybranej drużyny -->
   @if (selectedPartyId()) {
-    <div class="flex-row-align-center">
-      <span class="me-2">Aktualnie wybrana drużyna: {{ getSelectedPartyName() }}</span>
-      <button
-        type="button"
-        class="btn btn-danger btn-close-x"
-        (click)="removeSelectedParty()"
-      >
-        x
-      </button>
-    </div>
-  }
-}
-  
-  @if (isGoldenBlocked()) {
-  <div class="alert alert-warning">
-    Masz już aktywną rezerwację. Nie możesz dokonać kolejnej.
+  <div class="flex-row-align-center">
+    <span class="me-2"
+      >Aktualnie wybrana drużyna: {{ getSelectedPartyName() }}</span
+    >
+    <button
+      type="button"
+      class="btn btn-danger btn-close-x"
+      (click)="removeSelectedParty()"
+    >
+      x
+    </button>
   </div>
-  } @if (isMemberClubBlocked()) {
-  <div class="alert alert-warning">
-    W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
-    Alfheim). Możesz zarezerwować inną salę.
-  </div>
-  }
+  } }
 
   <app-universal-calendar
     [dailyDataMap]="reservationsMap()"
@@ -71,6 +66,7 @@
     [selectedDate]="selectedDate()"
     [selectionDisabled]="isSelectionDisabled()"
     [room]="selectedRoom()"
+    [isMemberClubBlocked]="isMemberClubBlocked"
     (dateSelected)="selectDate($event)"
     (monthChanged)="onMonthChanged($event)"
   ></app-universal-calendar>

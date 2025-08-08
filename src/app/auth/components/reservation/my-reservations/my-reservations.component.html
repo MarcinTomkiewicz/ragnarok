@@ -2,21 +2,20 @@
   <div class="container">
     <h2 class="section-title">Moje Rezerwacje</h2>
 
-    @let filtered = filteredReservations(); @if (filtered) {
-      @if (filtered.length > 0) {
-        <app-reservation-list
-          [reservations]="filtered"
-          [showCancelButton]="true"
-          [showManagePlaceholder]="true"
-          [showUserDetails]="false"
-          [showDetailsButton]="false"
-          (cancel)="onManage($event)"
-        />
-      } @else {
-        <p>Brak rezerwacji.</p>
-      }
+    @let filtered = filteredReservations(); @if (filtered) { @if
+    (filtered.length > 0) {
+    <app-reservation-list
+      [reservations]="filtered"
+      [showCancelButton]="true"
+      [showManagePlaceholder]="true"
+      [showUserDetails]="false"
+      [showDetailsButton]="false"
+      (cancel)="onManage($event)"
+    />
     } @else {
-      <p>Ładowanie rezerwacji...</p>
+    <p>Brak rezerwacji.</p>
+    } } @else {
+    <p>Ładowanie rezerwacji...</p>
     }
   </div>
 
