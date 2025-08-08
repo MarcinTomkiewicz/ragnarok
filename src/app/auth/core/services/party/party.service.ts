@@ -51,6 +51,25 @@ export class PartyService {
     return this.backend.getById<IUser>('users', ownerId);
   }
 
+  getUserTeams(userId: string): Observable<IParty[]> {
+    return forkJoin([
+      this.backend.getAll<IParty>('parties', 'name', 'asc', {
+        filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+      this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+        filters: { userId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+    ]).pipe(
+      map(([ownedTeams, memberTeams]) => {
+        const memberTeamIds = memberTeams.map((member) => member.teamId);
+        return [
+          ...ownedTeams,
+          ...ownedTeams.filter((team) => memberTeamIds.includes(team.id)),
+        ];
+      })
+    );
+  }
+
   createOrUpdateParty(
     team: IParty,
     systems: string[],

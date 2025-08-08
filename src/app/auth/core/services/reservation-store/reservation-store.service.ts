@@ -13,7 +13,9 @@ export class ReservationStoreService {
   readonly selectedGm = signal<string | null>(null);
   readonly gmFirstName = signal<string | null>(null);
   readonly selectedSystemId = signal<string | null>(null);
-  readonly confirmedTeam = signal(false);
+  readonly confirmedParty = signal(false);
+  readonly selectedPartyId = signal<string | null>(null);
+
   readonly isReceptionMode = signal(false);
   readonly externalName = signal<string | null>(null);
   readonly externalPhone = signal<string | null>(null);
@@ -47,10 +49,12 @@ export class ReservationStoreService {
 
       const externalIsClubMember = sessionStorage.getItem('externalIsClubMember');
       if (externalIsClubMember) this.externalIsClubMember.set(JSON.parse(externalIsClubMember));
+
+      const selectedPartyId = sessionStorage.getItem('selectedPartyId');
+      if (selectedPartyId) this.selectedPartyId.set(selectedPartyId);
     }
   }
 
-  // Zamiast subskrybowania do sygnałów, zapisujemy je bezpośrednio w metodzie
   // Zapis do sessionStorage w metodzie, po każdej zmianie sygnału
   readonly saveToStorage = () => {
     if (this.platformService.isBrowser) {
@@ -63,6 +67,7 @@ export class ReservationStoreService {
       sessionStorage.setItem('externalName', this.externalName() ?? '');
       sessionStorage.setItem('externalPhone', this.externalPhone() ?? '');
       sessionStorage.setItem('externalIsClubMember', JSON.stringify(this.externalIsClubMember()));
+      sessionStorage.setItem('selectedPartyId', this.selectedPartyId() ?? '');
     }
   }
 

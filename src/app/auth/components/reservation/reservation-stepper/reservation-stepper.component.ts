@@ -83,7 +83,7 @@ export class ReservationStepperComponent {
       case 1: {
         const room = this.store.selectedRoom();
         const isClubOnlyRoom = room === 'Asgard' || room === 'Alfheim';
-        const hasClubConfirmed = this.store.confirmedTeam();
+        const hasClubConfirmed = this.store.confirmedParty();
         return (
           !!room &&
           !!this.store.selectedDate() &&
@@ -162,7 +162,7 @@ export class ReservationStepperComponent {
       needsGm: this.store.needsGm(),
       gmId: this.store.selectedGm(),
       systemId: this.store.selectedSystemId(),
-      confirmedTeam: this.store.confirmedTeam(),
+      confirmedTeam: this.store.confirmedParty(),
       external_name: this.store.isReceptionMode()
         ? this.store.externalName()
         : null,
