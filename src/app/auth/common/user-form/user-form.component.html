@@ -1,4 +1,4 @@
-<div [formGroup]="form()">
+<div [formGroup]="form()" class="user-data-form">
   @if (showEmail()) { @if (!disabledEmail()) {
   <div class="form-group">
     <label for="email" class="text-start">E-mail</label>
@@ -12,7 +12,7 @@
   } @else {
   <div class="form-group">
     <label class="text-start">E-mail</label>
-    <p class="m-0">{{ form().get("email")?.value }}</p>
+    <p class="m-0 text-start">{{ form().get("email")?.value }}</p>
   </div>
   } } @if (showPassword()) {
   <div class="form-group">
@@ -47,16 +47,14 @@
     />
   </div>
 
-  <!-- [checked]="confirmedTeam()"
-  (change)="onClubCheckboxChange($event)" -->
-  <div class="form-check mt-0 mb-3 align-self-start">
+  <div class="form-check mt-3 mb-2">
     <input
-      class="form-check-input"
+      class="form-check-input text-start"
       type="checkbox"
       id="useNickname"
       formControlName="useNickname"
     />
-    <label class="form-check-label" for="useNickname">
+    <label class="form-check-label text-start" for="useNickname">
       Używaj pseudonimu zamiast imienia
     </label>
   </div>

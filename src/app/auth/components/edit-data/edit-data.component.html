@@ -1,24 +1,26 @@
-<div class="edit-data-panel">
-  <h3 class="panel-title">Edytuj dane</h3>
+<div class="gm-profile-panel">
+  <div class="container">
+    <h3 class="section-title">Edytuj dane</h3>
 
-  <form [formGroup]="form" (ngSubmit)="save()" class="user-form">
-    <app-user-form
-      [form]="form"
-      [showEmail]="true"
-      [disabledEmail]="true"
-      [showPassword]="false"
-    />
+    <form [formGroup]="form" (ngSubmit)="save()" class="w-100">
+      <app-user-form
+        [form]="form"
+        [showEmail]="true"
+        [disabledEmail]="true"
+        [showPassword]="false"
+      />
 
-    <button
-      type="submit"
-      class="btn btn-primary mt-3 mx-auto d-block"
-      [disabled]="form.invalid"
-    >
-      Zapisz zmiany
-    </button>
-  </form>
+      <button
+        type="submit"
+        class="btn btn-primary mt-3 mx-auto d-block"
+        [disabled]="form.invalid"
+      >
+        Zapisz zmiany
+      </button>
+    </form>
 
-  <ng-template #editedSuccessfully>
-    <strong>Sukces!</strong> Twoje dane zostały zaktualizowane.
-  </ng-template>
+    <ng-template #editedSuccessfully>
+      <strong>Sukces!</strong> Twoje dane zostały zaktualizowane.
+    </ng-template>
+  </div>
 </div>

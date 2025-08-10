@@ -1,6 +1,6 @@
 <div class="form-panel gm-profile-panel full-height">
   <div class="container">
-    <h1 class="panel-title">Mój profil Mistrza Gry</h1>
+    <h1 class="section-title">Mój profil Mistrza Gry</h1>
 
     <form [formGroup]="form" (ngSubmit)="submitProfile()" class="w-100">
       @if (imagePreview()){
@@ -15,7 +15,7 @@
       }
 
       <div class="form-group">
-        <label for="quote">Cytat przewodni (opcjonalny, max. 160 znaków)</label>
+        <label class="text-start" for="quote">Cytat przewodni (opcjonalny, max. 160 znaków)</label>
         <input
           id="quote"
           type="text"
@@ -26,7 +26,7 @@
       </div>
 
       <div class="form-group">
-        <label for="experience">Doświadczenie</label>
+        <label class="text-start" for="experience">Doświadczenie</label>
         <textarea
           id="experience"
           rows="5"
@@ -36,7 +36,7 @@
       </div>
 
       <div class="form-group">
-        <label>Systemy RPG (maks. 5)</label>
+        <label class="text-start">Systemy RPG (maks. 5)</label>
         <div class="d-flex flex-column gap-2" formArrayName="systems">
           @for (i of systemControls.controls; let index = $index; track index) {
           <select class="form-select" [formControlName]="index">
@@ -55,7 +55,7 @@
       </div>
 
       <div class="form-group">
-        <label>Styl prowadzenia (maks. 3)</label>
+        <label class="text-start">Styl prowadzenia (maks. 3)</label>
         <div class="d-flex flex-wrap gap-2">
           @for (tag of gmStyleTagValues; track tag) {
           <div
@@ -76,7 +76,7 @@
               (change)="toggleStyleTag(tag)"
               id="style_{{ tag }}"
             />
-            <label class="style-checkbox-label" [for]="'style_' + tag">
+            <label class="text-start"class="style-checkbox-label" [for]="'style_' + tag">
               {{ GmStyleTagLabels[tag] }}
             </label>
           </div>
@@ -86,7 +86,7 @@
       </div>
 
       <div class="form-group">
-        <label for="image">Zmień zdjęcie (opcjonalnie)</label>
+        <label class="text-start" for="image">Zmień zdjęcie (opcjonalnie)</label>
         <input
           type="file"
           id="image"
