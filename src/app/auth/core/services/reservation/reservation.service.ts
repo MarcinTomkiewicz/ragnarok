@@ -207,8 +207,12 @@ export class ReservationService {
         },
       })
       .pipe(
-        switchMap((gms) =>
-          forkJoin(
+        switchMap((gms) => {
+          if (gms.length === 0) {
+            return of([]);
+          }
+
+          return forkJoin(
             gms.map((gm) =>
               forkJoin([
                 this.checkGmAvailability(gm.userId, date, startHour, duration),
@@ -219,15 +223,50 @@ export class ReservationService {
                   duration
                 ),
               ]).pipe(
-                map(([isBusy, isAvailable]) =>
-                  !isBusy && isAvailable ? gm : null
-                )
+                map(([isBusy, isAvailable]) => {
+                  return !isBusy && isAvailable ? gm : null;
+                })
               )
             )
-          ).pipe(map((result) => result.filter((g): g is IGmData => !!g)))
-        )
+          ).pipe(
+            map((result) => result.filter((g) => g !== null))
+          );
+        }),
+        switchMap((gms) => of(gms.length > 0 ? gms : []))
       );
   }
+
+  getAllGmsForTimeRange(
+  date: string,
+  startHour: number,
+  duration: number
+): Observable<IGmData[]> {
+  return this.backend
+    .getAll<IGmData>('v_gm_basic_info') // Pobierz wszystkich dostępnych Mistrzów Gry
+    .pipe(
+      switchMap((gms) => {
+        if (gms.length === 0) {
+          return of([]); // Zwróć pustą tablicę, jeśli nie ma żadnych Mistrzów Gry
+        }
+
+        return forkJoin(
+          gms.map((gm) =>
+            forkJoin([
+              this.checkGmAvailability(gm.userId, date, startHour, duration), // Sprawdzamy dostępność Mistrza Gry
+              this.isAvailableDuringTimeRange(gm.userId, date, startHour, duration), // Sprawdzamy dostępność w wybranym przedziale czasowym
+            ]).pipe(
+              map(([isBusy, isAvailable]) => {
+                // Jeśli MG nie jest zajęty i dostępny w wybranym przedziale czasowym, zwróć go
+                return !isBusy && isAvailable ? gm : null;
+              })
+            )
+          )
+        ).pipe(
+          map((result) => result.filter((g) => g !== null)) // Filtrujemy null (niedostępnych MG)
+        );
+      })
+    );
+}
 
   getAllSystems(): Observable<IRPGSystem[]> {
     return this.backend.getAll<IRPGSystem>('systems', 'name');

@@ -21,15 +21,17 @@ export class GmService {
     if (gmId) return this.backend.getById<IGmData>('users', gmId).pipe(
       map((gmData) => {
         if (gmData) {
-          // Możesz wykonać dodatkową logikę, jeśli potrzebujesz
+          
           return gmData;
         }
-        return null; // Zwróć null, jeśli GM nie został znaleziony
+        return null;
       })
     );
-    return of(null); // Zwróć null, jeśli GM nie został znaleziony
+    return of(null);
   }
 
+
+  
   getAvailability(
     gmId: string,
     dates: string[]

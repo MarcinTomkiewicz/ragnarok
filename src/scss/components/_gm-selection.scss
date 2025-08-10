@@ -6,15 +6,59 @@
   @include section-wrapper;
   @include flex-wrapper(column, start, center);
 
-  .gm-grid {
-    @include flex-wrapper(row, center, center);
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin: 2rem 0;
+  .mg-grid {
+    @include mg-grid(4);
+    justify-content: center;
+    justify-items: center;
+
+    &.one-gm {
+     @include mg-grid(1);
+    }
+
+    &.two-gms {
+      @include mg-grid(2);
+      max-width: 542px;
+    }
 
     .btn.active {
       background-color: $primary-color;
       color: $button-text-color;
+    }
+  }
+
+  .mg-card {
+    border: 1px solid $border-color;
+    box-shadow: $card-shadow;
+    transition: transform $transition-fast, box-shadow $transition-fast;
+    cursor: pointer;
+    min-height: 365px;
+    width: 255px;
+
+    .mg-avatar {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1rem;
+      border-radius: 50%;
+      overflow: hidden;
+      object-fit: cover;
+    }
+
+    .mg-name {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .mg-role {
+      font-size: 0.9rem;
+      color: $secondary-text-color;
+      margin-bottom: 1rem;
+    }
+
+    .mg-description {
+      font-size: 1rem;
+      color: $secondary-text-color;
+      min-height: 3rem;
     }
   }
 }
