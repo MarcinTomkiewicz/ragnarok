@@ -18,6 +18,8 @@
 
     <div class="card-details">
       <p>{{ reservation().roomName }} – {{ reservation().durationHours }}h</p>
+      @if (partyName) {
+      <p>Drużyna: {{ partyName  }}</p> }
       @if (showUserDetails()) { @if (user()) {
       <p>{{ userDisplayName }}</p>
       <p>{{ user()!.phoneNumber }}</p>

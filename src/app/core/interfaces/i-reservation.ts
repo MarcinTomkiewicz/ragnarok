@@ -29,3 +29,8 @@ export const ReservationStatusDisplay: Record<ReservationStatus, string> = {
   [ReservationStatus.Pending]: 'Oczekująca',
   [ReservationStatus.Cancelled]: 'Anulowana',
 };
+
+export interface IReservations {
+  individualReservations: IReservation[];
+  teamsWithReservations: { teamId: string; reservations: IReservation[] }[];
+}

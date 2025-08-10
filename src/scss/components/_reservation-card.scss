@@ -37,6 +37,8 @@
 
 .card-details {
   font-size: $font-size-sm;
+  justify-self: flex-start;
+  height: 4rem;
 
   p {
     margin: 0.25rem 0;

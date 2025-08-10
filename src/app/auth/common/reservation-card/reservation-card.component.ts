@@ -5,6 +5,7 @@ import { IUser } from '../../../core/interfaces/i-user';
 import { ReservationStatusDisplay } from '../../../core/interfaces/i-reservation';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { PartyService } from '../../core/services/party/party.service';
 
 @Component({
   selector: 'app-reservation-card',
@@ -15,6 +16,7 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 })
 export class ReservationCardComponent {
   private readonly auth = inject(AuthService)
+  private readonly party = inject(PartyService)
   reservation = input.required<IReservation>();
   user = input<IUser | null>(null);
 
@@ -23,9 +25,20 @@ export class ReservationCardComponent {
   showDetailsButton = input(false);
   showCancelButton = input(false);
 
+  partyName = ''
+
   manage = output<void>();
   showDetails = output<void>();
   cancel = output<void>();
+
+ngOnInit(): void {
+  const reservation = this.reservation();
+  if (!reservation.teamId) return;
+
+  this.party.getPartyById(reservation.teamId).subscribe(party => {
+    this.partyName = party ? party.name : '';
+  });
+}
 
   get userDisplayName(): string | undefined {
     return this.auth.userDisplayName(this.user());

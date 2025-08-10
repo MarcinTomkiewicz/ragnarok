@@ -1,5 +1,5 @@
 <div class="reservations-grid" [ngClass]="{ 'centered-reservation': reservations().length === 1 }">
-  @for (res of reservations(); track res.id) {
+  @for (res of reservations(); track $index) {
     <app-reservation-card
       [reservation]="res"
       [user]="null"
