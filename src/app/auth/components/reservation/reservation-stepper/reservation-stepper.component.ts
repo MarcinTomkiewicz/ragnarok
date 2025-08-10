@@ -190,6 +190,7 @@ export class ReservationStepperComponent {
           sessionStorage.removeItem('selectedDuration');
           sessionStorage.removeItem('selectedGm');
           sessionStorage.removeItem('needsGm');
+          sessionStorage.removeItem('selectedPartyId')
           sessionStorage.removeItem('externalName');
           sessionStorage.removeItem('externalPhone');
           sessionStorage.removeItem('externalIsClubMember');

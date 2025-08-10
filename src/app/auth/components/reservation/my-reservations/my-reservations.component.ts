@@ -154,7 +154,7 @@ export class MyReservationsComponent {
             switchMap((teamReservations) =>
               this.reservationService.getMyReservations().pipe(
                 map((userReservations) => [
-                  ...teamReservations,
+                  // ...teamReservations,
                   ...userReservations,
                 ])
               )

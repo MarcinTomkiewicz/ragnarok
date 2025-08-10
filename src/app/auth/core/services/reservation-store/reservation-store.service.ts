@@ -57,7 +57,6 @@ export class ReservationStoreService {
     }
   }
 
-  // Zapis do sessionStorage w metodzie, po każdej zmianie sygnału
   readonly saveToStorage = () => {
     if (this.platformService.isBrowser) {
       sessionStorage.setItem('selectedRoom', this.selectedRoom() ?? '');

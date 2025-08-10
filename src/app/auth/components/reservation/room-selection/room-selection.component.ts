@@ -160,10 +160,12 @@ export class RoomSelectionComponent {
     this.store.selectedDuration.set(null);
     this.store.selectedGm.set(null);
     this.store.selectedSystemId.set(null);
+    this.store.selectedPartyId.set(null);
     this.store.needsGm.set(false);
     this.store.confirmedParty.set(false);
     this.store.confirmedParty.set(false);
     this.store.selectedPartyId.set(null);
+
   }
 
   selectDate(dateStr: string | null) {
