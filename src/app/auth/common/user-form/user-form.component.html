@@ -1,88 +1,153 @@
-<div [formGroup]="form()" class="user-form">
-  @if (showEmail()) {
-    @if (!disabledEmail()) {
-      <div class="form-group w-75">
-        <label for="email">E-mail</label>
-        <input
-          id="email"
-          type="email"
-          class="form-control"
-          formControlName="email"
-        />
-      </div>
-    } @else {
-      <div class="form-group w-75">
-        <label>E-mail</label>
-        <p class="m-0">{{ form().get('email')?.value }}</p>
-      </div>
-    }
-  } 
-
-  @if (showPassword()) {
-    <div class="form-group w-75">
-      <label for="password">Hasło</label>
-      <input
-        id="password"
-        type="password"
-        class="form-control"
-        formControlName="password"
-      />
-    </div>
+<div [formGroup]="form()">
+  @if (showEmail()) { @if (!disabledEmail()) {
+  <div class="form-group">
+    <label for="email" class="text-start">E-mail</label>
+    <input
+      id="email"
+      type="email"
+      class="form-control"
+      formControlName="email"
+    />
+  </div>
+  } @else {
+  <div class="form-group">
+    <label class="text-start">E-mail</label>
+    <p class="m-0">{{ form().get("email")?.value }}</p>
+  </div>
+  } } @if (showPassword()) {
+  <div class="form-group">
+    <label for="password" class="text-start">Hasło</label>
+    <input
+      id="password"
+      type="password"
+      class="form-control"
+      formControlName="password"
+    />
+  </div>
   }
 
   <!-- Pozostałe pola -->
-  <div class="form-group w-75">
-    <label for="firstName">Imię</label>
-    <input id="firstName" type="text" class="form-control" formControlName="firstName" />
+  <div class="form-group">
+    <label for="firstName" class="text-start">Imię</label>
+    <input
+      id="firstName"
+      type="text"
+      class="form-control"
+      formControlName="firstName"
+    />
   </div>
 
-  <div class="form-group w-75">
-    <label for="phoneNumber">Telefon</label>
-    <input id="phoneNumber" type="text" class="form-control" formControlName="phoneNumber" />
+  <div class="form-group">
+    <label for="nickname" class="text-start">Pseudonim</label>
+    <input
+      id="nickname"
+      type="text"
+      class="form-control"
+      formControlName="nickname"
+    />
   </div>
 
-  <div class="form-group w-75">
-    <label for="city">Miasto</label>
+  <!-- [checked]="confirmedTeam()"
+  (change)="onClubCheckboxChange($event)" -->
+  <div class="form-check mt-0 mb-3 align-self-start">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="useNickname"
+      formControlName="useNickname"
+    />
+    <label class="form-check-label" for="useNickname">
+      Używaj pseudonimu zamiast imienia
+    </label>
+  </div>
+
+  <div class="form-group">
+    <label for="phoneNumber" class="text-start">Telefon</label>
+    <input
+      id="phoneNumber"
+      type="text"
+      class="form-control"
+      formControlName="phoneNumber"
+    />
+  </div>
+
+  <div class="form-group">
+    <label for="city" class="text-start">Miasto</label>
     <input id="city" type="text" class="form-control" formControlName="city" />
   </div>
 
-  <div class="form-group w-75">
-    <label for="street">Ulica</label>
-    <input id="street" type="text" class="form-control" formControlName="street" />
+  <div class="form-group">
+    <label for="street" class="text-start">Ulica</label>
+    <input
+      id="street"
+      type="text"
+      class="form-control"
+      formControlName="street"
+    />
   </div>
 
-  <div class="form-group w-75">
-    <label for="houseNumber">Numer domu</label>
-    <input id="houseNumber" type="text" class="form-control" formControlName="houseNumber" />
+  <div class="form-group">
+    <label for="houseNumber" class="text-start">Numer domu</label>
+    <input
+      id="houseNumber"
+      type="text"
+      class="form-control"
+      formControlName="houseNumber"
+    />
   </div>
 
-  <div class="form-group w-75">
-    <label for="apartmentNumber">Numer mieszkania</label>
-    <input id="apartmentNumber" type="text" class="form-control" formControlName="apartmentNumber" />
+  <div class="form-group">
+    <label for="apartmentNumber" class="text-start">Numer mieszkania</label>
+    <input
+      id="apartmentNumber"
+      type="text"
+      class="form-control"
+      formControlName="apartmentNumber"
+    />
   </div>
 
-  <div class="form-group w-75">
-    <label for="postalCode">Kod pocztowy</label>
-    <input id="postalCode" type="text" class="form-control" formControlName="postalCode" />
+  <div class="form-group">
+    <label for="postalCode" class="text-start">Kod pocztowy</label>
+    <input
+      id="postalCode"
+      type="text"
+      class="form-control"
+      formControlName="postalCode"
+    />
   </div>
 
-  <div class="form-group w-75">
-    <label for="age">Wiek</label>
+  <div class="form-group">
+    <label for="age" class="text-start">Wiek</label>
     <input id="age" type="number" class="form-control" formControlName="age" />
   </div>
 
-  <div class="form-group w-75">
-    <label for="shortDescription">Krótki opis</label>
-    <textarea id="shortDescription" class="form-control" formControlName="shortDescription" rows="2"></textarea>
+  <div class="form-group">
+    <label for="shortDescription" class="text-start">Krótki opis</label>
+    <textarea
+      id="shortDescription"
+      class="form-control"
+      formControlName="shortDescription"
+      rows="2"
+    ></textarea>
   </div>
 
-  <div class="form-group w-75">
-    <label for="longDescription">Dłuższy opis</label>
-    <textarea id="longDescription" class="form-control" formControlName="longDescription" rows="3"></textarea>
+  <div class="form-group">
+    <label for="longDescription" class="text-start">Dłuższy opis</label>
+    <textarea
+      id="longDescription"
+      class="form-control"
+      formControlName="longDescription"
+      rows="3"
+    ></textarea>
   </div>
 
-  <div class="form-group w-75">
-    <label for="extendedDescription">Rozszerzony opis</label>
-    <textarea id="extendedDescription" class="form-control" formControlName="extendedDescription" rows="4"></textarea>
+  <div class="form-group">
+    <label for="extendedDescription" class="text-start">Rozszerzony opis</label>
+    <textarea
+      id="extendedDescription"
+      class="form-control"
+      formControlName="extendedDescription"
+      rows="4"
+    ></textarea>
   </div>
 </div>

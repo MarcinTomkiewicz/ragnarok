@@ -50,7 +50,7 @@ export class EditDataComponent {
   save(): void {
     if (this.form.invalid) return;
 
-    const cleaned = sanitizeUserData(this.form.getRawValue());
+    const cleaned = sanitizeUserData(this.form.getRawValue());    
     
     this.loader.show();
     this.auth.updateUserData(cleaned).subscribe({

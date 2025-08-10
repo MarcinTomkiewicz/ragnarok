@@ -17,6 +17,8 @@ import { ToastService } from '../../../core/services/toast/toast.service';
 import { sanitizeUserData } from '../../../core/utils/sanitize-user';
 import { UserFormComponent } from '../../common/user-form/user-form.component';
 import { createUserForm } from '../../core/factories/user-form.factory';
+import { SystemRole } from '../../../core/enums/systemRole';
+import { CoworkerRoles } from '../../../core/enums/roles';
 
 @Component({
   selector: 'app-registration',
@@ -48,8 +50,8 @@ export class RegistrationComponent {
 
   const rawUser: Partial<IUser> = {
     email: email!,
-    role: 'user',
-    coworker: 'user',
+    role: SystemRole.User,
+    coworker: CoworkerRoles.User,
     ...rest,
   };
 
@@ -60,7 +62,6 @@ export class RegistrationComponent {
       this.loaderService.hide();
 
       if (error) {
-        // Obsługujemy błąd rejestracji
         this.errorMessage = error;
         return;
       }
@@ -74,7 +75,6 @@ export class RegistrationComponent {
         });
       }
 
-      // this.router.navigate(['/']);
     },
         error: (errorMessage) => {
           this.loaderService.hide();

@@ -110,16 +110,15 @@ register(
     map(({ data, error }) => {
 
       if (error) {
-        const errorMessage = getSupabaseErrorMessage(error.code); // Przekształcamy kod błędu w komunikat
-        throw new Error(errorMessage); // Rzucamy błąd
+        const errorMessage = getSupabaseErrorMessage(error.code);
+        throw new Error(errorMessage);
       }
 
-      // Jeśli brak błędu, zwracamy null (sukces)
       return null;
     }),
     catchError((err) => {
-      console.error('Register error:', err); // Logowanie błędu
-      throw err; // Ponownie rzucamy błąd, aby dotarł do komponentu
+      console.error('Register error:', err);
+      throw err;
     })
   );
 }

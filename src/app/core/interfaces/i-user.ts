@@ -19,4 +19,6 @@ export interface IUser {
   extendedDescription?: string;
   createdAt?: string;
   updatedAt?: string;
+  nickname?: string;
+  useNickname?: boolean;
 }

@@ -7,6 +7,8 @@ export function createUserForm(
 ): FormGroup {
   const controls: Record<string, any> = {
     firstName: [''],
+    nickname: [''],
+    useNickname: [false],
     phoneNumber: [''],
     city: [''],
     street: [''],

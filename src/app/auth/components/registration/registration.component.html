@@ -1,38 +1,41 @@
 <div class="registration-panel">
-  <h3 class="panel-title">Zarejestruj się</h3>
+  <div class="container">
+    <h3 class="panel-title">Zarejestruj się</h3>
 
-  <form
-    [formGroup]="registerForm"
-    (ngSubmit)="register()"
-    class="registration-form"
-  >
-    <app-user-form
-      [form]="registerForm"
-      [showEmail]="true"
-      [showPassword]="true"
-
-    />
-
-    <button
-      type="submit"
-      class="btn btn-primary mt-3"
-      [disabled]="registerForm.invalid"
+    <form
+      [formGroup]="registerForm"
+      (ngSubmit)="register()"
+      class="registration-form"
     >
-      Zarejestruj
-    </button>
+      <app-user-form
+        [form]="registerForm"
+        [showEmail]="true"
+        [showPassword]="true"
+      />
 
-    <ng-template #registrationSuccessToast>
-      <div class="toast-body d-flex flex-column align-items-center">
-        <span><strong>Sukces!</strong> Rejestracja zakończona pomyślnie.</span>
-        <span>Sprawdź swoją skrzynkę e-mail, aby aktywować konto.</span>
-      </div>
-    </ng-template>
-        <ng-template #registrationErrorToast>
-      <strong>Błąd!</strong> {{ errorMessage }}
-    </ng-template>
-  </form>
+      <button
+        type="submit"
+        class="btn btn-primary mt-3"
+        [disabled]="registerForm.invalid"
+      >
+        Zarejestruj
+      </button>
 
-  @if (errorMessage) {
-  <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
-  }
+      <ng-template #registrationSuccessToast>
+        <div class="toast-body d-flex flex-column align-items-center">
+          <span
+            ><strong>Sukces!</strong> Rejestracja zakończona pomyślnie.</span
+          >
+          <span>Sprawdź swoją skrzynkę e-mail, aby aktywować konto.</span>
+        </div>
+      </ng-template>
+      <ng-template #registrationErrorToast>
+        <strong>Błąd!</strong> {{ errorMessage }}
+      </ng-template>
+    </form>
+
+    @if (errorMessage) {
+    <p class="text-danger text-center mt-3">{{ errorMessage }}</p>
+    }
+  </div>
 </div>

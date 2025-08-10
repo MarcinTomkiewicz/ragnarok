@@ -11,8 +11,5 @@ export function sanitizeUserData(
     }
   }
 
-  // Wymagane pola, które muszą być jawnie ustawione
-  if (!sanitized.role) sanitized.role = 'user';
-
   return sanitized;
 }

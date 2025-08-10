@@ -1,0 +1,11 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "layouts/form-panel";
+
+.registration-panel {
+  @include section-wrapper;
+}
+
+.registration-form {
+  @include flex-wrapper(column, flex-start, center)
+}
