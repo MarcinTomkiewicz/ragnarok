@@ -38,10 +38,10 @@
       <span class="label">MG potrzebny:</span>
       <span class="value">{{ store.needsGm() ? "Tak" : "Nie" }}</span>
     </div>
-    @if (store.needsGm() && store.gmFirstName()) {
+    @if (store.needsGm() && store.selectedGm()) {
     <div class="summary-row">
       <span class="label">Wybrany MG:</span>
-      <span class="value">{{ store.gmFirstName() }}</span>
+      <span class="value">{{ gmDisplayName }}</span>
     </div>
     }
   </div>

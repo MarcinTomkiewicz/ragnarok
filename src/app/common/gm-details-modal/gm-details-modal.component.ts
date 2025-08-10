@@ -6,6 +6,7 @@ import { IRPGSystem } from '../../core/interfaces/i-rpg-system';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { LinkifyPipe } from '../../core/pipes/linkify.pipe';
 import { GmStyleTagLabels } from '../../core/enums/gm-styles';
+import { GmService } from '../../auth/core/services/gm/gm.service';
 
 @Component({
   selector: 'app-gm-details-modal',
@@ -18,6 +19,7 @@ export class GmDetailsModalComponent implements OnInit {
   @Input() gm!: IGmData;
 
   private readonly backend = inject(BackendService);
+  private readonly gmService = inject(GmService);
   private readonly modal = inject(NgbActiveModal);
 
   readonly systems = signal<IRPGSystem[]>([]);
@@ -60,5 +62,9 @@ export class GmDetailsModalComponent implements OnInit {
 
   close(): void {
     this.modal.close();
+  }
+
+  gmDisplayName(gm: IGmData): string {
+    return this.gmService.gmDisplayName(gm);
   }
 }

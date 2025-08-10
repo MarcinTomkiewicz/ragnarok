@@ -21,7 +21,7 @@
         [class.active]="gm.userId === store.selectedGm()"
         (click)="selectGm(gm.userId)"
       >
-        {{ gm.firstName }}
+        {{ gmDisplayName(gm) }}
       </button>
       }
     </div>

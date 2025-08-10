@@ -15,6 +15,7 @@ export interface IGmData {
   gmProfileId: string;
   userId: string;
   firstName: string;
+  nickname: string;
   age: number | null;
   shortDescription: string | null;
   experience: string | null;
@@ -23,6 +24,7 @@ export interface IGmData {
   styleTags: GmStyleTag[];
   systemId: string;
   gmProfileCreatedAt: Date;
+  useNickname: boolean;
 }
 
 export interface IAvailabilitySlot {

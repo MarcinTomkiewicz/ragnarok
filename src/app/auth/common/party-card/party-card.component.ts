@@ -52,6 +52,10 @@ export class PartyCardComponent {
   showDetails = output<void>();
   editParty = output<void>();
 
+  get ownerDisplayName(): string {
+    return this.auth.userDisplayName(this.owner());
+  }
+
   ngOnInit(): void {
     forkJoin([
       this.PartyService.getPartyMembers(this.team().id),
@@ -77,7 +81,7 @@ export class PartyCardComponent {
   }
 
   canEditParty(): boolean {
-    return this.user()?.id === this.owner()?.id
+    return this.user()?.id === this.owner()?.id;
   }
 
   trackTag(index: number, tag: string): string {

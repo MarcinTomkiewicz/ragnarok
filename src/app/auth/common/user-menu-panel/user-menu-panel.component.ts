@@ -25,7 +25,7 @@ export class UserMenuPanelComponent implements OnInit {
 
   ngOnInit(): void {
     const user = this.auth.user();
-    this.username = user?.firstName || null;
+    this.username = this.auth.userDisplayName(user);
 
     this.isGm = hasStrictCoworkerRole(user, CoworkerRoles.Gm);
     this.isMember = hasStrictCoworkerRole(user, CoworkerRoles.Member)

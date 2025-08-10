@@ -5,6 +5,7 @@ import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { GmService } from '../../../core/services/gm/gm.service';
 
 @Component({
   selector: 'app-gm-selection',
@@ -17,6 +18,7 @@ export class GmSelectionComponent {
   readonly store = inject(ReservationStoreService);
   private readonly fb = inject(FormBuilder);
   private readonly reservationService = inject(ReservationService);
+  private readonly gmService = inject(GmService)
 
   readonly systems = signal<IRPGSystem[]>([]);
   readonly gms = signal<IGmData[]>([]);
@@ -28,7 +30,7 @@ export class GmSelectionComponent {
   readonly canProceed = computed(() => {
     const gmId = this.store.selectedGm();
     const gm = this.gms().find((g) => g.userId === gmId);
-    return !!gmId && !!gm?.firstName && !!this.form.value.systemId;
+    return !!gmId && !!this.form.value.systemId;
   });
 
   constructor() {
@@ -53,7 +55,6 @@ export class GmSelectionComponent {
         } else {
           this.gms.set([]);
           this.store.selectedGm.set(null);
-          this.store.gmFirstName.set(null);
         }
       });
   }
@@ -65,7 +66,6 @@ export class GmSelectionComponent {
 
     this.gms.set([]);
     this.store.selectedGm.set(null);
-    this.store.gmFirstName.set(null);
 
     if (!date || !startTime || duration == null) {
       return;
@@ -81,10 +81,11 @@ export class GmSelectionComponent {
   }
 
   selectGm(gmId: string) {
-    const gm = this.gms().find((g) => g.userId === gmId);
+    // const gm = this.gms().find((g) => g.userId === gmId);
     this.store.selectedGm.set(gmId);
-    if (gm?.firstName) {
-      this.store.gmFirstName.set(gm.firstName);
-    }
+  }
+
+  gmDisplayName(gm: IGmData): string {
+    return this.gmService.gmDisplayName(gm);
   }
 }

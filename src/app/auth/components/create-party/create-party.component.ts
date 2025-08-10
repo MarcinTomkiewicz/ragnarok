@@ -232,7 +232,7 @@ export class CreatePartyComponent {
         );
       } else if (type === 'members') {
         this.filteredMembers = this.membersList().filter((member) =>
-          `${member.firstName} ${member.email}`
+          `${this.getUserDisplayName(member)} ${member.email}`
             .toLowerCase()
             .includes(term.toLowerCase())
         );
@@ -259,7 +259,6 @@ export class CreatePartyComponent {
         type === 'systems' ? this.systemControls : this.membersControls;
 
       selectedValues.forEach((id) => {
-        // Dodajemy nowego członka/system, jeżeli nie przekraczamy limitu 5
         if (controls.value.length < 5 && !controls.value.includes(id)) {
           controls.push(this.fb.control(id));
         }
@@ -267,7 +266,6 @@ export class CreatePartyComponent {
     }
   }
 
-  // Generic method to remove items from system or members
   removeItem(itemId: string, type: 'systems' | 'members'): void {
     const controls =
       type === 'systems' ? this.systemControls : this.membersControls;
@@ -277,7 +275,6 @@ export class CreatePartyComponent {
     }
   }
 
-  // Getters for FormArrays
   get systemControls(): FormArray {
     return this.teamForm.get('systems') as FormArray;
   }
@@ -289,16 +286,18 @@ export class CreatePartyComponent {
   getMemberNameById(memberId: string): string | undefined {
     if (!this.filteredMembers.length) return;
     const member = this.filteredMembers.find((m) => m.id === memberId);
-    return member ? `${member.firstName} ${member.email}` : '';
+    return member ? `${this.getUserDisplayName(member)} ${member.email}` : '';
   }
 
-  // Pobieranie nazwy systemu
   getSystemNameById(systemId: string): string | undefined {
     const system = this.filteredSystems.find((s) => s.id === systemId);
     return system?.name;
   }
 
-  // Submit form method
+  getUserDisplayName(user: IUser | null): string {
+    return this.auth.userDisplayName(user);
+  }
+
   onSubmit(): void {
     if (this.teamForm.valid) {
       const teamData = {
@@ -348,6 +347,10 @@ export class CreatePartyComponent {
     return Object.values(GmStyleTag) as GmStyleTag[];
   }
 
+  gmDisplayName(gm: IGmData): string {
+    return this.gmService.gmDisplayName(gm);
+  }
+
   isReceptionField(): boolean {
     if (!this.user) return false;
     return hasMinimumCoworkerRole(this.user(), CoworkerRoles.Reception);
@@ -369,6 +372,6 @@ export class CreatePartyComponent {
   }
 
   createButtonText(): string {
-    return this.editMode ? 'Zapisz zmiany' : 'Utwórz drużynę'
+    return this.editMode ? 'Zapisz zmiany' : 'Utwórz drużynę';
   }
 }

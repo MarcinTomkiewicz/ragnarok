@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h5 class="modal-title">{{ gm.firstName }}</h5>
+  <h5 class="modal-title">{{ gmDisplayName(gm) }}</h5>
   <button
     type="button"
     class="btn-close"
@@ -15,7 +15,7 @@
       <!-- Avatar -->
       <div class="card-dark avatar-card">
         <div class="gm-card-avatar">
-          <img [src]="gm.image" [alt]="gm.firstName" />
+          <img [src]="gm.image" [alt]="gmDisplayName(gm)" />
         </div>
       </div>
       <!-- Informacje -->

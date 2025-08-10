@@ -5,7 +5,7 @@
     <form [formGroup]="teamForm" (ngSubmit)="onSubmit()" class="w-100">
       <div class="form-group">
         <label class="text-start">Założyciel</label>
-        <div class="text-start font-size-medium">{{ user()?.firstName }}</div>
+        <div class="text-start font-size-medium">{{ getUserDisplayName(user()) }}</div>
       </div>
 
       <div class="form-group">
@@ -23,7 +23,7 @@
         <select id="gmSelect" formControlName="gmId" class="form-select">
           <option [ngValue]="null">Bez Mistrza Gry</option>
           @for (gm of gmsList(); track $index) {
-          <option [ngValue]="gm.userId">{{ gm.firstName }}</option>
+          <option [ngValue]="gm.userId">{{ gmDisplayName(gm) }}</option>
           }
         </select>
       </div>
@@ -61,7 +61,7 @@
               !membersControls.value.includes(member.id)
             "
           >
-            {{ member.firstName }} - {{ member.email }}
+            {{ getUserDisplayName(member) }} - {{ member.email }}
           </option>
           }
         </select>

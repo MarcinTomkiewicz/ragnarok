@@ -18,10 +18,10 @@
           <div class="mg-card" (click)="onCardClick(gm)">
             <img
               [src]="gm.image"
-              [alt]="gm.firstName"
+              [alt]="gmDisplayName(gm)"
               class="mg-avatar"
             />
-            <h3 class="mg-name">{{ gm.firstName }}</h3>
+            <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
             <p class="mg-role">{{ roleDisplay }}</p>
             <p class="mg-description truncate-three-lines">
               {{ gm.shortDescription }}

@@ -1,14 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { BackendService } from '../../../../core/services/backend/backend.service';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
-import { toSnakeCase } from '../../../../core/utils/type-mappers';
 import {
   IAvailabilitySlot,
-  IGmData,
-  IGmProfile,
+  IGmData
 } from '../../../../core/interfaces/i-gm-profile';
+import { BackendService } from '../../../../core/services/backend/backend.service';
+import { toSnakeCase } from '../../../../core/utils/type-mappers';
 
 @Injectable({ providedIn: 'root' })
 export class GmService {
@@ -16,6 +15,19 @@ export class GmService {
 
   getAllGms(): Observable<IGmData[]> {
     return this.backend.getAll<IGmData>('v_gm_basic_info');
+  }
+
+  getGmById(gmId: string | null): Observable<IGmData | null> {
+    if (gmId) return this.backend.getById<IGmData>('users', gmId).pipe(
+      map((gmData) => {
+        if (gmData) {
+          // Możesz wykonać dodatkową logikę, jeśli potrzebujesz
+          return gmData;
+        }
+        return null; // Zwróć null, jeśli GM nie został znaleziony
+      })
+    );
+    return of(null); // Zwróć null, jeśli GM nie został znaleziony
   }
 
   getAvailability(
@@ -115,4 +127,13 @@ export class GmService {
       map(() => {})
     );
   }
+
+  readonly gmDisplayName = (gm: IGmData | null): string => {
+    if (gm) {
+      return gm.useNickname
+        ? (gm.nickname as unknown as string)
+        : (gm.firstName as unknown as string);
+    }
+    return '';
+  };
 }

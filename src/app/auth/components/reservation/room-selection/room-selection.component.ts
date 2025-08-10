@@ -159,7 +159,6 @@ export class RoomSelectionComponent {
     this.store.selectedStartTime.set(null);
     this.store.selectedDuration.set(null);
     this.store.selectedGm.set(null);
-    this.store.gmFirstName.set(null);
     this.store.selectedSystemId.set(null);
     this.store.needsGm.set(false);
     this.store.confirmedParty.set(false);
@@ -178,7 +177,6 @@ export class RoomSelectionComponent {
     this.store.selectedStartTime.set(null);
     this.store.selectedDuration.set(null);
     this.store.selectedGm.set(null);
-    this.store.gmFirstName.set(null);
     this.store.selectedSystemId.set(null);
     this.store.needsGm.set(false);
   }

@@ -21,7 +21,6 @@ declare const google: any;
     NgbToastModule,
     NgbProgressbarModule,
     GoogleMapsModule,
-    NgOptimizedImage
   ],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],

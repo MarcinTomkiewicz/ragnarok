@@ -11,7 +11,6 @@ export class ReservationStoreService {
   readonly selectedDuration = signal<number | null>(null);
   readonly needsGm = signal(false);
   readonly selectedGm = signal<string | null>(null);
-  readonly gmFirstName = signal<string | null>(null);
   readonly selectedSystemId = signal<string | null>(null);
   readonly confirmedParty = signal(false);
   readonly selectedPartyId = signal<string | null>(null);

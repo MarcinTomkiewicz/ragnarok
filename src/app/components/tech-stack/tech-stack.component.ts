@@ -9,6 +9,7 @@ import { IGmData } from '../../core/interfaces/i-gm-profile';
 import { LoaderComponent } from '../../common/loader/loader.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { GmDetailsModalComponent } from '../../common/gm-details-modal/gm-details-modal.component';
+import { GmService } from '../../auth/core/services/gm/gm.service';
 
 @Component({
   selector: 'app-tech-stack',
@@ -22,6 +23,7 @@ export class TechStackComponent implements OnInit {
   private readonly loader = inject(LoaderService);
   private readonly platform = inject(PlatformService);
   private readonly seo = inject(SeoService);
+  private readonly gmService = inject(GmService);
   private readonly modal = inject(NgbModal);
 
   readonly gms = signal<IGmData[]>([]);
@@ -84,4 +86,9 @@ export class TechStackComponent implements OnInit {
     });
     modalRef.componentInstance.gm = gm;
   }
+
+  gmDisplayName(gm: IGmData): string {
+    return this.gmService.gmDisplayName(gm);
+  }
+
 }

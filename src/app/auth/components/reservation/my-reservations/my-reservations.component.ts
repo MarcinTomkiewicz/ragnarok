@@ -11,7 +11,7 @@ import {
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { isAfter, isToday } from 'date-fns';
 import { from } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
 import { ToastService } from '../../../../core/services/toast/toast.service';
@@ -142,13 +142,26 @@ export class MyReservationsComponent {
   private loadReservations(): void {
     const userId = this.auth.user()?.id;
     if (userId) {
+      // Pobierz rezerwacje drużynowe
       this.partyService.getUserParties(userId).subscribe((parties) => {
         const teamIds = parties.map((party) => party.id);
 
+        // Pobierz rezerwacje dla drużyn
         this.reservationService
           .getReservationsForTeams(teamIds)
-          .subscribe((res) => {
-            this.reservationsSignal.set(res ?? []);
+          .pipe(
+            // Pobierz również indywidualne rezerwacje
+            switchMap((teamReservations) =>
+              this.reservationService.getMyReservations().pipe(
+                map((userReservations) => [
+                  ...teamReservations,
+                  ...userReservations,
+                ])
+              )
+            )
+          )
+          .subscribe((allReservations) => {
+            this.reservationsSignal.set(allReservations ?? []);
           });
       });
     }

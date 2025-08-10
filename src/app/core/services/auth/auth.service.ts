@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { SystemRole } from '../../enums/systemRole';
 import { CoworkerRoles } from '../../enums/roles';
 import { getSupabaseErrorMessage } from '../../utils/supabase-error-handling';
+import { IGmData, IGmProfile } from '../../interfaces/i-gm-profile';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -93,35 +94,34 @@ export class AuthService {
     );
   }
 
-register(
-  email: string,
-  password: string,
-  userData: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>
-): Observable<string | null> {
-  return from(
-    this.supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData,
-      },
-    })
-  ).pipe(
-    map(({ data, error }) => {
+  register(
+    email: string,
+    password: string,
+    userData: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>
+  ): Observable<string | null> {
+    return from(
+      this.supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: userData,
+        },
+      })
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) {
+          const errorMessage = getSupabaseErrorMessage(error.code);
+          throw new Error(errorMessage);
+        }
 
-      if (error) {
-        const errorMessage = getSupabaseErrorMessage(error.code);
-        throw new Error(errorMessage);
-      }
-
-      return null;
-    }),
-    catchError((err) => {
-      console.error('Register error:', err);
-      throw err;
-    })
-  );
-}
+        return null;
+      }),
+      catchError((err) => {
+        console.error('Register error:', err);
+        throw err;
+      })
+    );
+  }
 
   updateUserData(data: Partial<IUser>): Observable<string | null> {
     const user = this.user();
@@ -169,4 +169,13 @@ register(
   readonly userCoworkerRole = computed<CoworkerRoles | null>(() => {
     return this._user()?.coworker ?? null;
   });
+
+  readonly userDisplayName = (user: IUser | null): string => {
+    if (user) {
+      return user.useNickname
+        ? (user.nickname as unknown as string)
+        : (user.firstName as unknown as string);
+    }
+    return '';
+  };
 }
