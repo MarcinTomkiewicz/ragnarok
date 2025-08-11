@@ -18,6 +18,7 @@ import {
   IPagination,
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
+import e from 'express';
 
 @Injectable({ providedIn: 'root' })
 export class PartyService {
@@ -319,22 +320,35 @@ export class PartyService {
       ();
   }
 
-  getPartiesByUser(userId: string): Observable<IParty[]> {
-    return forkJoin([
-      this.backend.getAll<IParty>('parties', 'name', 'asc', {
-        filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
-      }),
-      this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
-        filters: { userId: { operator: FilterOperator.EQ, value: userId } },
-      }),
-    ]).pipe(
-      map(([ownedTeams, memberTeams]) => {
-        const memberTeamIds = memberTeams.map((member) => member.teamId);
-        return [
-          ...ownedTeams,
-          ...ownedTeams.filter((team) => memberTeamIds.includes(team.id)),
-        ];
-      })
-    );
-  }
+getPartiesByUser(userId: string): Observable<IParty[]> {
+  return forkJoin([
+    this.backend.getAll<IParty>('parties', 'name', 'asc', {
+      filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
+    }),
+    this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+      filters: { userId: { operator: FilterOperator.EQ, value: userId } },
+    }),
+  ]).pipe(
+    switchMap(([ownedTeams, memberTeams]) => {
+      const memberTeamIds = memberTeams.map(m => m.teamId);
+
+      if (!memberTeamIds.length) {
+        return of(ownedTeams);
+      }
+
+      return this.backend.getAll<IParty>('parties', 'name', 'asc', {
+        filters: {
+          id: { operator: FilterOperator.IN, value: memberTeamIds },
+        },
+      }).pipe(
+        map(memberParties => {
+          const all = [...ownedTeams, ...memberParties];
+          const uniq = Array.from(new Map(all.map(p => [p.id, p])).values());
+          return uniq;
+        })
+      );
+    })
+  );
+}
+
 }
