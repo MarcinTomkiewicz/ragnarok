@@ -12,7 +12,7 @@
     justify-items: center;
 
     &.one-gm {
-     @include mg-grid(1);
+      @include mg-grid(1, false);
     }
 
     &.two-gms {

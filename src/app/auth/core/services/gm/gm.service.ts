@@ -1,6 +1,14 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, of, combineLatest } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, of, combineLatest, from } from 'rxjs';
+import {
+  concatMap,
+  defaultIfEmpty,
+  find,
+  first,
+  map,
+  switchMap,
+  take,
+} from 'rxjs/operators';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import {
   IAvailabilitySlot,
@@ -10,6 +18,8 @@ import { BackendService } from '../../../../core/services/backend/backend.servic
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
 import { ReservationService } from '../reservation/reservation.service';
 import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
+import { GmSlotsMode } from '../../../../core/enums/gm-slots-mode';
+import { filter } from 'compression';
 
 @Injectable({ providedIn: 'root' })
 export class GmService {
@@ -363,13 +373,42 @@ export class GmService {
     gmId: string,
     fromDate: string,
     duration: number,
-    mode: '+2d' | '+3d' | '+7d' | 'weekend'
+    mode: GmSlotsMode
   ): Observable<{ date: string; startHour: number; duration: number }[]> {
     const base = new Date(fromDate + 'T00:00:00');
     const iso = (dt: Date) => dt.toISOString().slice(0, 10);
 
+    if (mode === GmSlotsMode.next) {
+      type Range = { from: number; to: number };
+      type Hit = { date: string; free: Range[] };
+
+      const HORIZON_DAYS = 60;
+      const days: string[] = [];
+      for (let i = 1; i <= HORIZON_DAYS; i++) {
+        const t = new Date(base);
+        t.setDate(base.getDate() + i);
+        days.push(iso(t));
+      }
+
+      return from(days).pipe(
+        concatMap((date) =>
+          this.getGmFreeRanges(gmId, date).pipe(
+            map<Range[], Hit>((free) => ({ date, free }))
+          )
+        ),
+        find((hit) => hit.free.length > 0), // Hit | undefined
+        map((hit) => {
+          if (!hit) return [];
+          const starts = this.chunkFreeRangesToStarts(hit.free, duration);
+          return starts
+            .map((h) => ({ date: hit.date, startHour: h, duration }))
+            .slice(0, 8);
+        })
+      );
+    }
+
     let days: string[] = [];
-    if (mode === 'weekend') {
+    if (mode === GmSlotsMode.weekend) {
       const day = base.getDay();
       const sat = new Date(base);
       sat.setDate(base.getDate() + ((6 - (day || 7)) % 7));
@@ -377,7 +416,12 @@ export class GmService {
       sun.setDate(sat.getDate() + 1);
       days = [iso(sat), iso(sun)];
     } else {
-      const jump = mode === '+2d' ? 2 : mode === '+3d' ? 3 : 7;
+      const jump =
+        mode === GmSlotsMode.twoDays
+          ? 2
+          : mode === GmSlotsMode.threeDays
+          ? 3
+          : 7;
       for (let i = 1; i <= jump; i++) {
         const t = new Date(base);
         t.setDate(base.getDate() + i);

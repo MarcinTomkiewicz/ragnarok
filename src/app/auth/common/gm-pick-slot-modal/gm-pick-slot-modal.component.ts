@@ -5,11 +5,12 @@ import { Subject, of } from 'rxjs';
 import { startWith, switchMap } from 'rxjs/operators';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
 import { GmService } from '../../core/services/gm/gm.service';
+import { GmSlotsMode } from '../../../core/enums/gm-slots-mode';
 
 export interface ISuggestedSlot {
-  date: string;         // 'YYYY-MM-DD'
-  startHour: number;    // 17..22
-  duration: number;     // hours
+  date: string;
+  startHour: number;
+  duration: number;
 }
 
 @Component({
@@ -36,8 +37,7 @@ export interface ISuggestedSlot {
             <div class="fw-semibold mb-2">{{ group.label }}</div>
             <div class="d-flex flex-wrap gap-2">
               @for(slot of group.slots; track slot.date + '-' + slot.startHour){
-                <button class="btn btn-outline"
-                        (click)="onPick(slot)">
+                <button class="btn btn-outline" (click)="onPick(slot)">
                   {{ labelForSlot(slot) }}
                 </button>
               }
@@ -49,12 +49,13 @@ export interface ISuggestedSlot {
       <p class="text-muted">Brak propozycji w najbliższych dniach.</p>
     }
 
-    <div class="d-flex align-items-center gap-2 mt-2">
+    <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
       <span class="me-2">Więcej terminów:</span>
-      <button class="btn btn-outline btn-sm" (click)="extend.next('+2d')">+2 dni</button>
-      <button class="btn btn-outline btn-sm" (click)="extend.next('+3d')">+3 dni</button>
-      <button class="btn btn-outline btn-sm" (click)="extend.next('+7d')">+7 dni</button>
-      <button class="btn btn-outline btn-sm" (click)="extend.next('weekend')">Następny weekend</button>
+      <button class="btn btn-outline btn-sm" (click)="extend.next(GmSlotsMode.next)">Najbliższy wolny dzień</button>
+      <button class="btn btn-outline btn-sm" (click)="extend.next(GmSlotsMode.twoDays)">+2 dni</button>
+      <button class="btn btn-outline btn-sm" (click)="extend.next(GmSlotsMode.threeDays)">+3 dni</button>
+      <button class="btn btn-outline btn-sm" (click)="extend.next(GmSlotsMode.sevenDays)">+7 dni</button>
+      <button class="btn btn-outline btn-sm" (click)="extend.next(GmSlotsMode.weekend)">Następny weekend</button>
     </div>
 
     @if(extended().length){
@@ -80,19 +81,17 @@ export interface ISuggestedSlot {
 export class GmPickSlotModalComponent {
   private readonly gmService = inject(GmService);
 
-  // INPUTS (klasycznie, bez signals ze względu na NgbModal)
   @Input() gm!: IGmData;
-  @Input() preferredDate!: string;     // 'YYYY-MM-DD'
-  @Input() preferredStartHour!: number; // 17..22
-  @Input() duration!: number;          // hours
-  @Input() allowPrevDay = false;       // D-1 tylko jeśli ≥48h
+  @Input() preferredDate!: string;
+  @Input() preferredStartHour!: number;
+  @Input() duration!: number;
+  @Input() allowPrevDay = false;
 
-  // OUTPUTS
   @Output() confirm = new EventEmitter<ISuggestedSlot>();
   @Output() close = new EventEmitter<void>();
 
-  // rozszerzanie horyzontu
-  readonly extend = new Subject<'+2d' | '+3d' | '+7d' | 'weekend'>();
+  readonly GmSlotsMode = GmSlotsMode;
+  readonly extend = new Subject<GmSlotsMode>();
 
   private readonly quickGroups$ = this.gmService
     .suggestSlotsAround(this.preferredDate, this.preferredStartHour, this.duration, this.gm?.userId ?? null, this.allowPrevDay)
@@ -106,7 +105,6 @@ export class GmPickSlotModalComponent {
     startWith([] as ISuggestedSlot[])
   );
 
-  // mostek do templatki
   readonly quickGroups = toSignal(this.quickGroups$, { initialValue: [] as { label: string; slots: ISuggestedSlot[] }[] });
   readonly extended = toSignal(this.extended$, { initialValue: [] as ISuggestedSlot[] });
 
@@ -116,7 +114,6 @@ export class GmPickSlotModalComponent {
   }
 
   labelForSlot(s: ISuggestedSlot): string {
-    // 'DD.MM • HH:00–HH:00'
     const d = new Date(s.date + 'T00:00:00');
     const dd = String(d.getDate()).padStart(2,'0');
     const mm = String(d.getMonth()+1).padStart(2,'0');
