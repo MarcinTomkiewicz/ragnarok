@@ -17,9 +17,6 @@ import { SupabaseService } from '../../../../core/services/supabase/supabase.ser
 import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 import { PartyService } from '../party/party.service';
 
-// TODO: Refactor this service to separate GM logic from reservation logic
-// This service should focus on reservation management, while GM-related logic should be handled in a dedicated service.
-
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
   private readonly backend = inject(BackendService);
@@ -28,7 +25,6 @@ export class ReservationService {
   private readonly authService = inject(AuthService);
   private readonly partyService = inject(PartyService);
 
-  // === UTILS ===
   private isReservationActive(res: IReservation): boolean {
     return (
       res.status === ReservationStatus.Confirmed ||
@@ -50,8 +46,6 @@ export class ReservationService {
   private getActiveReservations(reservations: IReservation[]): IReservation[] {
     return reservations.filter(this.isReservationActive);
   }
-
-  // === PUBLIC METHODS ===
 
   getMyReservations(): Observable<IReservation[]> {
     const user = this.authService.user();
@@ -84,7 +78,7 @@ export class ReservationService {
     return this.backend
       .getAll<IReservation>('reservations', 'date', 'asc', {
         filters: {
-          team_id: { value: teamIds, operator: FilterOperator.IN }, // Filtrujemy po team_id
+          team_id: { value: teamIds, operator: FilterOperator.IN },
         },
       })
       .pipe(map((reservations) => reservations));
@@ -105,27 +99,6 @@ export class ReservationService {
           },
         },
       }
-    );
-  }
-
-  checkGmAvailability(
-    gmId: string,
-    date: string,
-    newStartHour: number,
-    newDuration: number
-  ): Observable<boolean> {
-    return this.getReservationsForGm(gmId, date).pipe(
-      map((reservations) =>
-        reservations.some((res) => {
-          const existingStart = parseInt(res.startTime.split(':')[0], 10);
-          return this.isTimeOverlapping(
-            newStartHour,
-            newDuration,
-            existingStart,
-            res.durationHours
-          );
-        })
-      )
     );
   }
 
@@ -171,124 +144,8 @@ export class ReservationService {
     );
   }
 
-  private isAvailableDuringTimeRange(
-    gmId: string,
-    date: string,
-    startHour: number,
-    duration: number
-  ): Observable<boolean> {
-    const endHour = startHour + duration;
-
-    return this.backend
-      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', {
-        gmId,
-        date,
-      })
-      .pipe(
-        map((availability) => {
-          if (!availability) return false;
-          return (
-            availability.fromHour <= startHour && availability.toHour >= endHour
-          );
-        })
-      );
-  }
-
-  getAvailableGmsForSystem(
-    systemId: string,
-    date: string,
-    startHour: number,
-    duration: number
-  ): Observable<IGmData[]> {
-    return this.backend
-      .getAll<IGmData>('v_gm_specialties_with_user', undefined, 'asc', {
-        filters: {
-          systemId: { value: systemId, operator: FilterOperator.EQ },
-        },
-      })
-      .pipe(
-        switchMap((gms) => {
-          if (gms.length === 0) {
-            return of([]);
-          }
-
-          return forkJoin(
-            gms.map((gm) =>
-              forkJoin([
-                this.checkGmAvailability(gm.userId, date, startHour, duration),
-                this.isAvailableDuringTimeRange(
-                  gm.userId,
-                  date,
-                  startHour,
-                  duration
-                ),
-              ]).pipe(
-                map(([isBusy, isAvailable]) => {
-                  return !isBusy && isAvailable ? gm : null;
-                })
-              )
-            )
-          ).pipe(map((result) => result.filter((g) => g !== null)));
-        }),
-        switchMap((gms) => of(gms.length > 0 ? gms : []))
-      );
-  }
-
-  getAllGmsForTimeRange(
-    date: string,
-    startHour: number,
-    duration: number
-  ): Observable<IGmData[]> {
-    return this.backend
-      .getAll<IGmData>('v_gm_basic_info') // Pobierz wszystkich dostępnych Mistrzów Gry
-      .pipe(
-        switchMap((gms) => {
-          if (gms.length === 0) {
-            return of([]); // Zwróć pustą tablicę, jeśli nie ma żadnych Mistrzów Gry
-          }
-
-          return forkJoin(
-            gms.map((gm) =>
-              forkJoin([
-                this.checkGmAvailability(gm.userId, date, startHour, duration), // Sprawdzamy dostępność Mistrza Gry
-                this.isAvailableDuringTimeRange(
-                  gm.userId,
-                  date,
-                  startHour,
-                  duration
-                ), // Sprawdzamy dostępność w wybranym przedziale czasowym
-              ]).pipe(
-                map(([isBusy, isAvailable]) => {
-                  // Jeśli MG nie jest zajęty i dostępny w wybranym przedziale czasowym, zwróć go
-                  return !isBusy && isAvailable ? gm : null;
-                })
-              )
-            )
-          ).pipe(
-            map((result) => result.filter((g) => g !== null)) // Filtrujemy null (niedostępnych MG)
-          );
-        })
-      );
-  }
-
   getAllSystems(): Observable<IRPGSystem[]> {
     return this.backend.getAll<IRPGSystem>('systems', 'name');
-  }
-
-  getGmCandidatesForSystem(systemId: string): Observable<IUser[]> {
-    return from(
-      this.supabase
-        .from('gm_specialties')
-        .select('gm_id, gm_profiles!inner(*), users(*)')
-        .eq('system_id', systemId)
-    ).pipe(
-      map(({ data, error }) => {
-        if (error) throw new Error(error.message);
-        return (data || [])
-          .map((row) => toCamelCase<IUser>(row.users))
-          .filter(Boolean);
-      })
-    );
   }
 
   checkIfUserHasConflictingReservation(
@@ -365,7 +222,6 @@ export class ReservationService {
     return this.partyService.getUserParties(user.id).pipe(
       switchMap((parties) => {
         const teamIds = parties.map((party) => party.id);
-
         if (teamIds.length === 0) return of(false);
 
         return this.backend
@@ -386,7 +242,6 @@ export class ReservationService {
             map((reservations) =>
               reservations.some((r) => {
                 const resDate = new Date(r.date);
-
                 return (
                   this.isReservationActive(r) &&
                   resDate >= monday &&
@@ -415,184 +270,6 @@ export class ReservationService {
         const withImage = this.imageService.processImage(data);
         return toCamelCase(withImage);
       })
-    );
-  }
-
-  private chunkFreeRangesToSlots(
-    ranges: { from: number; to: number }[],
-    duration: number
-  ): number[] {
-    // zwróć listę startHour dla slotów mieszczących się w dowolnym wolnym przedziale
-    // skok co 1h (prosto i przewidywalnie)
-    const starts: number[] = [];
-    for (const r of ranges) {
-      for (let h = r.from; h + duration <= r.to; h++) {
-        starts.push(h);
-      }
-    }
-    return starts;
-  }
-
-  // odejmij zajęte rezerwacje od okna dostępności MG
-  getGmFreeRanges(
-    gmId: string,
-    date: string
-  ): Observable<{ from: number; to: number }[]> {
-    return this.backend
-      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', {
-        gmId,
-        date,
-      })
-      .pipe(
-        switchMap((avail) => {
-          if (!avail) return of([] as { from: number; to: number }[]);
-          return this.getReservationsForGm(gmId, date).pipe(
-            map((reservations) => {
-              const busy = this.getActiveReservations(reservations)
-                .map((r) => {
-                  const s = parseInt(r.startTime.split(':')[0], 10);
-                  return { from: s, to: s + r.durationHours };
-                })
-                .sort((a, b) => a.from - b.from);
-
-              // start z pełnym oknem
-              const free: { from: number; to: number }[] = [];
-              let cursor = avail.fromHour;
-
-              for (const b of busy) {
-                if (b.from > cursor) {
-                  free.push({
-                    from: cursor,
-                    to: Math.min(b.from, avail.toHour),
-                  });
-                }
-                cursor = Math.max(cursor, b.to);
-                if (cursor >= avail.toHour) break;
-              }
-              if (cursor < avail.toHour)
-                free.push({ from: cursor, to: avail.toHour });
-
-              // ogranicz do sensownych godzin lokalu (17–23) jeżeli trzeba
-              const OPEN = 17,
-                CLOSE = 23;
-              const clamped = free
-                .map((r) => ({
-                  from: Math.max(r.from, OPEN),
-                  to: Math.min(r.to, CLOSE),
-                }))
-                .filter((r) => r.to > r.from);
-
-              return clamped;
-            })
-          );
-        })
-      );
-  }
-
-  // grupa propozycji dla D-1/D/D+1; emituj tablicę {label, slots[]} (sloty = {date,startHour,duration})
-  suggestSlotsAround(
-    preferredDate: string,
-    preferredStartHour: number,
-    duration: number,
-    gmId: string | null,
-    allowPrevDay: boolean
-  ): Observable<
-    {
-      label: string;
-      slots: { date: string; startHour: number; duration: number }[];
-    }[]
-  > {
-    if (!gmId) return of([]);
-    const d = new Date(preferredDate + 'T00:00:00');
-    const iso = (dt: Date) => dt.toISOString().slice(0, 10);
-    const d0 = new Date(d);
-    const dM1 = new Date(d);
-    dM1.setDate(d.getDate() - 1);
-    const dP1 = new Date(d);
-    dP1.setDate(d.getDate() + 1);
-
-    const candidates: { label: string; date: string }[] = [];
-    if (allowPrevDay)
-      candidates.push({ label: 'Dzień wcześniej', date: iso(dM1) });
-    candidates.push({ label: 'Wybrany dzień', date: iso(d0) });
-    candidates.push({ label: 'Dzień później', date: iso(dP1) });
-
-    return combineLatest(
-      candidates.map((c) =>
-        this.getGmFreeRanges(gmId, c.date).pipe(
-          map((free) => {
-            const starts = this.chunkFreeRangesToSlots(free, duration);
-            // preferuj okolice preferredStartHour: sort po odległości
-            const sorted = starts.sort(
-              (a, b) =>
-                Math.abs(a - preferredStartHour) -
-                Math.abs(b - preferredStartHour)
-            );
-            const slots = sorted.map((h) => ({
-              date: c.date,
-              startHour: h,
-              duration,
-            }));
-            return { label: c.label, slots };
-          })
-        )
-      )
-    ).pipe(map((groups) => groups.filter((g) => g.slots.length > 0)));
-  }
-
-  // „Pokaż więcej terminów”: +2d, +3d, +7d, weekend (zwraca do 8 slotów, posortowane rosnąco)
-  moreSlots(
-    gmId: string,
-    fromDate: string,
-    duration: number,
-    mode: '+2d' | '+3d' | '+7d' | 'weekend'
-  ): Observable<{ date: string; startHour: number; duration: number }[]> {
-    const base = new Date(fromDate + 'T00:00:00');
-    const iso = (dt: Date) => dt.toISOString().slice(0, 10);
-
-    let days: string[] = [];
-    if (mode === 'weekend') {
-      // najbliższa sobota + niedziela
-      const day = base.getDay(); // 0 niedz, 6 sob
-      const sat = new Date(base);
-      sat.setDate(base.getDate() + ((6 - (day || 7)) % 7));
-      const sun = new Date(sat);
-      sun.setDate(sat.getDate() + 1);
-      days = [iso(sat), iso(sun)];
-    } else {
-      const jump = mode === '+2d' ? 2 : mode === '+3d' ? 3 : 7;
-      for (let i = 1; i <= jump; i++) {
-        const t = new Date(base);
-        t.setDate(base.getDate() + i);
-        days.push(iso(t));
-      }
-    }
-
-    return combineLatest(
-      days.map((date) =>
-        this.getGmFreeRanges(gmId, date).pipe(
-          map((free) =>
-            this.chunkFreeRangesToSlots(free, duration).map((h) => ({
-              date,
-              startHour: h,
-              duration,
-            }))
-          )
-        )
-      )
-    ).pipe(map((arr) => arr.flat().slice(0, 8)));
-  }
-
-  getGmsForSystem(systemId: string): Observable<IGmData[]> {
-    return this.backend.getAll<IGmData>(
-      'v_gm_specialties_with_user',
-      undefined,
-      'asc',
-      {
-        filters: {
-          systemId: { value: systemId, operator: FilterOperator.EQ },
-        },
-      }
     );
   }
 }

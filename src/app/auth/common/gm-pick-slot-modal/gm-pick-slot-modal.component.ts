@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Observable, Subject, combineLatest, of } from 'rxjs';
-import { map, startWith, switchMap } from 'rxjs/operators';
-import { ReservationService } from '../../core/services/reservation/reservation.service';
+import { Subject, of } from 'rxjs';
+import { startWith, switchMap } from 'rxjs/operators';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
+import { GmService } from '../../core/services/gm/gm.service';
 
 export interface ISuggestedSlot {
   date: string;         // 'YYYY-MM-DD'
@@ -78,7 +78,7 @@ export interface ISuggestedSlot {
   `,
 })
 export class GmPickSlotModalComponent {
-  private readonly reservationService = inject(ReservationService);
+  private readonly gmService = inject(GmService);
 
   // INPUTS (klasycznie, bez signals ze względu na NgbModal)
   @Input() gm!: IGmData;
@@ -94,13 +94,13 @@ export class GmPickSlotModalComponent {
   // rozszerzanie horyzontu
   readonly extend = new Subject<'+2d' | '+3d' | '+7d' | 'weekend'>();
 
-  private readonly quickGroups$ = this.reservationService
+  private readonly quickGroups$ = this.gmService
     .suggestSlotsAround(this.preferredDate, this.preferredStartHour, this.duration, this.gm?.userId ?? null, this.allowPrevDay)
     .pipe(startWith([] as { label: string; slots: ISuggestedSlot[] }[]));
 
   private readonly extended$ = this.extend.pipe(
     switchMap(mode => this.gm?.userId
-      ? this.reservationService.moreSlots(this.gm.userId, this.preferredDate, this.duration, mode)
+      ? this.gmService.moreSlots(this.gm.userId, this.preferredDate, this.duration, mode)
       : of([] as ISuggestedSlot[])
     ),
     startWith([] as ISuggestedSlot[])

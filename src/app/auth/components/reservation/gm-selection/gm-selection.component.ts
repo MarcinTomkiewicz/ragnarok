@@ -52,7 +52,7 @@ export class GmSelectionComponent {
   private readonly gmsForSystemAll$ = this.systemId$.pipe(
     switchMap((systemId) =>
       systemId
-        ? this.reservationService.getGmsForSystem(systemId)
+        ? this.gmService.getGmsForSystem(systemId)
         : of([] as IGmData[])
     )
   );
@@ -127,7 +127,7 @@ export class GmSelectionComponent {
     if (!date || !startTime || duration == null) return;
 
     const startHour = parseInt(startTime, 10);
-    this.reservationService
+    this.gmService
       .getAvailableGmsForSystem(systemId, date, startHour, duration)
       .subscribe((gms) => {
         this.gms.set(gms);
@@ -144,7 +144,7 @@ export class GmSelectionComponent {
     if (!date || !startTime || duration == null) return;
 
     const startHour = parseInt(startTime, 10);
-    this.reservationService
+    this.gmService
       .getAllGmsForTimeRange(date, startHour, duration)
       .subscribe((gms) => this.allAvailableGms.set(gms));
   }
