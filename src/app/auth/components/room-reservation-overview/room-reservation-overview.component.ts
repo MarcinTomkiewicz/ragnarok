@@ -18,11 +18,7 @@ import { SystemRole } from '../../../core/enums/systemRole';
 @Component({
   selector: 'app-room-reservation-overview',
   standalone: true,
-  imports: [
-    CommonModule,
-    UniversalCalendarComponent,
-    ReservationListComponent,
-  ],
+  imports: [CommonModule, UniversalCalendarComponent, ReservationListComponent],
   templateUrl: './room-reservation-overview.component.html',
 })
 export class RoomReservationsOverviewComponent {
@@ -39,7 +35,9 @@ export class RoomReservationsOverviewComponent {
   readonly visibleDates = computed(() => {
     const start = startOfMonth(new Date());
     const end = endOfMonth(new Date());
-    return eachDayOfInterval({ start, end }).map((d) => format(d, 'yyyy-MM-dd'));
+    return eachDayOfInterval({ start, end }).map((d) =>
+      format(d, 'yyyy-MM-dd')
+    );
   });
 
   constructor() {
@@ -119,8 +117,10 @@ export class RoomReservationsOverviewComponent {
     return blocks;
   };
 
-  readonly isPrivilegedUser = computed(() =>
-    [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(this.auth.userCoworkerRole()!) ||
-    this.auth.userSystemRole() === SystemRole.Admin
+  readonly isPrivilegedUser = computed(
+    () =>
+      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
+        this.auth.userCoworkerRole()!
+      ) || this.auth.userSystemRole() === SystemRole.Admin
   );
 }

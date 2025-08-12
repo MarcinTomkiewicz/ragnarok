@@ -4,16 +4,16 @@
 .card-dark {
   background-color: $bg-color;
   border: $primary-color solid 1px;
-  min-width: 350px;
+  width: 350px;
 
   @media (max-width: $breakpoint-xs) {
-    width: 300px;
+    width: 254px;
   }
 }
 
 .card-body {
   @media (max-width: $breakpoint-xs) {
-    width: 300px;
+    width: 254px;
   }
 }
 

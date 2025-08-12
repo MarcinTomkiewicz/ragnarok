@@ -57,10 +57,9 @@
   margin-top: 0.5rem;
 }
 
-// === Przyciski akcji ===
 .card-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 0.75rem;
   margin-top: 1rem;
 
@@ -76,6 +75,5 @@
 
   .reservation-card {
     max-width: 400px;
-    width: 100%;
   }
 }

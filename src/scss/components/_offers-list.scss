@@ -76,14 +76,12 @@
 
   .offers-list {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    @include flex-wrapper(column, start, center);
     gap: 2rem;
   }
 
   .offers-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    @include mg-grid(2);
     gap: 2rem;
   }
 

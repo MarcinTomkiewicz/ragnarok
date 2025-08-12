@@ -61,6 +61,7 @@
     @include flex-wrapper(row, center);
     gap: 2rem;
     margin-top: 2.5rem;
+    flex-wrap: wrap;
 
     .btn {
       min-width: 220px;
@@ -69,10 +70,10 @@
   }
 
   .day-controls {
+    @include flex-wrapper(row, center);
     margin-top: 2rem;
-    display: flex;
-    justify-content: center;
     gap: 1rem;
+    flex-wrap: wrap;
 
     .btn {
       min-width: 150px;

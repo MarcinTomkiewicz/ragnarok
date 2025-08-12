@@ -16,6 +16,7 @@ import { ImageStorageService } from '../../../../core/services/backend/image-sto
 import { SupabaseService } from '../../../../core/services/supabase/supabase.service';
 import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 import { PartyService } from '../party/party.service';
+import { TimeSlots } from '../../../../core/enums/hours';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
@@ -59,8 +60,14 @@ export class ReservationService {
 
   getReservationsForRoom(
     room: Rooms,
-    date: string
+    date: string,
+    opts?: { statuses?: ReservationStatus | ReservationStatus[] }
   ): Observable<IReservation[]> {
+    const statuses = opts?.statuses ?? ReservationStatus.Confirmed;
+    const statusFilter = Array.isArray(statuses)
+      ? { value: statuses, operator: FilterOperator.IN }
+      : { value: statuses, operator: FilterOperator.EQ };
+
     return this.backend.getAll<IReservation>(
       'reservations',
       'startTime',
@@ -69,9 +76,22 @@ export class ReservationService {
         filters: {
           room_name: { value: room, operator: FilterOperator.EQ },
           date: { value: date, operator: FilterOperator.EQ },
+          status: statusFilter,
         },
       }
     );
+  }
+
+  getConfirmedReservationsForRoom(room: Rooms, date: string) {
+    return this.getReservationsForRoom(room, date, {
+      statuses: ReservationStatus.Confirmed,
+    });
+  }
+
+  getActiveReservationsForRoom(room: Rooms, date: string) {
+    return this.getReservationsForRoom(room, date, {
+      statuses: [ReservationStatus.Confirmed, ReservationStatus.Pending],
+    });
   }
 
   getReservationsForTeams(teamIds: string[]): Observable<IReservation[]> {
@@ -102,44 +122,57 @@ export class ReservationService {
     );
   }
 
+  private openingHourForRoom(room: Rooms): number {
+    return [Rooms.Asgard, Rooms.Alfheim].includes(room)
+      ? TimeSlots.earlyStart
+      : TimeSlots.lateStart;
+  }
+
   getAvailableTimeSlots(
     room: Rooms,
-    date: string
+    date: string,
+    opts: { open?: number; close?: number } = {}
   ): Observable<{ start: string; end: string }[]> {
+    const OPEN = opts.open ?? this.openingHourForRoom(room);
+    const CLOSE = opts.close ?? TimeSlots.end;
+
     return this.getReservationsForRoom(room, date).pipe(
       map((reservations) => {
-        const OPEN = 17;
-        const CLOSE = 23;
-        const allSlots: { start: string; end: string }[] = [];
-
+        const all: { start: string; end: string }[] = [];
         const sorted = this.getActiveReservations(reservations).sort((a, b) =>
           a.startTime.localeCompare(b.startTime)
         );
 
         if (sorted.length === 0) {
-          return [{ start: '17:00', end: '23:00' }];
+          return [
+            {
+              start: `${String(OPEN).padStart(2, '0')}:00`,
+              end: `${String(CLOSE).padStart(2, '0')}:00`,
+            },
+          ];
         }
 
         let current = OPEN;
         for (const res of sorted) {
           const start = parseInt(res.startTime.split(':')[0], 10);
           if (current < start) {
-            allSlots.push({
+            all.push({
               start: `${String(current).padStart(2, '0')}:00`,
-              end: `${String(start).padStart(2, '0')}:00`,
+              end: `${String(Math.min(start, CLOSE)).padStart(2, '0')}:00`,
             });
           }
           current = Math.max(current, start + res.durationHours);
+          if (current >= CLOSE) break;
         }
 
         if (current < CLOSE) {
-          allSlots.push({
+          all.push({
             start: `${String(current).padStart(2, '0')}:00`,
-            end: '23:00',
+            end: `${String(CLOSE).padStart(2, '0')}:00`,
           });
         }
 
-        return allSlots;
+        return all;
       })
     );
   }
