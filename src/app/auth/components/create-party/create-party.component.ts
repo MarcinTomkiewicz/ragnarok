@@ -173,8 +173,8 @@ export class CreatePartyComponent {
         this.teamForm.patchValue({
           name: party.name,
           gmId: party.gmId,
-          startProgram: party.startProgram,
-          finishedProgram: party.finishedProgram,
+          beginnersProgram: party.beginnersProgram,
+          programStage: party.programStage,
           notes: party.notes,
           isOpen: party.isOpen,
           isForBeginners: party.isForBeginners,

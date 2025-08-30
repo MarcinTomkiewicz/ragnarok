@@ -4,8 +4,8 @@ export interface IParty {
   createdAt: string;
   gmId: string | null;
   ownerId: string;
-  startProgram: boolean;
-  finishedProgram: boolean;
+  beginnersProgram: boolean;
+  programStage: boolean;
   notes: string | null;
   isOpen: boolean;
   isForBeginners: boolean;
