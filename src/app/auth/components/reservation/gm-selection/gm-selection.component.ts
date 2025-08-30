@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toObservable, toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { combineLatest, of } from 'rxjs';
-import { distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
 
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
@@ -98,19 +98,41 @@ export class GmSelectionComponent {
     // Auto-aktualizacja ostrzeżenia w trybie „party-GM”
     const locked$   = toObservable(this.isPartyGmLocked).pipe(distinctUntilChanged());
     const systemId$ = this.form.get('systemId')!.valueChanges.pipe(
-      startWith(this.form.get('systemId')!.value as string | null),
-      distinctUntilChanged()
-    );
-    const date$     = toObservable(this.store.selectedDate).pipe(filter((d): d is string => !!d), distinctUntilChanged());
-    const start$    = toObservable(this.store.selectedStartTime).pipe(filter((s): s is string => !!s), distinctUntilChanged());
-    const dur$      = toObservable(this.store.selectedDuration).pipe(filter((n): n is number => n != null), distinctUntilChanged());
+    startWith(this.form.get('systemId')!.value as string | null),
+    distinctUntilChanged()
+  );
 
-    combineLatest([locked$, systemId$, date$, start$, dur$])
-      .pipe(
-        filter(([locked, systemId]) => locked && !!systemId),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(() => this.updateLockedGmAvailability());
+  const manualMode$ = toObservable(this.isPartyGmLocked).pipe(
+    map((locked) => !locked),
+    distinctUntilChanged()
+  );
+
+  const date$  = toObservable(this.store.selectedDate).pipe(filter(Boolean));
+  const time$  = toObservable(this.store.selectedStartTime).pipe(filter(Boolean));
+  const dur$   = toObservable(this.store.selectedDuration).pipe(filter((n): n is number => n != null));
+
+  combineLatest([manualMode$, systemId$, date$, time$, dur$])
+    .pipe(
+      // zachowaj ID systemu w store
+      tap(([manual, systemId]) => {
+        if (manual) this.store.selectedSystemId.set(systemId ?? null);
+      }),
+      // licz tylko, gdy mamy pełny zestaw danych
+      filter(([manual, systemId]) => manual && !!systemId),
+      switchMap(([_, systemId, date, startTime, duration]) =>
+        this.gmService.getAvailableGmsForSystem(
+          systemId as string,
+          date as string,
+          parseInt(startTime as string, 10),
+          duration as number
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    )
+    .subscribe((gms) => {
+      this.gms.set(gms);
+      this.showAllGmsButton.set(gms.length === 0);
+    });
 
     // Manualny pierwszy load
     if (!this.isPartyGmLocked() && this.form.value.systemId) {

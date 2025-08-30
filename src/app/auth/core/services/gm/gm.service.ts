@@ -2,7 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of, combineLatest, from } from 'rxjs';
 import { map, switchMap, concatMap, find } from 'rxjs/operators';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
-import { IAvailabilitySlot, IGmData } from '../../../../core/interfaces/i-gm-profile';
+import {
+  IAvailabilitySlot,
+  IGmData,
+} from '../../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
@@ -34,13 +37,13 @@ export class GmService {
         filters: { userId: { value: gmId, operator: FilterOperator.EQ } },
       })
       .pipe(
-        map(rows => rows?.[0] ?? null),
-        switchMap(row => {
+        map((rows) => rows?.[0] ?? null),
+        switchMap((row) => {
           if (row) return of(this.fillGmDefaults(row));
           // fallback: minimal z tabeli users
-          return this.backend.getById<IUser>('users', gmId).pipe(
-            map(u => (u ? this.fromUserToMinimalGm(u) : null))
-          );
+          return this.backend
+            .getById<IUser>('users', gmId)
+            .pipe(map((u) => (u ? this.fromUserToMinimalGm(u) : null)));
         })
       );
   }
@@ -60,9 +63,13 @@ export class GmService {
         }
       )
       .pipe(
-        map(rows => Array.from(new Set(rows.map(r => r.systemId))).filter(Boolean)),
-        switchMap(ids =>
-          ids.length ? this.backend.getByIds<IRPGSystem>('systems', ids) : of([])
+        map((rows) =>
+          Array.from(new Set(rows.map((r) => r.systemId))).filter(Boolean)
+        ),
+        switchMap((ids) =>
+          ids.length
+            ? this.backend.getByIds<IRPGSystem>('systems', ids)
+            : of([])
         )
       );
   }
@@ -80,14 +87,22 @@ export class GmService {
 
   // ======== AVAILABILITY CRUD ========
 
-  getAvailability(gmId: string, dates: string[]): Observable<IAvailabilitySlot[]> {
+  getAvailability(
+    gmId: string,
+    dates: string[]
+  ): Observable<IAvailabilitySlot[]> {
     if (!dates.length) return of([]);
-    return this.backend.getAll<IAvailabilitySlot>('gm_availability', undefined, 'asc', {
-      filters: {
-        gmId: { value: gmId, operator: FilterOperator.EQ },
-        date: { value: dates, operator: FilterOperator.IN },
-      },
-    });
+    return this.backend.getAll<IAvailabilitySlot>(
+      'gm_availability',
+      undefined,
+      'asc',
+      {
+        filters: {
+          gmId: { value: gmId, operator: FilterOperator.EQ },
+          date: { value: dates, operator: FilterOperator.IN },
+        },
+      }
+    );
   }
 
   upsertAvailability(entry: IAvailabilitySlot): Observable<IAvailabilitySlot> {
@@ -105,7 +120,9 @@ export class GmService {
       gm_id: { value: gmId, operator: FilterOperator.EQ },
     });
 
-    const insertPayload = systemIds.map(systemId => toSnakeCase({ gmId, systemId }));
+    const insertPayload = systemIds.map((systemId) =>
+      toSnakeCase({ gmId, systemId })
+    );
     const insert$ = systemIds.length
       ? this.backend.createMany(table, insertPayload)
       : of([]);
@@ -118,15 +135,19 @@ export class GmService {
 
   upsertMany(entries: IAvailabilitySlot[]): Observable<IAvailabilitySlot[]> {
     if (!entries.length) return of([]);
-    const withId = entries.filter(e => !!e.id);
-    const withoutId = entries.filter(e => !e.id);
+    const withId = entries.filter((e) => !!e.id);
+    const withoutId = entries.filter((e) => !e.id);
 
     const reqs: Observable<IAvailabilitySlot[]>[] = [];
 
     if (withId.length) {
-      const payload = withId.map(e => toSnakeCase(e));
+      const payload = withId.map((e) => toSnakeCase(e));
       reqs.push(
-        this.backend.upsertMany<IAvailabilitySlot>('gm_availability', toSnakeCase(payload), 'id')
+        this.backend.upsertMany<IAvailabilitySlot>(
+          'gm_availability',
+          toSnakeCase(payload),
+          'id'
+        )
       );
     }
 
@@ -141,7 +162,9 @@ export class GmService {
       );
     }
 
-    return reqs.length === 1 ? reqs[0] : combineLatest(reqs).pipe(map(r => r.flat()));
+    return reqs.length === 1
+      ? reqs[0]
+      : combineLatest(reqs).pipe(map((r) => r.flat()));
   }
 
   deleteAvailability(gmId: string, dates: string[]): Observable<void> {
@@ -156,7 +179,7 @@ export class GmService {
 
   readonly gmDisplayName = (gm: IGmData | null): string => {
     if (!gm) return '';
-    return gm.useNickname && gm.nickname ? gm.nickname : (gm.firstName ?? '');
+    return gm.useNickname && gm.nickname ? gm.nickname : gm.firstName ?? '';
   };
 
   private fillGmDefaults(g: IGmData): IGmData {
@@ -197,7 +220,12 @@ export class GmService {
 
   // ======== AVAILABILITY / SLOTS LOGIC ========
 
-  private isTimeOverlapping(startA: number, durationA: number, startB: number, durationB: number): boolean {
+  private isTimeOverlapping(
+    startA: number,
+    durationA: number,
+    startB: number,
+    durationB: number
+  ): boolean {
     const endA = startA + durationA;
     const endB = startB + durationB;
     return startA < endB && endA > startB;
@@ -211,11 +239,16 @@ export class GmService {
   ): Observable<boolean> {
     const endHour = startHour + duration;
     return this.backend
-      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', { gmId, date })
+      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', {
+        gmId,
+        date,
+      })
       .pipe(
-        map(availability => {
+        map((availability) => {
           if (!availability) return false;
-          return availability.fromHour <= startHour && availability.toHour >= endHour;
+          return (
+            availability.fromHour <= startHour && availability.toHour >= endHour
+          );
         })
       );
   }
@@ -227,11 +260,22 @@ export class GmService {
     duration: number
   ): Observable<boolean> {
     return this.reservations.getReservationsForGm(gmId, date).pipe(
-      map(reservations =>
-        reservations.some(res => {
-          const existingStart = parseInt(res.startTime.split(':')[0], 10);
-          return this.isTimeOverlapping(startHour, duration, existingStart, res.durationHours);
-        })
+      map((reservations) =>
+        reservations
+          .filter(
+            (r) =>
+              r.status === ReservationStatus.Confirmed ||
+              r.status === ReservationStatus.Pending
+          )
+          .some((res) => {
+            const existingStart = parseInt(res.startTime.split(':')[0], 10);
+            return this.isTimeOverlapping(
+              startHour,
+              duration,
+              existingStart,
+              res.durationHours
+            );
+          })
       )
     );
   }
@@ -243,49 +287,71 @@ export class GmService {
     duration: number
   ): Observable<IGmData[]> {
     return this.getGmsForSystem(systemId).pipe(
-      switchMap(gms => {
+      switchMap((gms) => {
         if (!gms.length) return of([]);
         return forkJoin(
-          gms.map(gm =>
+          gms.map((gm) =>
             forkJoin([
               this.isGmBusyAtSlot(gm.userId, date, startHour, duration),
-              this.isAvailableDuringTimeRange(gm.userId, date, startHour, duration),
+              this.isAvailableDuringTimeRange(
+                gm.userId,
+                date,
+                startHour,
+                duration
+              ),
             ]).pipe(map(([busy, avail]) => (!busy && avail ? gm : null)))
           )
-        ).pipe(map(arr => arr.filter((x): x is IGmData => !!x)));
+        ).pipe(map((arr) => arr.filter((x): x is IGmData => !!x)));
       })
     );
   }
 
-  getAllGmsForTimeRange(date: string, startHour: number, duration: number): Observable<IGmData[]> {
+  getAllGmsForTimeRange(
+    date: string,
+    startHour: number,
+    duration: number
+  ): Observable<IGmData[]> {
     return this.getAllGms().pipe(
-      switchMap(gms => {
+      switchMap((gms) => {
         if (!gms.length) return of([]);
         return forkJoin(
-          gms.map(gm =>
+          gms.map((gm) =>
             forkJoin([
               this.isGmBusyAtSlot(gm.userId, date, startHour, duration),
-              this.isAvailableDuringTimeRange(gm.userId, date, startHour, duration),
+              this.isAvailableDuringTimeRange(
+                gm.userId,
+                date,
+                startHour,
+                duration
+              ),
             ]).pipe(map(([busy, avail]) => (!busy && avail ? gm : null)))
           )
-        ).pipe(map(arr => arr.filter((x): x is IGmData => !!x)));
+        ).pipe(map((arr) => arr.filter((x): x is IGmData => !!x)));
       })
     );
   }
 
-  getGmFreeRanges(gmId: string, date: string): Observable<{ from: number; to: number }[]> {
+  getGmFreeRanges(
+    gmId: string,
+    date: string
+  ): Observable<{ from: number; to: number }[]> {
     return this.backend
-      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', { gmId, date })
+      .getOneByFields<{ fromHour: number; toHour: number }>('gm_availability', {
+        gmId,
+        date,
+      })
       .pipe(
-        switchMap(avail => {
+        switchMap((avail) => {
           if (!avail) return of([] as { from: number; to: number }[]);
           return this.reservations.getReservationsForGm(gmId, date).pipe(
-            map(reservations => {
+            map((reservations) => {
               const busy = reservations
                 .filter(
-                  r => r.status === ReservationStatus.Confirmed || r.status === ReservationStatus.Pending
+                  (r) =>
+                    r.status === ReservationStatus.Confirmed ||
+                    r.status === ReservationStatus.Pending
                 )
-                .map(r => {
+                .map((r) => {
                   const s = parseInt(r.startTime.split(':')[0], 10);
                   return { from: s, to: s + r.durationHours };
                 })
@@ -296,24 +362,35 @@ export class GmService {
 
               for (const b of busy) {
                 if (b.from > cursor) {
-                  free.push({ from: cursor, to: Math.min(b.from, avail.toHour) });
+                  free.push({
+                    from: cursor,
+                    to: Math.min(b.from, avail.toHour),
+                  });
                 }
                 cursor = Math.max(cursor, b.to);
                 if (cursor >= avail.toHour) break;
               }
-              if (cursor < avail.toHour) free.push({ from: cursor, to: avail.toHour });
+              if (cursor < avail.toHour)
+                free.push({ from: cursor, to: avail.toHour });
 
-              const OPEN = 17, CLOSE = 23;
+              const OPEN = 17,
+                CLOSE = 23;
               return free
-                .map(r => ({ from: Math.max(r.from, OPEN), to: Math.min(r.to, CLOSE) }))
-                .filter(r => r.to > r.from);
+                .map((r) => ({
+                  from: Math.max(r.from, OPEN),
+                  to: Math.min(r.to, CLOSE),
+                }))
+                .filter((r) => r.to > r.from);
             })
           );
         })
       );
   }
 
-  private chunkFreeRangesToStarts(ranges: { from: number; to: number }[], duration: number): number[] {
+  private chunkFreeRangesToStarts(
+    ranges: { from: number; to: number }[],
+    duration: number
+  ): number[] {
     const starts: number[] = [];
     for (const r of ranges) {
       for (let h = r.from; h + duration <= r.to; h++) starts.push(h);
@@ -327,32 +404,46 @@ export class GmService {
     duration: number,
     gmId: string | null,
     allowPrevDay: boolean
-  ): Observable<{ label: string; slots: { date: string; startHour: number; duration: number }[] }[]> {
+  ): Observable<
+    {
+      label: string;
+      slots: { date: string; startHour: number; duration: number }[];
+    }[]
+  > {
     if (!gmId) return of([]);
     const d = new Date(preferredDate + 'T00:00:00');
     const iso = (dt: Date) => dt.toISOString().slice(0, 10);
     const d0 = new Date(d);
-    const dM1 = new Date(d); dM1.setDate(d.getDate() - 1);
-    const dP1 = new Date(d); dP1.setDate(d.getDate() + 1);
+    const dM1 = new Date(d);
+    dM1.setDate(d.getDate() - 1);
+    const dP1 = new Date(d);
+    dP1.setDate(d.getDate() + 1);
 
     const candidates: { label: string; date: string }[] = [];
-    if (allowPrevDay) candidates.push({ label: 'Dzień wcześniej', date: iso(dM1) });
+    if (allowPrevDay)
+      candidates.push({ label: 'Dzień wcześniej', date: iso(dM1) });
     candidates.push({ label: 'Wybrany dzień', date: iso(d0) });
     candidates.push({ label: 'Dzień później', date: iso(dP1) });
 
     return combineLatest(
-      candidates.map(c =>
+      candidates.map((c) =>
         this.getGmFreeRanges(gmId, c.date).pipe(
-          map(free => {
+          map((free) => {
             const starts = this.chunkFreeRangesToStarts(free, duration).sort(
-              (a, b) => Math.abs(a - preferredStartHour) - Math.abs(b - preferredStartHour)
+              (a, b) =>
+                Math.abs(a - preferredStartHour) -
+                Math.abs(b - preferredStartHour)
             );
-            const slots = starts.map(h => ({ date: c.date, startHour: h, duration }));
+            const slots = starts.map((h) => ({
+              date: c.date,
+              startHour: h,
+              duration,
+            }));
             return { label: c.label, slots };
           })
         )
       )
-    ).pipe(map(groups => groups.filter(g => g.slots.length > 0)));
+    ).pipe(map((groups) => groups.filter((g) => g.slots.length > 0)));
   }
 
   moreSlots(
@@ -377,12 +468,18 @@ export class GmService {
       }
 
       return from(days).pipe(
-        concatMap(date => this.getGmFreeRanges(gmId, date).pipe(map<Range[], Hit>(free => ({ date, free })))),
-        find(hit => hit.free.length > 0),
-        map(hit => {
+        concatMap((date) =>
+          this.getGmFreeRanges(gmId, date).pipe(
+            map<Range[], Hit>((free) => ({ date, free }))
+          )
+        ),
+        find((hit) => hit.free.length > 0),
+        map((hit) => {
           if (!hit) return [];
           const starts = this.chunkFreeRangesToStarts(hit.free, duration);
-          return starts.map(h => ({ date: hit.date, startHour: h, duration })).slice(0, 8);
+          return starts
+            .map((h) => ({ date: hit.date, startHour: h, duration }))
+            .slice(0, 8);
         })
       );
     }
@@ -390,11 +487,18 @@ export class GmService {
     let days: string[] = [];
     if (mode === GmSlotsMode.weekend) {
       const day = base.getDay();
-      const sat = new Date(base); sat.setDate(base.getDate() + ((6 - (day || 7)) % 7));
-      const sun = new Date(sat);  sun.setDate(sat.getDate() + 1);
+      const sat = new Date(base);
+      sat.setDate(base.getDate() + ((6 - (day || 7)) % 7));
+      const sun = new Date(sat);
+      sun.setDate(sat.getDate() + 1);
       days = [iso(sat), iso(sun)];
     } else {
-      const jump = mode === GmSlotsMode.twoDays ? 2 : mode === GmSlotsMode.threeDays ? 3 : 7;
+      const jump =
+        mode === GmSlotsMode.twoDays
+          ? 2
+          : mode === GmSlotsMode.threeDays
+          ? 3
+          : 7;
       for (let i = 1; i <= jump; i++) {
         const t = new Date(base);
         t.setDate(base.getDate() + i);
@@ -403,13 +507,17 @@ export class GmService {
     }
 
     return combineLatest(
-      days.map(date =>
+      days.map((date) =>
         this.getGmFreeRanges(gmId, date).pipe(
-          map(free =>
-            this.chunkFreeRangesToStarts(free, duration).map(h => ({ date, startHour: h, duration }))
+          map((free) =>
+            this.chunkFreeRangesToStarts(free, duration).map((h) => ({
+              date,
+              startHour: h,
+              duration,
+            }))
           )
         )
       )
-    ).pipe(map(arr => arr.flat().slice(0, 8)));
+    ).pipe(map((arr) => arr.flat().slice(0, 8)));
   }
 }
