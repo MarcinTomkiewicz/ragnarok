@@ -3,60 +3,83 @@
 
   <div class="room-buttons">
     @for (room of rooms(); track room) {
-    <button
-      class="btn btn-outline-light"
-      [class.active]="store.selectedRoom() === room"
-      (click)="selectRoom(room)"
-    >
-      {{ room }}
-    </button>
+      <button
+        class="btn btn-outline-light"
+        [class.active]="store.selectedRoom() === room"
+        (click)="selectRoom(room)"
+      >
+        {{ room }}
+      </button>
     }
   </div>
 
   @if (isGoldenBlocked()) {
-  <div class="alert alert-warning">
-    Masz już aktywną rezerwację. Nie możesz dokonać kolejnej.
-  </div>
-  } @if (isMemberClubBlocked) {
-  <div class="alert alert-warning">
-    W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
-    Alfheim). Możesz zarezerwować inną salę.
-  </div>
+    <div class="alert alert-warning">
+      Masz już aktywną rezerwację. Nie możesz dokonać kolejnej.
+    </div>
   }
+  @if (isMemberClubBlocked) {
+    <div class="alert alert-warning">
+      W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
+      Alfheim). Możesz zarezerwować inną salę.
+    </div>
+  }
+
   <div ngbDropdown class="category-dropdown">
     <button
       type="button"
       class="btn btn-outline"
-      id="dropdownBasic1"
+      id="dropdownParties"
       ngbDropdownToggle
     >
       Wybierz drużynę
     </button>
-    <div ngbDropdownMenu aria-labelledby="PartyDropdown">
-      @for (party of userParties(); track $index) {
-      <button ngbDropdownItem (click)="selectParty(party.id)">
-        {{ party.name }}
-      </button>
+
+    <div ngbDropdownMenu aria-labelledby="dropdownParties">
+      @if (partiesGm().length) {
+        <h6 class="dropdown-header">Mistrz Gry</h6>
+        @for (party of partiesGm(); track party.id) {
+          <button ngbDropdownItem (click)="selectParty(party.id)">
+            {{ party.name }}
+          </button>
+        }
+        @if (partiesOther().length) { <div class="dropdown-divider"></div> }
+      }
+
+      @if (partiesOther().length) {
+        <h6 class="dropdown-header">Moje drużyny</h6>
+        @for (party of partiesOther(); track party.id) {
+          <button ngbDropdownItem (click)="selectParty(party.id)">
+            {{ party.name }}
+          </button>
+        }
+      }
+
+      @if (!partiesGm().length && !partiesOther().length) {
+        <span class="dropdown-item-text text-muted">Brak drużyn</span>
       }
     </div>
   </div>
+
   @if (requiresClubConfirmation() && !store.confirmedParty()) {
-  <div class="text-danger">
-    Aby zarezerwować salę klubową, musisz wybrać drużynę.
-  </div>
-  } @if (selectedPartyId()) {
-  <div class="flex-row-align-center">
-    <span class="me-2"
-      >Aktualnie wybrana drużyna: {{ getSelectedPartyName() }}</span
-    >
-    <button
-      type="button"
-      class="btn btn-danger btn-close-x"
-      (click)="removeSelectedParty()"
-    >
-      x
-    </button>
-  </div>
+    <div class="text-danger mt-2">
+      Aby zarezerwować salę klubową, musisz wybrać drużynę.
+    </div>
+  }
+
+  @if (selectedPartyId()) {
+    <div class="flex-row-align-center mt-2">
+      <span class="me-2">
+        Aktualnie wybrana drużyna: {{ getSelectedPartyName() }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-danger btn-close-x"
+        (click)="removeSelectedParty()"
+      >
+        x
+      </button>
+    </div>
   }
 
   <app-universal-calendar
@@ -71,18 +94,18 @@
   ></app-universal-calendar>
 
   @if (requiresClubConfirmation()) {
-  <div class="form-check mt-3">
-    <input
-      class="form-check-input"
-      type="checkbox"
-      id="clubConfirm"
-      [checked]="confirmedTeam()"
-      (change)="onClubCheckboxChange($event)"
-    />
-    <label class="form-check-label" for="clubConfirm">
-      Oświadczam, że wszyscy gracze posiadają członkostwo Klubu Gier Fabularnych
-      Ragnaroku.
-    </label>
-  </div>
+    <div class="form-check mt-3">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="clubConfirm"
+        [checked]="confirmedTeam()"
+        (change)="onClubCheckboxChange($event)"
+      />
+      <label class="form-check-label" for="clubConfirm">
+        Oświadczam, że wszyscy gracze posiadają członkostwo Klubu Gier
+        Fabularnych Ragnaroku.
+      </label>
+    </div>
   }
 </div>

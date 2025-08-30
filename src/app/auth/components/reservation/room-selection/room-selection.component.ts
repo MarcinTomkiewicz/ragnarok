@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { of } from 'rxjs';
+import { of, forkJoin } from 'rxjs';
+
 import { TimeSlots } from '../../../../core/enums/hours';
 import { CoworkerRoles } from '../../../../core/enums/roles';
 import { Rooms, SortedRooms } from '../../../../core/enums/rooms';
@@ -15,6 +16,7 @@ import { PartyService } from '../../../core/services/party/party.service';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { ReservationsCalendarFacade } from '../../../core/services/reservations-calendar/reservations-calendar.facade';
+import { hasMinimumCoworkerRole } from '../../../../core/utils/required-roles';
 
 @Component({
   selector: 'app-room-selection',
@@ -34,7 +36,11 @@ export class RoomSelectionComponent {
   readonly selectedDate = this.store.selectedDate;
   readonly confirmedTeam = this.store.confirmedParty;
   readonly selectedPartyId = this.store.selectedPartyId;
-  userParties = signal<IParty[]>([]);
+
+  // podział na dwie grupy
+  readonly partiesGm = signal<IParty[]>([]);
+  readonly partiesOther = signal<IParty[]>([]);
+
   isMemberClubBlocked = false;
 
   constructor() {
@@ -50,7 +56,7 @@ export class RoomSelectionComponent {
     [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom())
   );
 
-    readonly rooms = computed(() => {
+  readonly rooms = computed(() => {
     const isReceptionMode = this.store.isReceptionMode();
     const isExternalClubMember = this.store.externalIsClubMember();
     const userRole = this.auth.userCoworkerRole();
@@ -60,13 +66,11 @@ export class RoomSelectionComponent {
       const isClubOnly = [Rooms.Asgard, Rooms.Alfheim].includes(room);
 
       if (systemRole === SystemRole.Admin) return true;
-
       if (!isClubOnly) return true;
 
       if (isReceptionMode) {
         return isExternalClubMember === true;
       }
-
       return userRole === CoworkerRoles.Member;
     });
   });
@@ -91,7 +95,6 @@ export class RoomSelectionComponent {
   selectRoom(room: Rooms) {
     if (this.selectedRoom() === room) return;
 
-    // aktualizacja store'u
     this.store.selectedRoom.set(room);
     this.store.selectedDate.set(null);
     this.store.selectedStartTime.set(null);
@@ -102,15 +105,10 @@ export class RoomSelectionComponent {
     this.store.needsGm.set(false);
     this.store.confirmedParty.set(false);
 
-    // kluczowe: aktualizacja fasady
     this.calendar.setRoom(room);
 
-    // blokady klubowe możesz zostawić jak miałeś (osobna logika)
     const role = this.auth.userCoworkerRole();
-    if (
-      [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
-      role === CoworkerRoles.Member
-    ) {
+    if ([Rooms.Asgard, Rooms.Alfheim].includes(room) && role === CoworkerRoles.Member) {
       this.reservationService
         .checkIfMemberHasReservationThisWeekInClubRooms()
         .subscribe((result) => (this.isMemberClubBlocked = result));
@@ -150,10 +148,36 @@ export class RoomSelectionComponent {
   };
 
   private loadUserParties(): void {
-    const userId = this.auth.user()?.id;
-    if (userId) {
-      this.partyService.getUserParties(userId).subscribe((parties) => {
-        this.userParties.set(parties);
+    const me = this.auth.user();
+    if (!me) return;
+    const userId = me.id;
+    const canSeeGm = hasMinimumCoworkerRole(me, CoworkerRoles.Gm);
+
+    if (canSeeGm) {
+      forkJoin({
+        gm: this.partyService.getPartiesWhereGm(userId),
+        owned: this.partyService.getPartiesOwnedBy(userId),
+        member: this.partyService.getPartiesWhereMember(userId),
+      }).subscribe(({ gm, owned, member }) => {
+        const gmSet = new Set(gm.map((p) => p.id));
+        const otherMap = new Map<string, IParty>();
+        [...owned, ...member].forEach((p) => otherMap.set(p.id, p));
+        const other = Array.from(otherMap.values()).filter((p) => !gmSet.has(p.id));
+
+        // sortowanie alfabetyczne
+        this.partiesGm.set(gm.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        this.partiesOther.set(other.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+      });
+    } else {
+      forkJoin({
+        owned: this.partyService.getPartiesOwnedBy(userId),
+        member: this.partyService.getPartiesWhereMember(userId),
+      }).subscribe(({ owned, member }) => {
+        const otherMap = new Map<string, IParty>();
+        [...owned, ...member].forEach((p) => otherMap.set(p.id, p));
+        const other = Array.from(otherMap.values());
+        this.partiesGm.set([]); // brak sekcji MG
+        this.partiesOther.set(other.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
       });
     }
   }
@@ -164,11 +188,12 @@ export class RoomSelectionComponent {
   }
 
   getSelectedPartyName(): string | null {
-    const selectedPartyId = this.store.selectedPartyId();
-    const selectedParty = this.userParties().find(
-      (party) => party.id === selectedPartyId
-    );
-    return selectedParty ? selectedParty.name : null;
+    const pid = this.store.selectedPartyId();
+    if (!pid) return null;
+    const found =
+      this.partiesGm().find((p) => p.id === pid) ??
+      this.partiesOther().find((p) => p.id === pid);
+    return found?.name ?? null;
   }
 
   removeSelectedParty() {

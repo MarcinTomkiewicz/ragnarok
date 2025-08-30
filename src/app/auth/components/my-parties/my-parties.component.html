@@ -2,19 +2,40 @@
   <div class="container">
     <h2 class="section-title">Moje Drużyny</h2>
 
-    @let filtered = filteredTeams(); @if (filtered) {
-      @if (filtered.length > 0) {
-        <app-team-list
-          [teams]="filtered"
-          [showDetailsButton]="true"
-          (showDetails)="onShowDetails($event)"
-          (editParty)="onEditParty($event)"
-          />
-      } @else {
-        <p>Nie należysz do żadnej drużyny.</p>
-      }
-    } @else {
-      <p>Ładowanie drużyn...</p>
+    @if (canShowGmSection() && gmTeams().length) {
+      <h3 class="mt-3">Mistrz Gry</h3>
+      <app-team-list
+        [teams]="gmTeams()"
+        [showDetailsButton]="true"
+        (showDetails)="onShowDetails($event)"
+        (editParty)="onEditParty($event)"
+      />
+      <hr />
+    }
+
+    @if (ownerTeams().length) {
+      <h3 class="mt-3">Założyciel</h3>
+      <app-team-list
+        [teams]="ownerTeams()"
+        [showDetailsButton]="true"
+        (showDetails)="onShowDetails($event)"
+        (editParty)="onEditParty($event)"
+      />
+      <hr />
+    }
+
+    @if (memberTeams().length) {
+      <h3 class="mt-3">Należę do</h3>
+      <app-team-list
+        [teams]="memberTeams()"
+        [showDetailsButton]="true"
+        (showDetails)="onShowDetails($event)"
+        (editParty)="onEditParty($event)"
+      />
+    }
+
+    @if (isEmpty()) {
+      <p>Nie należysz do żadnej drużyny.</p>
     }
   </div>
 

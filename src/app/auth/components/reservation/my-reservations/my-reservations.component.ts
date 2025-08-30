@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { isAfter, isToday } from 'date-fns';
-import { from } from 'rxjs';
+import { from, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { InfoModalComponent } from '../../../../common/info-modal/info-modal.component';
@@ -25,6 +25,7 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ReservationListComponent } from '../../../common/reservation-list/reservation-list.component';
 import { PartyService } from '../../../core/services/party/party.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
+import { IParty } from '../../../../core/interfaces/parties/i-party';
 
 @Component({
   selector: 'app-my-reservations',
@@ -33,14 +34,12 @@ import { ReservationService } from '../../../core/services/reservation/reservati
   templateUrl: './my-reservations.component.html',
 })
 export class MyReservationsComponent {
-  // === DI ===
   private readonly reservationService = inject(ReservationService);
   private readonly partyService = inject(PartyService);
   private readonly toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
   private readonly modal = inject(NgbModal);
 
-  // === Toast templates ===
   readonly cancelSuccessToast =
     viewChild<TemplateRef<unknown>>('cancelSuccessToast');
   readonly cancelAbortToast =
@@ -48,10 +47,10 @@ export class MyReservationsComponent {
   readonly cancelErrorToast =
     viewChild<TemplateRef<unknown>>('cancelErrorToast');
 
-  // === Signals ===
   private readonly reservationsSignal: WritableSignal<IReservation[]> = signal(
     []
   );
+
   readonly filteredReservations = computed(() => {
     const reservations = this.reservationsSignal();
     const now = new Date();
@@ -87,7 +86,6 @@ export class MyReservationsComponent {
             this.showCancelAbortedToast();
             return [];
           }
-
           return this.reservationService.cancelReservation(reservationId).pipe(
             tap(() => this.showCancelSuccessToast()),
             catchError(() => {
@@ -101,9 +99,7 @@ export class MyReservationsComponent {
           return [];
         })
       )
-      .subscribe(() => {
-        this.loadReservations();
-      });
+      .subscribe(() => this.loadReservations());
   }
 
   private showCancelSuccessToast(): void {
@@ -140,31 +136,38 @@ export class MyReservationsComponent {
   }
 
   private loadReservations(): void {
-    const userId = this.auth.user()?.id;
-    if (userId) {
-      // Pobierz rezerwacje drużynowe
-      this.partyService.getUserParties(userId).subscribe((parties) => {
-        const teamIds = parties.map((party) => party.id);
+    const me = this.auth.user();
+    if (!me) return;
 
-        // Pobierz rezerwacje dla drużyn
-        this.reservationService
-          .getReservationsForTeams(teamIds)
-          .pipe(
-            // Pobierz również indywidualne rezerwacje
-            switchMap((teamReservations) =>
-              this.reservationService.getMyReservations().pipe(
-                map((userReservations) => [
-                  ...teamReservations,
-                  ...userReservations,
-                ])
-              )
-            )
-          )
-          .subscribe((allReservations) => {            
-            this.reservationsSignal.set(allReservations ?? []);
-          });
+    const userId = me.id;
+
+    const parties$ = forkJoin({
+      owned: this.partyService.getPartiesOwnedBy(userId),
+      member: this.partyService.getPartiesWhereMember(userId),
+    }).pipe(
+      map(({ owned, member }) => {
+        const map = new Map<string, IParty>();
+        [...owned, ...member].forEach((p) => map.set(p.id, p));
+        return Array.from(map.values());
+      })
+    );
+
+    parties$
+      .pipe(
+        switchMap((parties) => {
+          const teamIds = parties.map((p) => p.id);
+          const teamRes$ = teamIds.length
+            ? this.reservationService.getReservationsForTeams(teamIds)
+            : of<IReservation[]>([]);
+          return forkJoin({
+            team: teamRes$,
+            user: this.reservationService.getMyReservations(),
+          }).pipe(map(({ team, user }) => [...team, ...user]));
+        })
+      )
+      .subscribe((allReservations) => {
+        this.reservationsSignal.set(allReservations ?? []);
       });
-    }
   }
 
   onManage(reservation: IReservation): void {

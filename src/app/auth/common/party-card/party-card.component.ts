@@ -56,11 +56,17 @@ export class PartyCardComponent {
     return this.auth.userDisplayName(this.owner());
   }
 
-  get myRole(): TeamRole {
-    const userId = this.user()?.id;
-    const member = this.members().find((m) => m.userId === userId);
-    return member ? member.role : TeamRole.None;
-  }
+  readonly myRole = computed<TeamRole>(() => {
+    const me = this.user()?.id ?? null;
+    if (!me) return TeamRole.None;
+
+    const t = this.team();
+    if (t.ownerId === me) return TeamRole.Owner;
+    if (t.gmId === me) return TeamRole.Gm;
+
+    const m = this.members().find(x => x.userId === me);
+    return (m?.role as unknown as TeamRole) ?? TeamRole.None;
+  });
 
   ngOnInit(): void {
     forkJoin([

@@ -8,7 +8,6 @@ import {
   viewChild,
   WritableSignal,
 } from '@angular/core';
-
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { forkJoin, of } from 'rxjs';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
@@ -21,6 +20,8 @@ import { PartyService } from '../../core/services/party/party.service';
 import { Router } from '@angular/router';
 import { PartyDetailsModalComponent } from '../../common/party-details-modal/party-details-modal.component';
 import { IUser } from '../../../core/interfaces/i-user';
+import { CoworkerRoles } from '../../../core/enums/roles';
+import { hasMinimumCoworkerRole } from '../../../core/utils/required-roles';
 
 @Component({
   selector: 'app-my-parties',
@@ -29,7 +30,6 @@ import { IUser } from '../../../core/interfaces/i-user';
   templateUrl: './my-parties.component.html',
 })
 export class MyTeamsComponent {
-  // === DI ===
   private readonly partyService = inject(PartyService);
   private readonly modal = inject(NgbModal);
   private readonly toastService = inject(ToastService);
@@ -38,41 +38,66 @@ export class MyTeamsComponent {
 
   readonly user = this.auth.user()!;
 
-  // === Toast templates ===
-  readonly leaveSuccessToast =
-    viewChild<TemplateRef<unknown>>('leaveSuccessToast');
-  readonly leaveErrorToast = viewChild<TemplateRef<unknown>>('leaveErrorToast');
+  readonly leaveSuccessToast = viewChild<TemplateRef<unknown>>('leaveSuccessToast');
+  readonly leaveErrorToast   = viewChild<TemplateRef<unknown>>('leaveErrorToast');
 
-  // === Signals ===
-  private readonly teamsSignal: WritableSignal<IParty[]> = signal([]);
-  readonly filteredTeams = computed(() => this.teamsSignal());
+  readonly gmTeams: WritableSignal<IParty[]>    = signal<IParty[]>([]);
+  readonly ownerTeams: WritableSignal<IParty[]> = signal<IParty[]>([]);
+  readonly memberTeams: WritableSignal<IParty[]> = signal<IParty[]>([]);
+
   readonly teamMembers: WritableSignal<IPartyMember[]> = signal([]);
-  readonly teamSystems: WritableSignal<IRPGSystem[]> = signal([]);
+  readonly teamSystems: WritableSignal<IRPGSystem[]>   = signal([]);
+
+  readonly canShowGmSection = computed(() =>
+    hasMinimumCoworkerRole(this.auth.user(), CoworkerRoles.Gm)
+  );
+
+  readonly isEmpty = computed(
+    () => !this.gmTeams().length && !this.ownerTeams().length && !this.memberTeams().length
+  );
 
   constructor() {
     this.loadTeams();
   }
 
+  private loadTeams(): void {
+    const u = this.auth.user();
+    if (!u?.id) return;
+    const userId = u.id;
+
+    const gm$     = this.canShowGmSection() ? this.partyService.getPartiesWhereGm(userId) : of<IParty[]>([]);
+    const owner$  = this.partyService.getPartiesOwnedBy(userId);
+    const member$ = this.partyService.getPartiesWhereMember(userId);
+
+    forkJoin([gm$, owner$, member$]).subscribe(([gmTeams, ownerTeams, memberTeams]) => {
+      const gmIds    = new Set(gmTeams.map(t => t.id));
+      const ownerIds = new Set(ownerTeams.map(t => t.id));
+
+      const ownerOnly  = ownerTeams.filter(t => !gmIds.has(t.id));
+      const memberOnly = memberTeams.filter(t => !gmIds.has(t.id) && !ownerIds.has(t.id));
+
+      this.gmTeams.set(gmTeams);
+      this.ownerTeams.set(ownerOnly);
+      this.memberTeams.set(memberOnly);
+    });
+  }
+
   onShowDetails(team: IParty) {
     const ownerId = team.ownerId ?? '';
-    const gmId = team.gmId ?? '';
+    const gmId    = team.gmId ?? '';
 
     forkJoin({
       owner: ownerId ? this.partyService.getPartyOwnerData(ownerId) : of(null),
-      gm: gmId ? this.partyService.getPartyOwnerData(gmId) : of(null),
+      gm:    gmId    ? this.partyService.getPartyOwnerData(gmId)    : of(null),
       members: this.partyService.getPartyMembers(team.id),
       systems: this.partyService.getPartySystems(team.id),
       profile: this.partyService.getPartyProfile(team.id),
     }).subscribe({
       next: ({ owner, gm, members, systems, profile }) => {
-        const ownerLabel = this.userLabel(owner);
-        const gmLabel = this.userLabel(gm);
-
-        // Zbuduj Row na podstawie IParty + etykiety
         const row: Row = {
           ...team,
-          ownerLabel,
-          gmLabel,
+          ownerLabel: this.userLabel(owner),
+          gmLabel:    this.userLabel(gm),
         };
 
         const ref = this.modal.open(PartyDetailsModalComponent, {
@@ -80,20 +105,19 @@ export class MyTeamsComponent {
           backdrop: 'static',
         });
 
-        // Do modala wysyłamy Row
-        ref.componentInstance.team = row;
-
-        // oraz resztę danych jak wcześniej (pełni użytkownicy itd.)
-        ref.componentInstance.owner = owner;
-        ref.componentInstance.gm = gm;
+        ref.componentInstance.team    = row;
+        ref.componentInstance.owner   = owner;
+        ref.componentInstance.gm      = gm;
         ref.componentInstance.members = members;
         ref.componentInstance.systems = systems;
         ref.componentInstance.profile = profile;
       },
-      error: (err) => {
-        console.error('Błąd podczas ładowania danych drużyny:', err);
-      },
+      error: (err) => console.error('Błąd podczas ładowania danych drużyny:', err),
     });
+  }
+
+  onEditParty(team: IParty): void {
+    this.router.navigate([`auth/edit-party/${team.slug}`]);
   }
 
   private userLabel(u: IUser | null): string {
@@ -101,48 +125,6 @@ export class MyTeamsComponent {
     if (u.useNickname && u.nickname) return u.nickname;
     return u.firstName ?? u.email ?? '—';
   }
-
-  onEditParty(team: IParty): void {
-    this.router.navigate([`auth/edit-party/${team.slug}`]);
-  }
-
-  // openLeaveModal(teamId: string): void {
-  //   const modalRef = this.modal.open(InfoModalComponent, {
-  //     size: 'md',
-  //     backdrop: 'static',
-  //     keyboard: false,
-  //   });
-
-  //   modalRef.componentInstance.header = 'Potwierdzenie';
-  //   modalRef.componentInstance.message =
-  //     'Czy na pewno chcesz opuścić tę drużynę?';
-  //   modalRef.componentInstance.showCancel = true;
-
-  //   from(modalRef.result)
-  //     .pipe(
-  //       switchMap((confirmed) => {
-  //         if (!confirmed) {
-  //           this.showLeaveAbortedToast();
-  //           return [];
-  //         }
-
-  //         return this.PartyService.leaveTeam(teamId).pipe(
-  //           tap(() => this.showLeaveSuccessToast()),
-  //           catchError(() => {
-  //             this.showLeaveErrorToast();
-  //             return [];
-  //           })
-  //         );
-  //       }),
-  //       catchError(() => {
-  //         this.showLeaveAbortedToast();
-  //         return [];
-  //       })
-  //     )
-  //     .subscribe(() => {
-  //       this.loadTeams();
-  //     });
-  // }
 
   private showLeaveSuccessToast(): void {
     const template = this.leaveSuccessToast();
@@ -176,16 +158,4 @@ export class MyTeamsComponent {
       });
     }
   }
-
-  private loadTeams(): void {
-    if (!this.auth.user()) return;
-    const userId = this.auth.user()?.id;
-    this.partyService.getPartiesByUser(userId!!).subscribe((teams) => {
-      this.teamsSignal.set(teams ?? []);
-    });
-  }
-
-  // onManage(team: IParty): void {
-  //   this.openLeaveModal(team.id);
-  // }
 }

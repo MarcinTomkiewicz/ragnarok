@@ -252,10 +252,17 @@ export class ReservationService {
     sunday.setDate(monday.getDate() + 6);
     sunday.setHours(23, 59, 59, 999);
 
-    return this.partyService.getUserParties(user.id).pipe(
-      switchMap((parties) => {
-        const teamIds = parties.map((party) => party.id);
-        if (teamIds.length === 0) return of(false);
+    return forkJoin([
+      this.partyService.getPartiesOwnedBy(user.id),
+      this.partyService.getPartiesWhereMember(user.id),
+    ]).pipe(
+      map(([owned, member]) => {
+        const all = [...owned, ...member];
+        const uniqueTeamIds = Array.from(new Set(all.map((p) => p.id)));
+        return uniqueTeamIds;
+      }),
+      switchMap((teamIds) => {
+        if (!teamIds.length) return of(false);
 
         return this.backend
           .getAll<IReservation>('reservations', 'date', 'asc', {

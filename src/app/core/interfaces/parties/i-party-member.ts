@@ -1,6 +1,5 @@
 import { TeamRole } from "../../enums/team-role";
 import { IUser } from "../i-user";
-import { IParty } from "./i-party";
 
 export type TeamMemberRole = TeamRole;
 

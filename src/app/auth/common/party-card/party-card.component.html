@@ -8,7 +8,7 @@
       <p>
         <strong>Właściciel:</strong> {{ owner() ? ownerDisplayName : "Brak" }}
       </p>
-      <p><strong>Rola: </strong>{{ TeamRoleLabels[myRole] }}</p>
+      <p><strong>Rola: </strong>{{ TeamRoleLabels[myRole()] }}</p>
       <div class="card-text-dark mb-2">
         <strong>Systemy: </strong>
         @if (systems().length > 0) { @for (system of systems(); track system.id)
