@@ -7,12 +7,12 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { SystemRole } from '../../../../core/enums/systemRole';
 import { TimeSlots } from '../../../../core/enums/hours';
+import { of, combineLatest } from 'rxjs';
+import { distinctUntilChanged, switchMap, startWith, map } from 'rxjs/operators';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { PartyService } from '../../../core/services/party/party.service';
 
-enum DurationOptions {
-  ClubRoom = 4,
-  OtherRoom = 6,
-  FullTime = 11,
-}
+type GmChoice = 'party' | 'manual';
 
 @Component({
   selector: 'app-time-selection',
@@ -22,12 +22,11 @@ enum DurationOptions {
   styleUrl: './time-selection.component.scss',
 })
 export class TimeSelectionComponent {
-  // === Dependencies ===
   private readonly store = inject(ReservationStoreService);
   private readonly reservationService = inject(ReservationService);
   private readonly auth = inject(AuthService);
+  private readonly partyService = inject(PartyService);
 
-  // === Local state ===
   readonly selectedTime = signal<string | null>(
     this.store.selectedStartTime() ?? null
   );
@@ -37,7 +36,83 @@ export class TimeSelectionComponent {
   readonly needsGm = signal<boolean>(this.store.needsGm());
   readonly reservations = signal<IReservation[]>([]);
 
-  // === Roles ===
+  // PARTY + GM defaulting
+  readonly selectedPartyId = this.store.selectedPartyId; // proxy do templatki
+  readonly partyGmId = signal<string | null>(null);
+  readonly gmChoice = signal<GmChoice>('manual');
+  private readonly gmChoiceTouched = signal(false);
+
+  constructor() {
+    const date = this.store.selectedDate();
+    const room = this.store.selectedRoom();
+    if (date && room) {
+      this.reservationService
+        .getReservationsForRoom(room, date)
+        .subscribe((res) => this.reservations.set(res));
+    }
+
+    toObservable(this.store.selectedPartyId)
+      .pipe(
+        distinctUntilChanged(),
+        switchMap((pid) =>
+          pid
+            ? this.partyService
+                .getPartyById(pid)
+                .pipe(map((team) => ({ pid, team })))
+            : of({ pid: null as string | null, team: null })
+        )
+      )
+      .subscribe(({ pid, team }) => {
+        const gmId = team?.gmId ?? null;
+        this.partyGmId.set(gmId);
+
+        if (this.needsGm() && !this.gmChoiceTouched()) {
+          if (pid && gmId) {
+            this.gmChoice.set('party');
+            this.store.selectedGm.set(gmId);
+          } else {
+            this.gmChoice.set('manual');
+            this.store.selectedGm.set(null);
+          }
+        }
+      });
+
+    toObservable(this.needsGm)
+      .pipe(startWith(this.needsGm()), distinctUntilChanged())
+      .subscribe((on) => {
+        if (!on) {
+          this.gmChoice.set('manual');
+          this.gmChoiceTouched.set(false);
+          this.store.needsGm.set(false);
+          this.store.selectedGm.set(null);
+          return;
+        }
+        this.store.needsGm.set(true);
+        if (!this.gmChoiceTouched()) {
+          const pid = this.selectedPartyId();
+          const gmId = this.partyGmId();
+          if (pid && gmId) {
+            this.gmChoice.set('party');
+            this.store.selectedGm.set(gmId);
+          } else {
+            this.gmChoice.set('manual');
+            this.store.selectedGm.set(null);
+          }
+        }
+      });
+
+    combineLatest([
+      toObservable(this.partyGmId),
+      toObservable(this.store.selectedPartyId),
+      toObservable(this.needsGm),
+    ]).subscribe(([gmId, pid, needs]) => {
+      if (needs && this.gmChoice() === 'party') {
+        this.store.selectedGm.set(pid && gmId ? gmId : null);
+      }
+    });
+  }
+
+  // Roles
   readonly isPrivilegedUser = computed(
     () =>
       [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
@@ -48,30 +123,23 @@ export class TimeSelectionComponent {
   readonly isMemberRestrictedClubRoom = computed(() => {
     const room = this.store.selectedRoom();
     const role = this.auth.userCoworkerRole();
-
     return (
       [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
       (role === CoworkerRoles.Member || this.isPrivilegedUser())
     );
   });
 
-  // === Time logic ===
+  // Time logic
   readonly startHour = computed(() => {
-    if (this.store.isReceptionMode()) {
-      return TimeSlots.noonStart;
-    }
+    if (this.store.isReceptionMode()) return TimeSlots.noonStart;
     return this.isMemberRestrictedClubRoom()
       ? TimeSlots.earlyStart
       : TimeSlots.lateStart;
   });
 
   readonly maxDur = computed(() => {
-    if (this.store.isReceptionMode()) {
-      return DurationOptions.FullTime;
-    }
-    return this.isMemberRestrictedClubRoom()
-      ? DurationOptions.ClubRoom
-      : DurationOptions.OtherRoom;
+    if (this.store.isReceptionMode()) return 11;
+    return this.isMemberRestrictedClubRoom() ? 4 : 6;
   });
 
   readonly endHour = computed(() => TimeSlots.end);
@@ -80,7 +148,6 @@ export class TimeSelectionComponent {
     const start = this.startHour();
     const end = this.endHour();
     const slots = Array(end - start).fill(true);
-
     for (const res of this.reservations()) {
       const startRes = Number(res.startTime.split(':')[0]);
       for (let i = 0; i < res.durationHours; i++) {
@@ -88,11 +155,7 @@ export class TimeSelectionComponent {
         if (idx >= 0 && idx < slots.length) slots[idx] = false;
       }
     }
-
-    return slots.map((available, i) => ({
-      hour: start + i,
-      available,
-    }));
+    return slots.map((available, i) => ({ hour: start + i, available }));
   });
 
   readonly selectedHour = computed(() => {
@@ -103,31 +166,26 @@ export class TimeSelectionComponent {
   readonly durations = computed(() => {
     const hour = this.selectedHour();
     if (hour === null) return [];
-
     const start = this.startHour();
-
     const idx = hour - start;
-    const availableDurations: number[] = [];
-
+    const out: number[] = [];
     for (
       let len = 1;
       len <= this.maxDur() && idx + len <= this.timeSlots().length;
       len++
     ) {
       const slice = this.timeSlots().slice(idx, idx + len);
-      if (slice.every((s) => s.available)) availableDurations.push(len);
+      if (slice.every((s) => s.available)) out.push(len);
       else break;
     }
-
-    return availableDurations;
+    return out;
   });
 
-  // === Sync with store when user acts ===
+  // Actions
   selectTime(hour: number) {
     const time = `${String(hour).padStart(2, '0')}:00`;
     this.selectedTime.set(time);
     this.selectedDuration.set(1);
-
     this.store.selectedStartTime.set(time);
     this.store.selectedDuration.set(1);
   }
@@ -140,23 +198,24 @@ export class TimeSelectionComponent {
   toggleNeedsGm() {
     const updated = !this.needsGm();
     this.needsGm.set(updated);
-    this.store.needsGm.set(updated);
+    // reszta logiki defaultowania dzieje się w subskrypcji needsGm powyżej
   }
 
-  // === Used by stepper ===
+  choosePartyGm() {
+    this.gmChoiceTouched.set(true);
+    const gmId = this.partyGmId();
+    this.gmChoice.set('party');
+    this.store.selectedGm.set(gmId ?? null);
+  }
+
+  chooseManualGm() {
+    this.gmChoiceTouched.set(true);
+    this.gmChoice.set('manual');
+    this.store.selectedGm.set(null);
+  }
+
+  // Stepper
   readonly canProceed = computed(
     () => !!this.store.selectedStartTime() && this.store.selectedDuration()
   );
-
-  // === Init data ===
-  constructor() {
-    const date = this.store.selectedDate();
-    const room = this.store.selectedRoom();
-
-    if (date && room) {
-      this.reservationService
-        .getReservationsForRoom(room, date)
-        .subscribe((res) => this.reservations.set(res));
-    }
-  }
 }

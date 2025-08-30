@@ -38,7 +38,6 @@ export class RoomSelectionComponent {
   isMemberClubBlocked = false;
 
   constructor() {
-    // Initial room do fasady (nie w effect())
     this.calendar.setRoom(this.selectedRoom());
     this.loadUserParties();
   }

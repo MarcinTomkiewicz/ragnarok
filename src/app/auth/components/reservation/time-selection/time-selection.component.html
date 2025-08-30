@@ -3,43 +3,81 @@
 
   <div class="hour-grid">
     @for (slot of timeSlots(); track slot.hour) {
-    <button
-      class="btn btn-outline m-1"
-      [disabled]="!slot.available"
-      [class.active]="selectedTime() === slot.hour + ':00'"
-      (click)="selectTime(slot.hour)"
-    >
-      {{ slot.hour }}:00
-    </button>
+      <button
+        class="btn btn-outline m-1"
+        [disabled]="!slot.available"
+        [class.active]="selectedTime() === slot.hour + ':00'"
+        (click)="selectTime(slot.hour)"
+      >
+        {{ slot.hour }}:00
+      </button>
     }
   </div>
 
   @if (selectedTime()) {
-  <div class="duration-picker mt-4">
-    <h3 class="section-title">Wybierz długość rezerwacji</h3>
-    @for (d of durations(); track d) {
-    <button
-      class="btn btn-outline m-1"
-      [class.active]="selectedDuration() === d"
-      (click)="selectDuration(d)"
-    >
-      {{ d }}h
-    </button>
-    }
+    <div class="duration-picker mt-4">
+      <h3 class="section-title">Wybierz długość rezerwacji</h3>
 
-    <div class="form-check mt-3">
-      <input
-        class="form-check-input"
-        type="checkbox"
-        [checked]="needsGm()"
-        (change)="toggleNeedsGm()"
-        id="needsGmCheck"
-      />
-      <label class="form-check-label" for="needsGmCheck">
-        Potrzebuję Mistrza Gry
-      </label>
+      @for (d of durations(); track d) {
+        <button
+          class="btn btn-outline m-1"
+          [class.active]="selectedDuration() === d"
+          (click)="selectDuration(d)"
+        >
+          {{ d }}h
+        </button>
+      }
+
+      <div class="form-check mt-3">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          [checked]="needsGm()"
+          (change)="toggleNeedsGm()"
+          id="needsGmCheck"
+        />
+        <label class="form-check-label" for="needsGmCheck">
+          Potrzebuję Mistrza Gry
+        </label>
+      </div>
+
+      @if (needsGm()) {
+        <div class="mt-2 ps-4">
+          @if (selectedPartyId()) {
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="gmSource"
+                id="gmSourceParty"
+                [disabled]="!partyGmId()"
+                [checked]="gmChoice() === 'party'"
+                (change)="choosePartyGm()"
+              />
+              <label class="form-check-label" for="gmSourceParty">
+                Wybierz drużynowego Mistrza Gry
+                @if (!partyGmId()) {
+                  <small class="text-muted">(brak przypisanego MG w tej drużynie)</small>
+                }
+              </label>
+            </div>
+          }
+
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="gmSource"
+              id="gmSourceManual"
+              [checked]="gmChoice() === 'manual'"
+              (change)="chooseManualGm()"
+            />
+            <label class="form-check-label" for="gmSourceManual">
+              Wybiorę z listy w następnym kroku
+            </label>
+          </div>
+        </div>
+      }
     </div>
-  </div>
-
   }
 </div>

@@ -10,19 +10,111 @@
     </select>
   </form>
 
-  @if(form.get('systemId')?.value){
+  @if (isPartyGmLocked()) {
+    <div class="mt-2">
+      <h2 class="section-title">Wybrany Mistrz Gry</h2>
+
+      @if (lockedGmWarn()) {
+        <div class="alert alert-warning text-start mt-2" role="alert">
+          Wybrano godziny sesji <strong>poza godzinami dostępności Mistrza Gry</strong>.
+          Upewnij się, że Mistrz Gry będzie mógł poprowadzić sesję lub wybierz inny termin poniżej.
+        </div>
+      }
+
+      <div class="mg-grid one-gm">
+        <div class="flex-column-start gap-2">
+          <div class="mg-card" (click)="lockedGm() && onCardClick(lockedGm()!)">
+            @if (lockedGm()?.image) {
+              <img [src]="lockedGm()!.image" [alt]="gmDisplayName(lockedGm())" class="mg-avatar" />
+            }
+            <h3 class="mg-name">{{ gmDisplayName(lockedGm()) }}</h3>
+            @if (lockedGm()?.shortDescription) {
+              <p class="mg-description truncate-three-lines">
+                {{ lockedGm()!.shortDescription }}
+              </p>
+            }
+          </div>
+
+          <button
+            class="btn btn-outline active"
+            disabled
+          >
+            Wybrano
+          </button>
+
+          @if (lockedGm()) {
+            <button class="btn btn-primary" (click)="openPickSlotModal(lockedGm()!)">
+              Inny termin
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (!isPartyGmLocked() && form.get('systemId')?.value) {
     <div>
+      <h2 class="section-title">Dostępni Mistrzowie Gry</h2>
 
-      @if(!showSystemGms()){
-        <h2 class="section-title">Dostępni Mistrzowie Gry</h2>
+      @if (gms().length) {
+        <div class="mg-grid" [ngClass]="{
+            'one-gm': gms().length === 1,
+            'two-gms': gms().length === 2,
+            'more-gms': gms().length >= 3
+          }">
+          @for (gm of visibleGms(); track gm.userId) {
+            <div class="flex-column-start gap-2">
+              <div class="mg-card" (click)="onCardClick(gm)">
+                <img [src]="gm.image" [alt]="gmDisplayName(gm)" class="mg-avatar" />
+                <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
+                <p class="mg-description truncate-three-lines">
+                  {{ gm.shortDescription }}
+                </p>
+              </div>
+              <button
+                class="btn btn-outline"
+                [class.active]="gm.userId === store.selectedGm()"
+                (click)="selectGm(gm.userId)">
+                Wybierz
+              </button>
+            </div>
+          }
+        </div>
 
-        @if(gms().length){
+        @if (!showAll() && shouldShowMoreButton()) {
+          <div class="mt-4 text-center">
+            <button class="btn btn-outline" (click)="showAll.set(true)">
+              Pokaż więcej
+            </button>
+          </div>
+        }
+      } @else {
+        <div class="flex-column-center mt-3">
+          <p class="text-danger">Brak dostępnych MG dla wybranego systemu.</p>
+          @if (showAllGmsButton()) {
+            <div class="d-flex gap-2 mt-3">
+              <button class="btn btn-primary" (click)="showOnlyAvailableNow()">
+                Dostępni w tym terminie
+              </button>
+              <button class="btn btn-outline" (click)="showOnlySystemGms()">
+                Inny termin
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      @if (allAvailableGms().length) {
+        <div class="flex-column-start">
+          <h3 class="mt-4">Wszyscy dostępni Mistrzowie Gry</h3>
+          <p>Sprawdź szczegóły klikając kartę, a potem ponownie wybierz system.</p>
+
           <div class="mg-grid" [ngClass]="{
-              'one-gm': gms().length === 1,
-              'two-gms': gms().length === 2,
-              'more-gms': gms().length >= 3
+              'one-gm': visibleAllGms().length === 1,
+              'two-gms': visibleAllGms().length === 2,
+              'more-gms': visibleAllGms().length >= 3
             }">
-            @for (gm of visibleGms(); track gm.userId) {
+            @for (gm of visibleAllGms(); track gm.userId) {
               <div class="flex-column-start gap-2">
                 <div class="mg-card" (click)="onCardClick(gm)">
                   <img [src]="gm.image" [alt]="gmDisplayName(gm)" class="mg-avatar" />
@@ -31,115 +123,19 @@
                     {{ gm.shortDescription }}
                   </p>
                 </div>
-                <button
-                  class="btn btn-outline"
-                  [class.active]="gm.userId === store.selectedGm()"
-                  (click)="selectGm(gm.userId)">
-                  Wybierz
-                </button>
               </div>
             }
           </div>
 
-          @if (!showAll() && shouldShowMoreButton()) {
+          @if (!showAll() && shouldShowMoreGmsButton()) {
             <div class="mt-4 text-center">
               <button class="btn btn-outline" (click)="showAll.set(true)">
                 Pokaż więcej
               </button>
             </div>
           }
-        } @else {
-          <div class="flex-column-center mt-3">
-            <p class="text-danger">Brak dostępnych MG dla wybranego systemu.</p>
-            @if(showAllGmsButton()) {
-              <div class="d-flex gap-2 mt-3">
-                <button class="btn btn-primary" (click)="showOnlyAvailableNow()">
-                  Dostępni w tym terminie
-                </button>
-                <button class="btn btn-outline" (click)="showOnlySystemGms()">
-                  Inny termin
-                </button>
-              </div>
-            }
-          </div>
-        }
-
-        @if(allAvailableGms().length){
-          <div class="flex-column-start">
-            <h3 class="mt-4">Wszyscy dostępni Mistrzowie Gry</h3>
-            <p>Sprawdź szczegóły klikając kartę, a potem ponownie wybierz system.</p>
-
-            <div class="mg-grid" [ngClass]="{
-                'one-gm': visibleAllGms().length === 1,
-                'two-gms': visibleAllGms().length === 2,
-                'more-gms': visibleAllGms().length >= 3
-              }">
-              @for (gm of visibleAllGms(); track gm.userId) {
-                <div class="flex-column-start gap-2">
-                  <div class="mg-card" (click)="onCardClick(gm)">
-                    <img [src]="gm.image" [alt]="gmDisplayName(gm)" class="mg-avatar" />
-                    <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
-                    <p class="mg-description truncate-three-lines">
-                      {{ gm.shortDescription }}
-                    </p>
-                  </div>
-                </div>
-              }
-            </div>
-
-            @if (!showAll() && shouldShowMoreGmsButton()) {
-              <div class="mt-4 text-center">
-                <button class="btn btn-outline" (click)="showAll.set(true)">
-                  Pokaż więcej
-                </button>
-              </div>
-            }
-          </div>
-        }
-      }
-
-      @if(showSystemGms()){
-        <div class="flex-column-start mt-4">
-          <h3>Prowadzą ten system (inne godziny)</h3>
-          <p>Wybierz termin – pokażemy najbliższe dostępne godziny.</p>
-
-          @if(systemGms().length){
-            <div class="mg-grid" [ngClass]="{
-                'one-gm': systemGms().length === 1,
-                'two-gms': systemGms().length === 2,
-                'more-gms': systemGms().length >= 3
-              }">
-              @for (gm of systemGms(); track gm.userId) {
-                <div class="flex-column-start gap-2">
-                  <div class="mg-card" (click)="onCardClick(gm)">
-                    <img [src]="gm.image" [alt]="gmDisplayName(gm)" class="mg-avatar" />
-                    <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
-                    <p class="mg-description truncate-three-lines">
-                      {{ gm.shortDescription }}
-                    </p>
-                  </div>
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-primary" (click)="openPickSlotModal(gm)">
-                      Wybierz termin
-                    </button>
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="mt-4">
-              <p class="text-muted">Brak Mistrzów Gry prowadzących ten system.</p>
-            </div>
-          }
-
-          <div class="mt-3">
-            <button class="btn btn-outline" (click)="showOnlyAvailableNow()">
-              Pokaż dostępnych MG
-            </button>
-          </div>
         </div>
-      } 
-
+      }
     </div>
   }
 </div>
