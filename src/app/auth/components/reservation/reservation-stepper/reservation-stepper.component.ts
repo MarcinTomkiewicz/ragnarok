@@ -21,6 +21,7 @@ import { ReservationSummaryComponent } from '../reservation-summary/reservation-
 import { RoomSelectionComponent } from '../room-selection/room-selection.component';
 import { TimeSelectionComponent } from '../time-selection/time-selection.component';
 import { UserInfoFormComponent } from '../user-info-form/user-info-form.component';
+import { PartyService } from '../../../core/services/party/party.service';
 
 @Component({
   selector: 'app-reservation-stepper',
@@ -43,6 +44,7 @@ export class ReservationStepperComponent {
   readonly router = inject(Router);
   readonly route = inject(ActivatedRoute);
   readonly auth = inject(AuthService);
+  readonly partyService = inject(PartyService);
   private readonly reservationService = inject(ReservationService);
   private readonly modalService = inject(NgbModal);
 
@@ -103,15 +105,59 @@ export class ReservationStepperComponent {
     }
   });
 
-  // Przechodzenie do następnego kroku
   goForward() {
     if (!this.canProceed()) return;
 
     const current = this.step();
     const needsGm = this.store.needsGm();
 
-    if (current === 2 && !needsGm) {
-      this.step.set(4);
+    if (current === 2) {
+      const pid = this.store.selectedPartyId();
+      if (!needsGm) {
+        this.step.set(4);
+        this.scrollToStepperTop();
+        this.store.saveToStorage();
+        return;
+      }
+
+      if (pid) {
+        this.partyService.getPartyById(pid).subscribe((team) => {
+          const isJoin = !!team?.beginnersProgram && team?.programStage === 1;
+
+          if (!isJoin) {
+            this.step.set(3);
+            this.scrollToStepperTop();
+            this.store.saveToStorage();
+            return;
+          }
+
+          const ensureThenGo = () => {
+            this.step.set(4);
+            this.scrollToStepperTop();
+            this.store.saveToStorage();
+          };
+
+          if (!this.store.selectedGm() && team?.gmId) {
+            this.store.selectedGm.set(team.gmId);
+          }
+
+          if (!this.store.selectedSystemId()) {
+            this.partyService.getPartySystems(pid).subscribe((sys) => {
+              const first = sys[0]?.id ?? null;
+              this.store.selectedSystemId.set(first);
+              ensureThenGo();
+            });
+            return;
+          }
+
+          ensureThenGo();
+        });
+        return;
+      }
+
+      this.step.set(3);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
       return;
     }
 
@@ -127,20 +173,42 @@ export class ReservationStepperComponent {
 
   goBack() {
     const current = this.step();
-    const needsGm = this.store.needsGm();
 
-    if (current === 4 && !needsGm) {
-      this.step.set(2);
-      this.scrollToStepperTop();
+    if (current === 4) {
+      const needsGm = this.store.needsGm();
+
+      if (!needsGm) {
+        this.step.set(2);
+        this.scrollToStepperTop();
+        this.store.saveToStorage();
+        return;
+      }
+
+      const pid = this.store.selectedPartyId();
+      if (!pid) {
+        this.step.set(3);
+        this.scrollToStepperTop();
+        this.store.saveToStorage();
+        return;
+      }
+
+      this.partyService.getPartyById(pid).subscribe((team) => {
+        const isJoin = !!team?.beginnersProgram && team?.programStage === 1;
+        this.step.set(isJoin ? 2 : 3);
+        this.scrollToStepperTop();
+        this.store.saveToStorage();
+      });
+
       return;
     }
+
+    if (current === 1 && !this.store.isReceptionMode()) return;
 
     const prev = current - 1;
     if (prev >= 0) {
       this.step.set(prev);
       this.scrollToStepperTop();
     }
-
     this.store.saveToStorage();
   }
 
@@ -190,7 +258,7 @@ export class ReservationStepperComponent {
           sessionStorage.removeItem('selectedDuration');
           sessionStorage.removeItem('selectedGm');
           sessionStorage.removeItem('needsGm');
-          sessionStorage.removeItem('selectedPartyId')
+          sessionStorage.removeItem('selectedPartyId');
           sessionStorage.removeItem('externalName');
           sessionStorage.removeItem('externalPhone');
           sessionStorage.removeItem('externalIsClubMember');

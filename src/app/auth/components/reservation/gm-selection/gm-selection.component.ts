@@ -292,7 +292,6 @@ export class GmSelectionComponent {
     return target.getTime() - now.getTime() >= 48 * 60 * 60 * 1000;
   }
 
-  // Helpery dla list w trybie „manualnym”
   readonly gmsForSystemAll = toSignal(
     this.form.get('systemId')!.valueChanges.pipe(
       switchMap((systemId: string | null) =>

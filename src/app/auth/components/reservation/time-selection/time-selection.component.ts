@@ -8,7 +8,12 @@ import { ReservationService } from '../../../core/services/reservation/reservati
 import { SystemRole } from '../../../../core/enums/systemRole';
 import { TimeSlots } from '../../../../core/enums/hours';
 import { of, combineLatest } from 'rxjs';
-import { distinctUntilChanged, switchMap, startWith, map } from 'rxjs/operators';
+import {
+  distinctUntilChanged,
+  switchMap,
+  startWith,
+  map,
+} from 'rxjs/operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { PartyService } from '../../../core/services/party/party.service';
 
@@ -36,11 +41,12 @@ export class TimeSelectionComponent {
   readonly needsGm = signal<boolean>(this.store.needsGm());
   readonly reservations = signal<IReservation[]>([]);
 
-  // PARTY + GM defaulting
-  readonly selectedPartyId = this.store.selectedPartyId; // proxy do templatki
+  readonly selectedPartyId = this.store.selectedPartyId;
   readonly partyGmId = signal<string | null>(null);
   readonly gmChoice = signal<GmChoice>('manual');
   private readonly gmChoiceTouched = signal(false);
+
+  readonly isJoinStage1 = signal<boolean>(false);
 
   constructor() {
     const date = this.store.selectedDate();
@@ -51,6 +57,7 @@ export class TimeSelectionComponent {
         .subscribe((res) => this.reservations.set(res));
     }
 
+    // Zmiana drużyny: pobierz GM + flagę programu
     toObservable(this.store.selectedPartyId)
       .pipe(
         distinctUntilChanged(),
@@ -65,6 +72,9 @@ export class TimeSelectionComponent {
       .subscribe(({ pid, team }) => {
         const gmId = team?.gmId ?? null;
         this.partyGmId.set(gmId);
+        this.isJoinStage1.set(
+          !!team?.beginnersProgram && team?.programStage === 1
+        );
 
         if (this.needsGm() && !this.gmChoiceTouched()) {
           if (pid && gmId) {
@@ -73,6 +83,76 @@ export class TimeSelectionComponent {
           } else {
             this.gmChoice.set('manual');
             this.store.selectedGm.set(null);
+          }
+        }
+
+        // Jeżeli już był wybrany start – sprawdź, czy 4h pasuje
+        if (this.isJoinStage1()) {
+          const h = this.selectedHour();
+          if (h != null) {
+            if (this.isRangeFree(h, 4)) {
+              this.selectedDuration.set(4);
+              this.store.selectedDuration.set(4);
+            } else {
+              this.store.selectedDuration.set(null);
+            }
+          } else {
+            this.store.selectedDuration.set(null);
+          }
+        }
+      });
+
+    toObservable(this.store.selectedPartyId)
+      .pipe(
+        distinctUntilChanged(),
+        switchMap((pid) =>
+          pid
+            ? this.partyService
+                .getPartyById(pid)
+                .pipe(map((team) => ({ pid, team })))
+            : of({ pid: null as string | null, team: null })
+        )
+      )
+      .subscribe(({ pid, team }) => {
+        const gmId = team?.gmId ?? null;
+        const join = !!team?.beginnersProgram && team?.programStage === 1;
+        this.isJoinStage1.set(join);
+        this.partyGmId.set(gmId);
+
+        // AUTO: Join → zawsze z MG
+        if (join) {
+          this.store.needsGm.set(true);
+          if (gmId) this.store.selectedGm.set(gmId);
+          if (pid) {
+            this.partyService.getPartySystems(pid).subscribe((systems) => {
+              const first = systems[0]?.id ?? null;
+              this.store.selectedSystemId.set(first);
+            });
+          }
+        } else {
+          // zachowanie dotychczasowe dla nie-Join
+          if (this.needsGm() && !this.gmChoiceTouched()) {
+            if (pid && gmId) {
+              this.gmChoice.set('party');
+              this.store.selectedGm.set(gmId);
+            } else {
+              this.gmChoice.set('manual');
+              this.store.selectedGm.set(null);
+            }
+          }
+        }
+
+        if (join) {
+          const h = this.selectedHour();
+          if (h != null) {
+            if (this.isRangeFree(h, 4)) {
+              this.selectedDuration.set(4);
+              this.store.selectedDuration.set(4);
+            } else {
+              this.store.selectedDuration.set(null);
+            }
+          } else {
+            this.store.selectedDuration.set(null);
           }
         }
       });
@@ -101,6 +181,7 @@ export class TimeSelectionComponent {
         }
       });
 
+    // Spójność selectedGm przy „party”
     combineLatest([
       toObservable(this.partyGmId),
       toObservable(this.store.selectedPartyId),
@@ -112,7 +193,7 @@ export class TimeSelectionComponent {
     });
   }
 
-  // Roles
+  // Role
   readonly isPrivilegedUser = computed(
     () =>
       [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
@@ -129,41 +210,89 @@ export class TimeSelectionComponent {
     );
   });
 
-  // Time logic
+  // Godziny dnia
   readonly startHour = computed(() => {
     if (this.store.isReceptionMode()) return TimeSlots.noonStart;
     return this.isMemberRestrictedClubRoom()
       ? TimeSlots.earlyStart
       : TimeSlots.lateStart;
   });
+  readonly endHour = computed(() => TimeSlots.end);
 
+  // Maksymalna długość (w Join stage 1 zawsze 4)
   readonly maxDur = computed(() => {
+    if (this.isJoinStage1()) return 4;
     if (this.store.isReceptionMode()) return 11;
     return this.isMemberRestrictedClubRoom() ? 4 : 6;
   });
 
-  readonly endHour = computed(() => TimeSlots.end);
-
+  // Siatka 1h
   readonly timeSlots = computed(() => {
     const start = this.startHour();
     const end = this.endHour();
-    const slots = Array(end - start).fill(true);
-    for (const res of this.reservations()) {
-      const startRes = Number(res.startTime.split(':')[0]);
-      for (let i = 0; i < res.durationHours; i++) {
-        const idx = startRes + i - start;
-        if (idx >= 0 && idx < slots.length) slots[idx] = false;
+    const len = end - start;
+
+    // baza: wolność co godzinę
+    const base = Array<boolean>(len).fill(true);
+    for (const r of this.reservations()) {
+      const s = parseInt(r.startTime.split(':')[0], 10);
+      for (let i = 0; i < r.durationHours; i++) {
+        const idx = s + i - start;
+        if (idx >= 0 && idx < len) base[idx] = false;
       }
     }
-    return slots.map((available, i) => ({ hour: start + i, available }));
+
+    // przy Join stage 1 wymagamy od razu 4h ciągiem
+    const requiredDur = this.isJoinStage1() ? 4 : 1;
+
+    return Array.from({ length: len }, (_, i) => {
+      let available = base[i];
+      if (available && requiredDur > 1) {
+        if (i + requiredDur > len) {
+          available = false;
+        } else {
+          for (let k = 0; k < requiredDur; k++) {
+            if (!base[i + k]) {
+              available = false;
+              break;
+            }
+          }
+        }
+      }
+      return { hour: start + i, available };
+    });
   });
 
+  // Overlap + zakres wolny
+  private overlaps(aStart: number, aDur: number, bStart: number, bDur: number) {
+    const aEnd = aStart + aDur;
+    const bEnd = bStart + bDur;
+    return aStart < bEnd && aEnd > bStart;
+  }
+  private isRangeFree(h: number, dur: number): boolean {
+    const start = this.startHour();
+    const end = this.endHour();
+    if (h < start || h + dur > end) return false;
+    for (const r of this.reservations()) {
+      const rs = parseInt(r.startTime.split(':')[0], 10);
+      if (this.overlaps(h, dur, rs, r.durationHours)) return false;
+    }
+    return true;
+  }
+
+  // Wybrana godzina
   readonly selectedHour = computed(() => {
-    const [hourStr] = this.selectedTime()?.split(':') ?? [];
-    return hourStr ? parseInt(hourStr, 10) : null;
+    const [h] = this.selectedTime()?.split(':') ?? [];
+    return h ? parseInt(h, 10) : null;
   });
 
+  // Dostępne długości
   readonly durations = computed(() => {
+    if (this.isJoinStage1()) {
+      const h = this.selectedHour();
+      return h != null && this.isRangeFree(h, 4) ? [4] : [];
+    }
+
     const hour = this.selectedHour();
     if (hour === null) return [];
     const start = this.startHour();
@@ -181,16 +310,32 @@ export class TimeSelectionComponent {
     return out;
   });
 
-  // Actions
+  // Akcje
   selectTime(hour: number) {
     const time = `${String(hour).padStart(2, '0')}:00`;
     this.selectedTime.set(time);
-    this.selectedDuration.set(1);
     this.store.selectedStartTime.set(time);
-    this.store.selectedDuration.set(1);
+
+    if (this.isJoinStage1()) {
+      // ustaw 4h tylko jeśli się mieści
+      if (this.isRangeFree(hour, 4)) {
+        this.selectedDuration.set(4);
+        this.store.selectedDuration.set(4);
+      } else {
+        this.store.selectedDuration.set(null);
+      }
+    } else {
+      this.selectedDuration.set(1);
+      this.store.selectedDuration.set(1);
+    }
   }
 
   selectDuration(duration: number) {
+    if (this.isJoinStage1()) {
+      this.selectedDuration.set(4);
+      this.store.selectedDuration.set(4);
+      return;
+    }
     this.selectedDuration.set(duration);
     this.store.selectedDuration.set(duration);
   }
@@ -198,7 +343,6 @@ export class TimeSelectionComponent {
   toggleNeedsGm() {
     const updated = !this.needsGm();
     this.needsGm.set(updated);
-    // reszta logiki defaultowania dzieje się w subskrypcji needsGm powyżej
   }
 
   choosePartyGm() {
@@ -214,8 +358,7 @@ export class TimeSelectionComponent {
     this.store.selectedGm.set(null);
   }
 
-  // Stepper
   readonly canProceed = computed(
-    () => !!this.store.selectedStartTime() && this.store.selectedDuration()
+    () => !!this.store.selectedStartTime() && !!this.store.selectedDuration()
   );
 }

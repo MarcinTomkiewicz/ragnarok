@@ -36,6 +36,16 @@
     </button>
 
     <div ngbDropdownMenu aria-labelledby="dropdownParties">
+      @if (partiesJoin().length) {
+        <h6 class="dropdown-header">Dołącz do Drużyny</h6>
+        @for (party of partiesJoin(); track party.id) {
+          <button ngbDropdownItem (click)="selectParty(party.id)">
+            {{ party.name }}
+          </button>
+        }
+        @if (partiesGm().length || partiesMine().length) { <div class="dropdown-divider"></div> }
+      }
+
       @if (partiesGm().length) {
         <h6 class="dropdown-header">Mistrz Gry</h6>
         @for (party of partiesGm(); track party.id) {
@@ -43,19 +53,19 @@
             {{ party.name }}
           </button>
         }
-        @if (partiesOther().length) { <div class="dropdown-divider"></div> }
+        @if (partiesMine().length) { <div class="dropdown-divider"></div> }
       }
 
-      @if (partiesOther().length) {
+      @if (partiesMine().length) {
         <h6 class="dropdown-header">Moje drużyny</h6>
-        @for (party of partiesOther(); track party.id) {
+        @for (party of partiesMine(); track party.id) {
           <button ngbDropdownItem (click)="selectParty(party.id)">
             {{ party.name }}
           </button>
         }
       }
 
-      @if (!partiesGm().length && !partiesOther().length) {
+      @if (!partiesJoin().length && !partiesGm().length && !partiesMine().length) {
         <span class="dropdown-item-text text-muted">Brak drużyn</span>
       }
     </div>

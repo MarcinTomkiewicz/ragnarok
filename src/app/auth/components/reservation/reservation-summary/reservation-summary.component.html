@@ -18,6 +18,7 @@
       }}</span>
     </div>
     }
+
     <div class="summary-row">
       <span class="label">Sala:</span>
       <span class="value">{{ store.selectedRoom() }}</span>
@@ -34,18 +35,20 @@
       <span class="label">Czas trwania:</span>
       <span class="value">{{ store.selectedDuration() }}h</span>
     </div>
+    @if (store.selectedPartyId()) {
     <div class="summary-row">
       <span class="label">Drużyna:</span>
       <span class="value">{{ partyDisplayName }}</span>
     </div>
-    <div class="summary-row">
-      <span class="label">MG potrzebny:</span>
-      <span class="value">{{ store.needsGm() ? "Tak" : "Nie" }}</span>
-    </div>
-    @if (store.needsGm() && store.selectedGm()) {
+    } @if (store.needsGm() && store.selectedGm()) {
     <div class="summary-row">
       <span class="label">Wybrany MG:</span>
       <span class="value">{{ gmDisplayName }}</span>
+    </div>
+    } @if (store.selectedSystemId()) {
+    <div class="summary-row">
+      <span class="label">System:</span>
+      <span class="value">{{ systemDisplayName }}</span>
     </div>
     }
   </div>

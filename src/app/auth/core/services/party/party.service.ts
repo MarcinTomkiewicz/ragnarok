@@ -114,7 +114,6 @@ export class PartyService {
       );
   }
   
-
   // ===== Write / Update =====
   createOrUpdateParty(
     team: IParty,

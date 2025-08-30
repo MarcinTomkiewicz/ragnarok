@@ -17,6 +17,7 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { ReservationsCalendarFacade } from '../../../core/services/reservations-calendar/reservations-calendar.facade';
 import { hasMinimumCoworkerRole } from '../../../../core/utils/required-roles';
+import { TeamRole } from '../../../../core/enums/team-role';
 
 @Component({
   selector: 'app-room-selection',
@@ -37,9 +38,10 @@ export class RoomSelectionComponent {
   readonly confirmedTeam = this.store.confirmedParty;
   readonly selectedPartyId = this.store.selectedPartyId;
 
-  // podział na dwie grupy
-  readonly partiesGm = signal<IParty[]>([]);
-  readonly partiesOther = signal<IParty[]>([]);
+  // 3 sekcje
+  readonly partiesGm   = signal<IParty[]>([]);
+  readonly partiesJoin = signal<IParty[]>([]);
+  readonly partiesMine = signal<IParty[]>([]);
 
   isMemberClubBlocked = false;
 
@@ -64,13 +66,9 @@ export class RoomSelectionComponent {
 
     return Object.values(SortedRooms).filter((room) => {
       const isClubOnly = [Rooms.Asgard, Rooms.Alfheim].includes(room);
-
       if (systemRole === SystemRole.Admin) return true;
       if (!isClubOnly) return true;
-
-      if (isReceptionMode) {
-        return isExternalClubMember === true;
-      }
+      if (isReceptionMode) return isExternalClubMember === true;
       return userRole === CoworkerRoles.Member;
     });
   });
@@ -159,25 +157,37 @@ export class RoomSelectionComponent {
         owned: this.partyService.getPartiesOwnedBy(userId),
         member: this.partyService.getPartiesWhereMember(userId),
       }).subscribe(({ gm, owned, member }) => {
-        const gmSet = new Set(gm.map((p) => p.id));
-        const otherMap = new Map<string, IParty>();
-        [...owned, ...member].forEach((p) => otherMap.set(p.id, p));
-        const other = Array.from(otherMap.values()).filter((p) => !gmSet.has(p.id));
+        const mapUnion = new Map<string, IParty>();
+        [...gm, ...owned, ...member].forEach(p => mapUnion.set(p.id, p));
+        const union = Array.from(mapUnion.values());
 
-        // sortowanie alfabetyczne
-        this.partiesGm.set(gm.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
-        this.partiesOther.set(other.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        const join = union.filter(p => p.beginnersProgram === true);
+        const gmNonJoin = gm.filter(p => p.beginnersProgram === false);
+
+        const gmNonJoinIds = new Set(gmNonJoin.map(p => p.id));
+        const mine = [...owned, ...member]
+          .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i)
+          .filter(p => p.beginnersProgram === false && !gmNonJoinIds.has(p.id));
+
+        this.partiesJoin.set(join.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        this.partiesGm.set(gmNonJoin.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        this.partiesMine.set(mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
       });
     } else {
       forkJoin({
         owned: this.partyService.getPartiesOwnedBy(userId),
         member: this.partyService.getPartiesWhereMember(userId),
       }).subscribe(({ owned, member }) => {
-        const otherMap = new Map<string, IParty>();
-        [...owned, ...member].forEach((p) => otherMap.set(p.id, p));
-        const other = Array.from(otherMap.values());
-        this.partiesGm.set([]); // brak sekcji MG
-        this.partiesOther.set(other.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        const mapUnion = new Map<string, IParty>();
+        [...owned, ...member].forEach(p => mapUnion.set(p.id, p));
+        const union = Array.from(mapUnion.values());
+
+        const join = union.filter(p => p.beginnersProgram === true);
+        const mine = union.filter(p => p.beginnersProgram === false);
+
+        this.partiesGm.set([]); // brak sekcji GM dla ról < GM
+        this.partiesJoin.set(join.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        this.partiesMine.set(mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
       });
     }
   }
@@ -185,14 +195,42 @@ export class RoomSelectionComponent {
   selectParty(partyId: string) {
     this.store.selectedPartyId.set(partyId);
     this.store.confirmedParty.set(!!partyId);
+    this.autoConfirmClubIfAllPlayersAreMembers(partyId);
+  }
+
+  private autoConfirmClubIfAllPlayersAreMembers(partyId: string) {
+    const isClubRoom = [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom());
+    const iAmMember = this.auth.userCoworkerRole() === CoworkerRoles.Member;
+    if (!isClubRoom || !iAmMember) return;
+
+    this.partyService.getPartyMembers(partyId).subscribe((members) => {
+      const playerIds = members
+        .filter((m) => !m.leftAt && m.role === TeamRole.Player)
+        .map((m) => m.userId);
+
+      if (!playerIds.length) {
+        this.store.confirmedParty.set(false);
+        return;
+      }
+
+      this.partyService.getUsersByIds(playerIds).subscribe((users) => {
+        const allPlayersAreClubMembers = users.every(
+          (u) => u.coworker === CoworkerRoles.Member
+        );
+        if (allPlayersAreClubMembers) {
+          this.store.confirmedParty.set(true);
+        }
+      });
+    });
   }
 
   getSelectedPartyName(): string | null {
     const pid = this.store.selectedPartyId();
     if (!pid) return null;
     const found =
+      this.partiesJoin().find((p) => p.id === pid) ??
       this.partiesGm().find((p) => p.id === pid) ??
-      this.partiesOther().find((p) => p.id === pid);
+      this.partiesMine().find((p) => p.id === pid);
     return found?.name ?? null;
   }
 
