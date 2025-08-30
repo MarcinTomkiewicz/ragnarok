@@ -10,15 +10,17 @@ import {
 } from '@angular/core';
 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
-import { IParty } from '../../../core/interfaces/parties/i-party';
+import { IParty, Row } from '../../../core/interfaces/parties/i-party';
 import { IPartyMember } from '../../../core/interfaces/parties/i-party-member';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { PartyListComponent } from '../../common/party-list/party-list.component';
 import { PartyService } from '../../core/services/party/party.service';
 import { Router } from '@angular/router';
+import { PartyDetailsModalComponent } from '../../common/party-details-modal/party-details-modal.component';
+import { IUser } from '../../../core/interfaces/i-user';
 
 @Component({
   selector: 'app-my-parties',
@@ -28,11 +30,11 @@ import { Router } from '@angular/router';
 })
 export class MyTeamsComponent {
   // === DI ===
-  private readonly PartyService = inject(PartyService);
+  private readonly partyService = inject(PartyService);
   private readonly modal = inject(NgbModal);
   private readonly toastService = inject(ToastService);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router)
+  private readonly router = inject(Router);
 
   readonly user = this.auth.user()!;
 
@@ -51,19 +53,42 @@ export class MyTeamsComponent {
     this.loadTeams();
   }
 
-  onShowDetails(team: IParty): void {
-    forkJoin([
-      this.PartyService.getPartyMembers(team.id),
-      this.PartyService.getPartySystems(team.id),
-      this.PartyService.getPartyProfile(team.id),
-      this.PartyService.getPartyOwnerData(team.ownerId ? team.ownerId : ''),
-    ]).subscribe({
-      next: ([members, systems, profile, owner]) => {
-        console.log('Szczegóły drużyny:', team);
-        console.log('Członkowie drużyny:', members);
-        console.log('Systemy drużyny:', systems);
-        console.log('Profil drużyny:', profile);
-        console.log('Właściciel drużyny:', owner);
+  onShowDetails(team: IParty) {
+    const ownerId = team.ownerId ?? '';
+    const gmId = team.gmId ?? '';
+
+    forkJoin({
+      owner: ownerId ? this.partyService.getPartyOwnerData(ownerId) : of(null),
+      gm: gmId ? this.partyService.getPartyOwnerData(gmId) : of(null),
+      members: this.partyService.getPartyMembers(team.id),
+      systems: this.partyService.getPartySystems(team.id),
+      profile: this.partyService.getPartyProfile(team.id),
+    }).subscribe({
+      next: ({ owner, gm, members, systems, profile }) => {
+        const ownerLabel = this.userLabel(owner);
+        const gmLabel = this.userLabel(gm);
+
+        // Zbuduj Row na podstawie IParty + etykiety
+        const row: Row = {
+          ...team,
+          ownerLabel,
+          gmLabel,
+        };
+
+        const ref = this.modal.open(PartyDetailsModalComponent, {
+          size: 'lg',
+          backdrop: 'static',
+        });
+
+        // Do modala wysyłamy Row
+        ref.componentInstance.team = row;
+
+        // oraz resztę danych jak wcześniej (pełni użytkownicy itd.)
+        ref.componentInstance.owner = owner;
+        ref.componentInstance.gm = gm;
+        ref.componentInstance.members = members;
+        ref.componentInstance.systems = systems;
+        ref.componentInstance.profile = profile;
       },
       error: (err) => {
         console.error('Błąd podczas ładowania danych drużyny:', err);
@@ -71,8 +96,14 @@ export class MyTeamsComponent {
     });
   }
 
+  private userLabel(u: IUser | null): string {
+    if (!u) return '—';
+    if (u.useNickname && u.nickname) return u.nickname;
+    return u.firstName ?? u.email ?? '—';
+  }
+
   onEditParty(team: IParty): void {
-    this.router.navigate([`auth/edit-party/${team.slug}`])
+    this.router.navigate([`auth/edit-party/${team.slug}`]);
   }
 
   // openLeaveModal(teamId: string): void {
@@ -149,7 +180,7 @@ export class MyTeamsComponent {
   private loadTeams(): void {
     if (!this.auth.user()) return;
     const userId = this.auth.user()?.id;
-    this.PartyService.getPartiesByUser(userId!!).subscribe((teams) => {
+    this.partyService.getPartiesByUser(userId!!).subscribe((teams) => {
       this.teamsSignal.set(teams ?? []);
     });
   }

@@ -3,18 +3,18 @@ import { Component, Input, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { format } from 'date-fns';
 
-import { IParty } from '../../../core/interfaces/parties/i-party';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BehaviorSubject, map, of, switchMap } from 'rxjs';
+import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
+import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../core/interfaces/i-user';
+import { IParty } from '../../../core/interfaces/parties/i-party';
 import {
   IPartyMember,
   MemberRow,
 } from '../../../core/interfaces/parties/i-party-member';
-import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile';
 import { PartyService } from '../../core/services/party/party.service';
-import { BehaviorSubject, of, switchMap, map } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 
 @Component({
   selector: 'app-party-details-modal',
@@ -97,7 +97,7 @@ export class PartyDetailsModalComponent {
   get programDisplay(): string {
     if (!this.team.beginnersProgram) return 'Nie';
     const stage = this.team.programStage ?? null;
-    return stage ? `Tak (etap ${stage})` : 'Tak';
+    return stage ? `Tak (Etap ${stage})` : 'Tak';
   }
 
   roleLabel(r: string): string {
@@ -105,6 +105,7 @@ export class PartyDetailsModalComponent {
   }
 
   close(): void {
+    (document.activeElement as HTMLElement | null)?.blur();
     this.activeModal.dismiss();
   }
 }

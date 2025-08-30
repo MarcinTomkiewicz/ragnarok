@@ -2,18 +2,24 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { BehaviorSubject, of, switchMap, map, shareReplay, startWith, forkJoin } from 'rxjs';
+import {
+  BehaviorSubject,
+  of,
+  switchMap,
+  map,
+  shareReplay,
+  startWith,
+  forkJoin,
+} from 'rxjs';
 
 import { CoworkerRoles } from '../../../core/enums/roles';
 import { SystemRole } from '../../../core/enums/systemRole';
 import { IUser } from '../../../core/interfaces/i-user';
-import { IParty } from '../../../core/interfaces/parties/i-party';
+import { IParty, Row } from '../../../core/interfaces/parties/i-party';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { PartyService } from '../../core/services/party/party.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PartyDetailsModalComponent } from '../party-details-modal/party-details-modal.component';
-
-type Row = IParty & { ownerLabel: string; gmLabel: string };
 
 @Component({
   selector: 'app-parties-table',
@@ -44,17 +50,19 @@ export class PartiesTableComponent {
   private readonly rows$ = this.baseParties$.pipe(
     switchMap((teams) => {
       if (!teams.length) return of([] as Row[]);
-      const ids = Array.from(new Set([
-        ...(teams.map(t => t.ownerId).filter(Boolean) as string[]),
-        ...(teams.map(t => t.gmId).filter(Boolean)    as string[]),
-      ]));
+      const ids = Array.from(
+        new Set([
+          ...(teams.map((t) => t.ownerId).filter(Boolean) as string[]),
+          ...(teams.map((t) => t.gmId).filter(Boolean) as string[]),
+        ])
+      );
       return this.partyService.getUsersByIds(ids).pipe(
         map((users) => {
-          const byId = new Map(users.map(u => [u.id, u]));
-          return teams.map<Row>(t => ({
+          const byId = new Map(users.map((u) => [u.id, u]));
+          return teams.map<Row>((t) => ({
             ...t,
             ownerLabel: this.userLabel(byId.get(t.ownerId ?? '') ?? null),
-            gmLabel:    this.userLabel(byId.get(t.gmId    ?? '') ?? null),
+            gmLabel: this.userLabel(byId.get(t.gmId ?? '') ?? null),
           }));
         })
       );
@@ -73,32 +81,39 @@ export class PartiesTableComponent {
   }
 
   readonly isPrivileged = computed(
-    () => this.auth.userSystemRole() === SystemRole.Admin ||
-          this.auth.userCoworkerRole() === CoworkerRoles.Reception
+    () =>
+      this.auth.userSystemRole() === SystemRole.Admin ||
+      this.auth.userCoworkerRole() === CoworkerRoles.Reception
   );
 
   onToggleBeginners(team: Row, ev: Event) {
     const checked = (ev.target as HTMLInputElement).checked;
     const nextStage: 1 | 2 | null = checked ? team.programStage ?? 1 : null;
-    this.partyService.updateBeginnersProgramAndStage(team.id, checked, nextStage)
+    this.partyService
+      .updateBeginnersProgramAndStage(team.id, checked, nextStage)
       .subscribe(() => this.refresh$.next());
   }
 
   onStageChange(team: Row, ev: Event) {
     const v = (ev.target as HTMLSelectElement).value;
     const stage = v ? (Number(v) as 1 | 2) : null;
-    this.partyService.updateProgramStage(team.id, stage)
+    this.partyService
+      .updateProgramStage(team.id, stage)
       .subscribe(() => this.refresh$.next());
   }
 
-  onShow(team: Row) {
-    // Ładujemy wszystko, co potrzeba do modala
+  onShow(team: Row, ev?: Event) {
+    const opener =
+      (ev?.currentTarget as HTMLElement) ??
+      (document.activeElement as HTMLElement | null);
+    opener?.blur();
+
     const ownerId = team.ownerId ?? '';
-    const gmId    = team.gmId ?? '';
+    const gmId = team.gmId ?? '';
 
     forkJoin({
       owner: ownerId ? this.partyService.getPartyOwnerData(ownerId) : of(null),
-      gm:    gmId    ? this.partyService.getPartyOwnerData(gmId)    : of(null),
+      gm: gmId ? this.partyService.getPartyOwnerData(gmId) : of(null),
       members: this.partyService.getPartyMembers(team.id),
       systems: this.partyService.getPartySystems(team.id),
       profile: this.partyService.getPartyProfile(team.id),
@@ -107,17 +122,24 @@ export class PartiesTableComponent {
         size: 'lg',
         backdrop: 'static',
       });
-      ref.componentInstance.team    = team;
-      ref.componentInstance.owner   = owner;
-      ref.componentInstance.gm      = gm;
+
+      ref.componentInstance.team = team;
+      ref.componentInstance.owner = owner;
+      ref.componentInstance.gm = gm;
       ref.componentInstance.members = members;
       ref.componentInstance.systems = systems;
       ref.componentInstance.profile = profile;
+
+      const restoreFocus = () => {
+        setTimeout(() => requestAnimationFrame(() => opener?.focus()), 0);
+      };
+      ref.closed.subscribe(restoreFocus);
+      ref.dismissed.subscribe(restoreFocus);
     });
   }
 
-  onEdit(team: Row) {
-    // jeśli chcesz od razu na edycję:
+  onEdit(team: Row, ev?: Event) {
+    (ev?.currentTarget as HTMLElement | null)?.blur();
     this.router.navigate([`auth/edit-party/${team.slug}`]);
   }
 }

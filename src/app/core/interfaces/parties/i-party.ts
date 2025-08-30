@@ -11,3 +11,5 @@ export interface IParty {
   isForBeginners: boolean;
   slug: string;
 }
+
+export type Row = IParty & { ownerLabel: string; gmLabel: string };

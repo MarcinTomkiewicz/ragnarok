@@ -43,7 +43,7 @@
               [value]="team.programStage ?? ''"
               (change)="onStageChange(team, $event)"
             >
-              <option value="" disabled>Etap…</option>
+              <option value="" disabled>Etap</option>
               <option value="1">1</option>
               <option value="2">2</option>
             </select>
@@ -52,10 +52,14 @@
         </div>
 
         <div class="cell actions">
-          <button class="btn btn-sm btn-outline me-2" (click)="onShow(team)">
+          <button
+            ngbAutofocus
+            class="btn btn-sm btn-outline me-2"
+            (click)="onShow(team, $event)"
+          >
             Szczegóły
           </button>
-          <button class="btn btn-sm btn-outline" (click)="onEdit(team)">
+          <button class="btn btn-sm btn-outline" (click)="onEdit(team, $event)">
             Edytuj
           </button>
         </div>
