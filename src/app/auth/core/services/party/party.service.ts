@@ -2,7 +2,6 @@ import { inject, Injectable } from '@angular/core';
 import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import { GmStyleTag } from '../../../../core/enums/gm-styles';
-import { TeamRole } from '../../../../core/enums/team-role';
 import { IFilter } from '../../../../core/interfaces/i-filters';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../../core/interfaces/i-user';
@@ -18,14 +17,15 @@ import {
   IPagination,
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
-
-const PARTY_PEOPLE_SELECT =
-  'owner:users!teams_owner_id_fkey(id,email,first_name,nickname,use_nickname),' +
-  'gm:users!teams_gm_id_fkey(id,email,first_name,nickname,use_nickname)';
+import { TeamRole } from '../../../../core/enums/team-role';
 
 @Injectable({ providedIn: 'root' })
 export class PartyService {
   private backend = inject(BackendService);
+
+  // =========================
+  // Read
+  // =========================
 
   getParties(
     pagination?: IPagination,
@@ -55,186 +55,8 @@ export class PartyService {
     return this.backend.getById<IUser>('users', ownerId);
   }
 
-  getUserParties(userId: string): Observable<IParty[]> {
-    return forkJoin([
-      this.backend.getAll<IParty>('parties', 'name', 'asc', {
-        filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
-      }),
-      this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
-        filters: { userId: { operator: FilterOperator.EQ, value: userId } },
-      }),
-    ]).pipe(
-      switchMap(([ownedTeams, memberTeams]) => {
-        const memberTeamIds = memberTeams.map((member) => member.teamId);
-        if (memberTeamIds.length === 0) {
-          return of(ownedTeams);
-        }
-
-        return this.backend
-          .getAll<IParty>('parties', 'name', 'asc', {
-            filters: {
-              id: { operator: FilterOperator.IN, value: memberTeamIds },
-            },
-          })
-          .pipe(
-            map((memberParties) => {
-              return [...ownedTeams, ...memberParties];
-            })
-          );
-      })
-    );
-  }
-
-  createOrUpdateParty(
-    team: IParty,
-    systems: string[],
-    styleTags: GmStyleTag[],
-    description: string,
-    members: string[]
-  ): Observable<IParty> {
-    const teamData = toSnakeCase<IParty>(team);
-
-    return this.backend.upsert<IParty>('parties', teamData, 'slug').pipe(
-      switchMap(() => {
-        return this.backend
-          .getOneByFields<IParty>('parties', { slug: team.slug })
-          .pipe(
-            switchMap((updatedTeam) => {
-              if (!updatedTeam) {
-                throw new Error(
-                  'Błąd: nie udało się uzyskać zaktualizowanej drużyny'
-                );
-              }
-
-              const profileData: IPartyProfile = {
-                id: updatedTeam.id,
-                description: description,
-                styleTags: styleTags,
-                createdAt: new Date().toISOString(),
-              };
-
-              return this.backend
-                .upsert<IPartyProfile>(
-                  'party_profiles',
-                  toSnakeCase(profileData),
-                  'id'
-                )
-                .pipe(
-                  switchMap(() => {
-                    const systemRequests = systems.map((systemId) => ({
-                      teamId: updatedTeam.id,
-                      systemId,
-                    }));
-
-                    return this.removeDeletedSystems(
-                      updatedTeam.id,
-                      systems
-                    ).pipe(
-                      switchMap(() => {
-                        return this.backend.upsertMany<IPartySystem>(
-                          'party_systems',
-                          toSnakeCase(systemRequests),
-                          'team_id, system_id'
-                        );
-                      }),
-                      switchMap(() => {
-                        return this.removeDeletedMembers(
-                          updatedTeam.id,
-                          members
-                        ).pipe(
-                          switchMap(() => {
-                            const memberRequests = members.map((member) => ({
-                              teamId: updatedTeam.id,
-                              userId: member,
-                              role: null,
-                              joinedAt: new Date().toISOString(),
-                              leftAt: null,
-                            }));
-
-                            return this.backend.upsertMany<IPartyMember>(
-                              'party_members',
-                              toSnakeCase(memberRequests),
-                              'team_id,user_id'
-                            );
-                          })
-                        );
-                      })
-                    );
-                  }),
-                  map(() => updatedTeam)
-                );
-            })
-          );
-      })
-    );
-  }
-
-  private removeDeletedSystems(
-    teamId: string,
-    systems: string[]
-  ): Observable<void> {
-    return this.backend
-      .getAll<IPartySystem>('party_systems', 'teamId', 'asc', {
-        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
-      })
-      .pipe(
-        switchMap((existingSystems) => {
-          const existingSystemIds = existingSystems.map(
-            (system) => system.systemId
-          );
-          const systemsToDelete = existingSystemIds.filter(
-            (id) => !systems.includes(id)
-          );
-
-          if (systemsToDelete.length > 0) {
-            return forkJoin(
-              systemsToDelete.map((systemId) =>
-                this.backend.delete('party_systems', {
-                  teamId: { value: teamId, operator: FilterOperator.EQ },
-                  systemId: { value: systemId, operator: FilterOperator.EQ },
-                })
-              )
-            ).pipe(map(() => {}));
-          }
-          return of(undefined);
-        })
-      );
-  }
-
-  private removeDeletedMembers(
-    teamId: string,
-    members: string[]
-  ): Observable<void> {
-    return this.backend
-      .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
-        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
-      })
-      .pipe(
-        switchMap((existingMembers) => {
-          const existingMemberIds = existingMembers.map(
-            (member) => member.userId
-          );
-          const membersToDelete = existingMemberIds.filter(
-            (id) => !members.includes(id)
-          );
-
-          if (membersToDelete.length > 0) {
-            return forkJoin(
-              membersToDelete.map((userId) =>
-                this.backend.delete('party_members', {
-                  teamId: { value: teamId, operator: FilterOperator.EQ },
-                  userId: { value: userId, operator: FilterOperator.EQ },
-                })
-              )
-            ).pipe(map(() => {}));
-          }
-          return of(undefined);
-        })
-      );
-  }
-
-  deleteParty(id: string): Observable<void> {
-    return this.backend.delete('parties', id);
+  getUsersByIds(ids: string[]) {
+    return this.backend.getByIds<IUser>('users', ids);
   }
 
   getPartyMembers(
@@ -249,9 +71,7 @@ export class PartyService {
       'party_members',
       undefined,
       'asc',
-      {
-        filters: combinedFilters,
-      }
+      { filters: combinedFilters }
     );
   }
 
@@ -272,55 +92,34 @@ export class PartyService {
     return this.backend.getById<IPartyProfile>('party_profiles', teamId);
   }
 
-  getPendingRequests(teamId: string): Observable<IPartyMember[]> {
-    const filters = {
-      teamId: { operator: FilterOperator.EQ, value: teamId },
-      status: { operator: FilterOperator.EQ, value: 'pending' }, // jeśli status istnieje w bazie
-    };
-    return this.backend.getAll<IPartyMember>(
-      'party_members',
-      undefined,
-      'asc',
-      {
-        filters,
-      }
+  getUserParties(userId: string): Observable<IParty[]> {
+    return forkJoin([
+      this.backend.getAll<IParty>('parties', 'name', 'asc', {
+        filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+      this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+        filters: { userId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+    ]).pipe(
+      switchMap(([ownedTeams, memberTeams]) => {
+        const memberTeamIds = memberTeams.map((m) => m.teamId);
+        if (!memberTeamIds.length) return of(ownedTeams);
+
+        return this.backend
+          .getAll<IParty>('parties', 'name', 'asc', {
+            filters: {
+              id: { operator: FilterOperator.IN, value: memberTeamIds },
+            },
+          })
+          .pipe(
+            map((memberParties) => {
+              const all = [...ownedTeams, ...memberParties];
+
+              return Array.from(new Map(all.map((p) => [p.id, p])).values());
+            })
+          );
+      })
     );
-  }
-
-  requestToJoin(
-    teamId: string,
-    userId: string,
-    role: TeamMemberRole = TeamRole.Player
-  ): Observable<IPartyMember> {
-    const data: Partial<IPartyMember> = {
-      teamId,
-      userId,
-      role,
-      joinedAt: new Date().toISOString(),
-      leftAt: null,
-    };
-    return this.backend.create<IPartyMember>(
-      'party_members',
-      toSnakeCase(data)
-    );
-  }
-
-  acceptRequest(requestId: string): Observable<IPartyMember> {
-    // Zmiana np. statusu lub innego pola, jeśli status jest
-    // W interfejsie brak status, więc może usunięcie pending po prostu oznacza joinedAt + brak leftAt
-    return this.backend.update<IPartyMember>('party_members', requestId, {
-      leftAt: null,
-    });
-  }
-
-  rejectRequest(requestId: string): Observable<void> {
-    // Tu można usunąć rekord lub ustawić leftAt na datę odrzucenia
-    return this.backend
-      .delete('party_members', requestId)
-      .pipe
-      // Jeśli chcemy zwrócić pustą odpowiedź
-      // mapTo(null) lub podobne - zależy od potrzeb
-      ();
   }
 
   getPartiesByUser(userId: string): Observable<IParty[]> {
@@ -358,8 +157,102 @@ export class PartyService {
     );
   }
 
-  getUsersByIds(ids: string[]) {
-    return this.backend.getByIds<IUser>('users', ids);
+  // =========================
+  // Write / Update
+  // =========================
+
+  createOrUpdateParty(
+    team: IParty,
+    systems: string[],
+    styleTags: GmStyleTag[],
+    description: string,
+    members: string[]
+  ): Observable<IParty> {
+    const teamData = toSnakeCase<IParty>(team);
+
+    return this.backend.upsert<IParty>('parties', teamData, 'slug').pipe(
+      switchMap(() =>
+        this.backend.getOneByFields<IParty>('parties', { slug: team.slug })
+      ),
+      switchMap((updatedTeam) => {
+        if (!updatedTeam) {
+          throw new Error(
+            'Błąd: nie udało się uzyskać zaktualizowanej drużyny'
+          );
+        }
+
+        // 1) Profil
+        const profileData: IPartyProfile = {
+          id: updatedTeam.id,
+          description: description,
+          styleTags: styleTags,
+          createdAt: new Date().toISOString(),
+        };
+
+        return this.backend
+          .upsert<IPartyProfile>(
+            'party_profiles',
+            toSnakeCase(profileData),
+            'id'
+          )
+          .pipe(
+            // 2) Systemy
+            switchMap(() => {
+              const systemRequests = (systems ?? []).map((systemId) => ({
+                teamId: updatedTeam.id,
+                systemId,
+              }));
+
+              return this.removeDeletedSystems(updatedTeam.id, systems).pipe(
+                switchMap(() =>
+                  this.backend.upsertMany<IPartySystem>(
+                    'party_systems',
+                    toSnakeCase(systemRequests),
+                    'team_id, system_id'
+                  )
+                )
+              );
+            }),
+            // 3) Członkowie (role: owner/gm/player)
+            switchMap(() => {
+              const ownerId = updatedTeam.ownerId ?? null;
+              const gmId = updatedTeam.gmId ?? null;
+
+              const uniqueMembers = Array.from(
+                new Set((members ?? []).filter(Boolean))
+              ) as string[];
+
+              const memberRequests = uniqueMembers.map((userId) => ({
+                teamId: updatedTeam.id,
+                userId,
+                // wartości jako stringi — zgodne z typem ENUM w DB
+                role:
+                  userId === ownerId
+                    ? TeamRole.Owner
+                    : userId === gmId
+                    ? TeamRole.Gm
+                    : TeamRole.Player,
+                joinedAt: new Date().toISOString(),
+                leftAt: null as string | null,
+              }));
+
+              return this.removeDeletedMembers(
+                updatedTeam.id,
+                uniqueMembers
+              ).pipe(
+                switchMap(() =>
+                  this.backend.upsertMany<IPartyMember>(
+                    'party_members',
+                    toSnakeCase(memberRequests),
+                    'team_id,user_id'
+                  )
+                )
+              );
+            }),
+            map(() => updatedTeam)
+          );
+      })
+    );
   }
 
   updateBeginnersProgramAndStage(
@@ -377,5 +270,95 @@ export class PartyService {
       teamId,
       toSnakeCase({ programStage })
     );
+  }
+
+  deleteParty(id: string): Observable<void> {
+    return this.backend.delete('parties', id);
+  }
+
+  requestToJoin(
+    teamId: string,
+    userId: string,
+    role: TeamMemberRole = TeamRole.Player // domyślnie 'player'; opcjonalnie 'guest'
+  ): Observable<IPartyMember> {
+    const data: Partial<IPartyMember> = {
+      teamId,
+      userId,
+      role,
+      joinedAt: new Date().toISOString(),
+      leftAt: null,
+    };
+    return this.backend.create<IPartyMember>(
+      'party_members',
+      toSnakeCase(data)
+    );
+  }
+
+  acceptRequest(requestId: string): Observable<IPartyMember> {
+    return this.backend.update<IPartyMember>('party_members', requestId, {
+      leftAt: null,
+    });
+  }
+
+  rejectRequest(requestId: string): Observable<void> {
+    return this.backend.delete('party_members', requestId);
+  }
+
+  // =========================
+  // Helpers (private)
+  // =========================
+
+  private removeDeletedSystems(
+    teamId: string,
+    systems: string[]
+  ): Observable<void> {
+    return this.backend
+      .getAll<IPartySystem>('party_systems', 'teamId', 'asc', {
+        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
+      })
+      .pipe(
+        switchMap((existing) => {
+          const existingIds = existing.map((s) => s.systemId);
+          const keep = new Set(systems ?? []);
+          const toDelete = existingIds.filter((id) => !keep.has(id));
+          if (!toDelete.length) return of(void 0);
+
+          return forkJoin(
+            toDelete.map((systemId) =>
+              this.backend.delete('party_systems', {
+                teamId: { value: teamId, operator: FilterOperator.EQ },
+                systemId: { value: systemId, operator: FilterOperator.EQ },
+              })
+            )
+          ).pipe(map(() => void 0));
+        })
+      );
+  }
+
+  private removeDeletedMembers(
+    teamId: string,
+    members: string[]
+  ): Observable<void> {
+    return this.backend
+      .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
+      })
+      .pipe(
+        switchMap((existing) => {
+          const existingIds = existing.map((m) => m.userId);
+          const keep = new Set(members ?? []);
+          const toDelete = existingIds.filter((id) => !keep.has(id));
+          if (!toDelete.length) return of(void 0);
+
+          return forkJoin(
+            toDelete.map((userId) =>
+              this.backend.delete('party_members', {
+                teamId: { value: teamId, operator: FilterOperator.EQ },
+                userId: { value: userId, operator: FilterOperator.EQ },
+              })
+            )
+          ).pipe(map(() => void 0));
+        })
+      );
   }
 }

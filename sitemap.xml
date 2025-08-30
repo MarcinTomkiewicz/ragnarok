@@ -1,62 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
-
-<url>
-  <loc>https://ragnarok-rooms.pl/</loc>
-  <priority>1.00</priority>
-</url>
-<url>
-  <loc>https://ragnarok-rooms.pl/about</loc>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://ragnarok-rooms.pl/services</loc>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://ragnarok-rooms.pl/offers-list</loc>
-  <priority>0.80</priority>
-</url>
-<url>
-  <loc>https://ragnarok-rooms.pl/events</loc>
-  <priority>0.80</priority>
-</url>
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+>
+  <url>
+    <loc>https://ragnarok-rooms.pl/</loc>
+    <lastmod>2025-08-30</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <loc>https://ragnarok-rooms.pl/about</loc>
+    <lastmod>2025-08-25</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://ragnarok-rooms.pl/offers-list</loc>
+    <lastmod>2025-08-28</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://ragnarok-rooms.pl/events</loc>
+    <lastmod>2025-08-29</lastmod>
+    <priority>0.80</priority>
+  </url>
 <url>
   <loc>https://ragnarok-rooms.pl/tech-stack</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/offers/rooms</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/offers/vouchers</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/offers/courses</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/memberships</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/our-rooms</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/register</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 <url>
   <loc>https://ragnarok-rooms.pl/contact</loc>
+  <lastmod>2025-08-30</lastmod>
   <priority>0.80</priority>
 </url>
 
