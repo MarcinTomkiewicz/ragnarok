@@ -3,6 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PrivacyPolicyComponent } from '../privacy-policy/privacy-policy.component';
 import { RegulationsComponent } from '../regulations/regulations.component'
 import { RouterLink } from '@angular/router';
+import { MenuService } from '../../core/services/menu/menu.service';
 
 @Component({
   selector: 'app-footer',
@@ -13,6 +14,7 @@ import { RouterLink } from '@angular/router';
 })
 export class FooterComponent {
   private readonly modalService = inject(NgbModal);
+    readonly menu = inject(MenuService);
 
   openPrivacyPolicy() {
     this.modalService.open(PrivacyPolicyComponent, { size: 'lg' });

@@ -9,19 +9,44 @@
           tworzy się przy stole, a legendy pisze się kostkami.
         </p>
         <div class="social-icons">
-          <a href="https://facebook.com/ragnarokrooms" target="_blank" rel="noopener" aria-label="Facebook">
+          <a
+            href="https://facebook.com/ragnarokrooms"
+            target="_blank"
+            rel="noopener"
+            aria-label="Facebook"
+          >
             <i class="bi bi-facebook"></i>
           </a>
-          <a href="https://instagram.com/ragnarokrooms" target="_blank" rel="noopener" aria-label="Instagram">
+          <a
+            href="https://instagram.com/ragnarokrooms"
+            target="_blank"
+            rel="noopener"
+            aria-label="Instagram"
+          >
             <i class="bi bi-instagram"></i>
           </a>
-          <a href="https://tiktok.com/@ragnarokrooms" target="_blank" rel="noopener" aria-label="TikTok">
+          <a
+            href="https://tiktok.com/@ragnarokrooms"
+            target="_blank"
+            rel="noopener"
+            aria-label="TikTok"
+          >
             <i class="bi bi-tiktok"></i>
           </a>
-          <a href="https://www.youtube.com/@CentrumRPG" target="_blank" rel="noopener" aria-label="YouTube">
+          <a
+            href="https://www.youtube.com/@CentrumRPG"
+            target="_blank"
+            rel="noopener"
+            aria-label="YouTube"
+          >
             <i class="bi bi-youtube"></i>
           </a>
-          <a href="https://discord.gg/cJVxdmRvUY" target="_blank" rel="noopener" aria-label="Discord">
+          <a
+            href="https://discord.gg/cJVxdmRvUY"
+            target="_blank"
+            rel="noopener"
+            aria-label="Discord"
+          >
             <i class="bi bi-discord"></i>
           </a>
         </div>
@@ -31,13 +56,31 @@
       <div class="footer-column">
         <h3 class="footer-heading gold-text">Na skróty</h3>
         <ul class="footer-links">
-          <li><a routerLink="/about">O nas</a></li>
-          <li><a routerLink="/our-rooms">Nasze pokoje</a></li>
-          <li><a routerLink="/events">Kalendarz wydarzeń</a></li>
-          <li><a routerLink="/services">Cennik</a></li>
-          <li><a routerLink="/tech-stack">Zespół</a></li>
-          <li><a routerLink="/offers-list">Sklep</a></li>
-          <li><a routerLink="/contact">Kontakt</a></li>
+          @for (l of menu.footerShortcuts(); track l.label) {
+          <li>
+            @if (!l.external) {
+            <a
+              routerLink="{{ l.path }}"
+              [class.disabled]="l.disabled"
+              (click)="l.disabled && $event.preventDefault()"
+            >
+              {{ l.label }} @if (l.badge) {
+              <span class="badge ms-1">{{ l.badge }}</span> }
+            </a>
+            } @else {
+            <a
+              href="{{ l.path }}"
+              [attr.target]="l.target ?? '_blank'"
+              rel="noopener"
+              [class.disabled]="l.disabled"
+              (click)="l.disabled && $event.preventDefault()"
+            >
+              {{ l.label }} @if (l.badge) {
+              <span class="badge ms-1">{{ l.badge }}</span> }
+            </a>
+            }
+          </li>
+          }
         </ul>
       </div>
 
@@ -45,7 +88,9 @@
       <div class="footer-column">
         <h3 class="footer-heading gold-text">Kontakt</h3>
         <ul class="footer-contact">
-          <li><i class="bi bi-geo-alt"></i> ul. Dolna Wilda 16A, 61-530 Poznań</li>
+          <li>
+            <i class="bi bi-geo-alt"></i> ul. Dolna Wilda 16A, 61-530 Poznań
+          </li>
           <li><i class="bi bi-telephone"></i> +48 533 616 491</li>
           <li><i class="bi bi-envelope"></i> ragnarok&#64;ragnarok-rooms.pl</li>
           <li><i class="bi bi-clock"></i> Pon-Nd: 17:00–23:00</li>
@@ -55,13 +100,22 @@
 
     <div class="footer-bottom">
       <p>
-        © 2025 Ragnarok. Wszystkie prawa zastrzeżone. 
+        © 2025 Ragnarok. Wszystkie prawa zastrzeżone.
         <span class="separator">|</span>
-        <button class="btn btn-plain" (click)="openPrivacyPolicy(); $event.preventDefault()">Polityka prywatności</button> 
+        <button
+          class="btn btn-plain"
+          (click)="openPrivacyPolicy(); $event.preventDefault()"
+        >
+          Polityka prywatności
+        </button>
         <span class="separator">|</span>
-        <button class="btn btn-plain" (click)="openRules('loyalty')">Regulamin programu lojalnościowego</button> 
+        <button class="btn btn-plain" (click)="openRules('loyalty')">
+          Regulamin programu lojalnościowego
+        </button>
         <span class="separator">|</span>
-        <button class="btn btn-plain" (click)="openRules('voucher')">Regulamin voucherów</button>
+        <button class="btn btn-plain" (click)="openRules('voucher')">
+          Regulamin voucherów
+        </button>
       </p>
     </div>
   </div>
