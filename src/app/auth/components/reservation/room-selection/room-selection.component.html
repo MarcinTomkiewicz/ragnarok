@@ -62,7 +62,7 @@
   } }
 
   <app-universal-calendar
-    [dailyDataMap]="reservationsMap()"
+      [dailyDataMap]="calendar.reservationsMap()"
     [mapDailyToHourlyAvailability]="mapReservationToHours()"
     [selectedDate]="selectedDate()"
     [selectionDisabled]="isSelectionDisabled()"
