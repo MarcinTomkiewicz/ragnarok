@@ -3,6 +3,7 @@ export enum TeamRole {
   Gm = 'gm',
   Player = 'player',
   Guest = 'guest',
+  None = 'unknown',
 }
 
 export const TeamRoleLabels: Record<TeamRole, string> = {
@@ -10,4 +11,5 @@ export const TeamRoleLabels: Record<TeamRole, string> = {
   [TeamRole.Gm]: 'Mistrz Gry',
   [TeamRole.Player]: 'Gracz',
   [TeamRole.Guest]: 'Gość',
+  [TeamRole.None]: 'Rola nieznana',
 };

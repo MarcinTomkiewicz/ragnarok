@@ -27,7 +27,7 @@ import { AuthService } from '../../../core/services/auth/auth.service';
   styleUrl: './party-card.component.scss',
 })
 export class PartyCardComponent {
-  private readonly PartyService = inject(PartyService);
+  private readonly partyService = inject(PartyService);
   private readonly auth = inject(AuthService);
 
   readonly user = this.auth.user;
@@ -56,12 +56,18 @@ export class PartyCardComponent {
     return this.auth.userDisplayName(this.owner());
   }
 
+  get myRole(): TeamRole {
+    const userId = this.user()?.id;
+    const member = this.members().find((m) => m.userId === userId);
+    return member ? member.role : TeamRole.None;
+  }
+
   ngOnInit(): void {
     forkJoin([
-      this.PartyService.getPartyMembers(this.team().id),
-      this.PartyService.getPartySystems(this.team().id),
-      this.PartyService.getPartyProfile(this.team().id),
-      this.PartyService.getPartyOwnerData(this.team().ownerId),
+      this.partyService.getPartyMembers(this.team().id),
+      this.partyService.getPartySystems(this.team().id),
+      this.partyService.getPartyProfile(this.team().id),
+      this.partyService.getPartyOwnerData(this.team().ownerId),
     ]).subscribe({
       next: ([members, systems, profile, owner]) => {
         this.members.set(members);
@@ -85,10 +91,10 @@ export class PartyCardComponent {
   }
 
   trackTag(index: number, tag: string): string {
-    return tag; // track by tag value (or any unique property)
+    return tag; 
   }
 
   trackSystem(index: number, system: IRPGSystem): string {
-    return system.id; // track by system id (or any unique property)
+    return system.id;
   }
 }
