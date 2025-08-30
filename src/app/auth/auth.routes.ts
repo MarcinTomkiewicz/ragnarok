@@ -131,4 +131,15 @@ export const AUTH_ROUTES: Routes = [
       minCoworkerRole: CoworkerRoles.Member,
     },
   },
+    {
+    path: 'party-list',
+    loadComponent: () =>
+      import('./common/parties-table/parties-table.component').then(
+        (m) => m.PartiesTableComponent
+      ),
+    canActivate: [AuthGuard],
+    data: {
+      minCoworkerRole: CoworkerRoles.Member,
+    },
+  },
 ];

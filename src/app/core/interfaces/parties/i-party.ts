@@ -5,9 +5,9 @@ export interface IParty {
   gmId: string | null;
   ownerId: string;
   beginnersProgram: boolean;
-  programStage: boolean;
+  programStage: 1 | 2 | null;
   notes: string | null;
-  isOpen: boolean;
+  isOpen: boolean | null;
   isForBeginners: boolean;
   slug: string;
 }

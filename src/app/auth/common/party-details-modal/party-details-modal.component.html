@@ -1,0 +1,74 @@
+<div class="modal-header custom-modal-header">
+  <h4 class="modal-title">Szczegóły drużyny</h4>
+  <button
+    type="button"
+    class="btn-close"
+    aria-label="Close"
+    (click)="close()"
+  ></button>
+</div>
+
+<div class="modal-body custom-modal-body">
+  <div class="team-summary-wrapper">
+    <div class="summary-details">
+      <div class="summary-row">
+        <span class="label">Nazwa:</span>
+        <span class="value">{{ team.name }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Założyciel:</span>
+        <span class="value">{{ userLabel(owner) }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Mistrz Gry:</span>
+        <span class="value">{{ userLabel(gm) }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Dołącz do Drużyny:</span>
+        <span class="value">{{ programDisplay }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Utworzona:</span>
+        <span class="value">{{ createdAt }}</span>
+      </div>
+
+      @if (profile?.description) {
+      <div class="summary-row">
+        <span class="label">Opis:</span>
+        <span class="value">{{ profile?.description }}</span>
+      </div>
+      }
+
+      <div class="summary-row">
+        <span class="label">Systemy:</span>
+        <span class="value">{{ systemsDisplay }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Członkowie:</span>
+        <span class="value">
+          @if (memberRows().length) {
+          <ul class="list-unstyled mb-0">
+            @for (m of memberRows(); track m.id) {
+            <li class="d-flex justify-content-between gap-2 py-1">
+              <span>{{ userLabel(m.user) }}</span>
+              <span class="badge bg-secondary">{{ roleLabel(m.role) }}</span>
+            </li>
+            }
+          </ul>
+          } @else { — }
+        </span>
+      </div>
+
+      <div class="modal-footer custom-modal-footer">
+        <button type="button" class="btn btn-primary w-100" (click)="close()">
+          Zamknij
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

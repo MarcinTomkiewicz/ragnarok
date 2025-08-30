@@ -1,0 +1,24 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.team-summary-wrapper {
+  @include section-wrapper;
+  padding: 0;
+
+  .summary-details {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    margin-top: .5rem;
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed $primary-color;
+      padding: .5rem 0;
+
+      .label { font-weight: 600; }
+      .value { text-align: right; }
+    }
+  }
+}

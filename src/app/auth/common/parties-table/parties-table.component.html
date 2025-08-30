@@ -1,0 +1,67 @@
+<div class="parties-wrapper">
+  <div class="container">
+    <h2 class="section-title">Drużyny</h2>
+
+    @if (rows().length === 0) {
+    <p>Brak drużyn.</p>
+    } @else {
+    <div class="party-grid">
+      <div class="grid-head">
+        <div class="cell lp">Lp</div>
+        <div class="cell name">Nazwa drużyny</div>
+        <div class="cell owner">Założyciel</div>
+        <div class="cell gm">MG</div>
+        <div class="cell beginners">
+          @if (isPrivileged()) { Dołącz do Drużyny }
+        </div>
+        <div class="cell actions">Akcje</div>
+      </div>
+
+      @for (team of rows(); let i = $index; track team.id) {
+      <div class="grid-row">
+        <div class="cell lp">{{ i + 1 }}</div>
+        <div class="cell name">{{ team.name }}</div>
+        <div class="cell owner">{{ team.ownerLabel }}</div>
+        <div class="cell gm">{{ team.gmLabel }}</div>
+
+        <div class="cell beginners">
+          @if (isPrivileged()) {
+          <div class="beginner-controls">
+            <label class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                [checked]="!!team.beginnersProgram"
+                (change)="onToggleBeginners(team, $event)"
+              />
+              <span class="ms-1">Aktywne</span>
+            </label>
+
+            <select
+              class="form-select form-select-sm ms-2 w-auto"
+              [disabled]="!team.beginnersProgram"
+              [value]="team.programStage ?? ''"
+              (change)="onStageChange(team, $event)"
+            >
+              <option value="" disabled>Etap…</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+          }
+        </div>
+
+        <div class="cell actions">
+          <button class="btn btn-sm btn-outline me-2" (click)="onShow(team)">
+            Szczegóły
+          </button>
+          <button class="btn btn-sm btn-outline" (click)="onEdit(team)">
+            Edytuj
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

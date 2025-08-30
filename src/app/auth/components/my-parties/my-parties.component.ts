@@ -56,7 +56,7 @@ export class MyTeamsComponent {
       this.PartyService.getPartyMembers(team.id),
       this.PartyService.getPartySystems(team.id),
       this.PartyService.getPartyProfile(team.id),
-      this.PartyService.getPartyOwnerData(team.ownerId),
+      this.PartyService.getPartyOwnerData(team.ownerId ? team.ownerId : ''),
     ]).subscribe({
       next: ([members, systems, profile, owner]) => {
         console.log('Szczegóły drużyny:', team);

@@ -18,7 +18,10 @@ import {
   IPagination,
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
-import e from 'express';
+
+const PARTY_PEOPLE_SELECT =
+  'owner:users!teams_owner_id_fkey(id,email,first_name,nickname,use_nickname),' +
+  'gm:users!teams_gm_id_fkey(id,email,first_name,nickname,use_nickname)';
 
 @Injectable({ providedIn: 'root' })
 export class PartyService {
@@ -320,35 +323,59 @@ export class PartyService {
       ();
   }
 
-getPartiesByUser(userId: string): Observable<IParty[]> {
-  return forkJoin([
-    this.backend.getAll<IParty>('parties', 'name', 'asc', {
-      filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
-    }),
-    this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
-      filters: { userId: { operator: FilterOperator.EQ, value: userId } },
-    }),
-  ]).pipe(
-    switchMap(([ownedTeams, memberTeams]) => {
-      const memberTeamIds = memberTeams.map(m => m.teamId);
+  getPartiesByUser(userId: string): Observable<IParty[]> {
+    return forkJoin([
+      this.backend.getAll<IParty>('parties', 'name', 'asc', {
+        filters: { ownerId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+      this.backend.getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+        filters: { userId: { operator: FilterOperator.EQ, value: userId } },
+      }),
+    ]).pipe(
+      switchMap(([ownedTeams, memberTeams]) => {
+        const memberTeamIds = memberTeams.map((m) => m.teamId);
 
-      if (!memberTeamIds.length) {
-        return of(ownedTeams);
-      }
+        if (!memberTeamIds.length) {
+          return of(ownedTeams);
+        }
 
-      return this.backend.getAll<IParty>('parties', 'name', 'asc', {
-        filters: {
-          id: { operator: FilterOperator.IN, value: memberTeamIds },
-        },
-      }).pipe(
-        map(memberParties => {
-          const all = [...ownedTeams, ...memberParties];
-          const uniq = Array.from(new Map(all.map(p => [p.id, p])).values());
-          return uniq;
-        })
-      );
-    })
-  );
-}
+        return this.backend
+          .getAll<IParty>('parties', 'name', 'asc', {
+            filters: {
+              id: { operator: FilterOperator.IN, value: memberTeamIds },
+            },
+          })
+          .pipe(
+            map((memberParties) => {
+              const all = [...ownedTeams, ...memberParties];
+              const uniq = Array.from(
+                new Map(all.map((p) => [p.id, p])).values()
+              );
+              return uniq;
+            })
+          );
+      })
+    );
+  }
 
+  getUsersByIds(ids: string[]) {
+    return this.backend.getByIds<IUser>('users', ids);
+  }
+
+  updateBeginnersProgramAndStage(
+    teamId: string,
+    beginnersProgram: boolean,
+    programStage: 1 | 2 | null
+  ) {
+    const payload: Partial<IParty> = { beginnersProgram, programStage };
+    return this.backend.update<IParty>('parties', teamId, toSnakeCase(payload));
+  }
+
+  updateProgramStage(teamId: string, programStage: 1 | 2 | null) {
+    return this.backend.update<IParty>(
+      'parties',
+      teamId,
+      toSnakeCase({ programStage })
+    );
+  }
 }

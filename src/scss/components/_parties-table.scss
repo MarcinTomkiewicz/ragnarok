@@ -1,0 +1,73 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.parties-wrapper { @include section-wrapper; }
+
+/* Jedno źródło prawdy dla szerokości kolumn */
+$party-grid-cols: 56px 1.2fr 1fr 1fr 1.6fr minmax(160px, 220px);
+
+.party-grid {
+  @include data-grid($party-grid-cols, 1rem);
+
+  .grid-head { 
+    @include data-grid-row($party-grid-cols, .75rem);
+    font-weight: 700;
+    background-color: rgba($text-color, .06);
+
+    .cell { text-align: center; }
+    .cell.lp { text-align: left; }
+  }
+
+  .grid-row {
+    @include data-grid-row($party-grid-cols);
+    @include data-grid-row-divider($primary-color);
+  }
+
+  .cell {
+    &.lp {
+      text-align: center;
+      width: 56px;
+      font-variant-numeric: tabular-nums;
+      opacity: .9;
+    }
+
+    &.name {
+      font-weight: 600;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    &.owner, &.gm {
+      @include cell-ellipsis;
+      text-align: left;
+    }
+
+    &.actions {
+      @include flex-wrapper(row, center, center);
+      gap: .5rem;
+      flex-wrap: wrap;
+
+      .btn { padding: .25rem .5rem; font-size: .85rem; }
+    }
+  }
+
+  .beginner-controls {
+    @include flex-wrapper(row, flex-start, center);
+    gap: .5rem;
+
+    .form-check { margin-top: 0; }
+    .form-select { min-width: 84px; }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    .grid-head { display: none; }
+
+    .grid-row { 
+      @include collapse-grid-2cols;
+
+      .cell.lp   { grid-column: 1 / -1; text-align: center; opacity: .6; }
+      .cell.name { grid-column: 1 / -1; }
+      .cell.actions { grid-column: 1 / -1; justify-content: flex-start; }
+    }
+  }
+}
