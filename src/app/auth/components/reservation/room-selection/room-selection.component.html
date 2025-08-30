@@ -22,7 +22,7 @@
     W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
     Alfheim). Możesz zarezerwować inną salę.
   </div>
-  } @if (requiresClubConfirmation()) {
+  }
   <div ngbDropdown class="category-dropdown">
     <button
       type="button"
@@ -44,9 +44,7 @@
   <div class="text-danger">
     Aby zarezerwować salę klubową, musisz wybrać drużynę.
   </div>
-  }
-
-  @if (selectedPartyId()) {
+  } @if (selectedPartyId()) {
   <div class="flex-row-align-center">
     <span class="me-2"
       >Aktualnie wybrana drużyna: {{ getSelectedPartyName() }}</span
@@ -59,10 +57,10 @@
       x
     </button>
   </div>
-  } }
+  }
 
   <app-universal-calendar
-      [dailyDataMap]="calendar.reservationsMap()"
+    [dailyDataMap]="calendar.reservationsMap()"
     [mapDailyToHourlyAvailability]="mapReservationToHours()"
     [selectedDate]="selectedDate()"
     [selectionDisabled]="isSelectionDisabled()"
