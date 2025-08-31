@@ -39,7 +39,7 @@ export class RoomSelectionComponent {
   readonly selectedPartyId = this.store.selectedPartyId;
 
   // 3 sekcje
-  readonly partiesGm   = signal<IParty[]>([]);
+  readonly partiesGm = signal<IParty[]>([]);
   readonly partiesJoin = signal<IParty[]>([]);
   readonly partiesMine = signal<IParty[]>([]);
 
@@ -99,14 +99,17 @@ export class RoomSelectionComponent {
     this.store.selectedDuration.set(null);
     this.store.selectedGm.set(null);
     this.store.selectedSystemId.set(null);
-    this.store.selectedPartyId.set(null);
     this.store.needsGm.set(false);
-    this.store.confirmedParty.set(false);
+
+    this.store.confirmedParty.set(!!this.store.selectedPartyId());
 
     this.calendar.setRoom(room);
 
     const role = this.auth.userCoworkerRole();
-    if ([Rooms.Asgard, Rooms.Alfheim].includes(room) && role === CoworkerRoles.Member) {
+    if (
+      [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
+      role === CoworkerRoles.Member
+    ) {
       this.reservationService
         .checkIfMemberHasReservationThisWeekInClubRooms()
         .subscribe((result) => (this.isMemberClubBlocked = result));
@@ -146,6 +149,30 @@ export class RoomSelectionComponent {
   };
 
   private loadUserParties(): void {
+    if (this.store.isReceptionMode()) {
+      this.partyService.getParties().subscribe((all: IParty[]) => {
+        const join = all.filter((p) => p.beginnersProgram === true);
+        const rest = all.filter((p) => p.beginnersProgram === false);
+
+        this.partiesGm.set([]); // w recepcji nie grupujemy „moich”/„GM”
+        this.partiesJoin.set(
+          join
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
+        this.partiesMine.set(
+          rest
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
+      });
+      return;
+    }
+
     const me = this.auth.user();
     if (!me) return;
     const userId = me.id;
@@ -158,20 +185,40 @@ export class RoomSelectionComponent {
         member: this.partyService.getPartiesWhereMember(userId),
       }).subscribe(({ gm, owned, member }) => {
         const mapUnion = new Map<string, IParty>();
-        [...gm, ...owned, ...member].forEach(p => mapUnion.set(p.id, p));
+        [...gm, ...owned, ...member].forEach((p) => mapUnion.set(p.id, p));
         const union = Array.from(mapUnion.values());
 
-        const join = union.filter(p => p.beginnersProgram === true);
-        const gmNonJoin = gm.filter(p => p.beginnersProgram === false);
+        const join = union.filter((p) => p.beginnersProgram === true);
+        const gmNonJoin = gm.filter((p) => p.beginnersProgram === false);
 
-        const gmNonJoinIds = new Set(gmNonJoin.map(p => p.id));
+        const gmNonJoinIds = new Set(gmNonJoin.map((p) => p.id));
         const mine = [...owned, ...member]
-          .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i)
-          .filter(p => p.beginnersProgram === false && !gmNonJoinIds.has(p.id));
+          .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i)
+          .filter(
+            (p) => p.beginnersProgram === false && !gmNonJoinIds.has(p.id)
+          );
 
-        this.partiesJoin.set(join.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
-        this.partiesGm.set(gmNonJoin.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
-        this.partiesMine.set(mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        this.partiesJoin.set(
+          join
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
+        this.partiesGm.set(
+          gmNonJoin
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
+        this.partiesMine.set(
+          mine
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
       });
     } else {
       forkJoin({
@@ -179,15 +226,27 @@ export class RoomSelectionComponent {
         member: this.partyService.getPartiesWhereMember(userId),
       }).subscribe(({ owned, member }) => {
         const mapUnion = new Map<string, IParty>();
-        [...owned, ...member].forEach(p => mapUnion.set(p.id, p));
+        [...owned, ...member].forEach((p) => mapUnion.set(p.id, p));
         const union = Array.from(mapUnion.values());
 
-        const join = union.filter(p => p.beginnersProgram === true);
-        const mine = union.filter(p => p.beginnersProgram === false);
+        const join = union.filter((p) => p.beginnersProgram === true);
+        const mine = union.filter((p) => p.beginnersProgram === false);
 
         this.partiesGm.set([]); // brak sekcji GM dla ról < GM
-        this.partiesJoin.set(join.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
-        this.partiesMine.set(mine.slice().sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })));
+        this.partiesJoin.set(
+          join
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
+        this.partiesMine.set(
+          mine
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' })
+            )
+        );
       });
     }
   }
@@ -199,7 +258,9 @@ export class RoomSelectionComponent {
   }
 
   private autoConfirmClubIfAllPlayersAreMembers(partyId: string) {
-    const isClubRoom = [Rooms.Asgard, Rooms.Alfheim].includes(this.selectedRoom());
+    const isClubRoom = [Rooms.Asgard, Rooms.Alfheim].includes(
+      this.selectedRoom()
+    );
     const iAmMember = this.auth.userCoworkerRole() === CoworkerRoles.Member;
     if (!isClubRoom || !iAmMember) return;
 

@@ -1,0 +1,114 @@
+<div class="user-info-form-wrapper">
+  <form [formGroup]="form" class="user-info-form mx-auto mt-3">
+    <div class="section-title">Podaj dane</div>
+
+    <div class="form-group centered-input">
+      <label>Imię lub pseudonim</label>
+      <input class="form-control" formControlName="name" />
+    </div>
+
+    <div class="form-group centered-input mt-2">
+      <label>Numer telefonu</label>
+      <input class="form-control" formControlName="phone" />
+    </div>
+
+    <div class="form-check mt-3">
+      <input type="checkbox" class="form-check-input" id="isMember" formControlName="isMember" />
+      <label class="form-check-label" for="isMember">Członek Klubu Gier Fabularnych</label>
+    </div>
+  </form>
+
+  <div class="or-sep"><span>ALBO</span></div>
+
+  <div class="centered-input">
+    <div class="section-title mb-3">Wybierz użytkownika</div>
+
+    <div ngbDropdown #userDD="ngbDropdown" class="w-100">
+      <button type="button" ngbDropdownToggle class="btn btn-outline dropdown-toggle-wide">
+        {{ form.value.name || 'Wybierz użytkownika…' }}
+      </button>
+
+      <div ngbDropdownMenu class="dropdown-pane">
+        <div class="dropdown-search">
+          <input
+            class="form-control search"
+            placeholder="Szukaj po imieniu, pseudonimie lub telefonie…"
+            (input)="userQ.next($any($event.target).value)"
+          />
+        </div>
+
+        @if (userResults().length) {
+          <div class="dropdown-list">
+            @for (u of userResults(); track u.id) {
+              <button ngbDropdownItem class="item" (click)="onPickUser(u); userDD.close()">
+                <div class="lhs">
+                  <div class="name">{{ displayUserName(u) }}</div>
+                  <div class="meta">{{ u.phoneNumber || '—' }}</div>
+                </div>
+                <div class="rhs">
+                  @if (u.coworker === CoworkerRoles.Golden) { <span class="badge golden">Złoty Bilet</span> }
+                  @if (u.coworker === CoworkerRoles.Member) { <span class="badge member">Klub</span> }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="dropdown-empty">Brak wyników.</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="or-sep"><span>ALBO</span></div>
+
+  <div class="centered-input">
+    <div class="section-title mb-3">Wybierz drużynę</div>
+
+    <div ngbDropdown #partyDD="ngbDropdown" class="w-100">
+      <button type="button" ngbDropdownToggle class="btn btn-outline dropdown-toggle-wide">
+        Wybierz drużynę…
+      </button>
+
+      <div ngbDropdownMenu class="dropdown-pane">
+        <div class="dropdown-search">
+          <input
+            class="form-control search"
+            placeholder="Szukaj po nazwie drużyny…"
+            (input)="partyQ.next($any($event.target).value)"
+          />
+        </div>
+
+        @if (openParties().length) {
+          <h6 class="dropdown-header">Dołącz do Drużyny</h6>
+          <div class="dropdown-list">
+            @for (p of openParties(); track p.id) {
+              <button ngbDropdownItem class="item" (click)="onPickParty(p); partyDD.close()">
+                <div class="lhs">
+                  <div class="name">{{ p.name }}</div>
+                </div>
+              </button>
+            }
+          </div>
+        }
+
+        @if (otherParties().length) {
+          <div class="dropdown-divider"></div>
+          <h6 class="dropdown-header">Pozostałe drużyny</h6>
+          <div class="dropdown-list">
+            @for (p of otherParties(); track p.id) {
+              <button ngbDropdownItem class="item" (click)="onPickParty(p); partyDD.close()">
+                <div class="lhs">
+                  <div class="name">{{ p.name }}</div>
+                </div>
+              </button>
+            }
+          </div>
+        }
+
+        @if (partiesEmpty()) {
+          <div class="dropdown-empty">Brak wyników.</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

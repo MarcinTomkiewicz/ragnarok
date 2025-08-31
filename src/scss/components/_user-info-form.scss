@@ -1,0 +1,99 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.user-info-form-wrapper {
+
+      .or-sep {
+    @include flex-center;
+    gap: .75rem;
+    color: $secondary-text-color;
+    margin: 1.25rem auto;
+    max-width: 520px;
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1 1 auto;
+      border-bottom: 1px dashed $border-color;
+      transform: translateY(-2px);
+    }
+
+    span {
+      font-size: $font-size-sm;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      opacity: .9;
+    }
+  }
+
+
+  .dropdown-toggle-wide { 
+    max-width: 400px;
+    width: 100%;
+ }
+
+  .dropdown-pane {
+    min-width: 420px;
+    padding: .5rem 0;
+    @media (max-width: $breakpoint-sm) { min-width: 100%; }
+  }
+
+  .dropdown-search {
+    padding: .5rem .75rem .25rem;
+    .search { @include form-control; }
+  }
+
+  .dropdown-header {
+    padding: .5rem .75rem;
+    color: $secondary-text-color;
+  }
+
+  .dropdown-list {
+    max-height: 300px;
+    overflow: auto;
+  }
+
+  .item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .75rem;
+
+    .lhs {
+      .name { font-weight: 600; }
+      .meta { font-size: $font-size-sm; color: $secondary-text-color; }
+    }
+
+    .rhs {
+      display: flex; gap: .5rem; align-items: center;
+    }
+  }
+
+  .dropdown-empty {
+    padding: .75rem;
+    color: $secondary-text-color;
+  }
+
+  .badge {
+    border-radius: .5rem;
+    padding: .15rem .5rem;
+    font-size: $font-size-sm;
+    border: 1px solid $border-color;
+    &.member {
+      background: rgba(104,66,32,.15);
+      color: $secondary-color;
+      border-color: $secondary-color;
+    }
+    &.golden {
+      @include gold-gradient-text;
+      border-color: lighten($secondary-color, 10%);
+      background: rgba(232,188,88,.12);
+    }
+    &.muted {
+      color: $secondary-text-color;
+      background: $bg-color-light;
+    }
+  }
+}
