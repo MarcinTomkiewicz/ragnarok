@@ -1,18 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, of, combineLatest, from } from 'rxjs';
-import { map, switchMap, concatMap, find } from 'rxjs/operators';
+import { Observable, combineLatest, forkJoin, from, of } from 'rxjs';
+import { concatMap, find, map, switchMap } from 'rxjs/operators';
 import { FilterOperator } from '../../../../core/enums/filterOperator';
+import { GmSlotsMode } from '../../../../core/enums/gm-slots-mode';
 import {
   IAvailabilitySlot,
   IGmData,
 } from '../../../../core/interfaces/i-gm-profile';
+import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
+import { IUser } from '../../../../core/interfaces/i-user';
 import { BackendService } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
 import { ReservationService } from '../reservation/reservation.service';
-import { ReservationStatus } from '../../../../core/interfaces/i-reservation';
-import { GmSlotsMode } from '../../../../core/enums/gm-slots-mode';
-import { IUser } from '../../../../core/interfaces/i-user';
 
 @Injectable({ providedIn: 'root' })
 export class GmService {
@@ -25,10 +25,6 @@ export class GmService {
     return this.backend.getAll<IGmData>('v_gm_basic_info');
   }
 
-  /**
-   * Pełne info GM (z widoku v_gm_basic_info – rekordy per system).
-   * Fallback do `users` -> minimalne IGmData, żeby UI nie wybuchał.
-   */
   getGmById(gmId: string | null): Observable<IGmData | null> {
     if (!gmId) return of(null);
 
@@ -40,7 +36,6 @@ export class GmService {
         map((rows) => rows?.[0] ?? null),
         switchMap((row) => {
           if (row) return of(this.fillGmDefaults(row));
-          // fallback: minimal z tabeli users
           return this.backend
             .getById<IUser>('users', gmId)
             .pipe(map((u) => (u ? this.fromUserToMinimalGm(u) : null)));
@@ -48,10 +43,6 @@ export class GmService {
       );
   }
 
-  /**
-   * Systemy prowadzone przez GM (po userId).
-   * Czyta z v_gm_specialties_with_user, zwraca pełne rekordy systems.
-   */
   getSystemsForGm(gmId: string): Observable<IRPGSystem[]> {
     return this.backend
       .getAll<Pick<IGmData, 'systemId'>>(
@@ -83,6 +74,21 @@ export class GmService {
         filters: { systemId: { value: systemId, operator: FilterOperator.EQ } },
       }
     );
+  }
+
+  getSystemsWithAtLeastOneGm(): Observable<IRPGSystem[]> {
+    return this.backend
+      .getAll<Pick<IGmData, 'systemId'>>('v_gm_specialties_with_user')
+      .pipe(
+        map((rows) =>
+          Array.from(new Set(rows.map((r) => r.systemId).filter(Boolean)))
+        ),
+        switchMap((ids) =>
+          ids.length
+            ? this.backend.getByIds<IRPGSystem>('systems', ids)
+            : of([])
+        )
+      );
   }
 
   // ======== AVAILABILITY CRUD ========
@@ -181,6 +187,11 @@ export class GmService {
     if (!gm) return '';
     return gm.useNickname && gm.nickname ? gm.nickname : gm.firstName ?? '';
   };
+
+  formatPl(dateYmd: string): string {
+    const [y, m, d] = dateYmd.split('-');
+    return `${d}.${m}.${y}`;
+  }
 
   private fillGmDefaults(g: IGmData): IGmData {
     return {
@@ -412,7 +423,8 @@ export class GmService {
   > {
     if (!gmId) return of([]);
     const d = new Date(preferredDate + 'T00:00:00');
-    const iso = (dt: Date) => dt.toISOString().slice(0, 10);
+    const iso = (dt: Date) => this.isoLocal(dt);
+
     const d0 = new Date(d);
     const dM1 = new Date(d);
     dM1.setDate(d.getDate() - 1);
@@ -425,20 +437,18 @@ export class GmService {
     candidates.push({ label: 'Wybrany dzień', date: iso(d0) });
     candidates.push({ label: 'Dzień później', date: iso(dP1) });
 
+    const cmp = this.byPreferredHour(preferredStartHour);
+
     return combineLatest(
       candidates.map((c) =>
         this.getGmFreeRanges(gmId, c.date).pipe(
           map((free) => {
-            const starts = this.chunkFreeRangesToStarts(free, duration).sort(
-              (a, b) =>
-                Math.abs(a - preferredStartHour) -
-                Math.abs(b - preferredStartHour)
+            const ranked = this.chunkFreeRangesToStarts(free, duration).sort(
+              cmp
             );
-            const slots = starts.map((h) => ({
-              date: c.date,
-              startHour: h,
-              duration,
-            }));
+            const slots = ranked
+              .map((h) => ({ date: c.date, startHour: h, duration }))
+              .sort((a, b) => a.startHour - b.startHour);
             return { label: c.label, slots };
           })
         )
@@ -450,10 +460,12 @@ export class GmService {
     gmId: string,
     fromDate: string,
     duration: number,
-    mode: GmSlotsMode
+    mode: GmSlotsMode,
+    preferredStartHour?: number
   ): Observable<{ date: string; startHour: number; duration: number }[]> {
     const base = new Date(fromDate + 'T00:00:00');
-    const iso = (dt: Date) => dt.toISOString().slice(0, 10);
+    const iso = (dt: Date) => this.isoLocal(dt);
+    const cmp = this.byPreferredHour(preferredStartHour);
 
     if (mode === GmSlotsMode.next) {
       type Range = { from: number; to: number };
@@ -476,10 +488,14 @@ export class GmService {
         find((hit) => hit.free.length > 0),
         map((hit) => {
           if (!hit) return [];
-          const starts = this.chunkFreeRangesToStarts(hit.free, duration);
+          const cmp = this.byPreferredHour(preferredStartHour);
+          const starts = this.chunkFreeRangesToStarts(hit.free, duration).sort(
+            cmp
+          );
           return starts
+            .slice(0, 8)
             .map((h) => ({ date: hit.date, startHour: h, duration }))
-            .slice(0, 8);
+            .sort((a, b) => a.startHour - b.startHour); 
         })
       );
     }
@@ -487,8 +503,10 @@ export class GmService {
     let days: string[] = [];
     if (mode === GmSlotsMode.weekend) {
       const day = base.getDay();
+      let deltaToNextSat = (6 - day + 7) % 7;
+      if (deltaToNextSat === 0) deltaToNextSat = 7;
       const sat = new Date(base);
-      sat.setDate(base.getDate() + ((6 - (day || 7)) % 7));
+      sat.setDate(base.getDate() + deltaToNextSat);
       const sun = new Date(sat);
       sun.setDate(sat.getDate() + 1);
       days = [iso(sat), iso(sun)];
@@ -506,18 +524,56 @@ export class GmService {
       }
     }
 
+    const MAX_PER_DAY = 4;
+
     return combineLatest(
       days.map((date) =>
         this.getGmFreeRanges(gmId, date).pipe(
-          map((free) =>
-            this.chunkFreeRangesToStarts(free, duration).map((h) => ({
-              date,
-              startHour: h,
-              duration,
-            }))
-          )
+          map((free) => {
+            const starts = this.chunkFreeRangesToStarts(free, duration).sort(
+              cmp
+            );
+
+            return starts
+              .slice(0, MAX_PER_DAY)
+              .map((h) => ({ date, startHour: h, duration }))
+              .sort((a, b) => a.startHour - b.startHour);
+          })
         )
       )
-    ).pipe(map((arr) => arr.flat().slice(0, 8)));
+    ).pipe(
+      map((perDay) =>
+        perDay
+          .flat()
+          .sort(
+            (a, b) => a.date.localeCompare(b.date) || a.startHour - b.startHour
+          )
+      )
+    );
+  }
+
+  private byPreferredHour(preferredStartHour?: number) {
+    return (a: number, b: number) =>
+      this.compareStarts(a, b, preferredStartHour);
+  }
+
+  private compareStarts(a: number, b: number, preferredStartHour?: number) {
+    if (preferredStartHour == null) return a - b;
+    const da = Math.abs(a - preferredStartHour);
+    const db = Math.abs(b - preferredStartHour);
+    if (da !== db) return da - db;
+    const sideA = a <= preferredStartHour ? -1 : 1;
+    const sideB = b <= preferredStartHour ? -1 : 1;
+    if (sideA !== sideB) return sideA - sideB;
+    return a - b;
+  }
+
+  // ======== DATE HELPERS ========
+
+  private isoLocal(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
   }
 }
