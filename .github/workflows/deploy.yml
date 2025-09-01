@@ -22,12 +22,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create source archive (in RUNNER_TEMP)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Build SSR
+        env:
+          # Na wszelki wypadek większy heap (runner i tak ma sporo RAM)
+          NODE_OPTIONS: --max_old_space_size=4096
+          CI: true
+        run: npm run build:ssr
+
+      - name: Pack dist (browser + server)
         run: |
-          TAR_PATH="$RUNNER_TEMP/ragnarok-src.tgz"
+          TAR_PATH="$RUNNER_TEMP/ragnarok-dist.tgz"
           echo "TAR_PATH=$TAR_PATH" >> "$GITHUB_ENV"
-          tar -czf "$TAR_PATH" \
-            --exclude='.git' --exclude='node_modules' --exclude='dist' .
+          # Spakuj tylko katalogi wynikowe z dist/ragnarok/
+          tar -czf "$TAR_PATH" -C dist/ragnarok browser server
+          # Pokaż rozmiar dla debug
+          ls -lh "$TAR_PATH"
 
       - name: Setup SSH
         env:
@@ -52,14 +70,14 @@ jobs:
           : "${SSH_PORT:=22}"
           ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo '[ssh] ok'"
 
-      - name: Copy deploy script and sources to VPS
+      - name: Copy deploy script and dist to VPS
         run: |
           : "${SSH_PORT:=22}"
-          scp -P "$SSH_PORT" scripts/deploy.sh "$SSH_USER@$SSH_HOST:/tmp/ragnarok-deploy.sh"
-          scp -P "$SSH_PORT" "$TAR_PATH" "$SSH_USER@$SSH_HOST:/tmp/ragnarok-src.tgz"
+          scp -P "$SSH_PORT" scripts/deploy_dist.sh "$SSH_USER@$SSH_HOST:/tmp/ragnarok-deploy.sh"
+          scp -P "$SSH_PORT" "$TAR_PATH" "$SSH_USER@$SSH_HOST:/tmp/ragnarok-dist.tgz"
           ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "chmod +x /tmp/ragnarok-deploy.sh"
 
       - name: Run remote deploy
         run: |
           : "${SSH_PORT:=22}"
-          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "/tmp/ragnarok-deploy.sh /tmp/ragnarok-src.tgz"
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "/tmp/ragnarok-deploy.sh /tmp/ragnarok-dist.tgz"
