@@ -31,20 +31,18 @@ jobs:
       - name: Install deps
         run: npm ci --no-audit --no-fund
 
-      - name: Build SSR
+      - name: Build (SSR included by ng build)
         env:
-          # Na wszelki wypadek większy heap (runner i tak ma sporo RAM)
           NODE_OPTIONS: --max_old_space_size=4096
           CI: true
-        run: npm run build:ssr
+        run: npx ng build
 
       - name: Pack dist (browser + server)
         run: |
           TAR_PATH="$RUNNER_TEMP/ragnarok-dist.tgz"
           echo "TAR_PATH=$TAR_PATH" >> "$GITHUB_ENV"
-          # Spakuj tylko katalogi wynikowe z dist/ragnarok/
+          # Spakuj tylko wytworzone katalogi:
           tar -czf "$TAR_PATH" -C dist/ragnarok browser server
-          # Pokaż rozmiar dla debug
           ls -lh "$TAR_PATH"
 
       - name: Setup SSH
