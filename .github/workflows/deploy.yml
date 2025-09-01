@@ -1,0 +1,53 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create source archive
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/ragnarok-src.tgz \
+            --exclude='.git' --exclude='node_modules' --exclude='dist' .
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          if [ -n "${VPS_KNOWN_HOSTS:-}" ]; then
+            printf "%s\n" "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "StrictHostKeyChecking no" > ~/.ssh/config
+            echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config
+            chmod 600 ~/.ssh/config
+          fi
+          install -m 600 /dev/null ~/.ssh/id_ed25519
+          printf "%s\n" "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+
+      - name: Copy deploy script and sources to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          scp -P "$VPS_PORT" scripts/deploy.sh "$VPS_USER@$VPS_HOST:/tmp/ragnarok-deploy.sh"
+          scp -P "$VPS_PORT" artifacts/ragnarok-src.tgz "$VPS_USER@$VPS_HOST:/tmp/ragnarok-src.tgz"
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "chmod +x /tmp/ragnarok-deploy.sh"
+
+      - name: Run remote deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "/tmp/ragnarok-deploy.sh /tmp/ragnarok-src.tgz"

@@ -1,15 +1,12 @@
-import { Component, inject, Input, input } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  IReservation,
-  ReservationStatusDisplay,
-} from '../../../core/interfaces/i-reservation';
+import { IReservation, ReservationStatusDisplay } from '../../../core/interfaces/i-reservation';
 import { IUser } from '../../../core/interfaces/i-user';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { format } from 'date-fns';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { AuthService } from '../../../core/services/auth/auth.service';
-
+import { PartyService } from '../../core/services/party/party.service'; 
 @Component({
   selector: 'app-reservation-details-modal',
   standalone: true,
@@ -19,12 +16,28 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 })
 export class ReservationDetailsModalComponent {
   private readonly auth = inject(AuthService);
+  private readonly party = inject(PartyService); 
 
   @Input() reservation!: IReservation;
   @Input() user: IUser | null = null;
   @Input() system: IRPGSystem | null = null;
 
   readonly activeModal = inject(NgbActiveModal);
+
+  teamName = '';
+  isBeginners: boolean | null = null;             
+  programStage: 1 | 2 | null = null;
+
+  ngOnInit(): void {
+    const teamId = this.reservation?.teamId;
+    if (!teamId) return;
+
+    this.party.getPartyById(teamId).subscribe((p) => {
+      this.teamName = p?.name ?? '';
+      this.isBeginners = p?.beginnersProgram ?? null;
+      this.programStage = p?.beginnersProgram ? (p?.programStage ?? null) : null;
+    });
+  }
 
   get userDisplayName(): string {
     return this.auth.userDisplayName(this.user);
@@ -43,9 +56,7 @@ export class ReservationDetailsModalComponent {
   }
 
   get displayPhone(): string {
-    return (
-      this.reservation.externalPhone || this.user?.phoneNumber || 'Brak danych'
-    );
+    return this.reservation.externalPhone || this.user?.phoneNumber || 'Brak danych';
   }
 
   close(): void {

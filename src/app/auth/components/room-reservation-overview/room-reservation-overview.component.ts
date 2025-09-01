@@ -11,6 +11,7 @@ import { ReservationListComponent } from '../../common/reservation-list/reservat
 import { ReservationService } from '../../core/services/reservation/reservation.service';
 import { ReservationDetailsModalComponent } from '../../common/reservation-details-modal/reservation-details-modal.component';
 import { ReservationsCalendarFacade } from '../../core/services/reservations-calendar/reservations-calendar.facade';
+import { toCamelCase } from '../../../core/utils/type-mappers';
 
 @Component({
   selector: 'app-room-reservation-overview',
@@ -52,7 +53,10 @@ export class RoomReservationsOverviewComponent {
 
   readonly filteredReservationsForSelectedDate = computed(() => {
     const date = this.selectedDate();
-    return date ? (this.calendar.reservationsMap().get(date) ?? []) : [];
+    const raw = date ? (this.calendar.reservationsMap().get(date) ?? []) : [];
+    console.log(raw);
+    
+    return raw;
   });
 
   onShowDetails(reservationId: string) {
