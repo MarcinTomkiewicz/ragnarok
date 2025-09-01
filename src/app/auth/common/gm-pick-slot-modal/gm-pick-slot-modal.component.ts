@@ -99,32 +99,32 @@ export interface ISuggestedSlot {
         >
           Następny weekend
         </button>
-      </div>
-
-      @if(extended().length){
-      <hr class="my-3" />
-      <div>
-        <div class="fw-semibold mb-2">Najbliższe dostępne</div>
-        <div class="d-flex flex-wrap gap-2">
-          @for(slot of extended(); track slot.date + '-' + slot.startHour){
-          <button class="btn btn-outline" (click)="onPick(slot)">
-            {{ labelForSlot(slot) }}
-          </button>
-          }
+        @if(extended().length){
+        <hr/>
+        <div>
+          <div class="fw-semibold mb-2">Najbliższe dostępne</div>
+          <div class="d-flex flex-wrap gap-2">
+            @for(slot of extended(); track slot.date + '-' + slot.startHour){
+            <button class="btn btn-outline" (click)="onPick(slot)">
+              {{ labelForSlot(slot) }}
+            </button>
+            }
+          </div>
         </div>
+        }
+      </div>
+      @if(!extended().length && lastMode() !== null){
+      <hr />
+      <div class="alert alert-warning text-start mt-2" role="alert">
+        {{
+          lastMode() === GmSlotsMode.next
+            ? 'Mistrz Gry jeszcze nie podał dostępności. Spróbuj proszę później.'
+            : 'Mistrz Gry w tym terminie jest niedostępny.'
+        }}
       </div>
       }
-    </div>
-    @if(!extended().length && lastMode() !== null){
-    <hr class="my-3" />
-    <p class="text-muted">
-      {{
-        lastMode() === GmSlotsMode.next
-          ? 'Mistrz Gry jeszcze nie podał dostępności. Spróbuj proszę później.'
-          : 'Mistrz Gry w tym terminie jest niedostępny.'
-      }}
-    </p>
-    }
+      </div>
+
 
     <div class="modal-footer">
       <button class="btn btn-outline" (click)="close.emit()">Zamknij</button>

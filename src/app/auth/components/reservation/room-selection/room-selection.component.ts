@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { of, forkJoin } from 'rxjs';
+import { of, forkJoin, combineLatest, switchMap } from 'rxjs';
 
 import { TimeSlots } from '../../../../core/enums/hours';
 import { CoworkerRoles } from '../../../../core/enums/roles';
@@ -18,6 +18,7 @@ import { ReservationService } from '../../../core/services/reservation/reservati
 import { ReservationsCalendarFacade } from '../../../core/services/reservations-calendar/reservations-calendar.facade';
 import { hasMinimumCoworkerRole } from '../../../../core/utils/required-roles';
 import { TeamRole } from '../../../../core/enums/team-role';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-room-selection',
@@ -48,6 +49,37 @@ export class RoomSelectionComponent {
   constructor() {
     this.calendar.setRoom(this.selectedRoom());
     this.loadUserParties();
+
+    combineLatest([
+      toObservable(this.store.selectedRoom),
+      toObservable(this.store.selectedPartyId),
+      toObservable(this.store.isReceptionMode),
+    ])
+      .pipe(
+        switchMap(([room, partyId, isReception]) => {
+          const isClubRoom = [Rooms.Asgard, Rooms.Alfheim].includes(room);
+          if (!isClubRoom) return of(false);
+
+          if (partyId) {
+            this.reservationService.checkIfAnyMemberOfPartyHasClubReservationThisWeek(
+              partyId
+            ).subscribe(console.log);
+            return this.reservationService.checkIfAnyMemberOfPartyHasClubReservationThisWeek(
+              partyId
+            );
+          }
+
+          if (
+            !isReception &&
+            this.auth.userCoworkerRole() === CoworkerRoles.Member
+          ) {
+            return this.reservationService.checkIfMemberHasReservationThisWeekInClubRooms();
+          }
+
+          return of(false);
+        })
+      )
+      .subscribe((flag) => (this.isMemberClubBlocked = flag));      
   }
 
   onMonthChanged(dates: string[]) {
@@ -83,10 +115,12 @@ export class RoomSelectionComponent {
     const room = this.selectedRoom();
     const isClubRoom = [Rooms.Asgard, Rooms.Alfheim].includes(room);
     const isMember = this.auth.userCoworkerRole() === CoworkerRoles.Member;
+    const isReception = this.store.isReceptionMode();
 
     return (
       this.isGoldenBlocked() ||
-      (isClubRoom && isMember && !this.selectedPartyId())
+      this.isMemberClubBlocked ||
+      (isClubRoom && (isMember || isReception) && !this.selectedPartyId())
     );
   });
 
@@ -101,21 +135,13 @@ export class RoomSelectionComponent {
     this.store.selectedSystemId.set(null);
     this.store.needsGm.set(false);
 
+    // nie czyścimy selectedPartyId – zachowujemy wybór drużyny
     this.store.confirmedParty.set(!!this.store.selectedPartyId());
 
     this.calendar.setRoom(room);
 
-    const role = this.auth.userCoworkerRole();
-    if (
-      [Rooms.Asgard, Rooms.Alfheim].includes(room) &&
-      role === CoworkerRoles.Member
-    ) {
-      this.reservationService
-        .checkIfMemberHasReservationThisWeekInClubRooms()
-        .subscribe((result) => (this.isMemberClubBlocked = result));
-    } else {
-      this.isMemberClubBlocked = false;
-    }
+    // blokada tygodniowa wyliczy się reaktywnie (patrz subskrypcja niżej)
+    this.isMemberClubBlocked = false;
   }
 
   selectDate(dateStr: string | null) {

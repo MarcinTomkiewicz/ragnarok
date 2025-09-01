@@ -17,10 +17,15 @@
   <div class="alert alert-warning">
     Masz już aktywną rezerwację. Nie możesz dokonać kolejnej.
   </div>
-  } @if (isMemberClubBlocked) {
+  } @if (isMemberClubBlocked && !store.isReceptionMode()) {
   <div class="alert alert-warning">
     W tym tygodniu masz już rezerwację w jednej z sal klubowych (Asgard lub
     Alfheim). Możesz zarezerwować inną salę.
+  </div>
+  } @else if (isMemberClubBlocked && store.isReceptionMode()){
+  <div class="alert alert-warning">
+    W tym tygodniu drużyna {{ getSelectedPartyName() }} ma już rezwację w jednej
+    z sal klubowych (Asgard lub Alfheim). Możesz zarezerwować inną salę.
   </div>
   }
 
@@ -66,7 +71,7 @@
     </div>
   </div>
 
-@if (requiresClubConfirmation() && !selectedPartyId()) {
+  @if (requiresClubConfirmation() && !selectedPartyId()) {
   <div class="text-danger mt-2">
     Aby zarezerwować salę klubową, musisz wybrać drużynę.
   </div>

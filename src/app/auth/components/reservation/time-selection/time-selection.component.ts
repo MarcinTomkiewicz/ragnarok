@@ -57,7 +57,6 @@ export class TimeSelectionComponent {
         .subscribe((res) => this.reservations.set(res));
     }
 
-    // Zmiana drużyny: pobierz GM + flagę programu
     toObservable(this.store.selectedPartyId)
       .pipe(
         distinctUntilChanged(),
@@ -86,7 +85,6 @@ export class TimeSelectionComponent {
           }
         }
 
-        // Jeżeli już był wybrany start – sprawdź, czy 4h pasuje
         if (this.isJoinStage1()) {
           const h = this.selectedHour();
           if (h != null) {
@@ -119,7 +117,6 @@ export class TimeSelectionComponent {
         this.isJoinStage1.set(join);
         this.partyGmId.set(gmId);
 
-        // AUTO: Join → zawsze z MG
         if (join) {
           this.store.needsGm.set(true);
           if (gmId) this.store.selectedGm.set(gmId);
@@ -130,7 +127,6 @@ export class TimeSelectionComponent {
             });
           }
         } else {
-          // zachowanie dotychczasowe dla nie-Join
           if (this.needsGm() && !this.gmChoiceTouched()) {
             if (pid && gmId) {
               this.gmChoice.set('party');
@@ -181,7 +177,6 @@ export class TimeSelectionComponent {
         }
       });
 
-    // Spójność selectedGm przy „party”
     combineLatest([
       toObservable(this.partyGmId),
       toObservable(this.store.selectedPartyId),
@@ -193,7 +188,6 @@ export class TimeSelectionComponent {
     });
   }
 
-  // Role
   readonly isPrivilegedUser = computed(
     () =>
       [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(
@@ -210,7 +204,10 @@ export class TimeSelectionComponent {
     );
   });
 
-  // Godziny dnia
+  readonly isClubRoom = computed(() =>
+    [Rooms.Asgard, Rooms.Alfheim].includes(this.store.selectedRoom())
+  );
+
   readonly startHour = computed(() => {
     if (this.store.isReceptionMode()) return TimeSlots.noonStart;
     return this.isMemberRestrictedClubRoom()
@@ -219,20 +216,18 @@ export class TimeSelectionComponent {
   });
   readonly endHour = computed(() => TimeSlots.end);
 
-  // Maksymalna długość (w Join stage 1 zawsze 4)
   readonly maxDur = computed(() => {
     if (this.isJoinStage1()) return 4;
+    if (this.isClubRoom()) return 4;
     if (this.store.isReceptionMode()) return 11;
-    return this.isMemberRestrictedClubRoom() ? 4 : 6;
+    return 6;
   });
 
-  // Siatka 1h
   readonly timeSlots = computed(() => {
     const start = this.startHour();
     const end = this.endHour();
     const len = end - start;
 
-    // baza: wolność co godzinę
     const base = Array<boolean>(len).fill(true);
     for (const r of this.reservations()) {
       const s = parseInt(r.startTime.split(':')[0], 10);
@@ -242,7 +237,6 @@ export class TimeSelectionComponent {
       }
     }
 
-    // przy Join stage 1 wymagamy od razu 4h ciągiem
     const requiredDur = this.isJoinStage1() ? 4 : 1;
 
     return Array.from({ length: len }, (_, i) => {
@@ -263,7 +257,6 @@ export class TimeSelectionComponent {
     });
   });
 
-  // Overlap + zakres wolny
   private overlaps(aStart: number, aDur: number, bStart: number, bDur: number) {
     const aEnd = aStart + aDur;
     const bEnd = bStart + bDur;
@@ -280,13 +273,11 @@ export class TimeSelectionComponent {
     return true;
   }
 
-  // Wybrana godzina
   readonly selectedHour = computed(() => {
     const [h] = this.selectedTime()?.split(':') ?? [];
     return h ? parseInt(h, 10) : null;
   });
 
-  // Dostępne długości
   readonly durations = computed(() => {
     if (this.isJoinStage1()) {
       const h = this.selectedHour();
@@ -310,14 +301,12 @@ export class TimeSelectionComponent {
     return out;
   });
 
-  // Akcje
   selectTime(hour: number) {
     const time = `${String(hour).padStart(2, '0')}:00`;
     this.selectedTime.set(time);
     this.store.selectedStartTime.set(time);
 
     if (this.isJoinStage1()) {
-      // ustaw 4h tylko jeśli się mieści
       if (this.isRangeFree(hour, 4)) {
         this.selectedDuration.set(4);
         this.store.selectedDuration.set(4);
@@ -336,8 +325,10 @@ export class TimeSelectionComponent {
       this.store.selectedDuration.set(4);
       return;
     }
-    this.selectedDuration.set(duration);
-    this.store.selectedDuration.set(duration);
+    const cap = this.maxDur();
+    const val = Math.min(duration, cap);
+    this.selectedDuration.set(val);
+    this.store.selectedDuration.set(val);
   }
 
   toggleNeedsGm() {
