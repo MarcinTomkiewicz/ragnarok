@@ -1,13 +1,12 @@
-<div class="modal-header custom-modal-header">
-  <h4 class="modal-title">Szczegóły rezerwacji</h4>
-  <button
-    type="button"
-    class="btn-close"
-    aria-label="Close"
-    (click)="close()"
-  ></button>
-</div>
-
+    <div class="modal-header">
+      <h5 class="modal-title m-0">Podsumowanie rezerwacji</h5>
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="close()"
+      ></button>
+    </div>
 <div class="modal-body custom-modal-body">
   <div class="reservation-summary-wrapper">
     <div class="summary-details">
@@ -27,21 +26,44 @@
         <span class="label">Czas trwania:</span>
         <span class="value">{{ reservation.durationHours }}h</span>
       </div>
+
       @if (system) {
-      <div class="summary-row">
-        <span class="label">System:</span>
-        <span class="value">{{ system.name }}</span>
-      </div>
-      } @if (user) {
-      <div class="summary-row">
-        <span class="label">Rezerwujący:</span>
-        <span class="value">{{ displayName }}</span>
-      </div>
-      <div class="summary-row">
-        <span class="label">Telefon:</span>
-        <span class="value">{{ displayPhone }}</span>
-      </div>
+        <div class="summary-row">
+          <span class="label">System:</span>
+          <span class="value">{{ system.name }}</span>
+        </div>
       }
+
+      @if (teamName) {
+        <div class="summary-row">
+          <span class="label">Drużyna:</span>
+          <span class="value">{{ teamName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Dołącz do Drużyny:</span>
+          <span class="value">
+            {{ isBeginners === true ? 'Tak' : 'Nie' }}
+          </span>
+        </div>
+        @if (isBeginners && programStage) {
+          <div class="summary-row">
+            <span class="label">Etap programu:</span>
+            <span class="value">{{ programStage }}</span>
+          </div>
+        }
+      }
+
+      @if (user) {
+        <div class="summary-row">
+          <span class="label">Rezerwujący:</span>
+          <span class="value">{{ displayName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Telefon:</span>
+          <span class="value">{{ displayPhone }}</span>
+        </div>
+      }
+
       <div class="summary-row">
         <span class="label">Status:</span>
         <span class="value">{{ displayStatus }}</span>
@@ -50,8 +72,6 @@
   </div>
 
   <div class="modal-footer custom-modal-footer">
-    <button type="button" class="btn btn-primary w-100" (click)="close()">
-      Zamknij
-    </button>
+    <button type="button" class="btn btn-primary w-100" (click)="close()">Zamknij</button>
   </div>
 </div>

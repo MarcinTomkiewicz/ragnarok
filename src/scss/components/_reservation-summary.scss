@@ -4,6 +4,7 @@
 
 .reservation-summary-wrapper {
   @include section-wrapper;
+  padding: 1rem;
 
   .summary-details {
     display: flex;

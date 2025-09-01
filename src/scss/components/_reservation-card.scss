@@ -1,3 +1,4 @@
+/* reservation-card.component.scss */
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
@@ -7,6 +8,45 @@
   border-radius: $border-radius;
   box-shadow: $card-shadow;
   padding: 0.5rem;
+}
+
+.reservation-card {
+  position: relative;
+
+  .tag-badges {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+
+    .tag-badge {
+      background-color: lighten($bg-color, 8%);
+      border: 1px solid $border-color;
+      font-size: $font-size-xs;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      white-space: nowrap;
+
+      &.join {
+        color: $success-color;
+        box-shadow: 0 0 6px rgba($success-color, .25);
+      }
+
+      &.mine {
+        color: $secondary-text-color;
+      }
+
+      &.club {
+        @include gold-gradient-text;
+        border-color: lighten($primary-color, 10%);
+        box-shadow: 0 0 8px rgba($secondary-color, .35);
+      }
+    }
+  }
 }
 
 .card-meta {
@@ -25,13 +65,8 @@
   .reservation-status {
     font-weight: 600;
 
-    &.status-confirmed {
-      color: $success-color;
-    }
-
-    &.status-cancelled {
-      color: $danger-color;
-    }
+    &.status-confirmed { color: $success-color; }
+    &.status-cancelled { color: $danger-color; }
   }
 }
 
@@ -40,9 +75,7 @@
   justify-self: flex-start;
   height: 4rem;
 
-  p {
-    margin: 0.25rem 0;
-  }
+  p { margin: 0.25rem 0; }
 }
 
 .reservation-id {
