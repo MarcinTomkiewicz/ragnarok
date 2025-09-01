@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      SSH_USER: debian
+      SSH_HOST: ${{ secrets.VPS_HOST }}
+      SSH_PORT: ${{ secrets.VPS_PORT }}
 
     steps:
       - name: Checkout
@@ -41,20 +45,21 @@ jobs:
           install -m 600 /dev/null ~/.ssh/id_ed25519
           printf "%s\n" "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
 
-      - name: Copy deploy script and sources to VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
+      - name: Preflight SSH check
         run: |
-          scp -P "$VPS_PORT" scripts/deploy.sh "$VPS_USER@$VPS_HOST:/tmp/ragnarok-deploy.sh"
-          scp -P "$VPS_PORT" "$TAR_PATH" "$VPS_USER@$VPS_HOST:/tmp/ragnarok-src.tgz"
-          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "chmod +x /tmp/ragnarok-deploy.sh"
+          : "${SSH_HOST:?Missing secret VPS_HOST}"
+          : "${SSH_USER:?Missing SSH user}"
+          : "${SSH_PORT:=22}"
+          ssh -o BatchMode=yes -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo '[ssh] ok'"
+
+      - name: Copy deploy script and sources to VPS
+        run: |
+          : "${SSH_PORT:=22}"
+          scp -P "$SSH_PORT" scripts/deploy.sh "$SSH_USER@$SSH_HOST:/tmp/ragnarok-deploy.sh"
+          scp -P "$SSH_PORT" "$TAR_PATH" "$SSH_USER@$SSH_HOST:/tmp/ragnarok-src.tgz"
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "chmod +x /tmp/ragnarok-deploy.sh"
 
       - name: Run remote deploy
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "/tmp/ragnarok-deploy.sh /tmp/ragnarok-src.tgz"
+          : "${SSH_PORT:=22}"
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "/tmp/ragnarok-deploy.sh /tmp/ragnarok-src.tgz"
