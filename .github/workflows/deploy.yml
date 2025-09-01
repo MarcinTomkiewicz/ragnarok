@@ -4,18 +4,25 @@ on:
   push:
     branches: [ master ]
 
+concurrency:
+  group: deploy-to-vps
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create source archive
+      - name: Create source archive (in RUNNER_TEMP)
         run: |
-          mkdir -p artifacts
-          tar -czf artifacts/ragnarok-src.tgz \
+          TAR_PATH="$RUNNER_TEMP/ragnarok-src.tgz"
+          echo "TAR_PATH=$TAR_PATH" >> "$GITHUB_ENV"
+          tar -czf "$TAR_PATH" \
             --exclude='.git' --exclude='node_modules' --exclude='dist' .
 
       - name: Setup SSH
@@ -41,7 +48,7 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           scp -P "$VPS_PORT" scripts/deploy.sh "$VPS_USER@$VPS_HOST:/tmp/ragnarok-deploy.sh"
-          scp -P "$VPS_PORT" artifacts/ragnarok-src.tgz "$VPS_USER@$VPS_HOST:/tmp/ragnarok-src.tgz"
+          scp -P "$VPS_PORT" "$TAR_PATH" "$VPS_USER@$VPS_HOST:/tmp/ragnarok-src.tgz"
           ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "chmod +x /tmp/ragnarok-deploy.sh"
 
       - name: Run remote deploy
