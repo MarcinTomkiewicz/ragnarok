@@ -95,8 +95,7 @@ export class CreatePartyComponent {
 
   readonly partySuccessToast =
     viewChild<TemplateRef<unknown>>('partySuccessToast');
-  readonly partyErrorToast =
-    viewChild<TemplateRef<unknown>>('partyErrorToast');
+  readonly partyErrorToast = viewChild<TemplateRef<unknown>>('partyErrorToast');
 
   constructor() {
     this.teamForm = this.fb.group({
@@ -113,7 +112,6 @@ export class CreatePartyComponent {
 
       members: this.fb.array([]),
       systems: this.fb.array([]),
-
 
       styleTags: this.fb.array([], maxThreeStyles),
 
@@ -143,7 +141,14 @@ export class CreatePartyComponent {
     this.backendService
       .getAll<IUser>('users', 'firstName', 'asc', {
         filters: {
-          coworker: { value: CoworkerRoles.Member, operator: FilterOperator.EQ },
+          coworker: {
+            value: [
+              CoworkerRoles.Member,
+              CoworkerRoles.User,
+              CoworkerRoles.Golden,
+            ],
+            operator: FilterOperator.IN,
+          },
         },
       })
       .subscribe((users) => {
@@ -206,12 +211,16 @@ export class CreatePartyComponent {
         }
 
         if (systems) {
-          systems.forEach((s) => this.systemControls.push(this.fb.control(s.id)));
+          systems.forEach((s) =>
+            this.systemControls.push(this.fb.control(s.id))
+          );
           this.filteredSystems = this.systemsList();
         }
 
         if (members) {
-          members.forEach((m) => this.membersControls.push(this.fb.control(m.userId)));
+          members.forEach((m) =>
+            this.membersControls.push(this.fb.control(m.userId))
+          );
           const me = this.auth.user()?.id ?? null;
           const hasMe = !!me && !!members.find((m) => m.userId === me);
           this.teamForm.get('addSelf')!.setValue(hasMe, { emitEvent: false });
@@ -275,8 +284,11 @@ export class CreatePartyComponent {
     const target = event.target as HTMLSelectElement;
     if (!target?.selectedOptions) return;
 
-    const selectedValues = Array.from(target.selectedOptions).map((o) => o.value);
-    const controls = type === 'systems' ? this.systemControls : this.membersControls;
+    const selectedValues = Array.from(target.selectedOptions).map(
+      (o) => o.value
+    );
+    const controls =
+      type === 'systems' ? this.systemControls : this.membersControls;
 
     selectedValues.forEach((id) => {
       if (controls.value.length < 5 && !controls.value.includes(id)) {
@@ -286,7 +298,8 @@ export class CreatePartyComponent {
   }
 
   removeItem(itemId: string, type: 'systems' | 'members'): void {
-    const controls = type === 'systems' ? this.systemControls : this.membersControls;
+    const controls =
+      type === 'systems' ? this.systemControls : this.membersControls;
     const i = controls.value.indexOf(itemId);
     if (i >= 0) controls.removeAt(i);
   }
