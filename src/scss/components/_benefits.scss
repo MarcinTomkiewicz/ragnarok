@@ -1,0 +1,64 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components"; // jeżeli tu trzymacie wspólne utilsy/karty
+
+.benefits-section {
+  @include section-wrapper;
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+
+    .status-card {
+      @extend .mg-card;
+      align-items: flex-start; // nadpisujemy .mg-card (tam jest center)
+      text-align: left;
+
+      .status-title { font-weight: 700; margin-bottom: .25rem; }
+      .status-value { font-size: $font-size-xl; font-weight: 800; }
+      .status-value.success { color: $success-color; }
+      .status-value.muted { color: $secondary-text-color; }
+      .status-meta { font-size: $font-size-sm; color: $secondary-text-color; margin-top: .25rem; }
+    }
+  }
+
+  .benefits-grid {
+    margin-top: 1rem;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+
+    @media (max-width: $breakpoint-mid) { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: $breakpoint-sm)  { grid-template-columns: 1fr; }
+
+    .benefit-card {
+      @extend .mg-card;
+      align-items: flex-start;
+      text-align: left;
+
+      .benefit-name  { font-weight: 700; }
+      .benefit-value { font-size: $font-size-xl; font-weight: 800; margin-top: .25rem; }
+      .benefit-note  { font-size: $font-size-sm; color: $secondary-text-color; margin-top: .25rem; }
+    }
+
+    .span-2 { grid-column: span 2; @media (max-width: $breakpoint-sm) { grid-column: auto; } }
+    .span-3 { grid-column: span 3; @media (max-width: $breakpoint-mid) { grid-column: span 2; } @media (max-width: $breakpoint-sm) { grid-column: auto; } }
+  }
+
+  .empty-card {
+    border: 1px dashed $border-color;
+    background: $bg-color-light;
+    border-radius: $border-radius;
+    padding: 1.25rem;
+    text-align: center;
+    color: $secondary-text-color;
+    max-width: $container-width-md;
+    margin: 1rem auto 0;
+  }
+}

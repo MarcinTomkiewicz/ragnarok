@@ -2,10 +2,9 @@
 @import "abstracts/mixins";
 
 .user-info-form-wrapper {
-
-      .or-sep {
+  .or-sep {
     @include flex-center;
-    gap: .75rem;
+    gap: 0.75rem;
     color: $secondary-text-color;
     margin: 1.25rem auto;
     max-width: 520px;
@@ -20,31 +19,34 @@
 
     span {
       font-size: $font-size-sm;
-      letter-spacing: .06em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      opacity: .9;
+      opacity: 0.9;
     }
   }
 
-
-  .dropdown-toggle-wide { 
+  .dropdown-toggle-wide {
     max-width: 400px;
     width: 100%;
- }
+  }
 
   .dropdown-pane {
     min-width: 420px;
-    padding: .5rem 0;
-    @media (max-width: $breakpoint-sm) { min-width: 100%; }
+    padding: 0.5rem 0;
+    @media (max-width: $breakpoint-sm) {
+      min-width: 100%;
+    }
   }
 
   .dropdown-search {
-    padding: .5rem .75rem .25rem;
-    .search { @include form-control; }
+    padding: 0.5rem 0.75rem 0.25rem;
+    .search {
+      @include form-control;
+    }
   }
 
   .dropdown-header {
-    padding: .5rem .75rem;
+    padding: 0.5rem 0.75rem;
     color: $secondary-text-color;
   }
 
@@ -58,39 +60,75 @@
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
-    gap: .5rem;
-    padding: .5rem .75rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
 
     .lhs {
-      .name { font-weight: 600; }
-      .meta { font-size: $font-size-sm; color: $secondary-text-color; }
+      .name {
+        font-weight: 600;
+      }
+      .meta {
+        font-size: $font-size-sm;
+        color: $secondary-text-color;
+      }
     }
 
     .rhs {
-      display: flex; gap: .5rem; align-items: center;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
   }
 
   .dropdown-empty {
-    padding: .75rem;
+    padding: 0.75rem;
     color: $secondary-text-color;
   }
 
   .badge {
-    border-radius: .5rem;
-    padding: .15rem .5rem;
+    border-radius: 0.5rem;
+    padding: 0.15rem 0.5rem;
     font-size: $font-size-sm;
     border: 1px solid $border-color;
+
     &.member {
-      background: rgba(104,66,32,.15);
+      background: rgba(104, 66, 32, 0.15);
       color: $secondary-color;
       border-color: $secondary-color;
     }
+
     &.golden {
       @include gold-gradient-text;
       border-color: lighten($secondary-color, 10%);
-      background: rgba(232,188,88,.12);
+      background: rgba(232, 188, 88, 0.12);
     }
+
+    &.gm {
+      $violet: #9b59b6;
+      color: lighten($violet, 5%);
+      background: rgba(155, 89, 182, 0.12);
+      border-color: lighten($violet, 10%);
+    }
+
+    &.reception {
+      $nurgle: #6b8f2a;
+      color: lighten($nurgle, 10%);
+      background: rgba(107, 143, 42, 0.14);
+      border-color: lighten($nurgle, 8%);
+    }
+
+    &.coowner {
+      color: lighten($secondary-color, 8%);
+      background: rgba($secondary-color, 0.14);
+      border-color: lighten($secondary-color, 12%);
+    }
+
+    &.owner {
+      color: lighten($primary-color, 5%);
+      background: rgba($primary-color, 0.1);
+      border-color: lighten($primary-color, 8%);
+    }
+
     &.muted {
       color: $secondary-text-color;
       background: $bg-color-light;

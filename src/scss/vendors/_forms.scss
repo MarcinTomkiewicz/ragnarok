@@ -6,7 +6,7 @@
 
   label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
     font-size: $font-size-sm;
     color: $secondary-text-color;
   }
@@ -49,8 +49,10 @@
     font-size: $font-size-sm;
     color: $text-color;
     cursor: pointer;
+    margin: 0;
   }
 }
+
 
 .form-select {
   padding: 0.5rem 1rem;

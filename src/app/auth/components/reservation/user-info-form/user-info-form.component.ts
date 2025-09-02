@@ -1,16 +1,16 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { Subject, combineLatest, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, startWith, tap, shareReplay } from 'rxjs/operators';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { combineLatest, Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, shareReplay, startWith, tap } from 'rxjs/operators';
 
-import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
-import { BackendService } from '../../../../core/services/backend/backend.service';
+import { CoworkerRoles } from '../../../../core/enums/roles';
 import { IUser } from '../../../../core/interfaces/i-user';
 import { IParty } from '../../../../core/interfaces/parties/i-party';
-import { CoworkerRoles } from '../../../../core/enums/roles';
+import { BackendService } from '../../../../core/services/backend/backend.service';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 
 @Component({
   selector: 'app-user-info-form',
