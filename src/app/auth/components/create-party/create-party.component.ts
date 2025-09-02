@@ -17,7 +17,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, debounceTime, forkJoin } from 'rxjs';
+import { BehaviorSubject, debounceTime, forkJoin, of } from 'rxjs';
+import { switchMap, map } from 'rxjs/operators';
 
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
@@ -35,6 +36,7 @@ import { maxThreeStyles } from '../../../core/utils/tag-limiter';
 import { stringToSlug } from '../../../core/utils/type-mappers';
 import { GmService } from '../../core/services/gm/gm.service';
 import { PartyService } from '../../core/services/party/party.service';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 
 enum Modes {
   Edit = 'Zaktualizowano',
@@ -52,7 +54,7 @@ enum SuccessModes {
 @Component({
   selector: 'app-create-party',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NgbDropdownModule],
   templateUrl: './create-party.component.html',
   styleUrl: './create-party.component.scss',
 })
@@ -67,19 +69,30 @@ export class CreatePartyComponent {
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
+  readonly CoworkerRoles = CoworkerRoles;
   readonly user = this.auth.user;
 
+  // dane list
   gmsList = signal<IGmData[]>([]);
   membersList = signal<IUser[]>([]);
-
   systemsList = computed(() => this.systemService.systems());
+
+  // labelki
   GmStyleTag = GmStyleTag;
   GmStyleTagLabels = GmStyleTagLabels;
 
+  // filtry UI
   filteredSystems: IRPGSystem[] = [];
   filteredMembers: IUser[] = [];
+  filteredGms: IGmData[] = [];
 
+  // ograniczenia systemów dla wybranego MG
+  private allowedSystemIds: Set<string> | null = null;
+  private lastSystemsSearchTerm = '';
+
+  // stan edycji
   partySlug: string | null = null;
   editMode = false;
   partyData!: IParty;
@@ -88,13 +101,13 @@ export class CreatePartyComponent {
   modeFailMessage = this.editMode ? FailModes.Edit : FailModes.Create;
   modeSuccessMessage = this.editMode ? SuccessModes.Edit : SuccessModes.Create;
 
+  // wyszukiwarki
   systemsSearchTerm$ = new BehaviorSubject<string>('');
   membersSearchTerm$ = new BehaviorSubject<string>('');
+  gmSearchTerm$ = new BehaviorSubject<string>('');
 
-  private destroyRef = inject(DestroyRef);
-
-  readonly partySuccessToast =
-    viewChild<TemplateRef<unknown>>('partySuccessToast');
+  // toasty
+  readonly partySuccessToast = viewChild<TemplateRef<unknown>>('partySuccessToast');
   readonly partyErrorToast = viewChild<TemplateRef<unknown>>('partyErrorToast');
 
   constructor() {
@@ -134,19 +147,18 @@ export class CreatePartyComponent {
   ngOnInit(): void {
     if (this.editMode && this.partySlug) this.loadPartyData();
 
+    // GM list
     this.gmService.getAllGms().subscribe((gms) => {
       this.gmsList.set(gms);
+      this.filteredGms = this.gmsList();
     });
 
+    // members list
     this.backendService
       .getAll<IUser>('users', 'firstName', 'asc', {
         filters: {
           coworker: {
-            value: [
-              CoworkerRoles.Member,
-              CoworkerRoles.User,
-              CoworkerRoles.Golden,
-            ],
+            value: [CoworkerRoles.Member, CoworkerRoles.User, CoworkerRoles.Golden],
             operator: FilterOperator.IN,
           },
         },
@@ -156,8 +168,10 @@ export class CreatePartyComponent {
         this.filteredMembers = this.membersList();
       });
 
-    this.filteredSystems = this.systemsList();
+    // systems (na start pełna lista)
+    this.applySystemFilter('');
 
+    // checkbox "dodaj mnie"
     this.teamForm
       .get('addSelf')!
       .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
@@ -166,6 +180,7 @@ export class CreatePartyComponent {
         else this.removeSelfFromMembers();
       });
 
+    // wyszukiwarki
     this.systemsSearchTerm$
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe((term) => this.filterItems(term, 'systems'));
@@ -173,6 +188,37 @@ export class CreatePartyComponent {
     this.membersSearchTerm$
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe((term) => this.filterItems(term, 'members'));
+
+    this.gmSearchTerm$
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => this.filterItems(term, 'gms'));
+
+    // zmiana MG -> pobierz systemy MG i nałóż ograniczenie
+    this.teamForm
+      .get('gmId')!
+      .valueChanges.pipe(
+        switchMap((gmId: string | null) =>
+          gmId ? this.gmService.getSystemsForGm(gmId) : of<IRPGSystem[] | null>(null)
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((systemsOrNull) => {
+        this.allowedSystemIds = systemsOrNull ? new Set(systemsOrNull.map((s) => s.id)) : null;
+        // odśwież filtr listy
+        this.applySystemFilter(this.lastSystemsSearchTerm);
+        // i przytnij wybrane systemy (jeśli trzeba)
+        if (this.allowedSystemIds) this.pruneSelectedSystems(this.allowedSystemIds);
+      });
+
+    // inicjalne ograniczenie wg domyślnego gmId (np. podczas edycji)
+    const initialGm = this.teamForm.get('gmId')?.value as string | null;
+    if (initialGm) {
+      this.gmService.getSystemsForGm(initialGm).subscribe((sys) => {
+        this.allowedSystemIds = new Set(sys.map((s) => s.id));
+        this.applySystemFilter(this.lastSystemsSearchTerm);
+        this.pruneSelectedSystems(this.allowedSystemIds!);
+      });
+    }
   }
 
   // =========================
@@ -211,20 +257,14 @@ export class CreatePartyComponent {
         }
 
         if (systems) {
-          systems.forEach((s) =>
-            this.systemControls.push(this.fb.control(s.id))
-          );
-          this.filteredSystems = this.systemsList();
+          systems.forEach((s) => this.systemControls.push(this.fb.control(s.id)));
         }
 
         if (members) {
-          members.forEach((m) =>
-            this.membersControls.push(this.fb.control(m.userId))
-          );
+          members.forEach((m) => this.membersControls.push(this.fb.control(m.userId)));
           const me = this.auth.user()?.id ?? null;
           const hasMe = !!me && !!members.find((m) => m.userId === me);
           this.teamForm.get('addSelf')!.setValue(hasMe, { emitEvent: false });
-          this.filteredMembers = this.membersList();
         }
       });
     });
@@ -254,29 +294,52 @@ export class CreatePartyComponent {
   // =========================
   // Filtering & selection
   // =========================
-  onSearchChange(event: Event, type: 'systems' | 'members'): void {
+  onSearchChange(event: Event, type: 'systems' | 'members' | 'gms'): void {
     const input = event.target as HTMLInputElement;
     if (type === 'systems') this.systemsSearchTerm$.next(input.value);
-    else this.membersSearchTerm$.next(input.value);
+    else if (type === 'members') this.membersSearchTerm$.next(input.value);
+    else this.gmSearchTerm$.next(input.value);
   }
 
-  filterItems(term: string, type: 'systems' | 'members'): void {
+  filterItems(term: string, type: 'systems' | 'members' | 'gms'): void {
     if (type === 'systems') {
-      const src = this.systemsList();
-      this.filteredSystems =
-        term.length >= 3
-          ? src.filter((s) => s.name.toLowerCase().includes(term.toLowerCase()))
-          : src;
-    } else {
+      this.applySystemFilter(term);
+    } else if (type === 'members') {
       const src = this.membersList();
       this.filteredMembers =
         term.length >= 3
           ? src.filter((m) =>
-              `${this.getUserDisplayName(m)} ${m.email}`
-                .toLowerCase()
-                .includes(term.toLowerCase())
+              `${this.getUserDisplayName(m)} ${m.email}`.toLowerCase().includes(term.toLowerCase())
             )
           : src;
+    } else {
+      const src = this.gmsList();
+      this.filteredGms =
+        term.length >= 3
+          ? src.filter((g) => this.gmDisplayName(g).toLowerCase().includes(term.toLowerCase()))
+          : src;
+    }
+  }
+
+  private applySystemFilter(term: string): void {
+    this.lastSystemsSearchTerm = term ?? '';
+    const all = this.systemsList();
+    const allowed = this.allowedSystemIds;
+
+    let base = all;
+    if (allowed) base = all.filter((s) => allowed.has(s.id));
+
+    this.filteredSystems =
+      term && term.length >= 3
+        ? base.filter((s) => s.name.toLowerCase().includes(term.toLowerCase()))
+        : base;
+  }
+
+  private pruneSelectedSystems(allowed: Set<string>): void {
+    const ctrl = this.systemControls;
+    for (let i = ctrl.length - 1; i >= 0; i--) {
+      const id = ctrl.at(i).value;
+      if (!allowed.has(id)) ctrl.removeAt(i);
     }
   }
 
@@ -284,11 +347,8 @@ export class CreatePartyComponent {
     const target = event.target as HTMLSelectElement;
     if (!target?.selectedOptions) return;
 
-    const selectedValues = Array.from(target.selectedOptions).map(
-      (o) => o.value
-    );
-    const controls =
-      type === 'systems' ? this.systemControls : this.membersControls;
+    const selectedValues = Array.from(target.selectedOptions).map((o) => o.value);
+    const controls = type === 'systems' ? this.systemControls : this.membersControls;
 
     selectedValues.forEach((id) => {
       if (controls.value.length < 5 && !controls.value.includes(id)) {
@@ -298,10 +358,24 @@ export class CreatePartyComponent {
   }
 
   removeItem(itemId: string, type: 'systems' | 'members'): void {
-    const controls =
-      type === 'systems' ? this.systemControls : this.membersControls;
+    const controls = type === 'systems' ? this.systemControls : this.membersControls;
     const i = controls.value.indexOf(itemId);
     if (i >= 0) controls.removeAt(i);
+  }
+
+  // =========================
+  // GM single-select helpers
+  // =========================
+  pickGm(userId: string | null): void {
+    this.teamForm.get('gmId')?.setValue(userId);
+    // reszta (pobranie systemów, filtr, prune) odbywa się w subskrypcji valueChanges
+  }
+
+  selectedGmName(): string {
+    const id = this.teamForm.get('gmId')?.value as string | null;
+    if (!id) return '';
+    const gm = this.gmsList().find((g) => g.userId === id);
+    return gm ? this.gmDisplayName(gm) : '';
   }
 
   // =========================
@@ -412,5 +486,29 @@ export class CreatePartyComponent {
 
   createButtonText(): string {
     return this.editMode ? 'Zapisz zmiany' : 'Utwórz drużynę';
+  }
+
+  // members dropdown helpers
+  isMemberSelected(id: string): boolean {
+    return this.membersControls.value.includes(id);
+  }
+
+  toggleMember(id: string): void {
+    const ctrl = this.membersControls;
+    const idx = ctrl.value.indexOf(id);
+    if (idx >= 0) {
+      ctrl.removeAt(idx);
+      return;
+    }
+    if (ctrl.length >= 5) return;
+    ctrl.push(this.fb.control(id));
+  }
+
+  getMemberById(memberId: string): IUser | null {
+    return (
+      this.membersList().find((u) => u.id === memberId) ??
+      this.filteredMembers.find((u) => u.id === memberId) ??
+      null
+    );
   }
 }

@@ -1,0 +1,84 @@
+<div class="benefits-section">
+  <div class="container">
+    <h2 class="section-title">Twoje benefity</h2>
+
+    @if (isMemberSection()) {
+
+    <div class="status-grid">
+      <!-- Status -->
+      <div class="status-card">
+        <div class="status-title">Status</div>
+        <div class="status-value">
+          @if (isGolden()) { <span class="badge golden">Złoty Bilet</span> }
+          @else if (isMember()) { <span class="badge member">Klub Gier Fabularnych</span> }
+        </div>
+        <div class="status-meta">
+          <!-- Okres: {{ weekStartLabel() }} – {{ weekEndLabel() }} -->
+        </div>
+      </div>
+
+      <!-- Darmowa sesja -->
+      <div class="status-card">
+        <div class="status-title">Darmowa sesja (4h)</div>
+        @if (freeLeft() > 0) {
+        <div class="status-value success">Pozostało: 1</div>
+        <a class="btn btn-outline mt-2" href="/auth/reservation">
+          Zarezerwuj salę klubową
+        </a>
+        } @else {
+        <div class="status-value muted">Wykorzystana w tym tygodniu</div>
+        <div class="status-meta">Reset w poniedziałek 00:00</div>
+        }
+      </div>
+    </div>
+
+    <div class="benefits-grid">
+      <div class="benefit-card">
+        <div class="benefit-name">Chaotyczne Czwartki</div>
+        <div class="benefit-value">30 zł</div>
+        <div class="benefit-note">cena klubowa</div>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-name">MG na życzenie</div>
+        <div class="benefit-value">30 zł / h</div>
+        <div class="benefit-note">cena klubowa</div>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-name">Sklep Ragnaroku</div>
+        <div class="benefit-value">-10%</div>
+        <div class="benefit-note">rabat klubowy</div>
+      </div>
+
+      <div class="benefit-card span-2">
+        <div class="benefit-name">Rezerwacje dodatkowe</div>
+        <div class="benefit-value">-10 zł / h</div>
+        <div class="benefit-note">zniżka klubowa</div>
+      </div>
+
+      <div class="benefit-card">
+        <div class="benefit-name">Napój</div>
+        <div class="benefit-value">Darmowy</div>
+        <div class="benefit-note">do każdej sesji klubowej</div>
+      </div>
+
+      <div class="benefit-card span-3">
+        <div class="benefit-name">Program poleceń</div>
+        <div class="benefit-value">79 zł / miesiąc</div>
+        <div class="benefit-note">
+          dla Ciebie i znajomego w kolejnym miesiącu
+        </div>
+      </div>
+    </div>
+
+    } @else {
+    <div class="empty-card">
+      <p>
+        Brak aktywnego członkostwa. Sekcja klubowa jest dostępna dla
+        Klubowiczów.
+      </p>
+    </div>
+    }
+  </div>
+</div>

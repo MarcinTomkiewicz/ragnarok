@@ -104,9 +104,6 @@ export const AUTH_ROUTES: Routes = [
         (m) => m.CreatePartyComponent
       ),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Member,
-    },
   },
   {
     path: 'edit-party/:slug',
@@ -116,9 +113,6 @@ export const AUTH_ROUTES: Routes = [
       ),
     resolve: { party: PartyResolver },
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Member,
-    },
   },
   {
     path: 'my-parties',
@@ -127,15 +121,23 @@ export const AUTH_ROUTES: Routes = [
         (m) => m.MyTeamsComponent
       ),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Member,
-    },
   },
     {
     path: 'party-list',
     loadComponent: () =>
       import('./common/parties-table/parties-table.component').then(
         (m) => m.PartiesTableComponent
+      ),
+    canActivate: [AuthGuard],
+    data: {
+      minCoworkerRole: CoworkerRoles.Reception,
+    },
+  },
+      {
+    path: 'benefits',
+    loadComponent: () =>
+      import('./components/benefits/benefits.component').then(
+        (m) => m.BenefitsComponent
       ),
     canActivate: [AuthGuard],
     data: {

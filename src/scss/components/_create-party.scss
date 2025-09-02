@@ -1,12 +1,205 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
-@import 'layouts/form-panel';
+@import "layouts/form-panel";
 
 .create-party-panel {
-    @include section-wrapper
-}
+  @include section-wrapper;
 
-.user-form {
-  @extend .form-panel;
-  width: 600px;
+  .user-info-form {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .dropdown-toggle-wide {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .selected-chips .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid $border-color;
+    border-radius: 0.5rem;
+    background: $bg-color-light;
+  }
+  .chip .chip-close {
+    margin-left: 0.25rem;
+  }
+
+  .dropdown-pane {
+    min-width: 100%;
+    padding: 0.5rem 0;
+
+  }
+  .dropdown-pane .dropdown-item.active {
+    background: rgba($primary-color, 0.12);
+    border-left: 2px solid $primary-color;
+  }
+  .dropdown-search {
+    padding: 0.5rem 0.75rem 0.25rem;
+  }
+  .dropdown-list {
+    max-height: 300px;
+    overflow: auto;
+  }
+  .item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+  .item .lhs .name {
+    font-weight: 600;
+  }
+  .item .lhs .meta {
+    font-size: $font-size-sm;
+    color: $secondary-text-color;
+  }
+  .item .rhs {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .dropdown-empty {
+    padding: 0.75rem;
+    color: $secondary-text-color;
+  }
+
+  .badge {
+    border-radius: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    font-size: $font-size-sm;
+    border: 1px solid $border-color;
+
+    &.member {
+      background: rgba(104, 66, 32, 0.15);
+      color: $secondary-color;
+      border-color: $secondary-color;
+    }
+
+    &.golden {
+      @include gold-gradient-text;
+      border-color: lighten($secondary-color, 10%);
+      background: rgba(232, 188, 88, 0.12);
+    }
+
+    &.gm {
+      $violet: #9b59b6;
+      color: lighten($violet, 5%);
+      background: rgba(155, 89, 182, 0.12);
+      border-color: lighten($violet, 10%);
+    }
+
+    &.reception {
+      $nurgle: #6b8f2a;
+      color: lighten($nurgle, 10%);
+      background: rgba(107, 143, 42, 0.14);
+      border-color: lighten($nurgle, 8%);
+    }
+
+    &.coowner {
+      color: lighten($secondary-color, 8%);
+      background: rgba($secondary-color, 0.14);
+      border-color: lighten($secondary-color, 12%);
+    }
+
+    &.owner {
+      color: lighten($primary-color, 5%);
+      background: rgba($primary-color, 0.1);
+      border-color: lighten($primary-color, 8%);
+    }
+
+    &.muted {
+      color: $secondary-text-color;
+      background: $bg-color-light;
+    }
+  }
+
+  .style-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background-color: $bg-color-light;
+    border: 1px solid $border-color;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: $bg-color;
+    }
+
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .style-checkbox-input {
+    -webkit-appearance: none;
+    appearance: none;
+
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-right: 0.25rem;
+
+    border: 2px solid $primary-color;
+    border-radius: 0.25rem;
+    background-color: $bg-color-light;
+
+    display: inline-grid;
+    place-content: center;
+    vertical-align: middle;
+    transition: background-color 0.12s ease, border-color 0.12s ease,
+      box-shadow 0.12s ease;
+
+    &::after {
+      content: "";
+      width: 0.55rem;
+      height: 0.3rem;
+      border: 2px solid $button-text-color;
+      border-top: 0;
+      border-left: 0;
+      transform: rotate(45deg) scale(0);
+      transform-origin: center;
+      transition: transform 0.12s ease-in-out;
+    }
+
+    &:checked {
+      background-color: $primary-color;
+      border-color: $primary-color;
+    }
+    &:checked::after {
+      transform: rotate(45deg) scale(1);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+      border-color: lighten($primary-color, 12%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .style-checkbox-label {
+    font-size: $font-size-md;
+    color: $text-color;
+    cursor: pointer;
+    margin: 0 !important;
+    vertical-align: middle;
+  }
+
+  .style-checkbox-input:disabled + .style-checkbox-label {
+    opacity: 0.85;
+    cursor: not-allowed;
+  }
 }
