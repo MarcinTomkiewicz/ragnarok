@@ -4,10 +4,6 @@
 
 .my-reservations-wrapper {
   @include section-wrapper;
-
-  .reservations-grid {
-    @include mg-grid(3);
-  }
 }
 
 .card-dark {

@@ -29,7 +29,8 @@
 
 .card-text-dark {
   color: $primary-color;
-  @include responsive-font-size(12px);
+  // @include responsive-font-size(12px);
+  font-size: $font-size-md;
 
   &.large {
     @include responsive-font-size(18px);

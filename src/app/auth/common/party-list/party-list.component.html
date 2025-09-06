@@ -1,12 +1,18 @@
-<div class="reservations-grid" [ngClass]="{ 'centered-reservation': teams().length === 1 }">
+<div
+  class="reservations-grid"
+  [ngClass]="{
+    'one-reservation': teams().length === 1,
+    'two-reservations': teams().length === 2
+  }"
+>
   @if (teams().length > 0) {
-      @for (team of teams(); track team.id) {
-        <app-party-card
-          [team]="team"
-          [showDetailsButton]="showDetailsButton()"
-          (showDetails)="onShowDetails(team)"
-          (editParty)="onEditParty(team)"
-        />
-      }
+    @for (team of teams(); track team.id) {
+      <app-party-card
+        [team]="team"
+        [showDetailsButton]="showDetailsButton()"
+        (showDetails)="onShowDetails(team)"
+        (editParty)="onEditParty(team)"
+      />
+    }
   }
 </div>

@@ -9,34 +9,39 @@
   padding: 0.5rem;
 }
 
-.reservation-card {
+.card-body.party-card {
+  @include flex-wrapper(column, flex-start, flex-start);
   position: relative;
+  min-height: 316px;
+  // max-height: 450px;
 
   .tag-badges {
     position: absolute;
     top: 8px;
     right: 8px;
   }
-}
 
-.card-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: $font-size-sm;
-  margin-bottom: 0.75rem;
-  height: calc(2 * $font-size-xl);
-}
+  .card-meta {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: $font-size-md;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
 
-.card-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  .card-actions {
+    margin-top: auto; /* tworzy elastyczny „spacer” nad actions */
+    align-self: stretch; /* przycisk(i) wycentruj w wierszu poniżej */
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
 
-  .btn {
-    font-size: $font-size-xs;
-    padding: 0.4rem 0.8rem;
+    .btn {
+      font-size: $font-size-xs;
+      padding: 0.4rem 0.8rem;
+    }
   }
 }
 
@@ -174,7 +179,6 @@
 
     .pending-avatars {
       justify-content: center;
-      // margin-left: 1.125rem;
 
       .avatar {
         margin-left: -$overlap-xs;

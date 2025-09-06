@@ -1,17 +1,17 @@
-<div class="card card-dark reservation-card">
+<div class="card-dark party-card">
   <div class="card-body">
     <div class="card-meta justify-content-center align-items-start">
       <h3 class="truncate-two-lines">{{ team().name }}</h3>
     </div>
 
-    <div class="card-body text-start">
-      <p>
-        <strong>Właściciel:</strong> {{ owner() ? ownerDisplayName : "Brak" }}
-      </p>
-      <p><strong>Rola: </strong>{{ TeamRoleLabels[myRole()] }}</p>
-
+    <div class="card-body party-card">
       <div class="card-text-dark mb-2">
-        <strong>Systemy: </strong>
+        <strong>Właściciel:</strong> {{ owner() ? ownerDisplayName : "Brak" }}
+      </div>
+      <div class="card-text-dark mb-2"><strong>Rola: </strong>{{ TeamRoleLabels[myRole()] }}</div>
+
+      <div class="card-meta card-text-dark mb-2">
+        <strong><span>Systemy: </span></strong>
         @if (systems().length > 0) {
           @for (system of systems(); track system.id) {
             <span class="badge bg-primary me-1">{{ system.name }}</span>
@@ -21,8 +21,8 @@
         }
       </div>
 
-      <div class="card-text-dark mb-2">
-        <strong>Styl gry: </strong>
+      <div class="card-meta card-text-dark mb-2">
+        <strong><span>Styl gry: </span></strong>
         @if (showStyle()) {
           @for (tag of profile()!.styleTags; track tag) {
             <span class="badge bg-secondary me-1">{{ GmStyleTagLabels[tag] }}</span>

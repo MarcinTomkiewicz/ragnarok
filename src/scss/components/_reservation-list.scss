@@ -3,6 +3,17 @@
 
 .reservations-grid {
   @include mg-grid(3);
+  justify-content: center;
+  justify-items: center;
+
+  &.one-reservation {
+    @include mg-grid(1, false);
+  }
+
+  &.two-reservations {
+    @include mg-grid(2);
+    max-width: 740px;
+  }
 }
 
 .centered-reservation {
