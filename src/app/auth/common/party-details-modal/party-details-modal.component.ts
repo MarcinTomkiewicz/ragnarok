@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, map, of, switchMap } from 'rxjs';
-import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../core/interfaces/i-user';
 import { IParty } from '../../../core/interfaces/parties/i-party';
@@ -15,6 +14,7 @@ import {
 } from '../../../core/interfaces/parties/i-party-member';
 import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile';
 import { PartyService } from '../../core/services/party/party.service';
+import { TeamRole, TeamRoleLabels } from '../../../core/enums/party.enum';
 
 @Component({
   selector: 'app-party-details-modal',

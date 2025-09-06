@@ -25,18 +25,16 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'reservation',
     loadComponent: () =>
-      import(
-        './components/reservation/reservation-stepper/reservation-stepper.component'
-      ).then((m) => m.ReservationStepperComponent),
+      import('./components/reservation/reservation-stepper/reservation-stepper.component')
+        .then((m) => m.ReservationStepperComponent),
     canActivate: [AuthGuard],
     data: { authOnly: true },
   },
   {
     path: 'guest-reservation',
     loadComponent: () =>
-      import(
-        './components/reservation/reservation-stepper/reservation-stepper.component'
-      ).then((m) => m.ReservationStepperComponent),
+      import('./components/reservation/reservation-stepper/reservation-stepper.component')
+        .then((m) => m.ReservationStepperComponent),
     canActivate: [AuthGuard],
     data: {
       minCoworkerRole: CoworkerRoles.Reception,
@@ -47,29 +45,23 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'reservations-calendar',
     loadComponent: () =>
-      import(
-        './components/room-reservation-overview/room-reservation-overview.component'
-      ).then((m) => m.RoomReservationsOverviewComponent),
+      import('./components/room-reservation-overview/room-reservation-overview.component')
+        .then((m) => m.RoomReservationsOverviewComponent),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Reception,
-    },
+    data: { minCoworkerRole: CoworkerRoles.Reception },
   },
   {
     path: 'my-reservations',
     loadComponent: () =>
-      import(
-        './components/reservation/my-reservations/my-reservations.component'
-      ).then((m) => m.MyReservationsComponent),
+      import('./components/reservation/my-reservations/my-reservations.component')
+        .then((m) => m.MyReservationsComponent),
     canActivate: [AuthGuard],
     data: { authOnly: true },
   },
   {
     path: 'manage-gm',
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Gm,
-    },
+    data: { minCoworkerRole: CoworkerRoles.Gm },
     loadComponent: () =>
       import('./components/manage-gm/manage-gm.component').then(
         (m) => m.ManageGmComponent
@@ -78,24 +70,18 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'upcoming-sessions',
     loadComponent: () =>
-      import('./components/upcoming-sessions/upcoming-sessions.component').then(
-        (m) => m.UpcomingSessionsComponent
-      ),
+      import('./components/upcoming-sessions/upcoming-sessions.component')
+        .then((m) => m.UpcomingSessionsComponent),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Gm,
-    },
+    data: { minCoworkerRole: CoworkerRoles.Gm },
   },
   {
     path: 'availability',
     loadComponent: () =>
-      import('./components/gm-availability/gm-availability.component').then(
-        (m) => m.GmAvailabilityComponent
-      ),
+      import('./components/gm-availability/gm-availability.component')
+        .then((m) => m.GmAvailabilityComponent),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Gm,
-    },
+    data: { minCoworkerRole: CoworkerRoles.Gm },
   },
   {
     path: 'create-party',
@@ -122,26 +108,31 @@ export const AUTH_ROUTES: Routes = [
       ),
     canActivate: [AuthGuard],
   },
-    {
+  {
     path: 'party-list',
     loadComponent: () =>
       import('./common/parties-table/parties-table.component').then(
         (m) => m.PartiesTableComponent
       ),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Reception,
-    },
+    data: { minCoworkerRole: CoworkerRoles.Reception },
   },
-      {
+  {
+    path: 'find-party',
+    loadComponent: () =>
+      import('./common/parties-table/parties-table.component').then(
+        (m) => m.PartiesTableComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { publicMode: true }, // <-- to wystarczy, komponent sam to odczyta
+  },
+  {
     path: 'benefits',
     loadComponent: () =>
       import('./components/benefits/benefits.component').then(
         (m) => m.BenefitsComponent
       ),
     canActivate: [AuthGuard],
-    data: {
-      minCoworkerRole: CoworkerRoles.Member,
-    },
+    data: { minCoworkerRole: CoworkerRoles.Member },
   },
 ];

@@ -9,6 +9,7 @@ export interface IParty {
   notes: string | null;
   isOpen: boolean | null;
   isForBeginners: boolean;
+  isClubParty: boolean;
   slug: string;
 }
 

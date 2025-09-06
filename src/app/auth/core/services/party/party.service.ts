@@ -17,7 +17,8 @@ import {
   IPagination,
 } from '../../../../core/services/backend/backend.service';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
-import { TeamRole } from '../../../../core/enums/team-role';
+import { PartyType, TeamRole } from '../../../../core/enums/party.enum';
+import { CoworkerRoles } from '../../../../core/enums/roles';
 
 @Injectable({ providedIn: 'root' })
 export class PartyService {
@@ -266,6 +267,31 @@ export class PartyService {
 
   rejectRequest(requestId: string): Observable<void> {
     return this.backend.delete('party_members', requestId);
+  }
+
+  computeTeamTypes(
+    byTeam: Map<string, IPartyMember[]>,
+    usersById: Map<string, IUser>
+  ): Map<string, PartyType> {
+    const out = new Map<string, PartyType>();
+
+    for (const [teamId, members] of byTeam.entries()) {
+      const roles = members
+        .map((m) => usersById.get(m.userId)?.coworker ?? null)
+        .filter((r): r is CoworkerRoles => r !== null);
+
+      const allClub =
+        roles.length > 0 && roles.every((r) => r === CoworkerRoles.Member);
+      const anyGolden = roles.some((r) => r === CoworkerRoles.Golden);
+
+      const type = allClub
+        ? PartyType.Club
+        : anyGolden
+        ? PartyType.Golden
+        : PartyType.Regular;
+      out.set(teamId, type);
+    }
+    return out;
   }
 
   // ===== Helpers =====

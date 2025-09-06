@@ -1,10 +1,12 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-.parties-wrapper { @include section-wrapper; }
+.parties-wrapper {
+  @include section-wrapper;
+}
 
 /* ===== Desktop ===== */
-$party-grid-cols: 56px 1.2fr 1fr 1fr 1.6fr minmax(160px, 220px);
+$party-grid-cols: 56px 1.3fr 1fr 1fr 2fr 150px;
 $mobile-label-col: 12ch;
 $mobile-row-max: 520px;
 
@@ -15,8 +17,12 @@ $mobile-row-max: 520px;
     @include data-grid-row($party-grid-cols, 0.75rem);
     font-weight: 700;
     background-color: rgba($text-color, 0.06);
-    .cell { text-align: center; }
-    .cell.lp { text-align: left; }
+    .cell {
+      text-align: center;
+    }
+    .cell.lp {
+      text-align: left;
+    }
   }
 
   .grid-row {
@@ -36,30 +42,55 @@ $mobile-row-max: 520px;
       text-align: left;
       overflow-wrap: anywhere;
     }
-    &.owner, &.gm {
+    &.owner,
+    &.gm {
       @include cell-ellipsis;
       text-align: left;
+    }
+    &.beginners {
+      .cell-value {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: space-between;
+      }
+      .badge {
+        display: inline-flex;
+        margin-inline: auto;
+      }
+      .beginner-controls {
+        @include flex-wrapper(row, flex-start, center);
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.5rem;
+        .form-check {
+          margin-top: 0;
+        }
+        .form-select {
+          min-width: 84px;
+        }
+      }
     }
     &.actions {
       .cell-value {
         @include flex-wrapper(column, center, center);
         gap: 0.5rem;
       }
-      .btn { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+      .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+      }
     }
-    .cell-label { display: none; }
-  }
-
-  .beginner-controls {
-    @include flex-wrapper(row, flex-start, center);
-    gap: 0.5rem;
-    .form-check { margin-top: 0; }
-    .form-select { min-width: 84px; }
+    .cell-label {
+      display: none;
+    }
   }
 
   /* ===== Mobile ===== */
   @media (max-width: $breakpoint-sm) {
-    .grid-head { display: none; }
+    .grid-head {
+      display: none;
+    }
 
     .grid-row {
       grid-template-columns: 1fr;
@@ -83,7 +114,9 @@ $mobile-row-max: 520px;
       max-width: $mobile-row-max;
     }
 
-    .grid-row .cell.lp { display: none; }
+    .grid-row .cell.lp {
+      display: none;
+    }
 
     .grid-row .cell.name {
       margin-bottom: 0.15rem;
@@ -113,7 +146,9 @@ $mobile-row-max: 520px;
         justify-self: start;
         text-align: left;
       }
-      .cell-value { min-width: 0; }
+      .cell-value {
+        min-width: 0;
+      }
     }
 
     .grid-row .cell.owner .cell-value,
@@ -122,13 +157,25 @@ $mobile-row-max: 520px;
       text-align: left;
     }
 
-    .grid-row .cell.beginners .badge { justify-self: start; }
-
+    .grid-row .cell.beginners .cell-value {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+    .grid-row .cell.beginners .badge {
+      margin-inline: auto;
+    }
     .grid-row .cell.beginners .beginner-controls {
       @include flex-wrapper(row, flex-start, center);
       gap: 0.5rem;
       margin-top: 0;
       flex-wrap: wrap;
+      .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+      }
     }
     .grid-row .cell.beginners .beginner-controls .form-check {
       margin: 0;
@@ -147,7 +194,10 @@ $mobile-row-max: 520px;
       align-items: center;
       gap: 0.5rem;
       flex-wrap: wrap;
+      justify-content: space-between;
     }
-    .grid-row .cell.actions .btn { flex: 0 0 auto; }
+    .grid-row .cell.actions .btn {
+      flex: 0 0 auto;
+    }
   }
 }
