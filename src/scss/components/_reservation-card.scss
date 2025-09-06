@@ -1,194 +1,113 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-.card-dark {
+.reservation-card.card-dark {
   background-color: $bg-color-light;
   border: 1px solid $border-color;
   border-radius: $border-radius;
   box-shadow: $card-shadow;
   padding: 0.5rem;
+  width: 350px;
+  @media (max-width: $breakpoint-sm) {
+    width: 300px;
+  }
 }
 
-.card-body.party-card {
-  @include flex-wrapper(column, flex-start, flex-start);
-  position: relative;
+.reservation-card .card-body {
+  @include flex-wrapper(column, flex-start, stretch);
   min-height: 316px;
-  // max-height: 450px;
+  gap: 0.75rem; /* ← to jest Twoje „+8px pod badge” */
+  text-align: left;
+}
 
-  .tag-badges {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-  }
+.reservation-card .tag-badges {
+  --badge-row-h: 22.4px; /* 22.391 ~ 22.4 px */
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  min-height: var(--badge-row-h);
+  margin-bottom: 0;
+  // max-width: 100%;
+  overflow: hidden;
+}
 
-  .card-meta {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    font-size: $font-size-md;
-    margin-bottom: 0.75rem;
+@media (max-width: $breakpoint-xs) {
+  .reservation-card .tag-badges {
     flex-wrap: wrap;
-    gap: 0.25rem;
+    overflow: visible;
   }
+}
 
-  .card-actions {
-    margin-top: auto; /* tworzy elastyczny „spacer” nad actions */
-    align-self: stretch; /* przycisk(i) wycentruj w wierszu poniżej */
-    display: flex;
-    justify-content: center;
-    gap: 0.75rem;
+.reservation-card .card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: $font-size-md;
+  width: 100%;
 
-    .btn {
-      font-size: $font-size-xs;
-      padding: 0.4rem 0.8rem;
+  .reservation-date {
+    font-size: $font-size-sm;
+    font-weight: bold;
+    color: $text-color;
+  }
+  .reservation-status {
+    font-weight: 600;
+    &.status-confirmed {
+      color: $success-color;
+    }
+    &.status-cancelled {
+      color: $danger-color;
     }
   }
 }
 
-/* === PENDING STRIP === */
-.pending-requests {
-  @include flex-wrapper(row, space-between, center);
+.reservation-card .card-details {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  text-align: center;
+  p {
+    font-size: $font-size-md;
+    margin: 0.25rem 0;
+  }
+  &,
+  p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+.reservation-card .reservation-id {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: $font-size-xs;
+  color: $secondary-text-color;
+
+  code {
+    overflow-wrap: anywhere;
+  }
+}
+
+.reservation-card .card-actions {
+  margin-top: auto;
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
   gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
-  margin: 0.25rem 0 0.75rem;
 
-  border: 1px dashed lighten($secondary-color, 8%);
-  background: rgba($secondary-color, 0.1);
-  border-radius: $border-radius;
-
-  .pending-left {
-    flex: 1 1 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
-
-    .pending-dot {
-      flex: 0 0 auto;
-      width: 10px;
-      height: 10px;
-      aspect-ratio: 1 / 1;
-      display: block;
-      line-height: 0;
-      border-radius: 50%;
-      background: $info-color;
-      box-shadow: 0 0 0 3px rgba($info-color, 0.18);
-    }
-
-    .pending-title {
-      font-weight: 600;
-
-      .muted {
-        font-weight: 400;
-        color: $secondary-text-color;
-        margin-left: 0.25rem;
-      }
-    }
-
-    .pending-count {
-      margin-left: 0.4rem;
-      padding: 0.12rem 0.5rem;
-      border-radius: 999px;
-      font-size: $font-size-xs;
-      font-weight: 700;
-      white-space: nowrap;
-      background: rgba($info-color, 0.15);
-      border: 1px solid lighten($info-color, 10%);
-      color: lighten($info-color, 12%);
-    }
+  .btn {
+    font-size: $font-size-xs;
+    padding: 0.4rem 0.8rem;
   }
+}
 
-  $avatar-size: 28px;
-  $overlap-xs: 0;
-  $overlap-sm: 14px;
-  $overlap-lg: 17px;
-  $z-base: 200;
-  $z-count: 12;
-
-  .pending-avatars {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    min-height: $avatar-size;
-    gap: 0.25rem;
-
-    .avatar {
-      flex: 0 0 $avatar-size;
-      width: $avatar-size;
-      height: $avatar-size;
-      border-radius: 50%;
-      background: $bg-color;
-      border: 1px solid $border-color;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: $font-size-xs;
-      font-weight: 700;
-      color: $text-color;
-      margin-left: -$overlap-sm;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-      position: relative;
-      will-change: transform;
-
-      &:first-child {
-        margin-left: 0;
-      }
-
-      &.more {
-        background: transparent;
-        border-style: dashed;
-        color: $secondary-text-color;
-      }
-
-      &:hover {
-        z-index: $z-base + $z-count + 1;
-        transform: translateY(-1px);
-      }
-    }
-
-    @for $i from 1 through $z-count {
-      .avatar:nth-child(#{$i}) {
-        z-index: $z-base + ($z-count - $i + 1);
-      }
-    }
-  }
-
-  &.can-act {
-    border-color: lighten($success-color, 10%);
-    background: rgba($success-color, 0.07);
-
-    .pending-left .pending-dot {
-      background: $success-color;
-      box-shadow: 0 0 0 3px rgba($success-color, 0.16);
-    }
-    .pending-left .pending-count {
-      background: rgba($success-color, 0.12);
-      border-color: lighten($success-color, 10%);
-      color: lighten($success-color, 10%);
-    }
-  }
-
-  @media (max-width: $breakpoint-xs) {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-
-    .pending-left {
-      width: 100%;
-    }
-
-    .pending-avatars {
-      justify-content: center;
-
-      .avatar {
-        margin-left: -$overlap-xs;
-      }
-    }
-  }
-
-  @media (min-width: $breakpoint-lg) {
-    .pending-avatars .avatar {
-      margin-left: -$overlap-lg;
-    }
+@media (max-width: $breakpoint-xs) {
+  .reservation-card .tag-badges {
+    flex-wrap: wrap;
   }
 }
