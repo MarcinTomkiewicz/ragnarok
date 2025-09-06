@@ -20,7 +20,7 @@ import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 import { AuthService } from '../../../core/services/auth/auth.service';
 
 @Component({
-  selector: 'app-team-card',
+  selector: 'app-party-card',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './party-card.component.html',

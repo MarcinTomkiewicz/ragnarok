@@ -11,57 +11,96 @@
         <div class="cell name">Nazwa drużyny</div>
         <div class="cell owner">Założyciel</div>
         <div class="cell gm">MG</div>
-        <div class="cell beginners">
-          @if (isPrivileged()) { Dołącz do Drużyny }
-        </div>
+        <div class="cell beginners">Typ drużyny</div>
         <div class="cell actions">Akcje</div>
       </div>
 
       @for (team of rows(); let i = $index; track team.id) {
       <div class="grid-row">
         <div class="cell lp">{{ i + 1 }}</div>
-        <div class="cell name">{{ team.name }}</div>
-        <div class="cell owner">{{ team.ownerLabel }}</div>
-        <div class="cell gm">{{ team.gmLabel }}</div>
+
+        <div class="cell name">
+          <span class="cell-value">{{ team.name }}</span>
+        </div>
+
+        <div class="cell owner">
+          <span class="cell-label">Właściciel:</span>
+          <span class="cell-value">{{ team.ownerLabel }}</span>
+        </div>
+
+        <div class="cell gm">
+          <span class="cell-label">Mistrz Gry:</span>
+          <span class="cell-value">{{ team.gmLabel }}</span>
+        </div>
 
         <div class="cell beginners">
-          @if (isPrivileged()) {
-          <div class="beginner-controls">
-            <label class="form-check">
-              <input
-                type="checkbox"
-                class="form-check-input"
-                [checked]="!!team.beginnersProgram"
-                (change)="onToggleBeginners(team, $event)"
-              />
-              <span class="ms-1">Aktywne</span>
-            </label>
+          <span class="cell-label">Typ drużyny:</span>
+          <span class="cell-value">
+            @if (!isPrivileged()) {
+            <span class="badge bg-secondary">
+              {{ teamTypeById().get(team.id) ?? "—" }}
+            </span>
+            } @if (isPrivileged()) {
+            <div class="beginner-controls mt-2">
+              <label class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="!!team.beginnersProgram"
+                  (change)="onToggleBeginners(team, $event)"
+                />
+                <span class="ms-1 flex-grow-1">Dołącz do Drużyny</span>
+              </label>
 
-            <select
-              class="form-select form-select-sm ms-2 w-auto"
-              [disabled]="!team.beginnersProgram"
-              [value]="team.programStage ?? ''"
-              (change)="onStageChange(team, $event)"
-            >
-              <option value="" disabled>Etap</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-            </select>
-          </div>
-          }
+              <select
+                class="form-select form-select-sm ms-2 w-auto"
+                [disabled]="!team.beginnersProgram"
+                [value]="team.programStage ?? ''"
+                (change)="onStageChange(team, $event)"
+              >
+                <option value="" disabled>Etap</option>
+                <option value="1">Etap 1</option>
+                <option value="2">Etap 2</option>
+              </select>
+            </div>
+            }
+          </span>
         </div>
 
         <div class="cell actions">
-          <button
-            ngbAutofocus
-            class="btn btn-sm btn-outline me-2"
-            (click)="onShow(team, $event)"
-          >
-            Szczegóły
-          </button>
-          <button class="btn btn-sm btn-outline" (click)="onEdit(team, $event)">
-            Edytuj
-          </button>
+          <span class="cell-label">Akcje:</span>
+          <span class="cell-value">
+            @if (!isPrivileged()) { @if (canJoin(team)) {
+            <button
+              class="btn btn-sm btn-success"
+              (click)="onJoin(team, $event)"
+            >
+              Dołącz
+            </button>
+            }
+            <button
+              ngbAutofocus
+              class="btn btn-sm btn-outline me-2"
+              (click)="onShow(team, $event)"
+            >
+              Szczegóły
+            </button>
+            } @else {
+            <button
+              class="btn btn-sm btn-outline"
+              (click)="onEdit(team, $event)"
+            >
+              Edytuj
+            </button>
+            <button
+              ngbAutofocus
+              class="btn btn-sm btn-outline"
+              (click)="onShow(team, $event)"
+            >
+              Szczegóły
+            </button>
+            }
+          </span>
         </div>
       </div>
       }

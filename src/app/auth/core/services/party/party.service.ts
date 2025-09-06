@@ -48,6 +48,15 @@ export class PartyService {
     return this.backend.getBySlug<IParty>('parties', slug);
   }
 
+  getOpenParties(
+    sortBy: keyof IParty = 'name',
+    sortOrder: 'asc' | 'desc' = 'asc'
+  ): Observable<IParty[]> {
+    return this.backend.getAll<IParty>('parties', sortBy, sortOrder, {
+      filters: { isOpen: { operator: FilterOperator.EQ, value: true } },
+    });
+  }
+
   getPartyOwnerData(ownerId: string): Observable<IUser | null> {
     return this.backend.getById<IUser>('users', ownerId);
   }
@@ -64,9 +73,14 @@ export class PartyService {
       teamId: { operator: FilterOperator.EQ, value: teamId },
       ...filters,
     };
-    return this.backend.getAll<IPartyMember>('party_members', undefined, 'asc', {
-      filters: combinedFilters,
-    });
+    return this.backend.getAll<IPartyMember>(
+      'party_members',
+      undefined,
+      'asc',
+      {
+        filters: combinedFilters,
+      }
+    );
   }
 
   getPartySystems(teamId: string): Observable<IRPGSystem[]> {
@@ -113,7 +127,7 @@ export class PartyService {
         })
       );
   }
-  
+
   // ===== Write / Update =====
   createOrUpdateParty(
     team: IParty,
@@ -130,7 +144,9 @@ export class PartyService {
       ),
       switchMap((updatedTeam) => {
         if (!updatedTeam) {
-          throw new Error('Błąd: nie udało się uzyskać zaktualizowanej drużyny');
+          throw new Error(
+            'Błąd: nie udało się uzyskać zaktualizowanej drużyny'
+          );
         }
 
         const profileData: IPartyProfile = {
@@ -141,7 +157,11 @@ export class PartyService {
         };
 
         return this.backend
-          .upsert<IPartyProfile>('party_profiles', toSnakeCase(profileData), 'id')
+          .upsert<IPartyProfile>(
+            'party_profiles',
+            toSnakeCase(profileData),
+            'id'
+          )
           .pipe(
             switchMap(() => {
               const systemRequests = (systems ?? []).map((systemId) => ({
@@ -180,7 +200,10 @@ export class PartyService {
                 leftAt: null as string | null,
               }));
 
-              return this.removeDeletedMembers(updatedTeam.id, uniqueMembers).pipe(
+              return this.removeDeletedMembers(
+                updatedTeam.id,
+                uniqueMembers
+              ).pipe(
                 switchMap(() =>
                   this.backend.upsertMany<IPartyMember>(
                     'party_members',
@@ -206,7 +229,11 @@ export class PartyService {
   }
 
   updateProgramStage(teamId: string, programStage: 1 | 2 | null) {
-    return this.backend.update<IParty>('parties', teamId, toSnakeCase({ programStage }));
+    return this.backend.update<IParty>(
+      'parties',
+      teamId,
+      toSnakeCase({ programStage })
+    );
   }
 
   deleteParty(id: string): Observable<void> {
@@ -225,11 +252,16 @@ export class PartyService {
       joinedAt: new Date().toISOString(),
       leftAt: null,
     };
-    return this.backend.create<IPartyMember>('party_members', toSnakeCase(data));
+    return this.backend.create<IPartyMember>(
+      'party_members',
+      toSnakeCase(data)
+    );
   }
 
   acceptRequest(requestId: string): Observable<IPartyMember> {
-    return this.backend.update<IPartyMember>('party_members', requestId, { leftAt: null });
+    return this.backend.update<IPartyMember>('party_members', requestId, {
+      leftAt: null,
+    });
   }
 
   rejectRequest(requestId: string): Observable<void> {
@@ -237,7 +269,10 @@ export class PartyService {
   }
 
   // ===== Helpers =====
-  private removeDeletedSystems(teamId: string, systems: string[]): Observable<void> {
+  private removeDeletedSystems(
+    teamId: string,
+    systems: string[]
+  ): Observable<void> {
     return this.backend
       .getAll<IPartySystem>('party_systems', 'teamId', 'asc', {
         filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
@@ -261,7 +296,10 @@ export class PartyService {
       );
   }
 
-  private removeDeletedMembers(teamId: string, members: string[]): Observable<void> {
+  private removeDeletedMembers(
+    teamId: string,
+    members: string[]
+  ): Observable<void> {
     return this.backend
       .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
         filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
