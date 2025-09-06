@@ -1,35 +1,29 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-.card-dark {
+.card {
+  border-radius: $border-radius;
+}
+
+.card.card-dark {
   background-color: $bg-color;
-  border: $primary-color solid 1px;
-  width: 350px;
-
-  @media (max-width: $breakpoint-xs) {
-    width: 254px;
-  }
+  border: 1px solid $primary-color;
+  color: $primary-color;
 }
 
-.card-body {
-  @media (max-width: $breakpoint-xs) {
-    width: 254px;
-  }
-}
-
-.title-dark,
-.header-dark {
+.card .card-title,
+.card .card-header.title-dark,
+.card .header-dark { 
   color: $primary-color;
   @include responsive-font-size(18px);
 }
 
-.header-dark {
-  border-bottom: $primary-color solid 1px;
+.card .header-dark {
+  border-bottom: 1px solid $primary-color;
 }
 
-.card-text-dark {
+.card .card-text-dark {
   color: $primary-color;
-  // @include responsive-font-size(12px);
   font-size: $font-size-md;
 
   &.large {
@@ -37,13 +31,8 @@
   }
 }
 
-.card-350 {
-  height: 350px;
-}
-
-.card-body {
-  padding: 1rem;
-  width: 100%;
+.card-body { 
+  padding: 0.5rem; 
   text-align: center;
-  color: $primary-color;
+  color: $primary-color; 
 }
