@@ -10,7 +10,7 @@ export interface IPartyMember {
   joinedAt: string;
   leftAt: string | null;
   role: TeamMemberRole;
-  status: PartyMemberStatus;
+  memberStatus: PartyMemberStatus;
 }
 
 export type MemberRow = { user: IUser | null; role: string; id: string };

@@ -1,5 +1,6 @@
 export const maxPartyMembers = 5;
 export const alreadyThereLabel = 'Należysz';
+export const waitingForApprovalLabel = 'Oczekujesz';
 
 export enum TeamRole {
   Owner = 'owner',
@@ -24,13 +25,15 @@ export enum PartyType {
 }
 
 export const PartyTypeLabels: Record<PartyType, string> = {
-  [PartyType.Club]:   'Klubowa',
+  [PartyType.Club]: 'Klubowa',
   [PartyType.Golden]: 'Złoty Bilet',
-  [PartyType.Regular]:'Zwykła',
+  [PartyType.Regular]: 'Zwykła',
 };
 
 export enum PartyMemberStatus {
-    Active = 'active',
-    Left = 'left',
-    Pending = 'pending',
+  Active = 'active',
+  Left = 'left',
+  Pending = 'pending',
+  Rejected = 'rejected',
+  Removed = 'removed',
 }
