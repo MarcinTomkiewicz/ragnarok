@@ -173,6 +173,63 @@ export class PartyService {
       );
   }
 
+  // === PENDING DECISIONS ===============================
+
+getPartiesWhereUserCanDecide(userId: string): Observable<IParty[]> {
+  return forkJoin([this.getPartiesOwnedBy(userId), this.getPartiesWhereGm(userId)]).pipe(
+    map(([owned, gm]) => {
+      const byId = new Map<string, IParty>();
+      [...owned, ...gm].forEach((p) => byId.set(p.id, p));
+      return Array.from(byId.values());
+    })
+  );
+}
+
+getPendingDecisionCountForUser(userId: string): Observable<number> {
+  return this.getPartiesWhereUserCanDecide(userId).pipe(
+    map((parties) => parties.map((p) => p.id)),
+    switchMap((teamIds) => {
+      if (!teamIds.length) return of(0);
+      return this.backend
+        .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+          filters: {
+            teamId: { operator: FilterOperator.IN, value: teamIds },
+            memberStatus: { operator: FilterOperator.EQ, value: PartyMemberStatus.Pending },
+          },
+        })
+        .pipe(
+          map((rows) => rows.filter((m) => !m.leftAt).length)
+        );
+    })
+  );
+}
+
+getPendingDecisionCountsByTeamForUser(userId: string): Observable<Record<string, number>> {
+  return this.getPartiesWhereUserCanDecide(userId).pipe(
+    map((parties) => parties.map((p) => p.id)),
+    switchMap((teamIds) => {
+      if (!teamIds.length) return of<Record<string, number>>({});
+      return this.backend
+        .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+          filters: {
+            teamId: { operator: FilterOperator.IN, value: teamIds },
+            memberStatus: { operator: FilterOperator.EQ, value: PartyMemberStatus.Pending },
+          },
+        })
+        .pipe(
+          map((rows) =>
+            rows
+              .filter((m) => !m.leftAt)
+              .reduce((acc, m) => {
+                acc[m.teamId] = (acc[m.teamId] ?? 0) + 1;
+                return acc;
+              }, {} as Record<string, number>)
+          )
+        );
+    })
+  );
+}
+
   // ===== Write / Update =====
 
   createOrUpdateParty(

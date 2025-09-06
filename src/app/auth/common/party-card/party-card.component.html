@@ -9,33 +9,64 @@
         <strong>Właściciel:</strong> {{ owner() ? ownerDisplayName : "Brak" }}
       </p>
       <p><strong>Rola: </strong>{{ TeamRoleLabels[myRole()] }}</p>
+
       <div class="card-text-dark mb-2">
         <strong>Systemy: </strong>
-        @if (systems().length > 0) { @for (system of systems(); track system.id)
-        {
-        <span class="badge bg-primary me-1">{{ system.name }}</span>
-        } } @else {
-        <em>Brak systemów</em>
-        }
-      </div>
-      <div class="card-text-dark mb-2">
-        <strong>Styl gry: </strong>
-        @if (showStyle()) { @for (tag of profile()!.styleTags; track tag) {
-        <span class="badge bg-secondary me-1">{{ GmStyleTagLabels[tag] }}</span>
-        } } @else {
-        <em>Brak stylów</em>
+        @if (systems().length > 0) {
+          @for (system of systems(); track system.id) {
+            <span class="badge bg-primary me-1">{{ system.name }}</span>
+          }
+        } @else {
+          <em>Brak systemów</em>
         }
       </div>
 
+      <div class="card-text-dark mb-2">
+        <strong>Styl gry: </strong>
+        @if (showStyle()) {
+          @for (tag of profile()!.styleTags; track tag) {
+            <span class="badge bg-secondary me-1">{{ GmStyleTagLabels[tag] }}</span>
+          }
+        } @else {
+          <em>Brak stylów</em>
+        }
+      </div>
+
+      <!-- PENDING STRIP -->
+      @if (pendingCount() > 0) {
+      <div class="pending-requests" [class.can-act]="canModerate()">
+        <div class="pending-left">
+          <span class="pending-dot" aria-hidden="true"></span>
+          <span class="pending-title">
+            Oczekujące prośby
+            @if (canModerate()) { <span class="muted">do akceptacji</span> }
+          </span>
+          <span class="pending-count">{{ pendingCount() }}</span>
+        </div>
+
+        <div class="pending-avatars" aria-label="Użytkownicy oczekujący">
+          @for (u of pendingUsersPreview(); track trackUser($index, u)) {
+            <span
+              class="avatar"
+              [title]="userDisplayName(u)"
+            >
+              {{ initials(userDisplayName(u)) }}
+            </span>
+          }
+          @if (pendingOverflow() > 0) {
+            <span class="avatar more" [title]="'+' + pendingOverflow() + ' więcej'">
+              +{{ pendingOverflow() }}
+            </span>
+          }
+        </div>
+      </div>
+      }
+
       <div class="card-actions">
         @if (canEditParty()) {
-        <button class="btn btn-primary" (click)="onEditParty()">
-          Edytuj drużynę
-        </button>
+          <button class="btn btn-primary" (click)="onEditParty()">Edytuj drużynę</button>
         }
-        <button ngbAutofocus class="btn btn-info" (click)="onShowDetails()">
-          Zobacz szczegóły
-        </button>
+        <button ngbAutofocus class="btn btn-info" (click)="onShowDetails()">Zobacz szczegóły</button>
       </div>
     </div>
   </div>

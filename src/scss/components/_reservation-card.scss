@@ -25,33 +25,7 @@
   align-items: center;
   font-size: $font-size-sm;
   margin-bottom: 0.75rem;
-  height: calc(2*$font-size-xl);
-
-  .reservation-date {
-    font-weight: bold;
-    color: $text-color;
-  }
-
-  .reservation-status {
-    font-weight: 600;
-
-    &.status-confirmed { color: $success-color; }
-    &.status-cancelled { color: $danger-color; }
-  }
-}
-
-.card-details {
-  font-size: $font-size-sm;
-  justify-self: flex-start;
-  height: 4rem;
-
-  p { margin: 0.25rem 0; }
-}
-
-.reservation-id {
-  font-size: $font-size-xs;
-  color: $secondary-text-color;
-  margin-top: 0.5rem;
+  height: calc(2 * $font-size-xl);
 }
 
 .card-actions {
@@ -63,5 +37,154 @@
   .btn {
     font-size: $font-size-xs;
     padding: 0.4rem 0.8rem;
+  }
+}
+
+/* === PENDING STRIP === */
+.pending-requests {
+  @include flex-wrapper(row, space-between, center);
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  margin: 0.25rem 0 0.75rem;
+
+  border: 1px dashed lighten($secondary-color, 8%);
+  background: rgba($secondary-color, 0.1);
+  border-radius: $border-radius;
+
+  .pending-left {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+
+    .pending-dot {
+      flex: 0 0 auto;
+      width: 10px;
+      height: 10px;
+      aspect-ratio: 1 / 1;
+      display: block;
+      line-height: 0;
+      border-radius: 50%;
+      background: $info-color;
+      box-shadow: 0 0 0 3px rgba($info-color, 0.18);
+    }
+
+    .pending-title {
+      font-weight: 600;
+
+      .muted {
+        font-weight: 400;
+        color: $secondary-text-color;
+        margin-left: 0.25rem;
+      }
+    }
+
+    .pending-count {
+      margin-left: 0.4rem;
+      padding: 0.12rem 0.5rem;
+      border-radius: 999px;
+      font-size: $font-size-xs;
+      font-weight: 700;
+      white-space: nowrap;
+      background: rgba($info-color, 0.15);
+      border: 1px solid lighten($info-color, 10%);
+      color: lighten($info-color, 12%);
+    }
+  }
+
+  $avatar-size: 28px;
+  $overlap-xs: 0;
+  $overlap-sm: 14px;
+  $overlap-lg: 17px;
+  $z-base: 200;
+  $z-count: 12;
+
+  .pending-avatars {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: $avatar-size;
+    gap: 0.25rem;
+
+    .avatar {
+      flex: 0 0 $avatar-size;
+      width: $avatar-size;
+      height: $avatar-size;
+      border-radius: 50%;
+      background: $bg-color;
+      border: 1px solid $border-color;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-xs;
+      font-weight: 700;
+      color: $text-color;
+      margin-left: -$overlap-sm;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      position: relative;
+      will-change: transform;
+
+      &:first-child {
+        margin-left: 0;
+      }
+
+      &.more {
+        background: transparent;
+        border-style: dashed;
+        color: $secondary-text-color;
+      }
+
+      &:hover {
+        z-index: $z-base + $z-count + 1;
+        transform: translateY(-1px);
+      }
+    }
+
+    @for $i from 1 through $z-count {
+      .avatar:nth-child(#{$i}) {
+        z-index: $z-base + ($z-count - $i + 1);
+      }
+    }
+  }
+
+  &.can-act {
+    border-color: lighten($success-color, 10%);
+    background: rgba($success-color, 0.07);
+
+    .pending-left .pending-dot {
+      background: $success-color;
+      box-shadow: 0 0 0 3px rgba($success-color, 0.16);
+    }
+    .pending-left .pending-count {
+      background: rgba($success-color, 0.12);
+      border-color: lighten($success-color, 10%);
+      color: lighten($success-color, 10%);
+    }
+  }
+
+  @media (max-width: $breakpoint-xs) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+
+    .pending-left {
+      width: 100%;
+    }
+
+    .pending-avatars {
+      justify-content: center;
+      // margin-left: 1.125rem;
+
+      .avatar {
+        margin-left: -$overlap-xs;
+      }
+    }
+  }
+
+  @media (min-width: $breakpoint-lg) {
+    .pending-avatars .avatar {
+      margin-left: -$overlap-lg;
+    }
   }
 }

@@ -1,11 +1,6 @@
 @import 'abstracts/variables';
 @import 'abstracts/mixins';
 
-.icon {
-    filter: $icon-filter-dark;
-    cursor: pointer;
-}
-
 .user-menu {
   position: relative;
   display: inline-block;
@@ -14,10 +9,7 @@
     font-size: 1.5rem;
     transition: transform 0.3s ease;
   }
-
-  &.open i {
-    transform: rotate(180deg);
-  }
+  &.open i { transform: rotate(180deg); }
 
   .submenu {
     position: absolute;
@@ -26,28 +18,45 @@
     background-color: $bg-color;
     border-radius: 0.5rem;
     min-width: 250px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     z-index: 100;
     animation: slideDown 1500ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
     overflow: hidden;
 
     @keyframes slideDown {
-      0% {
-        opacity: 0;
-        transform: translateY(-10px);
-        max-height: 0;
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-        max-height: 1000px;
-      }
+      0% { opacity: 0; transform: translateY(-10px); max-height: 0; }
+      100% { opacity: 1; transform: translateY(0); max-height: 1000px; }
     }
   }
 
   .icon {
-    filter: $icon-filter;
+    position: relative; 
+    display: inline-block;
+    filter: $icon-filter; 
+    cursor: pointer;
+  }
+
+  .notification-badge {
+    position: absolute;
+    top: -6px;
+    left: -11px;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: $font-size-xs;
+    line-height: 18px;
+    text-align: center;
+    border: 2px solid $bg-color;
+    box-shadow: 0 0 8px rgba(0,0,0,0.25);
+    pointer-events: none; 
+    user-select: none;
+
+    &.wider {
+      left: -18px;
+    }
+    &.widest {
+      left: -25px;
+    }
   }
 }
-
-  

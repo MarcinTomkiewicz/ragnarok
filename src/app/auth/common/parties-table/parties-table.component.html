@@ -1,130 +1,158 @@
 <div class="parties-wrapper">
   <div class="container">
     <h2 class="section-title mb-4">
-      {{ isPrivileged() ? 'Drużyny' : 'Znajdź drużynę' }}
+      {{ !publicMode() ? "Drużyny" : "Znajdź drużynę" }}
     </h2>
 
     @if (rows().length === 0) {
-      <p>Brak drużyn.</p>
+    <p>Brak drużyn</p>
     } @else {
-      <div class="party-grid">
-        <div class="grid-head">
-          <div class="cell lp">Lp</div>
-          <div class="cell name">Nazwa drużyny</div>
-          <div class="cell owner">Założyciel</div>
-          <div class="cell gm">MG</div>
-          <div class="cell beginners">{{ !isPrivileged() ? 'Dane drużyny' : 'Typ drużyny' }}</div>
-          <div class="cell actions">Akcje</div>
+    <div class="party-grid">
+      <div class="grid-head">
+        <div class="cell lp">Lp</div>
+        <div class="cell name">Nazwa drużyny</div>
+        <div class="cell owner">Założyciel</div>
+        <div class="cell gm">MG</div>
+        <div class="cell beginners">
+          {{ !isPrivileged() ? "Dane drużyny" : "Typ drużyny" }}
+        </div>
+        <div class="cell actions">Akcje</div>
+      </div>
+
+      @for (team of rows(); let i = $index; track team.id) {
+      <div class="grid-row">
+        <div class="cell lp">{{ i + 1 }}</div>
+
+        <div class="cell name">
+          <span class="cell-value">{{ team.name }}</span>
         </div>
 
-        @for (team of rows(); let i = $index; track team.id) {
-          <div class="grid-row">
-            <div class="cell lp">{{ i + 1 }}</div>
+        <div class="cell owner">
+          <span class="cell-label">Właściciel:</span>
+          <span class="cell-value">{{ team.ownerLabel }}</span>
+        </div>
 
-            <div class="cell name">
-              <span class="cell-value">{{ team.name }}</span>
+        <div class="cell gm">
+          <span class="cell-label">Mistrz Gry:</span>
+          <span class="cell-value">{{ team.gmLabel }}</span>
+        </div>
+
+        <div class="cell beginners">
+          <span class="cell-label">Typ drużyny:</span>
+          <span class="cell-value">
+            @if (!isPrivileged() || publicMode()) {
+            <div class="team-type-badges tag-badges">
+              @switch (teamTypeById().get(team.id)) { @case (PartyType.Club) {
+              <span class="tag-badge club">{{
+                PartyTypeLabels[PartyType.Club]
+              }}</span>
+              } @case (PartyType.Golden) {
+              <span class="tag-badge golden">{{
+                PartyTypeLabels[PartyType.Golden]
+              }}</span>
+              } @default {
+              <span class="badge bg-secondary">{{
+                PartyTypeLabels[PartyType.Regular]
+              }}</span>
+              } } @if (isMyActive(team.id)) {
+              <span class="tag-badge mine ms-1">Moja drużyna</span>
+              } @else if (isMyPending(team.id)) {
+              <span class="tag-badge join ms-1">{{
+                waitingForApprovalLabel
+              }}</span>
+              }
             </div>
 
-            <div class="cell owner">
-              <span class="cell-label">Właściciel:</span>
-              <span class="cell-value">{{ team.ownerLabel }}</span>
-            </div>
+            <span
+              class="ms-2"
+              [class.text-danger]="activeCount(team.id) >= maxMembers"
+              [class.text-muted]="activeCount(team.id) < maxMembers"
+            >
+              Graczy {{ activeCount(team.id) }} / {{ maxMembers }}
+            </span>
+            } @else {
+            <div class="beginner-controls">
+              <label class="form-check">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="!!team.beginnersProgram"
+                  (change)="onToggleBeginners(team, $event)"
+                />
+                <span class="ms-1 flex-grow-1">Dołącz do Drużyny</span>
+              </label>
 
-            <div class="cell gm">
-              <span class="cell-label">Mistrz Gry:</span>
-              <span class="cell-value">{{ team.gmLabel }}</span>
-            </div>
+              <div ngbDropdown class="type-dropdown">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline"
+                  ngbDropdownToggle
+                  [disabled]="!team.beginnersProgram"
+                >
+                  {{
+                    team.programStage
+                      ? "Etap " + team.programStage
+                      : "Wybierz etap"
+                  }}
+                </button>
 
-            <div class="cell beginners">
-              <span class="cell-label">Typ drużyny:</span>
-              <span class="cell-value">
-                @if (!isPrivileged()) {
-                  <div class="team-type-badges tag-badges">
-                    @switch (teamTypeById().get(team.id)) {
-                      @case (PartyType.Club)   { <span class="tag-badge club">{{ PartyTypeLabels[PartyType.Club] }}</span> }
-                      @case (PartyType.Golden) { <span class="tag-badge golden">{{ PartyTypeLabels[PartyType.Golden] }}</span> }
-                      @default                 { <span class="badge bg-secondary">{{ PartyTypeLabels[PartyType.Regular] }}</span> }
-                    }
-                    @if (isMyActive(team.id)) {
-                      <span class="tag-badge mine ms-1">Moja drużyna</span>
-                    } @else if (isMyPending(team.id)) {
-                      <span class="tag-badge join ms-1">{{ waitingForApprovalLabel }}</span>
-                    }
-                  </div>
-
-                  <span
-                    class="ms-2"
-                    [class.text-danger]="activeCount(team.id) >= maxMembers"
-                    [class.text-muted]="activeCount(team.id) < maxMembers"
-                  >
-                    Graczy {{ activeCount(team.id) }} / {{ maxMembers }}
-                  </span>
-                } @else {
-                  <div class="beginner-controls">
-                    <label class="form-check">
-                      <input
-                        type="checkbox"
-                        class="form-check-input"
-                        [checked]="!!team.beginnersProgram"
-                        (change)="onToggleBeginners(team, $event)"
-                      />
-                      <span class="ms-1 flex-grow-1">Dołącz do Drużyny</span>
-                    </label>
-
-                    <div ngbDropdown class="type-dropdown">
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-outline"
-                        ngbDropdownToggle
-                        [disabled]="!team.beginnersProgram"
-                      >
-                        {{ team.programStage ? ('Etap ' + team.programStage) : 'Wybierz etap' }}
-                      </button>
-
-                      <div ngbDropdownMenu>
-                        <button ngbDropdownItem (click)="onStageSelect(team, 1)">Etap 1</button>
-                        <button ngbDropdownItem (click)="onStageSelect(team, 2)">Etap 2</button>
-                        <div class="dropdown-divider"></div>
-                        <button ngbDropdownItem (click)="onStageSelect(team, null)">Wyczyść</button>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </span>
-            </div>
-
-            <div class="cell actions">
-              <span class="cell-label">Akcje:</span>
-              <span class="cell-value">
-                @if (!isPrivileged()) {
-                  <button
-                    class="btn btn-sm"
-                    [ngClass]="(isMyActive(team.id) || isMyPending(team.id)) ? 'btn-outline' : 'btn-success'"
-                    (click)="onJoin(team, $event)"
-                    [disabled]="isMyActive(team.id) || isMyPending(team.id) || !canJoin(team)"
-                    [title]="actionTitle(team.id)"
-                  >
-                    {{ actionLabel(team.id) }}
+                <div ngbDropdownMenu>
+                  <button ngbDropdownItem (click)="onStageSelect(team, 1)">
+                    Etap 1
                   </button>
-
-                  <button
-                    ngbAutofocus
-                    class="btn btn-sm btn-outline"
-                    (click)="onShow(team, $event)"
-                  >
-                    Szczegóły
+                  <button ngbDropdownItem (click)="onStageSelect(team, 2)">
+                    Etap 2
                   </button>
-                } @else {
-                  <button class="btn btn-outline" (click)="onEdit(team, $event)">Edytuj</button>
-                  <button ngbAutofocus class="btn btn-outline" (click)="onShow(team, $event)">
-                    Szczegóły
+                  <div class="dropdown-divider"></div>
+                  <button ngbDropdownItem (click)="onStageSelect(team, null)">
+                    Wyczyść
                   </button>
-                }
-              </span>
+                </div>
+              </div>
             </div>
-          </div>
-        }
+            }
+          </span>
+        </div>
+
+        <div class="cell actions">
+          <span class="cell-label">Akcje:</span>
+          <span class="cell-value">
+            @if (publicMode()) {
+            <button
+              class="btn btn-sm"
+              [ngClass]="
+                isMyActive(team.id) || isMyPending(team.id)
+                  ? 'btn-outline'
+                  : 'btn-success'
+              "
+              (click)="onJoin(team, $event)"
+              [disabled]="
+                isMyActive(team.id) || isMyPending(team.id) || !canJoin(team)
+              "
+              [title]="actionTitle(team.id)"
+            >
+              {{ actionLabel(team.id) }}
+            </button>
+            } @if (isPrivileged()) {<button
+              class="btn btn-outline"
+              (click)="onEdit(team, $event)"
+            >
+              Edytuj
+            </button>
+            }
+            <button
+              ngbAutofocus
+              class="btn btn-outline"
+              (click)="onShow(team, $event)"
+            >
+              Szczegóły
+            </button>
+            <!-- } -->
+          </span>
+        </div>
       </div>
+      }
+    </div>
     }
   </div>
 </div>

@@ -18,6 +18,7 @@ import { IUser } from '../../../core/interfaces/i-user';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { TeamRole, TeamRoleLabels } from '../../../core/enums/party.enum';
+import { PartyMemberStatus } from '../../../core/enums/party.enum';
 
 @Component({
   selector: 'app-party-card',
@@ -37,6 +38,7 @@ export class PartyCardComponent {
   public readonly GmStyleTagLabels = GmStyleTagLabels;
   public readonly TeamRole = TeamRole;
   public readonly TeamRoleLabels = TeamRoleLabels;
+
   public showStyle = computed(() => {
     const profile = this.profile();
     return profile && profile.styleTags && profile.styleTags.length > 0;
@@ -44,10 +46,26 @@ export class PartyCardComponent {
 
   members: WritableSignal<IPartyMember[]> = signal<IPartyMember[]>([]);
   systems: WritableSignal<IRPGSystem[]> = signal<IRPGSystem[]>([]);
-  profile: WritableSignal<IPartyProfile | null> = signal<IPartyProfile | null>(
-    null
-  );
+  profile: WritableSignal<IPartyProfile | null> = signal<IPartyProfile | null>(null);
   owner: WritableSignal<IUser | null> = signal<IUser | null>(null);
+
+  /** Pending: linki + dane userów do „awatarów” */
+  pendingMembers = computed(() =>
+    this.members().filter(m => m.memberStatus === PartyMemberStatus.Pending && !m.leftAt)
+  );
+  pendingCount = computed(() => this.pendingMembers().length);
+  pendingUserIds = computed(() => Array.from(new Set(this.pendingMembers().map(m => m.userId))));
+  pendingUsers: WritableSignal<IUser[]> = signal<IUser[]>([]);
+  pendingUsersPreview = computed(() => this.pendingUsers().slice(0, 5));
+  pendingOverflow = computed(() => Math.max(0, this.pendingCount() - this.pendingUsersPreview().length));
+
+  /** Czy ja mogę moderować (właściciel lub MG tej drużyny) */
+  canModerate = computed<boolean>(() => {
+    const me = this.user()?.id ?? null;
+    if (!me) return false;
+    const t = this.team();
+    return t.ownerId === me || t.gmId === me;
+  });
 
   showDetails = output<void>();
   editParty = output<void>();
@@ -80,7 +98,24 @@ export class PartyCardComponent {
         this.systems.set(systems);
         this.profile.set(profile);
         this.owner.set(owner);
+
+        // po wczytaniu członków — dociągnij dane użytkowników dla pendingów (do inicjałów + title)
+        this.loadPendingUsers();
       },
+    });
+  }
+
+  private loadPendingUsers(): void {
+    const ids = this.pendingUserIds();
+    if (!ids.length) {
+      this.pendingUsers.set([]);
+      return;
+    }
+    this.partyService.getUsersByIds(ids).subscribe(users => {
+      // zachowaj kolejność według members() (opcjonalne)
+      const order = new Map(ids.map((id, idx) => [id, idx]));
+      const sorted = [...users].sort((a, b) => (order.get(a.id)! - order.get(b.id)!));
+      this.pendingUsers.set(sorted);
     });
   }
 
@@ -96,11 +131,26 @@ export class PartyCardComponent {
     return this.user()?.id === this.owner()?.id;
   }
 
+  /** Helpers: wyświetlanie */
+  userDisplayName(u: IUser | null): string {
+    return this.auth.userDisplayName(u);
+  }
+
+  initials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/).slice(0, 2);
+    return parts.map(p => p[0]?.toUpperCase() ?? '').join('');
+  }
+
   trackTag(index: number, tag: string): string {
-    return tag; 
+    return tag;
   }
 
   trackSystem(index: number, system: IRPGSystem): string {
     return system.id;
+  }
+
+  trackUser(index: number, u: IUser): string {
+    return u.id;
   }
 }
