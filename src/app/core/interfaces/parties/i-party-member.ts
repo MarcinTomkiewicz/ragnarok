@@ -1,4 +1,4 @@
-import { TeamRole } from "../../enums/team-role";
+import { PartyMemberStatus, TeamRole } from "../../enums/party.enum";
 import { IUser } from "../i-user";
 
 export type TeamMemberRole = TeamRole;
@@ -10,6 +10,7 @@ export interface IPartyMember {
   joinedAt: string;
   leftAt: string | null;
   role: TeamMemberRole;
+  memberStatus: PartyMemberStatus;
 }
 
 export type MemberRow = { user: IUser | null; role: string; id: string };

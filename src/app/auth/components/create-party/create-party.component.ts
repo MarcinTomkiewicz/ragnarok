@@ -18,11 +18,13 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, debounceTime, forkJoin, of } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 
+import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { CoworkerRoles } from '../../../core/enums/roles';
+import { PartyMemberStatus } from '../../../core/enums/party.enum';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../core/interfaces/i-user';
@@ -36,7 +38,7 @@ import { maxThreeStyles } from '../../../core/utils/tag-limiter';
 import { stringToSlug } from '../../../core/utils/type-mappers';
 import { GmService } from '../../core/services/gm/gm.service';
 import { PartyService } from '../../core/services/party/party.service';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { InfoModalComponent } from '../../../common/info-modal/info-modal.component';
 
 enum Modes {
   Edit = 'Zaktualizowano',
@@ -70,44 +72,53 @@ export class CreatePartyComponent {
   private readonly toastService = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly modal = inject(NgbModal);
 
   readonly CoworkerRoles = CoworkerRoles;
   readonly user = this.auth.user;
 
-  // dane list
+  // Czy pokazać "Tylko dla Klubowiczów"
+  readonly canSeeClubOnly = computed(() =>
+    hasMinimumCoworkerRole(this.user(), CoworkerRoles.Member)
+  );
+
+  // listy do UI
   gmsList = signal<IGmData[]>([]);
   membersList = signal<IUser[]>([]);
   systemsList = computed(() => this.systemService.systems());
 
-  // labelki
   GmStyleTag = GmStyleTag;
   GmStyleTagLabels = GmStyleTagLabels;
 
-  // filtry UI
   filteredSystems: IRPGSystem[] = [];
   filteredMembers: IUser[] = [];
   filteredGms: IGmData[] = [];
 
-  // ograniczenia systemów dla wybranego MG
   private allowedSystemIds: Set<string> | null = null;
   private lastSystemsSearchTerm = '';
+  private lastMembersSearchTerm = ''; // <— dla refiltra po zmianie isClubParty
 
-  // stan edycji
   partySlug: string | null = null;
   editMode = false;
   partyData!: IParty;
+  private currentTeamId: string | null = null;
+
+  // oczekujące prośby (widoczne tylko w edycji)
+  readonly pendingMembers = signal<{ id: string; userId: string }[]>([]);
+
+  // aktywni członkowie z DB (po userId) — do rozróżniania lokalnych vs zapisanych
+  readonly dbActiveMemberIds = signal<Set<string>>(new Set());
 
   modeMessage = this.editMode ? Modes.Edit : Modes.Create;
   modeFailMessage = this.editMode ? FailModes.Edit : FailModes.Create;
   modeSuccessMessage = this.editMode ? SuccessModes.Edit : SuccessModes.Create;
 
-  // wyszukiwarki
   systemsSearchTerm$ = new BehaviorSubject<string>('');
   membersSearchTerm$ = new BehaviorSubject<string>('');
   gmSearchTerm$ = new BehaviorSubject<string>('');
 
-  // toasty
-  readonly partySuccessToast = viewChild<TemplateRef<unknown>>('partySuccessToast');
+  readonly partySuccessToast =
+    viewChild<TemplateRef<unknown>>('partySuccessToast');
   readonly partyErrorToast = viewChild<TemplateRef<unknown>>('partyErrorToast');
 
   constructor() {
@@ -130,6 +141,7 @@ export class CreatePartyComponent {
 
       isOpen: [true],
       isForBeginners: [false],
+      isClubParty: [false], // nowa flaga
     });
 
     this.systemService.loadAvailableSystems();
@@ -139,6 +151,7 @@ export class CreatePartyComponent {
         this.partyData = data['party'];
         this.partySlug = this.partyData.slug;
         this.editMode = true;
+        this.currentTeamId = this.partyData.id;
         this.loadPartyData();
       }
     });
@@ -153,12 +166,16 @@ export class CreatePartyComponent {
       this.filteredGms = this.gmsList();
     });
 
-    // members list
+    // katalog użytkowników
     this.backendService
       .getAll<IUser>('users', 'firstName', 'asc', {
         filters: {
           coworker: {
-            value: [CoworkerRoles.Member, CoworkerRoles.User, CoworkerRoles.Golden],
+            value: [
+              CoworkerRoles.Member,
+              CoworkerRoles.User,
+              CoworkerRoles.Golden,
+            ],
             operator: FilterOperator.IN,
           },
         },
@@ -168,10 +185,10 @@ export class CreatePartyComponent {
         this.filteredMembers = this.membersList();
       });
 
-    // systems (na start pełna lista)
+    // Systems (pełna lista startowa / + filtr po MG)
     this.applySystemFilter('');
 
-    // checkbox "dodaj mnie"
+    // „Dodaj mnie”
     this.teamForm
       .get('addSelf')!
       .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
@@ -187,30 +204,42 @@ export class CreatePartyComponent {
 
     this.membersSearchTerm$
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
-      .subscribe((term) => this.filterItems(term, 'members'));
+      .subscribe((term) => {
+        this.lastMembersSearchTerm = term ?? '';
+        this.filterItems(term, 'members');
+      });
 
     this.gmSearchTerm$
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe((term) => this.filterItems(term, 'gms'));
 
-    // zmiana MG -> pobierz systemy MG i nałóż ograniczenie
+    // zmiana MG => ogranicz systemy
     this.teamForm
       .get('gmId')!
       .valueChanges.pipe(
         switchMap((gmId: string | null) =>
-          gmId ? this.gmService.getSystemsForGm(gmId) : of<IRPGSystem[] | null>(null)
+          gmId
+            ? this.gmService.getSystemsForGm(gmId)
+            : of<IRPGSystem[] | null>(null)
         ),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((systemsOrNull) => {
-        this.allowedSystemIds = systemsOrNull ? new Set(systemsOrNull.map((s) => s.id)) : null;
-        // odśwież filtr listy
+        this.allowedSystemIds = systemsOrNull
+          ? new Set(systemsOrNull.map((s) => s.id))
+          : null;
         this.applySystemFilter(this.lastSystemsSearchTerm);
-        // i przytnij wybrane systemy (jeśli trzeba)
-        if (this.allowedSystemIds) this.pruneSelectedSystems(this.allowedSystemIds);
+        if (this.allowedSystemIds)
+          this.pruneSelectedSystems(this.allowedSystemIds);
       });
 
-    // inicjalne ograniczenie wg domyślnego gmId (np. podczas edycji)
+    // reaguj na zmianę isClubParty:
+    this.teamForm
+      .get('isClubParty')!
+      .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((isClub: boolean) => this.onClubOnlyToggle(isClub));
+
+    // wstępne ograniczenie po istniejącym GM (edycja)
     const initialGm = this.teamForm.get('gmId')?.value as string | null;
     if (initialGm) {
       this.gmService.getSystemsForGm(initialGm).subscribe((sys) => {
@@ -231,6 +260,8 @@ export class CreatePartyComponent {
       if (!party) return;
       if (this.teamForm.get('name')?.value) return;
 
+      this.currentTeamId = party.id;
+
       this.teamForm.patchValue({
         name: party.name,
         gmId: party.gmId,
@@ -239,13 +270,13 @@ export class CreatePartyComponent {
         notes: party.notes,
         isOpen: party.isOpen,
         isForBeginners: party.isForBeginners,
+        isClubParty: party.isClubParty,
       });
 
       forkJoin([
         this.partyService.getPartyProfile(party.id),
         this.partyService.getPartySystems(party.id),
-        this.partyService.getPartyMembers(party.id),
-      ]).subscribe(([profile, systems, members]) => {
+      ]).subscribe(([profile, systems]) => {
         if (profile) {
           this.teamForm.patchValue({ description: profile.description });
           const styleTags = profile.styleTags || [];
@@ -257,17 +288,88 @@ export class CreatePartyComponent {
         }
 
         if (systems) {
-          systems.forEach((s) => this.systemControls.push(this.fb.control(s.id)));
-        }
-
-        if (members) {
-          members.forEach((m) => this.membersControls.push(this.fb.control(m.userId)));
-          const me = this.auth.user()?.id ?? null;
-          const hasMe = !!me && !!members.find((m) => m.userId === me);
-          this.teamForm.get('addSelf')!.setValue(hasMe, { emitEvent: false });
+          systems.forEach((s) =>
+            this.systemControls.push(this.fb.control(s.id))
+          );
         }
       });
+
+      // aktywni i oczekujący ładowani osobno i synchronizowani z formularzem
+      this.refreshMembersForEdit();
+
+      // jeśli po wczytaniu jest tryb klubowy — przefiltruj listę wyboru członków
+      if (this.teamForm.get('isClubParty')?.value) {
+        this.filterItems(this.lastMembersSearchTerm, 'members');
+      }
     });
+  }
+
+  /** Pobiera z backendu Active + Pending, rozdziela i synchronizuje z formularzem. */
+  private refreshMembersForEdit(): void {
+    if (!this.currentTeamId) return;
+
+    this.partyService
+      .getActiveAndPendingMembers(this.currentTeamId)
+      .subscribe((members) => {
+        const active = members.filter(
+          (m) => m.memberStatus === PartyMemberStatus.Active && !m.leftAt
+        );
+        const pending = members.filter(
+          (m) => m.memberStatus === PartyMemberStatus.Pending && !m.leftAt
+        );
+
+        // aktywni z DB -> Set do rozróżniania przy kasowaniu
+        const activeIdsFromDb = Array.from(
+          new Set(active.map((m) => m.userId).filter(Boolean) as string[])
+        );
+        this.dbActiveMemberIds.set(new Set(activeIdsFromDb));
+
+        // scal aktywnych z ewentualnymi lokalnymi wyborami, przytnij do 5
+        const current = new Set(this.membersControls.value as string[]);
+        const merged = Array.from(
+          new Set([...activeIdsFromDb, ...current])
+        ).slice(0, 5);
+        this.setFormArray(this.membersControls, merged);
+
+        // ustaw „dodaj mnie”
+        const me = this.auth.user()?.id ?? null;
+        const hasMe = !!me && merged.includes(me);
+        this.teamForm.get('addSelf')!.setValue(hasMe, { emitEvent: false });
+
+        // oczekujący
+        this.pendingMembers.set(
+          pending.map((p) => ({ id: p.id, userId: p.userId }))
+        );
+      });
+  }
+
+  // =========================
+  // Club-only toggle (zad. 1 i 2)
+  // =========================
+  private onClubOnlyToggle(isClub: boolean): void {
+    if (isClub) {
+      // 1) sprawdź, czy na liście wybranych jest ktokolwiek nie-Member
+      const nonClubPresent = (this.membersControls.value as string[]).some(
+        (id) => this.userCoworker(id) !== CoworkerRoles.Member
+      );
+      if (nonClubPresent) {
+        // 2) pokaż info modal i cofnij zaznaczenie
+        this.openInfo(
+          'Przed ustawieniem drużyny "Tylko dla Klubowiczów" usuń z drużyny wszystkie osoby, niebędące Członkami Klubu Gier Fabularnych!'
+        );
+        this.teamForm.get('isClubParty')!.setValue(false, { emitEvent: false });
+        return;
+      }
+    }
+    // niezależnie od wartości — przefiltruj listę wyboru członków
+    this.filterItems(this.lastMembersSearchTerm, 'members');
+  }
+
+  private openInfo(message: string): void {
+    const ref = this.modal.open(InfoModalComponent, { backdrop: 'static' });
+    ref.componentInstance.header = 'Informacja';
+    ref.componentInstance.message = message;
+    ref.componentInstance.showCancel = false; // tylko OK
   }
 
   // =========================
@@ -291,6 +393,15 @@ export class CreatePartyComponent {
     if (idx >= 0) ctrl.removeAt(idx);
   }
 
+  private setFormArray(ctrl: FormArray, values: string[]): void {
+    while (ctrl.length) ctrl.removeAt(ctrl.length - 1);
+    values.forEach((v) => ctrl.push(this.fb.control(v)));
+  }
+
+  isDbActiveMember(userId: string): boolean {
+    return this.dbActiveMemberIds().has(userId);
+  }
+
   // =========================
   // Filtering & selection
   // =========================
@@ -305,18 +416,30 @@ export class CreatePartyComponent {
     if (type === 'systems') {
       this.applySystemFilter(term);
     } else if (type === 'members') {
-      const src = this.membersList();
+      // baza: cały katalog
+      let base = this.membersList();
+
+      // ogranicz do Member gdy isClubParty = true
+      if (this.teamForm.get('isClubParty')?.value) {
+        base = base.filter((u) => u.coworker === CoworkerRoles.Member);
+      }
+
+      // min 3 znaki do wyszukiwarki (jak wcześniej)
       this.filteredMembers =
-        term.length >= 3
-          ? src.filter((m) =>
-              `${this.getUserDisplayName(m)} ${m.email}`.toLowerCase().includes(term.toLowerCase())
+        term && term.length >= 3
+          ? base.filter((m) =>
+              `${this.getUserDisplayName(m)} ${m.email}`
+                .toLowerCase()
+                .includes(term.toLowerCase())
             )
-          : src;
+          : base;
     } else {
       const src = this.gmsList();
       this.filteredGms =
-        term.length >= 3
-          ? src.filter((g) => this.gmDisplayName(g).toLowerCase().includes(term.toLowerCase()))
+        term && term.length >= 3
+          ? src.filter((g) =>
+              this.gmDisplayName(g).toLowerCase().includes(term.toLowerCase())
+            )
           : src;
     }
   }
@@ -347,8 +470,11 @@ export class CreatePartyComponent {
     const target = event.target as HTMLSelectElement;
     if (!target?.selectedOptions) return;
 
-    const selectedValues = Array.from(target.selectedOptions).map((o) => o.value);
-    const controls = type === 'systems' ? this.systemControls : this.membersControls;
+    const selectedValues = Array.from(target.selectedOptions).map(
+      (o) => o.value
+    );
+    const controls =
+      type === 'systems' ? this.systemControls : this.membersControls;
 
     selectedValues.forEach((id) => {
       if (controls.value.length < 5 && !controls.value.includes(id)) {
@@ -358,9 +484,33 @@ export class CreatePartyComponent {
   }
 
   removeItem(itemId: string, type: 'systems' | 'members'): void {
-    const controls = type === 'systems' ? this.systemControls : this.membersControls;
+    if (type === 'systems') {
+      const controls = this.systemControls;
+      const i = controls.value.indexOf(itemId);
+      if (i >= 0) controls.removeAt(i);
+      return;
+    }
+
+    // type === 'members'
+    const controls = this.membersControls;
     const i = controls.value.indexOf(itemId);
     if (i >= 0) controls.removeAt(i);
+
+    // jeśli usuwa siebie — odznacz „dodaj mnie”
+    const me = this.auth.user()?.id ?? null;
+    if (me && itemId === me && this.teamForm.get('addSelf')?.value) {
+      this.teamForm.get('addSelf')!.setValue(false, { emitEvent: false });
+    }
+
+    // w trybie edycji i jeśli to członek aktywny w DB -> oznacz go jako removed w backendzie
+    if (this.editMode && this.currentTeamId && this.isDbActiveMember(itemId)) {
+      this.partyService
+        .removeMemberByTeamUser(this.currentTeamId, itemId)
+        .subscribe({
+          next: () => this.refreshMembersForEdit(),
+          error: () => this.refreshMembersForEdit(),
+        });
+    }
   }
 
   // =========================
@@ -368,7 +518,6 @@ export class CreatePartyComponent {
   // =========================
   pickGm(userId: string | null): void {
     this.teamForm.get('gmId')?.setValue(userId);
-    // reszta (pobranie systemów, filtr, prune) odbywa się w subskrypcji valueChanges
   }
 
   selectedGmName(): string {
@@ -391,15 +540,100 @@ export class CreatePartyComponent {
     return this.teamForm.get('styleTags') as FormArray;
   }
 
+  // =========================
+  // Pending actions
+  // =========================
+  acceptPending(memberLinkId: string): void {
+    if (!this.currentTeamId) return;
+    if (this.membersControls.length >= 5) return; // limit aktywnych
+
+    // Jeżeli włączony tryb klubowy, to akceptować można tylko Member
+    const pending = this.pendingMembers().find((p) => p.id === memberLinkId);
+    if (pending && this.teamForm.get('isClubParty')?.value) {
+      if (this.userCoworker(pending.userId) !== CoworkerRoles.Member) {
+        this.openInfo(
+          'Ta drużyna jest Tylko dla Klubowiczów – akceptować można wyłącznie Członków Klubu.'
+        );
+        return;
+      }
+    }
+
+    this.partyService.acceptRequest(memberLinkId).subscribe({
+      next: () => this.refreshMembersForEdit(),
+      error: () => this.refreshMembersForEdit(),
+    });
+  }
+
+  rejectPending(memberLinkId: string): void {
+    if (!this.currentTeamId) return;
+    this.partyService.rejectRequest(memberLinkId).subscribe({
+      next: () => this.refreshMembersForEdit(),
+      error: () => this.refreshMembersForEdit(),
+    });
+  }
+
+  // =========================
+  // Badge & display helpers
+  // =========================
+  userCoworker(userId: string): CoworkerRoles | null {
+    const u =
+      this.membersList().find((x) => x.id === userId) ??
+      this.filteredMembers.find((x) => x.id === userId) ??
+      null;
+    return u?.coworker ?? null;
+  }
+
+  hasMemberBadge(userId: string): boolean {
+    const u = this.getMemberById(userId);
+    return u?.coworker === CoworkerRoles.Member;
+  }
+  hasGoldenBadge(userId: string): boolean {
+    const u = this.getMemberById(userId);
+    return u?.coworker === CoworkerRoles.Golden;
+  }
+
+  shouldShowEmailForActive(userId: string): boolean {
+    return (
+      this.canShowEmails() &&
+      this.isDbActiveMember(userId) &&
+      !!this.getUserEmailById(userId)
+    );
+  }
+
+  shouldShowEmailForPending(userId: string): boolean {
+    // pending rekordy mamy z backendu, więc jeśli właściciel – może widzieć mail
+    return this.canShowEmails() && !!this.getUserEmailById(userId);
+  }
+  // =========================
+  // Misc UI
+  // =========================
+  canShowEmails(): boolean {
+    const me = this.user()?.id ?? null;
+    return !!(
+      this.editMode &&
+      this.partyData &&
+      me &&
+      me === this.partyData.ownerId
+    );
+  }
+
+  // zwróć samo imię/pseudonim (bez maila)
   getMemberNameById(memberId: string): string {
     const byId = (arr: IUser[]) => arr.find((u) => u.id === memberId);
-    const full = byId(this.membersList()) ?? byId(this.filteredMembers) ?? null;
-    if (full) return `${this.getUserDisplayName(full)} ${full.email}`;
-    if (this.auth.user()?.id === memberId) {
-      const me = this.auth.user()!;
-      return `${this.getUserDisplayName(me)} ${me.email}`;
-    }
-    return memberId;
+    const full =
+      byId(this.membersList()) ??
+      byId(this.filteredMembers) ??
+      (this.auth.user()?.id === memberId ? this.auth.user()! : null);
+    return full ? this.getUserDisplayName(full) : memberId;
+  }
+
+  getUserEmailById(memberId: string): string {
+    const byId = (arr: IUser[]) => arr.find((u) => u.id === memberId);
+    const full =
+      byId(this.membersList()) ??
+      byId(this.filteredMembers) ??
+      (this.auth.user()?.id === memberId ? this.auth.user()! : null);
+    return full?.email ?? '';
   }
 
   getSystemNameById(systemId: string): string | undefined {
@@ -488,12 +722,22 @@ export class CreatePartyComponent {
     return this.editMode ? 'Zapisz zmiany' : 'Utwórz drużynę';
   }
 
-  // members dropdown helpers
   isMemberSelected(id: string): boolean {
     return this.membersControls.value.includes(id);
   }
 
   toggleMember(id: string): void {
+    // w trybie „Tylko dla Klubowiczów” nie pozwól dodać kogoś, kto nie jest Member
+    if (
+      this.teamForm.get('isClubParty')?.value &&
+      this.userCoworker(id) !== CoworkerRoles.Member
+    ) {
+      this.openInfo(
+        'Ta drużyna jest Tylko dla Klubowiczów – można dodawać wyłącznie Członków Klubu.'
+      );
+      return;
+    }
+
     const ctrl = this.membersControls;
     const idx = ctrl.value.indexOf(id);
     if (idx >= 0) {

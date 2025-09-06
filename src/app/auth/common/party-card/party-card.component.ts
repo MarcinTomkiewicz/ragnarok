@@ -16,11 +16,11 @@ import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile';
 import { IUser } from '../../../core/interfaces/i-user';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
-import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { TeamRole, TeamRoleLabels } from '../../../core/enums/party.enum';
 
 @Component({
-  selector: 'app-team-card',
+  selector: 'app-party-card',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './party-card.component.html',

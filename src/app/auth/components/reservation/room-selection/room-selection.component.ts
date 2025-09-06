@@ -17,8 +17,8 @@ import { ReservationStoreService } from '../../../core/services/reservation-stor
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { ReservationsCalendarFacade } from '../../../core/services/reservations-calendar/reservations-calendar.facade';
 import { hasMinimumCoworkerRole } from '../../../../core/utils/required-roles';
-import { TeamRole } from '../../../../core/enums/team-role';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { TeamRole } from '../../../../core/enums/party.enum';
 
 @Component({
   selector: 'app-room-selection',

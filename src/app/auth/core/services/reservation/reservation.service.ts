@@ -17,8 +17,8 @@ import { SupabaseService } from '../../../../core/services/supabase/supabase.ser
 import { toCamelCase, toSnakeCase } from '../../../../core/utils/type-mappers';
 import { PartyService } from '../party/party.service';
 import { TimeSlots } from '../../../../core/enums/hours';
-import { TeamRole } from '../../../../core/enums/team-role';
 import { CoworkerRoles } from '../../../../core/enums/roles';
+import { TeamRole } from '../../../../core/enums/party.enum';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {

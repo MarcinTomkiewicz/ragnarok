@@ -2,10 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { format } from 'date-fns';
-
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, map, of, switchMap } from 'rxjs';
-import { TeamRole, TeamRoleLabels } from '../../../core/enums/team-role';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../core/interfaces/i-user';
 import { IParty } from '../../../core/interfaces/parties/i-party';
@@ -15,6 +13,11 @@ import {
 } from '../../../core/interfaces/parties/i-party-member';
 import { IPartyProfile } from '../../../core/interfaces/parties/i-party-profile';
 import { PartyService } from '../../core/services/party/party.service';
+import {
+  TeamRole,
+  TeamRoleLabels,
+  PartyMemberStatus,
+} from '../../../core/enums/party.enum';
 
 @Component({
   selector: 'app-party-details-modal',
@@ -38,18 +41,24 @@ export class PartyDetailsModalComponent {
   private readonly partyService = inject(PartyService);
   readonly activeModal = inject(NgbActiveModal);
 
+  // <<< TUTAJ ZMIANA: filtrujemy tylko aktywnych (bez leftAt) >>>
   private readonly memberRows$ = this.membersSub$.pipe(
-    switchMap((members) => {
-      if (!members?.length) return of([] as MemberRow[]);
+    map((members) =>
+      (members ?? []).filter(
+        (m) => m.memberStatus === PartyMemberStatus.Active && !m.leftAt
+      )
+    ),
+    switchMap((activeMembers) => {
+      if (!activeMembers.length) return of([] as MemberRow[]);
       const ids = Array.from(
-        new Set(members.map((m) => m.userId).filter(Boolean) as string[])
+        new Set(activeMembers.map((m) => m.userId).filter(Boolean) as string[])
       );
       if (!ids.length) return of([] as MemberRow[]);
       return this.partyService.getUsersByIds(ids).pipe(
         map((users) => {
           const byId = new Map(users.map((u) => [u.id, u]));
-          return members.map<MemberRow>((m) => ({
-            id: m.userId ?? crypto.randomUUID(),
+          return activeMembers.map<MemberRow>((m) => ({
+            id: (m as any).id ?? m.userId ?? crypto.randomUUID(), // stabilny trackBy
             user: m.userId ? byId.get(m.userId) ?? null : null,
             role: this.normalizeRole(m.role),
           }));
@@ -57,6 +66,10 @@ export class PartyDetailsModalComponent {
       );
     })
   );
+
+  readonly memberRows = toSignal(this.memberRows$, {
+    initialValue: [] as MemberRow[],
+  });
 
   private normalizeRole(role: string | null | undefined): TeamRole {
     switch (role) {
@@ -72,10 +85,6 @@ export class PartyDetailsModalComponent {
         return TeamRole.Player;
     }
   }
-
-  readonly memberRows = toSignal(this.memberRows$, {
-    initialValue: [] as MemberRow[],
-  });
 
   get createdAt(): string {
     const d = this.team.createdAt ? new Date(this.team.createdAt) : null;

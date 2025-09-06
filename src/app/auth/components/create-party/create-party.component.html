@@ -12,7 +12,12 @@
 
       <div class="form-group">
         <label for="teamName" class="text-start">Nazwa drużyny</label>
-        <input id="teamName" type="text" formControlName="name" class="form-control" />
+        <input
+          id="teamName"
+          type="text"
+          formControlName="name"
+          class="form-control"
+        />
       </div>
 
       <!-- MISTRZ GRY (dropdown single-select) -->
@@ -25,7 +30,7 @@
             ngbDropdownToggle
             class="btn btn-outline dropdown-toggle-wide d-flex align-items-center justify-content-between"
           >
-            <span>{{ selectedGmName() || 'Bez Mistrza Gry' }}</span>
+            <span>{{ selectedGmName() || "Bez Mistrza Gry" }}</span>
           </button>
 
           <div ngbDropdownMenu class="dropdown-pane w-100">
@@ -47,42 +52,56 @@
             </button>
 
             @if (filteredGms.length) {
-              <div class="dropdown-list">
-                @for (gm of filteredGms; track gm.userId) {
-                  <button
-                    ngbDropdownItem
-                    class="item dropdown-item"
-                    [class.active]="teamForm.get('gmId')?.value === gm.userId"
-                    (click)="$event.preventDefault(); pickGm(gm.userId); gmDD.close()"
-                  >
-                    <div class="lhs"><div class="name">{{ gmDisplayName(gm) }}</div></div>
-                    <div class="rhs"></div>
-                  </button>
-                }
-              </div>
+            <div class="dropdown-list">
+              @for (gm of filteredGms; track gm.userId) {
+              <button
+                ngbDropdownItem
+                class="item dropdown-item"
+                [class.active]="teamForm.get('gmId')?.value === gm.userId"
+                (click)="
+                  $event.preventDefault(); pickGm(gm.userId); gmDD.close()
+                "
+              >
+                <div class="lhs">
+                  <div class="name">{{ gmDisplayName(gm) }}</div>
+                </div>
+                <div class="rhs"></div>
+              </button>
+              }
+            </div>
             } @else {
-              <div class="dropdown-empty">Brak wyników.</div>
+            <div class="dropdown-empty">Brak wyników.</div>
             }
           </div>
         </div>
 
         <div class="form-text mt-1">
-          @if (teamForm.get('gmId')?.value) {
-            Lista systemów poniżej jest ograniczona do tych, które prowadzi wybrany MG.
-          } @else {
-            Wybierz MG, aby zawęzić listę systemów.
-          }
+          @if (teamForm.get('gmId')?.value) { Lista systemów poniżej jest
+          ograniczona do tych, które prowadzi wybrany MG. } @else { Wybierz MG,
+          aby zawęzić listę systemów. }
         </div>
       </div>
 
       <div class="form-group">
         <label for="description" class="text-start">Opis</label>
-        <textarea id="description" class="form-control" formControlName="description" rows="7"></textarea>
+        <textarea
+          id="description"
+          class="form-control"
+          formControlName="description"
+          rows="7"
+        ></textarea>
       </div>
 
       <div class="form-group form-check text-start">
-        <input id="addSelf" class="form-check-input" type="checkbox" formControlName="addSelf" />
-        <label class="form-check-label" for="addSelf">Dodaj mnie jako członka drużyny</label>
+        <input
+          id="addSelf"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="addSelf"
+        />
+        <label class="form-check-label" for="addSelf"
+          >Dodaj mnie jako członka drużyny</label
+        >
       </div>
 
       <!-- CZŁONKOWIE (dropdown multi-select) -->
@@ -98,67 +117,156 @@
             <span>Wybierz członków…</span>
           </button>
 
-        <div ngbDropdownMenu class="dropdown-pane w-100">
-          <div class="dropdown-search">
-            <input
-              class="form-control search"
-              placeholder="Szukaj po imieniu, pseudonimie lub mailu…"
-              (input)="onSearchChange($event, 'members')"
-            />
-          </div>
+          <div ngbDropdownMenu class="dropdown-pane w-100">
+            <div class="dropdown-search">
+              <input
+                class="form-control search"
+                placeholder="Szukaj po imieniu, pseudonimie lub mailu…"
+                (input)="onSearchChange($event, 'members')"
+              />
+            </div>
 
-          @if (filteredMembers.length) {
+            @if (filteredMembers.length) {
             <div class="dropdown-list">
               @for (m of filteredMembers; track m.id) {
-                <button
-                  ngbDropdownItem
-                  class="item"
-                  [class.active]="isMemberSelected(m.id)"
-                  (click)="$event.preventDefault(); toggleMember(m.id)"
-                >
-                  <div class="lhs">
-                    <div class="name">{{ getUserDisplayName(m) }}</div>
-                    <div class="meta">{{ m.email }}</div>
-                  </div>
-                  <div class="rhs">
-                    @if (m.coworker === CoworkerRoles.Golden) { <span class="badge golden">Złoty Bilet</span> }
-                    @if (m.coworker === CoworkerRoles.Member) { <span class="badge member">Klub</span> }
-                    @if (m.coworker === CoworkerRoles.Gm) { <span class="badge gm">MG</span> }
-                    @if (m.coworker === CoworkerRoles.Reception) { <span class="badge reception">Recepcja</span> }
-                    @if (m.coworker === CoworkerRoles.Coowner) { <span class="badge coowner">Marketing</span> }
-                    @if (m.coworker === CoworkerRoles.Owner) { <span class="badge owner">Właściciel</span> }
-                  </div>
-                </button>
+              <button
+                ngbDropdownItem
+                class="item"
+                [class.active]="isMemberSelected(m.id)"
+                (click)="$event.preventDefault(); toggleMember(m.id)"
+              >
+                <div class="lhs">
+                  <div class="name">{{ getUserDisplayName(m) }}</div>
+                </div>
+                <div class="rhs">
+                  @if (m.coworker === CoworkerRoles.Golden) {
+                  <span class="tag-badge golden">Złoty Bilet</span> } @if
+                  (m.coworker === CoworkerRoles.Member) {
+                  <span class="tag-badge member">Klub</span> } @if (m.coworker
+                  === CoworkerRoles.Gm) { <span class="badge gm">MG</span> } @if
+                  (m.coworker === CoworkerRoles.Reception) {
+                  <span class="tag-badge reception">Recepcja</span> } @if
+                  (m.coworker === CoworkerRoles.Coowner) {
+                  <span class="tag-badge coowner">Marketing</span> } @if
+                  (m.coworker === CoworkerRoles.Owner) {
+                  <span class="tag-badge owner">Właściciel</span> }
+                </div>
+              </button>
               }
             </div>
-          } @else {
+            } @else {
             <div class="dropdown-empty">Brak wyników.</div>
-          }
-        </div>
+            }
+          </div>
         </div>
 
         @if (membersControls.value.length > 0) {
-          <label>Wybrani członkowie:</label>
-          <ul class="list-group">
-            @for (memberId of membersControls.value; track $index) {
-              <li class="text-start list-group-item">
-                <div class="flex-row-align-start">
-                  {{ getMemberNameById(memberId) }}
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-close-x"
-                    (click)="removeItem(memberId, 'members')"
-                  >
-                    x
-                  </button>
-                </div>
-              </li>
-            }
-          </ul>
+        <label>Wybrani członkowie:</label>
+        <ul class="list-group member-list">
+          @for (memberId of membersControls.value; track $index) {
+          <li class="list-group-item">
+            <div class="member-row">
+              <span class="member-name">
+                <span class="member-header">
+                  <span class="member-primary me-2">{{
+                    getMemberNameById(memberId)
+                  }}</span>
+                  <span class="tag-badges">
+                    @if (hasMemberBadge(memberId)) {
+                    <span class="tag-badge member">Klub</span> } @if
+                    (hasGoldenBadge(memberId)) {
+                    <span class="tag-badge golden">Złoty Bilet</span> }
+                  </span>
+                </span>
+
+                @if (shouldShowEmailForActive(memberId)) {
+                <span class="member-email">{{
+                  getUserEmailById(memberId)
+                }}</span>
+                }
+              </span>
+
+              <span class="member-actions">
+                @if (isDbActiveMember(memberId)) {
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="removeItem(memberId, 'members')"
+                  title="Usuń z drużyny (zapisane w bazie)"
+                >
+                  Usuń z drużyny
+                </button>
+                } @else {
+                <button
+                  type="button"
+                  class="btn btn-danger btn-close-x"
+                  (click)="removeItem(memberId, 'members')"
+                >
+                  x
+                </button>
+                }
+              </span>
+            </div>
+          </li>
+          }
+        </ul>
         }
       </div>
 
-      <!-- SYSTEMY RPG (multiselect natywny) -->
+      @if (editMode && pendingMembers().length > 0) {
+      <div class="form-group text-start mt-3">
+        <label>Oczekujące prośby:</label>
+        <ul class="list-group pending-list">
+          @for (req of pendingMembers(); track req.id) {
+          <li class="list-group-item">
+            <div class="member-row">
+              <span class="member-name">
+                <span class="member-header">
+                  <span class="member-primary me-2">{{
+                    getMemberNameById(req.userId)
+                  }}</span>
+                  <span class="tag-badges">
+                    @if (hasMemberBadge(req.userId)) {
+                    <span class="tag-badge member">Klub</span> } @if
+                    (hasGoldenBadge(req.userId)) {
+                    <span class="tag-badge golden">Złoty Bilet</span> }
+                  </span>
+                </span>
+
+                @if (shouldShowEmailForPending(req.userId)) {
+                <span class="member-email">{{
+                  getUserEmailById(req.userId)
+                }}</span>
+                }
+              </span>
+
+              <span class="member-actions btn-group">
+                <button
+                  type="button"
+                  class="btn btn-success btn-sm"
+                  (click)="acceptPending(req.id)"
+                  [disabled]="membersControls.length >= 5"
+                  [title]="
+                    membersControls.length >= 5 ? 'Limit 5 aktywnych' : ''
+                  "
+                >
+                  Akceptuj
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline btn-sm"
+                  (click)="rejectPending(req.id)"
+                >
+                  Odrzuć
+                </button>
+              </span>
+            </div>
+          </li>
+          }
+        </ul>
+      </div>
+      }
+
       <div class="form-group text-start">
         <label for="systemsSelect">Systemy RPG (maks. 5)</label>
         <input
@@ -175,37 +283,41 @@
           (change)="onItemChange($event, 'systems')"
         >
           @for (system of filteredSystems; track system.id) {
-            <option
-              [value]="system.id"
-              [disabled]="systemControls.value.length >= 5 && !systemControls.value.includes(system.id)"
-            >
-              {{ system.name }}
-            </option>
+          <option
+            [value]="system.id"
+            [disabled]="
+              systemControls.value.length >= 5 &&
+              !systemControls.value.includes(system.id)
+            "
+          >
+            {{ system.name }}
+          </option>
           }
         </select>
 
         @if (filteredSystems.length === 0 && teamForm.get('gmId')?.value) {
-          <div class="text-muted small">Wybrany MG nie ma przypisanych systemów. Wybierz innego MG albo usuń wybór.</div>
-        }
-
-        @if (systemControls.value.length > 0) {
-          <label>Wybrane systemy:</label>
-          <ul class="list-group">
-            @for (systemId of systemControls.value; track $index) {
-              <li class="text-start list-group-item">
-                <div class="flex-row-align-start">
-                  {{ getSystemNameById(systemId) }}
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-close-x"
-                    (click)="removeItem(systemId, 'systems')"
-                  >
-                    x
-                  </button>
-                </div>
-              </li>
-            }
-          </ul>
+        <div class="text-muted small">
+          Wybrany MG nie ma przypisanych systemów. Wybierz innego MG albo usuń
+          wybór.
+        </div>
+        } @if (systemControls.value.length > 0) {
+        <label>Wybrane systemy:</label>
+        <ul class="list-group">
+          @for (systemId of systemControls.value; track $index) {
+          <li class="text-start list-group-item">
+            <div class="flex-row-regular">
+              {{ getSystemNameById(systemId) }}
+              <button
+                type="button"
+                class="btn btn-danger btn-close-x"
+                (click)="removeItem(systemId, 'systems')"
+              >
+                x
+              </button>
+            </div>
+          </li>
+          }
+        </ul>
         }
       </div>
 
@@ -213,31 +325,57 @@
         <label>Styl drużyny (maks. 3)</label>
         <div class="d-flex flex-wrap gap-2">
           @for (tag of gmStyleTagValues; track tag) {
-            <div class="style-checkbox">
-              <input
-                class="style-checkbox-input"
-                type="checkbox"
-                [checked]="styleTagControls.value.includes(tag)"
-                [disabled]="styleTagControls.value.length >= 3 && !styleTagControls.value.includes(tag)"
-                (change)="toggleStyleTag(tag)"
-                id="style_{{ tag }}"
-              />
-              <label class="style-checkbox-label" [for]="'style_' + tag">
-                {{ GmStyleTagLabels[tag] }}
-              </label>
-            </div>
+          <div class="style-checkbox">
+            <input
+              class="style-checkbox-input"
+              type="checkbox"
+              [checked]="styleTagControls.value.includes(tag)"
+              [disabled]="
+                styleTagControls.value.length >= 3 &&
+                !styleTagControls.value.includes(tag)
+              "
+              (change)="toggleStyleTag(tag)"
+              id="style_{{ tag }}"
+            />
+            <label class="style-checkbox-label" [for]="'style_' + tag">
+              {{ GmStyleTagLabels[tag] }}
+            </label>
+          </div>
           }
         </div>
       </div>
 
       <div class="form-group text-start">
         <label for="notes">Notatki</label>
-        <textarea id="notes" class="form-control" formControlName="notes"></textarea>
+        <textarea
+          id="notes"
+          class="form-control"
+          formControlName="notes"
+        ></textarea>
       </div>
 
       <div class="form-group form-check">
-        <input id="isOpen" class="form-check-input" type="checkbox" formControlName="isOpen" />
-        <label class="form-check-label" for="isOpen">Dostępna dla innych</label>
+        <input
+          id="isOpen"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="isOpen"
+        />
+        <label class="form-check-label me-4" for="isOpen"
+          >Dostępna dla innych</label
+        >
+
+        @if (canSeeClubOnly()) {
+        <input
+          id="isClubParty"
+          class="form-check-input"
+          type="checkbox"
+          formControlName="isClubParty"
+        />
+        <label class="form-check-label" for="isClubParty">
+          Tylko dla Klubowiczów
+        </label>
+        }
       </div>
 
       <button type="submit" class="btn btn-primary mt-3">

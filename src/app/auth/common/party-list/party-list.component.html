@@ -1,7 +1,7 @@
 <div class="reservations-grid" [ngClass]="{ 'centered-reservation': teams().length === 1 }">
   @if (teams().length > 0) {
       @for (team of teams(); track team.id) {
-        <app-team-card
+        <app-party-card
           [team]="team"
           [showDetailsButton]="showDetailsButton()"
           (showDetails)="onShowDetails(team)"

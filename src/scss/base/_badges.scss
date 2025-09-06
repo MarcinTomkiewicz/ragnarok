@@ -1,0 +1,77 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.tag-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tag-badge {
+  background-color: lighten($bg-color, 8%);
+  border: 1px solid $border-color;
+  font-size: $font-size-xs;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+
+  &.join {
+    color: $success-color;
+    box-shadow: 0 0 6px rgba($success-color, 0.25);
+  }
+
+  &.mine {
+    color: $secondary-text-color;
+  }
+
+  &.club {
+    @include gold-gradient-text;
+    border-color: lighten($primary-color, 10%);
+    box-shadow: 0 0 8px rgba($secondary-color, 0.35);
+  }
+
+  &.member {
+    background: rgba(104, 66, 32, 0.15);
+    color: $secondary-color;
+    border-color: $secondary-color;
+  }
+
+  &.golden {
+    @include gold-gradient-text;
+    border-color: lighten($secondary-color, 10%);
+    background: rgba(232, 188, 88, 0.12);
+  }
+
+  &.gm {
+    $violet: #9b59b6;
+    color: lighten($violet, 5%);
+    background: rgba(155, 89, 182, 0.12);
+    border-color: lighten($violet, 10%);
+  }
+
+  &.reception {
+    $nurgle: #6b8f2a;
+    color: lighten($nurgle, 10%);
+    background: rgba(107, 143, 42, 0.14);
+    border-color: lighten($nurgle, 8%);
+  }
+
+  &.coowner {
+    color: lighten($secondary-color, 8%);
+    background: rgba($secondary-color, 0.14);
+    border-color: lighten($secondary-color, 12%);
+  }
+
+  &.owner {
+    color: lighten($primary-color, 5%);
+    background: rgba($primary-color, 0.1);
+    border-color: lighten($primary-color, 8%);
+  }
+
+  &.muted {
+    color: $secondary-text-color;
+    background: $bg-color-light;
+  }
+}

@@ -9,8 +9,8 @@ import { ReservationStatusDisplay } from '../../../core/interfaces/i-reservation
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { PartyService } from '../../core/services/party/party.service';
 import { CoworkerRoles } from '../../../core/enums/roles';
-import { TeamRole } from '../../../core/enums/team-role';
 import { IParty } from '../../../core/interfaces/parties/i-party';
+import { TeamRole } from '../../../core/enums/party.enum';
 
 @Component({
   selector: 'app-reservation-card',

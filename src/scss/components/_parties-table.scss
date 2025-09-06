@@ -1,21 +1,28 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-.parties-wrapper { @include section-wrapper; }
+.parties-wrapper {
+  @include section-wrapper;
+}
 
-/* Jedno źródło prawdy dla szerokości kolumn */
-$party-grid-cols: 56px 1.2fr 1fr 1fr 1.6fr minmax(160px, 220px);
+/* ===== Desktop ===== */
+$party-grid-cols: 56px 1.3fr 1fr 1fr 2fr 150px;
+$mobile-label-col: 12ch;
+$mobile-row-max: 520px;
 
 .party-grid {
   @include data-grid($party-grid-cols, 1rem);
 
-  .grid-head { 
-    @include data-grid-row($party-grid-cols, .75rem);
+  .grid-head {
+    @include data-grid-row($party-grid-cols, 0.75rem);
     font-weight: 700;
-    background-color: rgba($text-color, .06);
-
-    .cell { text-align: center; }
-    .cell.lp { text-align: left; }
+    background-color: rgba($text-color, 0.06);
+    .cell {
+      text-align: center;
+    }
+    .cell.lp {
+      text-align: left;
+    }
   }
 
   .grid-row {
@@ -28,46 +35,169 @@ $party-grid-cols: 56px 1.2fr 1fr 1fr 1.6fr minmax(160px, 220px);
       text-align: center;
       width: 56px;
       font-variant-numeric: tabular-nums;
-      opacity: .9;
+      opacity: 0.9;
     }
-
     &.name {
       font-weight: 600;
       text-align: left;
       overflow-wrap: anywhere;
     }
+    &.owner,
+    &.gm {
+      @include cell-ellipsis;
+      text-align: left;
+    }
+    &.beginners {
+      .cell-value {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: space-between;
+      }
+      .badge {
+        display: inline-flex;
+        margin-inline: auto;
+      }
+      .beginner-controls {
+        @include flex-wrapper(row, flex-start, center);
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.5rem;
+        .form-check {
+          margin-top: 0;
+        }
+        .form-select {
+          min-width: 84px;
+        }
+      }
+    }
+    &.actions {
+      .cell-value {
+        @include flex-wrapper(column, center, center);
+        gap: 0.5rem;
+      }
+      .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+      }
+    }
+    .cell-label {
+      display: none;
+    }
+  }
 
-    &.owner, &.gm {
+  /* ===== Mobile ===== */
+  @media (max-width: $breakpoint-sm) {
+    .grid-head {
+      display: none;
+    }
+
+    .grid-row {
+      grid-template-columns: 1fr;
+      row-gap: 0.5rem;
+      padding: 0.75rem 0;
+      justify-items: center;
+      border-bottom: none;
+      position: relative;
+    }
+    .grid-row::after {
+      content: "";
+      display: block;
+      width: min(100%, #{$mobile-row-max});
+      border-bottom: 1px dashed $primary-color;
+      margin: 0.75rem auto 0;
+    }
+
+    .grid-row .cell {
+      grid-column: 1;
+      width: 100%;
+      max-width: $mobile-row-max;
+    }
+
+    .grid-row .cell.lp {
+      display: none;
+    }
+
+    .grid-row .cell.name {
+      margin-bottom: 0.15rem;
+      text-align: center;
+      font-size: $font-size-lg;
+      font-weight: 700;
+      line-height: $line-height-base;
+    }
+
+    .grid-row .cell.owner,
+    .grid-row .cell.gm,
+    .grid-row .cell.beginners,
+    .grid-row .cell.actions {
+      display: grid;
+      grid-template-columns: $mobile-label-col 1fr;
+      align-items: center;
+      justify-items: start;
+      column-gap: 0.5rem;
+      min-width: 0;
+
+      .cell-label {
+        display: inline-block;
+        font-size: $font-size-xs;
+        font-weight: 600;
+        color: $secondary-text-color;
+        white-space: nowrap;
+        justify-self: start;
+        text-align: left;
+      }
+      .cell-value {
+        min-width: 0;
+      }
+    }
+
+    .grid-row .cell.owner .cell-value,
+    .grid-row .cell.gm .cell-value {
       @include cell-ellipsis;
       text-align: left;
     }
 
-    &.actions {
-      @include flex-wrapper(row, center, center);
-      gap: .5rem;
+    .grid-row .cell.beginners .cell-value {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       flex-wrap: wrap;
-
-      .btn { padding: .25rem .5rem; font-size: .85rem; }
+      justify-content: flex-start;
     }
-  }
+    .grid-row .cell.beginners .badge {
+      margin-inline: auto;
+    }
+    .grid-row .cell.beginners .beginner-controls {
+      @include flex-wrapper(row, flex-start, center);
+      gap: 0.5rem;
+      margin-top: 0;
+      flex-wrap: wrap;
+      .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+      }
+    }
+    .grid-row .cell.beginners .beginner-controls .form-check {
+      margin: 0;
+      justify-content: flex-start;
+      white-space: nowrap;
+    }
+    .grid-row .cell.beginners .beginner-controls .form-select {
+      width: auto;
+      min-width: 8rem;
+      max-width: 100%;
+    }
 
-  .beginner-controls {
-    @include flex-wrapper(row, flex-start, center);
-    gap: .5rem;
-
-    .form-check { margin-top: 0; }
-    .form-select { min-width: 84px; }
-  }
-
-  @media (max-width: $breakpoint-sm) {
-    .grid-head { display: none; }
-
-    .grid-row { 
-      @include collapse-grid-2cols;
-
-      .cell.lp   { grid-column: 1 / -1; text-align: center; opacity: .6; }
-      .cell.name { grid-column: 1 / -1; }
-      .cell.actions { grid-column: 1 / -1; justify-content: flex-start; }
+    .grid-row .cell.actions .cell-value {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+    .grid-row .cell.actions .btn {
+      flex: 0 0 auto;
     }
   }
 }

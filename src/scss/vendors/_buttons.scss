@@ -21,6 +21,10 @@
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
 
+  &.btn-sm {
+    padding: 0.25rem 0.75rem;
+  }
+
   &:disabled {
     cursor: not-allowed;
     transform: none;
