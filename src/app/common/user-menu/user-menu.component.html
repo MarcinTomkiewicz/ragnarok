@@ -1,14 +1,14 @@
 <div class="user-menu" (click)="toggleMenu()" [class.open]="isOpen">
   <span class="icon">
     <img src="/icons/viking-head.svg" alt="User Menu" width="24" height="24" />
-    @if (pendingCount > 0) {
+    @if (totalCount() > 0) {
     <span
       class="notification-badge"
-      [class.wider]="pendingCount > 9 && pendingCount <= 99"
-      [class.widest]="pendingCount > 99"
-      [attr.aria-label]="'Oczekujące decyzje: ' + pendingCountLabel()"
+      [class.wider]="totalCount() > 9 && totalCount() <= 99"
+      [class.widest]="totalCount() > 99"
+      [attr.aria-label]="'Oczekujące: ' + totalLabel()"
     >
-      {{ pendingCountLabel() }}
+      {{ totalLabel() }}
     </span>
     }
   </span>

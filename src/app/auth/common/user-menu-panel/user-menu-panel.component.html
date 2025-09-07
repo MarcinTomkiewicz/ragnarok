@@ -1,5 +1,7 @@
 <div class="menu-panel d-flex flex-column align-items-center">
-  <span class="menu-title fw-bold text-center">Witaj, {{ username }}!</span>
+  <span class="menu-title fw-bold text-center"
+    >Witaj, {{ usernameDisplay() }}!</span
+  >
 
   <div class="w-100 mt-3">
     <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
@@ -27,19 +29,22 @@
     <a class="menu-item w-100 text-center" href="/auth/create-party"
       >Załóż drużynę</a
     >
-    <a class="menu-item w-100 text-center" href="/auth/my-parties"
-      >Moje drużyny</a
-    >
+
+    <a class="menu-item w-100 text-center" href="/auth/my-parties">
+      Moje drużyny
+      <app-notification-badge
+        [bucket]="NotificationBucket.PartyMembershipRequests"
+      />
+    </a>
   </div>
-  @if (isMember) {
+
+  @if (isMember()) {
   <hr class="menu-divider w-100 my-3" />
   <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
     Strefa Klubowicza
   </div>
-      <a class="menu-item w-100 text-center" href="/auth/benefits"
-      >Moje benefity</a
-    >
-  } @if (isGm) {
+  <a class="menu-item w-100 text-center" href="/auth/benefits">Moje benefity</a>
+  } @if (isGm()) {
   <hr class="menu-divider w-100 my-3" />
   <div class="w-100">
     <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
@@ -55,13 +60,12 @@
       >Twoja dostępność</a
     >
   </div>
-  } @if (isAdminSection) {
+  } @if (isAdminSection()) {
   <hr class="menu-divider w-100 my-3" />
   <div class="w-100">
     <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
       Strefa Admina
     </div>
-    <!-- <a class="menu-item w-100 text-center" href="/admin/dashboard">Panel administratora</a> -->
     <a class="menu-item w-100 text-center" href="/auth/guest-reservation"
       >Nowa Rezerwacja</a
     >
@@ -71,7 +75,6 @@
     <a class="menu-item w-100 text-center" href="/auth/party-list"
       >Zarządzaj Drużynami</a
     >
-    <!-- Inne opcje w przyszłości -->
   </div>
   }
 
