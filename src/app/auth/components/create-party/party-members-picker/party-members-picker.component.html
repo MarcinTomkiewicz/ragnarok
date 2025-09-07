@@ -1,0 +1,112 @@
+<div ngbDropdown #membersDD="ngbDropdown" class="w-100">
+      <button type="button" ngbDropdownToggle
+        class="btn btn-outline dropdown-toggle-wide d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <span>Wybierz członków…</span>
+      </button>
+
+      <div ngbDropdownMenu class="dropdown-pane w-100">
+        <div class="dropdown-search">
+          <input class="form-control search" placeholder="Szukaj po imieniu, pseudonimie lub mailu…" (input)="onSearch($event)" />
+        </div>
+
+        @if (filtered().length) {
+          <div class="dropdown-list">
+            @for (m of filtered(); track m.id) {
+              <button ngbDropdownItem class="item"
+                [class.active]="isSelected(m.id)"
+                (click)="$event.preventDefault(); toggle(m)">
+                <div class="lhs">
+                  <div class="name">{{ displayName(m) }}</div>
+                </div>
+                <div class="rhs">
+                  @if (m.coworker === CoworkerRoles.Golden) { <span class="tag-badge golden">Złoty Bilet</span> }
+                  @if (m.coworker === CoworkerRoles.Member) { <span class="tag-badge member">Klub</span> }
+                  @if (m.coworker === CoworkerRoles.Gm) { <span class="badge gm">MG</span> }
+                  @if (m.coworker === CoworkerRoles.Reception) { <span class="tag-badge reception">Recepcja</span> }
+                  @if (m.coworker === CoworkerRoles.Coowner) { <span class="tag-badge coowner">Marketing</span> }
+                  @if (m.coworker === CoworkerRoles.Owner) { <span class="tag-badge owner">Właściciel</span> }
+                </div>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="dropdown-empty">Brak wyników.</div>
+        }
+      </div>
+    </div>
+
+    @if (selectedIds().length > 0) {
+      <label>Wybrani członkowie:</label>
+      <ul class="list-group member-list">
+        @for (memberId of selectedIds(); track $index) {
+          <li class="list-group-item">
+            <div class="member-row">
+              <span class="member-name">
+                <span class="member-header">
+                  <span class="member-primary me-2">{{ nameById(memberId) }}</span>
+                  <span class="tag-badges">
+                    @if (hasBadge(memberId, 'member')) { <span class="tag-badge member">Klub</span> }
+                    @if (hasBadge(memberId, 'golden')) { <span class="tag-badge golden">Złoty Bilet</span> }
+                  </span>
+                </span>
+
+                @if (shouldShowEmailForActive(memberId)) {
+                  <span class="member-email">{{ emailById(memberId) }}</span>
+                }
+              </span>
+
+              <span class="member-actions">
+                @if (activeSet().has(memberId)) {
+                  <button type="button" class="btn btn-danger btn-sm"
+                    (click)="remove(memberId, true)"
+                    title="Usuń z drużyny (zapisane w bazie)">
+                    Usuń z drużyny
+                  </button>
+                } @else {
+                  <button type="button" class="btn btn-danger btn-close-x" (click)="remove(memberId, false)">x</button>
+                }
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (showPending() && pending().length > 0) {
+      <div class="form-group text-start mt-3">
+        <label>Oczekujące prośby:</label>
+        <ul class="list-group pending-list">
+          @for (req of pending(); track req.id) {
+            <li class="list-group-item">
+              <div class="member-row">
+                <span class="member-name">
+                  <span class="member-header">
+                    <span class="member-primary me-2">{{ nameById(req.userId) }}</span>
+                    <span class="tag-badges">
+                      @if (badgeByUserId(req.userId) === 'member') { <span class="tag-badge member">Klub</span> }
+                      @if (badgeByUserId(req.userId) === 'golden') { <span class="tag-badge golden">Złoty Bilet</span> }
+                    </span>
+                  </span>
+
+                  @if (canShowEmails() && emailById(req.userId)) {
+                    <span class="member-email">{{ emailById(req.userId) }}</span>
+                  }
+                </span>
+
+                <span class="member-actions btn-group">
+                  <button
+                    type="button"
+                    class="btn btn-success btn-sm"
+                    (click)="accept(req.id)"
+                    [disabled]="selectedIds().length >= 5"
+                    [title]="selectedIds().length >= 5 ? 'Limit 5 aktywnych' : ''">
+                    Akceptuj
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" (click)="reject(req.id)">Odrzuć</button>
+                </span>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }

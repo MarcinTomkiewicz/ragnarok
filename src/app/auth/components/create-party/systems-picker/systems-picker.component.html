@@ -1,0 +1,37 @@
+    <input
+      type="text"
+      class="form-control mb-2"
+      placeholder="Wyszukaj system"
+      (input)="onSearch($event)" />
+
+    <select
+      class="form-select mb-2 w-100"
+      multiple
+      size="5"
+      (change)="onSelect($event)">
+      @for (system of filtered(); track system.id) {
+        <option
+          [value]="system.id"
+          [disabled]="selectedIds().length >= 5 && !selectedIds().includes(system.id)">
+          {{ system.name }}
+        </option>
+      }
+    </select>
+
+    @if (filtered().length === 0 && gmSelected()) {
+      <div class="text-muted small">Wybrany MG nie ma przypisanych systemów. Wybierz innego MG albo usuń wybór.</div>
+    }
+
+    @if (selectedIds().length > 0) {
+      <label>Wybrane systemy:</label>
+      <ul class="list-group">
+        @for (id of selectedIds(); track $index) {
+          <li class="text-start list-group-item">
+            <div class="flex-row-regular">
+              {{ nameById(id) }}
+              <button type="button" class="btn btn-danger btn-close-x" (click)="remove(id)">x</button>
+            </div>
+          </li>
+        }
+      </ul>
+    }

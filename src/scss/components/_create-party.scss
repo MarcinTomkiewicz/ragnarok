@@ -1,8 +1,6 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 @import "layouts/form-panel";
-// UWAGA: style badge'ów (kolory/kształty) są w base/_badges.scss.
-// Tutaj dodajemy tylko ODSTĘPY i responsywne ułożenie.
 
 .create-party-panel {
   @include section-wrapper;

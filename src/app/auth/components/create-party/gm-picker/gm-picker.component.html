@@ -1,0 +1,39 @@
+ <div ngbDropdown #gmDD="ngbDropdown" class="w-100">
+      <button
+        type="button"
+        ngbDropdownToggle
+        class="btn btn-outline dropdown-toggle-wide d-flex align-items-center justify-content-between">
+        <span>{{ selectedName() || 'Bez Mistrza Gry' }}</span>
+      </button>
+
+      <div ngbDropdownMenu class="dropdown-pane w-100">
+        <div class="dropdown-search">
+          <input class="form-control search" placeholder="Szukaj po imieniu, pseudonimie lub mailu…" (input)="onSearch($event)" />
+        </div>
+
+        <button
+          ngbDropdownItem
+          class="item dropdown-item"
+          [class.active]="!selectedId()"
+          (click)="$event.preventDefault(); choose(null); gmDD.close()">
+          <div class="lhs"><div class="name">Bez Mistrza Gry</div></div>
+        </button>
+
+        @if (filteredGms().length) {
+          <div class="dropdown-list">
+            @for (gm of filteredGms(); track gm.userId) {
+              <button
+                ngbDropdownItem
+                class="item dropdown-item"
+                [class.active]="selectedId() === gm.userId"
+                (click)="$event.preventDefault(); choose(gm.userId); gmDD.close()">
+                <div class="lhs"><div class="name">{{ gmName(gm) }}</div></div>
+                <div class="rhs"></div>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="dropdown-empty">Brak wyników.</div>
+        }
+      </div>
+    </div>
