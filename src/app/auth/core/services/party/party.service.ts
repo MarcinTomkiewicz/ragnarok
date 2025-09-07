@@ -503,38 +503,39 @@ getPendingDecisionCountsByTeamForUser(userId: string): Observable<Record<string,
       );
   }
 
-  private removeDeletedMembers(
-    teamId: string,
-    members: string[]
-  ): Observable<void> {
-    return this.backend
-      .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
-        filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
-      })
-      .pipe(
-        switchMap((existing) => {
-          const keep = new Set(members ?? []);
-          const toMark = existing.filter(
-            (m) =>
-              !keep.has(m.userId) &&
-              m.memberStatus !== PartyMemberStatus.Removed
-          );
+private removeDeletedMembers(
+  teamId: string,
+  members: string[]
+): Observable<void> {
+  return this.backend
+    .getAll<IPartyMember>('party_members', 'teamId', 'asc', {
+      filters: { teamId: { operator: FilterOperator.EQ, value: teamId } },
+    })
+    .pipe(
+      switchMap((existing) => {
+        const keep = new Set(members ?? []);
+        const toMark = existing.filter(
+          (m) =>
+            !keep.has(m.userId) &&
+            m.memberStatus === PartyMemberStatus.Active && 
+            !m.leftAt
+        );
 
-          if (!toMark.length) return of(void 0);
+        if (!toMark.length) return of(void 0);
 
-          return forkJoin(
-            toMark.map((m) =>
-              this.backend.update<IPartyMember>(
-                'party_members',
-                m.id,
-                toSnakeCase<Partial<IPartyMember>>({
-                  memberStatus: PartyMemberStatus.Removed,
-                  leftAt: new Date().toISOString(),
-                })
-              )
+        return forkJoin(
+          toMark.map((m) =>
+            this.backend.update<IPartyMember>(
+              'party_members',
+              m.id,
+              toSnakeCase<Partial<IPartyMember>>({
+                memberStatus: PartyMemberStatus.Removed,
+                leftAt: new Date().toISOString(),
+              })
             )
-          ).pipe(map(() => void 0));
-        })
-      );
-  }
+          )
+        ).pipe(map(() => void 0));
+      })
+    );
+}
 }
