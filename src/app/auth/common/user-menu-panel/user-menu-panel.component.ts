@@ -104,7 +104,7 @@ export class UserMenuPanelComponent {
 
     const receptionItems: MenuItem[] = [];
     if (min(CoworkerRoles.Gm)) {
-      receptionItems.push({ label: 'Dyspozycyjność na recepcji', path: '/auth/reception-availability' });
+      receptionItems.push({ label: 'Dyspozycyjność na recepcji', path: '/auth/reception-availability' }, { label: 'Czas pracy', path: '/auth/work-log' });
     }
     if (min(CoworkerRoles.Reception)) {
       receptionItems.push(
@@ -120,7 +120,7 @@ export class UserMenuPanelComponent {
     if (min(CoworkerRoles.Reception)) {
       sections.push({
         title: 'Strefa Admina',
-        items: [],
+        items: [{ label: 'Zarządzaj Dostępnością', path: '/auth/availability-overview' },],
         alwaysVisible: true,
       });
     }

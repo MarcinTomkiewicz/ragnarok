@@ -150,4 +150,21 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Gm },
   },
+  {
+    path: 'availability-overview',
+    loadComponent: () =>
+      import(
+        './components/availability-overview/availability-overview.component'
+      ).then((m) => m.AvailabilityOverviewComponent),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Reception },
+  },
+  {
+  path: 'work-log',
+  loadComponent: () =>
+    import('./components/my-work-log/my-work-log.component')
+      .then(m => m.MyWorkLogComponent),
+  canActivate: [AuthGuard],
+  data: { minCoworkerRole: CoworkerRoles.Gm },
+},
 ];

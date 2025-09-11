@@ -1,0 +1,105 @@
+<div class="time-selection-wrapper">
+  <div class="container">
+    <h2 class="section-title">Podgląd dyspozycyjności</h2>
+
+    <div class="mb-3 d-flex gap-3 justify-content-center">
+      <label class="form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          [checked]="showGm()"
+          (change)="onToggleShowGm($event)"
+        />
+        <span class="ms-2">Pokaż GM</span>
+      </label>
+      <label class="form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          [checked]="showReception()"
+          (change)="onToggleShowReception($event)"
+        />
+        <span class="ms-2">Pokaż Recepcję</span>
+      </label>
+    </div>
+
+    <app-universal-calendar
+      [dailyDataMap]="dailyDataMap()"
+      [mapDailyToHourlyAvailability]="mapDailyToHourlyAvailability()"
+      [mapDailyToDayFlags]="mapDailyToDayFlags()"
+      [selectedDate]="selectedDate()"
+      [editMode]="true"
+      [room]="null"
+      (dateSelected)="onDateSelected($event)"
+      (monthChanged)="onMonthChanged()"
+    />
+
+    @if (selectedDate()) {
+    <div class="date-label">
+      <h3>Szczegóły: {{ selectedDate() }}</h3>
+    </div>
+
+    <div class="row g-3 mt-2 justify-content-center text-center">
+      @if (showGm()) {
+      <div class="col-12 col-lg-4">
+        <h4 class="h6 text-uppercase text-muted mb-2">GM</h4>
+        @if (gmSlotsForDay().length === 0) {
+        <div class="text-muted small">Brak</div>
+        } @else {
+        <ul class="list-unstyled mb-0">
+          @for (s of gmSlotsForDay(); track s.userId) {
+          <li class="mb-1">
+            <strong>{{ displayName(userById(s.userId)) }}</strong>
+            <span class="ms-1">— {{ formatRange(s) }}</span>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+      } @if (showReception()) {
+      <div class="col-12 col-lg-4">
+        <h4 class="h6 text-uppercase text-muted mb-2">Recepcja</h4>
+        @if (receptionSlotsForDay().length === 0) {
+        <div class="text-muted small">Brak</div>
+        } @else {
+        <ul class="list-unstyled mb-0">
+          @for (s of receptionSlotsForDay(); track s.userId) {
+          <li class="mb-1">
+            <strong>{{ displayName(userById(s.userId)) }}</strong>
+            <span class="ms-1">— {{ formatRange(s) }}</span>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+
+      <div class="col-12 col-lg-4">
+        <h4 class="h6 text-uppercase text-muted mb-2">
+          Tylko event zewnętrzny
+        </h4>
+        @if (externalOnlyForDay().length === 0) {
+        <div class="text-muted small">Brak</div>
+        } @else {
+        <ul class="list-unstyled mb-0">
+          @for (s of externalOnlyForDay(); track s.userId) {
+          <li class="mb-1">
+            <strong>{{ displayName(userById(s.userId)) }}</strong>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="day-controls mt-3">
+      <button class="btn btn-secondary" (click)="changeDay(dayDirection.Prev)">
+        Poprzedni dzień
+      </button>
+      <button class="btn btn-secondary" (click)="changeDay(dayDirection.Next)">
+        Następny dzień
+      </button>
+    </div>
+    }
+  </div>
+</div>

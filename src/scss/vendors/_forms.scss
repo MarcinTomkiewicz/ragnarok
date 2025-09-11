@@ -53,7 +53,6 @@
   }
 }
 
-
 .form-select {
   padding: 0.5rem 1rem;
   font-size: 1rem;
@@ -106,4 +105,53 @@
     max-width: 100%;
     width: 100%;
   }
+}
+
+
+input[type="number"].form-control {
+  position: relative;
+  padding-right: 2rem; /* miejsce na strzałki */
+  // -moz-appearance: number-input;
+}
+
+/* NIE wyłączamy spinnerów w WebKit – zostawiamy je aktywne */
+input[type="number"].form-control::-webkit-outer-spin-button,
+input[type="number"].form-control::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button;
+  margin: 0;
+}
+
+/* Nakładki z naszym kolorem + złotymi trójkątami; klik przenika do natywnych strzałek */
+input[type="number"].form-control::before,
+input[type="number"].form-control::after {
+  content: "";
+  position: absolute;
+  right: 0.45rem;
+  width: 0.9rem;
+  height: 0.44rem;
+  pointer-events: none;
+  z-index: 1;
+  background-color: $bg-color-light;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  border-radius: 2px;
+}
+
+/* góra */
+input[type="number"].form-control::before {
+  top: 0.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 0L12 6H0z' fill='%23e8bc58'/%3E%3C/svg%3E");
+}
+
+/* dół */
+input[type="number"].form-control::after {
+  bottom: 0.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 6L0 0h12z' fill='%23e8bc58'/%3E%3C/svg%3E");
+}
+
+/* focus – delikatne podbicie widoczności */
+input[type="number"].form-control:focus::before,
+input[type="number"].form-control:focus::after {
+  filter: brightness(1.1);
 }

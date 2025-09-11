@@ -39,7 +39,16 @@
       "
       (click)="handleClick(day)"
     >
-      {{ format(day, "d") }}
+      <div class="day-header">
+        <span class="day-number">{{ format(day, "d") }}</span>
+        @if (getDayFlags(day).externalOnly) {
+        <span
+          class="uc-indicator uc-indicator--external"
+          aria-label="Tylko eventy"
+          title="Tylko eventy"
+        ></span>
+        }
+      </div>
 
       @if (canShowHours(day)) {
       <div class="hour-grid">

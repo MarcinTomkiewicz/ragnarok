@@ -37,6 +37,11 @@ export class UniversalCalendarComponent {
   readonly room = input<Rooms | null>(null);
   readonly editMode = input<boolean>(false);
   readonly isMemberClubBlocked = input<boolean>(false);
+  readonly alwaysClickable = input<boolean>(false);
+  readonly mapDailyToDayFlags =
+    input<
+      (items: unknown[]) => { externalOnly?: boolean } | null | undefined
+    >();
 
   // === Outputs ===
   readonly dateSelected = output<string | null>();
@@ -171,6 +176,23 @@ export class UniversalCalendarComponent {
     return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
   }
 
+  readonly dayFlagsMap = computed(() => {
+    const flags = new Map<string, { externalOnly?: boolean }>();
+    const fn = this.mapDailyToDayFlags();
+    for (const date of this.visibleDays()) {
+      const key = format(date, 'yyyy-MM-dd');
+      const items = this.dailyDataMap().get(key) ?? [];
+      const f = fn?.(items) ?? null;
+      flags.set(key, f ?? {});
+    }
+    return flags;
+  });
+
+  getDayFlags(date: Date): { externalOnly?: boolean } {
+    const key = format(date, 'yyyy-MM-dd');
+    return this.dayFlagsMap().get(key) ?? {};
+  }
+
   handleClick(date: Date) {
     const formatted = format(date, 'yyyy-MM-dd');
     const isReservedDay = this.isReserved(date);
@@ -181,7 +203,10 @@ export class UniversalCalendarComponent {
       this.isPastDay(date) ||
       !this.isSameMonth(date, this.currentMonth());
 
-    if (!canEdit && (isDisabled || isReservedDay)) {
+    if (
+      !canEdit &&
+      (isDisabled || (!this.alwaysClickable() && isReservedDay))
+    ) {
       return;
     }
 

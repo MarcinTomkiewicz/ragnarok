@@ -1,0 +1,95 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+/* wrapper komponentu – zwiększamy specyficzność, żeby nic z innych plików nie nadpisało */
+.worklog-wrapper {
+  @include section-wrapper;
+
+  .worklog-table {
+    display: grid;
+    gap: 0.5rem;
+
+    .worklog-header,
+    .worklog-row {
+      display: grid;
+      grid-template-columns: 160px 160px 1fr;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .worklog-header {
+      font-weight: 700;
+      color: $secondary-text-color;
+      padding: 0.25rem 0.25rem 0.5rem;
+      border-bottom: 1px solid $border-color;
+      .col {
+        font-size: $font-size-sm;
+      }
+    }
+
+    .worklog-row {
+      padding: 0.25rem;
+      border-bottom: 1px dashed $border-color;
+
+      .col-date {
+        .date-main {
+          font-weight: 600;
+        }
+        .date-sub {
+          font-size: $font-size-xs;
+          color: $secondary-text-color;
+        }
+      }
+
+      .col-hours .form-control {
+        @include form-control;
+        width: 100%; 
+        max-width: none;
+        text-align: left;
+      }
+
+      .col-comment .form-control {
+        @include form-control;
+        width: 100%;
+      }
+
+      .form-group {
+        margin-bottom: 0;
+        .form-label {
+          display: block;
+        }
+      }
+    }
+  }
+
+  .worklog-footer {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .summary {
+      font-size: $font-size-md;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .worklog-table {
+      .worklog-header,
+      .worklog-row {
+        grid-template-columns: 1fr;
+      }
+      .col-hours .form-control {
+        max-width: 100%;
+        text-align: left;
+      }
+    }
+  }
+}
