@@ -47,24 +47,34 @@ export class GmAvailabilityComponent implements OnInit {
   readonly dayDirection = DayDirection;
   private originalDates = signal<Set<string>>(new Set());
 
-  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>('availabilitySuccessToast');
-  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>('availabilityErrorToast');
+  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>(
+    'availabilitySuccessToast'
+  );
+  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>(
+    'availabilityErrorToast'
+  );
 
   readonly lastError = signal<any | null>(null);
 
-  // Kafle godzinowe w pickerze "Od:" (12..22)
   readonly startHours = Array.from(
     { length: TimeSlots.end - TimeSlots.noonStart },
     (_, i) => TimeSlots.noonStart + i
   );
 
-  // Liczba bloków w kalendarzu = 11 (12..22)
   private readonly calendarBlockCount = TimeSlots.end - TimeSlots.noonStart;
+
+  private isTimed = (
+    slot: IAvailabilitySlot
+  ): slot is IAvailabilitySlot & { fromHour: number; toHour: number } =>
+    typeof (slot as any).fromHour === 'number' &&
+    typeof (slot as any).toHour === 'number';
 
   readonly visibleDates = computed(() => {
     const start = startOfMonth(new Date());
     const end = endOfMonth(addMonths(new Date(), 1));
-    return eachDayOfInterval({ start, end }).map((d) => format(d, 'yyyy-MM-dd'));
+    return eachDayOfInterval({ start, end }).map((d) =>
+      format(d, 'yyyy-MM-dd')
+    );
   });
 
   readonly availabilityMapRaw = computed(() => {
@@ -76,13 +86,13 @@ export class GmAvailabilityComponent implements OnInit {
     return map;
   });
 
-  // Mapowanie do bloków [from, to) na siatkę 12..22
   readonly availabilityMap = computed(() => {
     const map = new Map<string, boolean[]>();
     for (const slot of this.availabilityStore.getAll()) {
+      if (!this.isTimed(slot)) continue;
       const blocks = Array(this.calendarBlockCount).fill(false);
       for (let h = slot.fromHour; h < slot.toHour; h++) {
-        const idx = h - TimeSlots.noonStart; // 12 -> 0 ... 22 -> 10
+        const idx = h - TimeSlots.noonStart;
         if (idx >= 0 && idx < blocks.length) blocks[idx] = true;
       }
       map.set(slot.date, blocks);
@@ -95,19 +105,21 @@ export class GmAvailabilityComponent implements OnInit {
   }
 
   fetchAvailability() {
-    this.gmScheduling.getAvailability(this.userId, this.visibleDates()).subscribe({
-      next: (slots) => {
-        this.availabilityStore.setBulk(slots);
-        this.originalDates.set(new Set(slots.map((s) => s.date)));
-      },
-      error: (err) => console.error('❌ Błąd ładowania dostępności:', err),
-    });
+    this.gmScheduling
+      .getAvailability(this.userId, this.visibleDates())
+      .subscribe({
+        next: (slots) => {
+          this.availabilityStore.setBulk(slots);
+          this.originalDates.set(new Set(slots.map((s) => s.date)));
+        },
+        error: (err) => console.error('❌ Błąd ładowania dostępności:', err),
+      });
   }
 
-  // Używane przez UniversalCalendar do renderu dziennych bloków
   mapToAvailabilityBlocks = () => (slots: IAvailabilitySlot[]) => {
-    const blocks = Array(this.calendarBlockCount).fill(false); // 11 bloków
+    const blocks = Array(this.calendarBlockCount).fill(false);
     for (const slot of slots) {
+      if (!this.isTimed(slot)) continue;
       for (let h = slot.fromHour; h < slot.toHour; h++) {
         const idx = h - TimeSlots.noonStart;
         if (idx >= 0 && idx < blocks.length) blocks[idx] = true;
@@ -128,7 +140,7 @@ export class GmAvailabilityComponent implements OnInit {
       date: event.date,
       fromHour: event.hour,
       toHour: event.hour + 1,
-    });
+    } as IAvailabilitySlot);
   }
 
   selectStartHour(hour: number | null) {
@@ -153,8 +165,8 @@ export class GmAvailabilityComponent implements OnInit {
       userId: this.userId,
       workType: 'gm',
       fromHour: hour,
-      toHour: Math.max(hour + 1, current.toHour ?? hour + 1),
-    });
+      toHour: Math.max(hour + 1, (current as any).toHour ?? hour + 1),
+    } as IAvailabilitySlot);
   }
 
   selectEndHour(hour: number) {
@@ -173,9 +185,9 @@ export class GmAvailabilityComponent implements OnInit {
       ...current,
       userId: this.userId,
       workType: 'gm',
-      fromHour: Math.min(current.fromHour, hour - 1),
+      fromHour: Math.min((current as any).fromHour ?? hour - 1, hour - 1),
       toHour: hour ?? TimeSlots.end,
-    });
+    } as IAvailabilitySlot);
   }
 
   selectWholeDay() {
@@ -186,8 +198,8 @@ export class GmAvailabilityComponent implements OnInit {
       workType: 'gm',
       date,
       fromHour: TimeSlots.noonStart,
-      toHour: TimeSlots.end, // 23 (czyli bloki 12..22)
-    });
+      toHour: TimeSlots.end,
+    } as IAvailabilitySlot);
   }
 
   resetDayAvailability() {
@@ -198,15 +210,16 @@ export class GmAvailabilityComponent implements OnInit {
 
   getStartHour(): number | null {
     const date = this.selectedDate();
-    return date ? this.availabilityStore.getDay(date)?.fromHour ?? null : null;
+    const s = date ? this.availabilityStore.getDay(date) : undefined;
+    return s && this.isTimed(s) ? s.fromHour : null;
   }
 
   getEndHour(): number | null {
     const date = this.selectedDate();
-    return date ? this.availabilityStore.getDay(date)?.toHour ?? null : null;
+    const s = date ? this.availabilityStore.getDay(date) : undefined;
+    return s && this.isTimed(s) ? s.toHour : null;
   }
 
-  // Zwraca [from+1 .. 23], więc zawsze oferuje kafelek 23:00
   getEndHourOptions(): number[] {
     const from = this.getStartHour();
     if (from === null) return [];
@@ -239,26 +252,47 @@ export class GmAvailabilityComponent implements OnInit {
     }
   }
 
+  // ...
   saveAvailability() {
-    const current = this.availabilityStore.getAll();
-    const currentDates = new Set(current.map((s) => s.date));
+    // bierzemy tylko timed GM – nic z external_event tu nie powinno wejść
+    const currentTimedGm = this.availabilityStore
+      .getAll()
+      .filter(
+        (
+          s
+        ): s is IAvailabilitySlot & {
+          workType: 'gm';
+          fromHour: number;
+          toHour: number;
+        } =>
+          s.workType === 'gm' &&
+          typeof (s as any).fromHour === 'number' &&
+          typeof (s as any).toHour === 'number'
+      );
+
+    const currentDates = new Set(currentTimedGm.map((s) => s.date));
     const original = this.originalDates();
 
-    const datesToDelete = Array.from(original).filter((d) => !currentDates.has(d));
+    const datesToDelete = Array.from(original).filter(
+      (d) => !currentDates.has(d)
+    );
 
     const delete$ = datesToDelete.length
       ? this.gmScheduling.deleteAvailability(this.userId, datesToDelete)
       : of(null);
 
     const upsert$ = this.gmScheduling.upsertMany(
-      current.map((s) => ({ ...s, userId: this.userId, workType: 'gm' as const }))
+      currentTimedGm.map((s) => ({
+        ...s,
+        userId: this.userId,
+        workType: 'gm' as const,
+      }))
     );
 
     forkJoin([delete$, upsert$]).subscribe({
       next: () => {
         this.availabilityStore.clear();
         this.fetchAvailability();
-
         const template = this.availabilitySuccessToast();
         if (template) {
           this.toastService.show({
