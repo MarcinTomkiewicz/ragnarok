@@ -4,11 +4,9 @@ import {
   HostListener,
   computed,
   effect,
-  inject
+  inject,
 } from '@angular/core';
-import {
-  toSignal
-} from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { UserMenuPanelComponent } from '../../auth/common/user-menu-panel/user-menu-panel.component';
 import { LoginComponent } from '../../auth/components/login/login.component';
 import { NotificationService } from '../../auth/core/services/notifications/notifications.service';
@@ -52,6 +50,12 @@ export class UserMenuComponent {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.user-menu')) this.isOpen = false;
+  }
+
+  @HostListener('document:pointerdown', ['$event'])
+  onPointerDown(event: Event): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.user-menu')) this.isOpen = false;
   }

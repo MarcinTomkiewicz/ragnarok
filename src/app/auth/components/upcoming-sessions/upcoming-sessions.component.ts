@@ -1,19 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { AuthService } from '../../../core/services/auth/auth.service';
-import { IReservation } from '../../../core/interfaces/i-reservation';
-import { format, addMonths, startOfMonth } from 'date-fns';
-import { forkJoin, map } from 'rxjs';
-import { Rooms } from '../../../core/enums/rooms';
-import { ReservationService } from '../../core/services/reservation/reservation.service';
-import { ReservationCalendarComponent } from '../../common/reservation-calendar/reservation-calendar.component';
-import { ReservationListComponent } from '../../common/reservation-list/reservation-list.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ReservationDetailsModalComponent } from '../../common/reservation-details-modal/reservation-details-modal.component';
-import { BackendService } from '../../../core/services/backend/backend.service';
-import { IUser } from '../../../core/interfaces/i-user';
-import { UniversalCalendarComponent } from '../../common/universal-calendar/universal-calendar.component';
+import { addMonths, format, startOfMonth } from 'date-fns';
+import { forkJoin, map } from 'rxjs';
 import { TimeSlots } from '../../../core/enums/hours';
+import { Rooms } from '../../../core/enums/rooms';
+import { IReservation } from '../../../core/interfaces/i-reservation';
+import { AuthService } from '../../../core/services/auth/auth.service';
+import { ReservationDetailsModalComponent } from '../../common/reservation-details-modal/reservation-details-modal.component';
+import { ReservationListComponent } from '../../common/reservation-list/reservation-list.component';
+import { UniversalCalendarComponent } from '../../common/universal-calendar/universal-calendar.component';
+import { ReservationService } from '../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-upcoming-sessions',

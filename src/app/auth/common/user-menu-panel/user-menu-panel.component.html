@@ -1,80 +1,26 @@
 <div class="menu-panel d-flex flex-column align-items-center">
-  <span class="menu-title fw-bold text-center"
-    >Witaj, {{ usernameDisplay() }}!</span
-  >
-
-  <div class="w-100 mt-3">
-    <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
-      Strefa użytkownika
-    </div>
-    <a class="menu-item w-100 text-center" href="/auth/edit-data"
-      >Edytuj dane</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/reservation"
-      >Rezerwuj salkę</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/my-reservations"
-      >Moje rezerwacje</a
-    >
-  </div>
-
+  <span class="menu-title fw-bold text-center">
+    Witaj, {{ usernameDisplay() }}!
+  </span>
   <hr class="menu-divider w-100 my-3" />
+  @for (section of menuSections(); track section.title; let idx = $index) { @if
+  (idx > 0) {
+  <hr class="menu-divider w-100 my-3" />
+  }
+
   <div class="w-100">
     <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
-      Drużyny
+      {{ section.title }}
     </div>
-    <a class="menu-item w-100 text-center" href="/auth/find-party"
-      >Znajdź drużynę</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/create-party"
-      >Załóż drużynę</a
-    >
 
-    <a class="menu-item w-100 text-center" href="/auth/my-parties">
-      Moje drużyny
-      <app-notification-badge
-        [bucket]="NotificationBucket.PartyMembershipRequests"
-      />
+    @for (item of section.items; track item.path) {
+    <a class="menu-item w-100 text-center" [href]="item.path">
+      {{ item.label }}
+      @if (item.badgeBucket != null) {
+      <app-notification-badge [bucket]="item.badgeBucket" />
+      }
     </a>
-  </div>
-
-  @if (isMember()) {
-  <hr class="menu-divider w-100 my-3" />
-  <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
-    Strefa Klubowicza
-  </div>
-  <a class="menu-item w-100 text-center" href="/auth/benefits">Moje benefity</a>
-  } @if (isGm()) {
-  <hr class="menu-divider w-100 my-3" />
-  <div class="w-100">
-    <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
-      Strefa Mistrza Gry
-    </div>
-    <a class="menu-item w-100 text-center" href="/auth/manage-gm"
-      >Profil Mistrza Gry</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/upcoming-sessions"
-      >Nadchodzące sesje</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/availability"
-      >Twoja dostępność</a
-    >
-  </div>
-  } @if (isAdminSection()) {
-  <hr class="menu-divider w-100 my-3" />
-  <div class="w-100">
-    <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
-      Strefa Admina
-    </div>
-    <a class="menu-item w-100 text-center" href="/auth/guest-reservation"
-      >Nowa Rezerwacja</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/reservations-calendar"
-      >Kalendarz Rezerwacji</a
-    >
-    <a class="menu-item w-100 text-center" href="/auth/party-list"
-      >Zarządzaj Drużynami</a
-    >
+    }
   </div>
   }
 

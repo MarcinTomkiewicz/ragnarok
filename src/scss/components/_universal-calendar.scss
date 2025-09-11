@@ -104,6 +104,21 @@
       min-height: 60px;
       transition: background-color 0.3s;
 
+      .day-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        line-height: 1; // brak „podskakiwania” kropek
+      }
+
+      .day-number {
+        display: inline-block;
+      }
+
+      .hour-grid {
+        margin-top: 0.35rem; // lekki oddech pod nagłówkiem
+      }
+
       &.outside-month {
         visibility: hidden;
       }
@@ -137,5 +152,18 @@
         border-radius: 1px;
       }
     }
+  }
+}
+
+.uc-indicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 4px;
+  border-radius: 50%;
+  vertical-align: middle;
+
+  &--external {
+    background: #ff9800;
   }
 }

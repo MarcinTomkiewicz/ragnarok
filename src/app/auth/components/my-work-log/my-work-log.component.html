@@ -1,0 +1,132 @@
+<div class="worklog-wrapper">
+  <div class="container">
+    <h2 class="section-title mb-3">Ewidencja godzin</h2>
+
+    <div class="btn-group mb-3">
+      <button
+        class="btn btn-outline"
+        [class.active]="monthOffset() === -1"
+        (click)="switchTo(-1)"
+      >
+        Poprzedni miesiąc
+      </button>
+
+      <button
+        class="btn btn-outline"
+        [class.active]="monthOffset() === 0"
+        (click)="switchTo(0)"
+      >
+        Bieżący miesiąc ({{ monthLabel() }})
+      </button>
+    </div>
+
+    <div class="worklog-table">
+      <div class="worklog-header">
+        <div class="col col-date">Data</div>
+        <div class="col col-hours">Godziny</div>
+        <div class="col col-comment">Komentarz (opcjonalnie)</div>
+      </div>
+
+      @for (r of rows(); track trackByDate($index, r)) {
+      <div class="worklog-row">
+        <div class="col col-date">
+          <div class="date-main">{{ formatDate(r.date) }}</div>
+          <div class="date-sub">{{ r.weekday }}</div>
+        </div>
+
+        <div class="col col-hours">
+          <div class="input-with-action">
+            <div class="form-group mb-0 flex-1">
+              <label
+                class="form-label visually-hidden"
+                [attr.for]="'hours-' + r.date"
+              >
+                Godziny
+              </label>
+
+              <div class="number-input number-input--brand">
+                <input
+                  type="number"
+                  class="form-control number-input__field"
+                  [id]="'hours-' + r.date"
+                  min="0"
+                  max="16"
+                  step="0.5"
+                  [value]="r.hours ?? ''"
+                  (input)="onHoursInput(r.date, $event)"
+                  aria-label="Godziny"
+                />
+                <span
+                  class="number-input__arrow number-input__arrow--up"
+                  aria-hidden="true"
+                ></span>
+                <span
+                  class="number-input__arrow number-input__arrow--down"
+                  aria-hidden="true"
+                ></span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-outline btn-sm reset-btn"
+              (click)="resetRow(r.date)"
+              [disabled]="!isRowDirty(r)"
+              [title]="
+                isRowDirty(r) ? 'Przywróć wartości z bazy' : 'Brak zmian'
+              "
+              aria-label="Przywróć wartości z bazy"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="col col-comment">
+          <div class="form-group mb-0">
+            <label
+              class="form-label visually-hidden"
+              [attr.for]="'comment-' + r.date"
+            >
+              Komentarz
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              [id]="'comment-' + r.date"
+              [value]="r.comment"
+              (input)="onCommentInput(r.date, $event)"
+              placeholder="np. event zewnętrzny"
+              aria-label="Komentarz"
+            />
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="worklog-footer">
+      <div class="summary">
+        Suma: <strong>{{ totalHours() }}</strong> h
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline btn-sm" (click)="clearAll()">
+          Wyczyść
+        </button>
+        <button class="btn btn-success btn-sm" (click)="save()">Zapisz</button>
+      </div>
+    </div>
+
+    <ng-template #toastSaved>
+      <strong>Sukces!</strong> Zapisano ewidencję godzin.
+    </ng-template>
+
+    <ng-template #toastNoChanges>
+      <strong>Brak zmian.</strong> Nie było nic do zapisania.
+    </ng-template>
+
+    <ng-template #toastError>
+      <strong>Błąd!</strong> Nie udało się zapisać ewidencji.
+    </ng-template>
+  </div>
+</div>
