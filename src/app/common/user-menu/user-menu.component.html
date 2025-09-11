@@ -14,12 +14,18 @@
   </span>
 
   @if (isOpen) {
-  <div class="submenu" (click)="$event.stopPropagation()">
+  <div
+    class="submenu"
+    (click)="$event.stopPropagation()"
+    (pointerdown)="$event.stopPropagation()"
+    (touchstart)="$event.stopPropagation()"
+  >
     @if (!auth.user()) {
     <app-login />
     } @else {
     <app-user-menu-panel></app-user-menu-panel>
     }
   </div>
+
   }
 </div>

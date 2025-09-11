@@ -8,6 +8,18 @@
   min-width: 180px;
   z-index: 10;
 
+  max-height: clamp(240px, min(70svh, calc(100svh - 2rem)), 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+
+  @supports not (height: 1svh) {
+    .menu-panel {
+      max-height: clamp(240px, 70vh, 640px);
+    }
+  }
+
   .menu-title {
     font-size: $font-size-sm;
     color: $secondary-text-color;
@@ -34,4 +46,8 @@
     border-color: $border-color;
     margin: 0.5rem 0;
   }
+}
+
+.menu-panel {
+  touch-action: pan-y;
 }

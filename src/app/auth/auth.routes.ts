@@ -25,16 +25,18 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'reservation',
     loadComponent: () =>
-      import('./components/reservation/reservation-stepper/reservation-stepper.component')
-        .then((m) => m.ReservationStepperComponent),
+      import(
+        './components/reservation/reservation-stepper/reservation-stepper.component'
+      ).then((m) => m.ReservationStepperComponent),
     canActivate: [AuthGuard],
     data: { authOnly: true },
   },
   {
     path: 'guest-reservation',
     loadComponent: () =>
-      import('./components/reservation/reservation-stepper/reservation-stepper.component')
-        .then((m) => m.ReservationStepperComponent),
+      import(
+        './components/reservation/reservation-stepper/reservation-stepper.component'
+      ).then((m) => m.ReservationStepperComponent),
     canActivate: [AuthGuard],
     data: {
       minCoworkerRole: CoworkerRoles.Reception,
@@ -45,16 +47,18 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'reservations-calendar',
     loadComponent: () =>
-      import('./components/room-reservation-overview/room-reservation-overview.component')
-        .then((m) => m.RoomReservationsOverviewComponent),
+      import(
+        './components/room-reservation-overview/room-reservation-overview.component'
+      ).then((m) => m.RoomReservationsOverviewComponent),
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
   {
     path: 'my-reservations',
     loadComponent: () =>
-      import('./components/reservation/my-reservations/my-reservations.component')
-        .then((m) => m.MyReservationsComponent),
+      import(
+        './components/reservation/my-reservations/my-reservations.component'
+      ).then((m) => m.MyReservationsComponent),
     canActivate: [AuthGuard],
     data: { authOnly: true },
   },
@@ -70,16 +74,18 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'upcoming-sessions',
     loadComponent: () =>
-      import('./components/upcoming-sessions/upcoming-sessions.component')
-        .then((m) => m.UpcomingSessionsComponent),
+      import('./components/upcoming-sessions/upcoming-sessions.component').then(
+        (m) => m.UpcomingSessionsComponent
+      ),
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Gm },
   },
   {
     path: 'availability',
     loadComponent: () =>
-      import('./components/gm-availability/gm-availability.component')
-        .then((m) => m.GmAvailabilityComponent),
+      import('./components/gm-availability/gm-availability.component').then(
+        (m) => m.GmAvailabilityComponent
+      ),
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Gm },
   },
@@ -135,4 +141,13 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Member },
   },
+  // {
+  //   path: 'reception-availability',
+  //   loadComponent: () =>
+  //     import(
+  //       './components/reception-availability/reception-availability.component'
+  //     ).then((m) => m.ReceptionAvailabilityComponent),
+  //   canActivate: [AuthGuard],
+  //   data: { minCoworkerRole: CoworkerRoles.Gm }, // GM i wyżej
+  // },
 ];
