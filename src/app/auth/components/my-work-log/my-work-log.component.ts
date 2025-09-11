@@ -18,7 +18,7 @@ import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { pl } from 'date-fns/locale';
 
 type Row = {
-  date: string; 
+  date: string;
   weekday: string;
   hours: number | null;
   comment: string;
@@ -99,9 +99,9 @@ export class MyWorkLogComponent implements OnInit {
   }
 
   formatDate(ymd: string): string {
-  return format(parseISO(ymd), 'dd.MM.yyyy');
-}
-  
+    return format(parseISO(ymd), 'dd.MM.yyyy');
+  }
+
   switchTo(offset: 0 | -1) {
     if (this.monthOffset() === offset) return;
     this.monthOffset.set(offset);
@@ -192,9 +192,55 @@ export class MyWorkLogComponent implements OnInit {
   }
 
   clearAll() {
-    const next = this.rows().map((r) => ({ ...r, hours: null, comment: '' }));
+    const orig = this.original();
+    const next = this.rows().map((r) => {
+      const l = orig.get(r.date);
+      return {
+        date: r.date,
+        weekday: r.weekday,
+        hours: l ? Number(l.hours) : null,
+        comment: l?.comment ?? '',
+        id: l?.id,
+      };
+    });
     this.rows.set(next);
   }
 
   trackByDate = (_: number, r: Row) => r.date;
+
+  resetRow(date: string) {
+    const l = this.original().get(date);
+    this.rows.set(
+      this.rows().map((r) =>
+        r.date === date
+          ? {
+              ...r,
+              hours: l ? Number(l.hours) : null,
+              comment: l?.comment ?? '',
+              id: l?.id,
+            }
+          : r
+      )
+    );
+  }
+
+  private normComment(v: string | null | undefined): string {
+    return (v ?? '').trim();
+  }
+
+  isRowDirty(r: Row): boolean {
+    const orig = this.original().get(r.date);
+
+    if (!orig) {
+      return (
+        (r.hours != null && r.hours > 0) || this.normComment(r.comment) !== ''
+      );
+    }
+
+    const hoursSame = (r.hours ?? null) === Number(orig.hours);
+    const commentSame =
+      this.normComment(r.comment) === this.normComment(orig.comment);
+
+    return !(hoursSame && commentSame);
+  }
 }

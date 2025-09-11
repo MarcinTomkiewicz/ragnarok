@@ -43,7 +43,7 @@
 
       .col-hours .form-control {
         @include form-control;
-        width: 100%; 
+        width: 100%;
         max-width: none;
         text-align: left;
       }
@@ -51,6 +51,28 @@
       .col-comment .form-control {
         @include form-control;
         width: 100%;
+      }
+
+      .input-with-action {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .flex-1 {
+          flex: 1 1 auto;
+        }
+      }
+
+      .reset-btn {
+        padding: 0.3rem 0.5rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+          font-size: 1rem;
+        }
       }
 
       .form-group {

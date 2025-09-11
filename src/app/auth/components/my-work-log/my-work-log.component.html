@@ -35,35 +35,50 @@
         </div>
 
         <div class="col col-hours">
-          <div class="form-group mb-0">
-            <label
-              class="form-label visually-hidden"
-              [attr.for]="'hours-' + r.date"
-            >
-              Godziny
-            </label>
+          <div class="input-with-action">
+            <div class="form-group mb-0 flex-1">
+              <label
+                class="form-label visually-hidden"
+                [attr.for]="'hours-' + r.date"
+              >
+                Godziny
+              </label>
 
-            <div class="number-input number-input--brand">
-              <input
-                type="number"
-                class="form-control number-input__field"
-                [id]="'hours-' + r.date"
-                min="0"
-                max="16"
-                step="0.5"
-                [value]="r.hours ?? ''"
-                (input)="onHoursInput(r.date, $event)"
-                aria-label="Godziny"
-              />
-              <span
-                class="number-input__arrow number-input__arrow--up"
-                aria-hidden="true"
-              ></span>
-              <span
-                class="number-input__arrow number-input__arrow--down"
-                aria-hidden="true"
-              ></span>
+              <div class="number-input number-input--brand">
+                <input
+                  type="number"
+                  class="form-control number-input__field"
+                  [id]="'hours-' + r.date"
+                  min="0"
+                  max="16"
+                  step="0.5"
+                  [value]="r.hours ?? ''"
+                  (input)="onHoursInput(r.date, $event)"
+                  aria-label="Godziny"
+                />
+                <span
+                  class="number-input__arrow number-input__arrow--up"
+                  aria-hidden="true"
+                ></span>
+                <span
+                  class="number-input__arrow number-input__arrow--down"
+                  aria-hidden="true"
+                ></span>
+              </div>
             </div>
+
+            <button
+              type="button"
+              class="btn btn-outline btn-sm reset-btn"
+              (click)="resetRow(r.date)"
+              [disabled]="!isRowDirty(r)"
+              [title]="
+                isRowDirty(r) ? 'Przywróć wartości z bazy' : 'Brak zmian'
+              "
+              aria-label="Przywróć wartości z bazy"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
           </div>
         </div>
 
