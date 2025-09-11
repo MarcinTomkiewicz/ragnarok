@@ -130,7 +130,7 @@ export const AUTH_ROUTES: Routes = [
         (m) => m.PartiesTableComponent
       ),
     canActivate: [AuthGuard],
-    data: { publicMode: true }, // <-- to wystarczy, komponent sam to odczyta
+    data: { publicMode: true },
   },
   {
     path: 'benefits',
@@ -141,13 +141,13 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Member },
   },
-  // {
-  //   path: 'reception-availability',
-  //   loadComponent: () =>
-  //     import(
-  //       './components/reception-availability/reception-availability.component'
-  //     ).then((m) => m.ReceptionAvailabilityComponent),
-  //   canActivate: [AuthGuard],
-  //   data: { minCoworkerRole: CoworkerRoles.Gm }, // GM i wyżej
-  // },
+  {
+    path: 'reception-availability',
+    loadComponent: () =>
+      import(
+        './components/reception-availability/reception-availability.component'
+      ).then((m) => m.ReceptionAvailabilityComponent),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Gm },
+  },
 ];
