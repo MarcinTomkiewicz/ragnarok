@@ -1,15 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { format } from 'date-fns';
-import { of, combineLatest } from 'rxjs';
+import { combineLatest, of } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
-import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
-import { GmService } from '../../../core/services/gm/gm.service';
-import { PartyService } from '../../../core/services/party/party.service';
-import { ReservationService } from '../../../core/services/reservation/reservation.service';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
+import { GmDirectoryService } from '../../../core/services/gm/gm-directory/gm-directory.service';
+import { PartyService } from '../../../core/services/party/party.service';
+import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
+import { ReservationService } from '../../../core/services/reservation/reservation.service';
 
 @Component({
   selector: 'app-reservation-summary',
@@ -20,7 +20,7 @@ import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
 })
 export class ReservationSummaryComponent {
   readonly store = inject(ReservationStoreService);
-  private readonly gmService = inject(GmService);
+  private readonly gmDirectoryService = inject(GmDirectoryService);
   private readonly partyService = inject(PartyService);
   private readonly reservationService = inject(ReservationService);
   private readonly destroyRef = inject(DestroyRef);
@@ -34,8 +34,8 @@ export class ReservationSummaryComponent {
     toObservable(this.store.selectedGm)
       .pipe(
         startWith(this.store.selectedGm()),
-        switchMap((gmId) => (gmId ? this.gmService.getGmById(gmId) : of(null))),
-        map((gm) => (gm ? this.gmService.gmDisplayName(gm) : '')),
+        switchMap((gmId) => (gmId ? this.gmDirectoryService.getGmById(gmId) : of(null))),
+        map((gm) => (gm ? this.gmDirectoryService.gmDisplayName(gm) : '')),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((name) => (this.gmDisplayName = name));

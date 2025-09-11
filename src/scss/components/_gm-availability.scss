@@ -1,7 +1,3 @@
-@import "abstracts/variables";
-@import "abstracts/mixins";
-@import "abstracts/components";
-
 .time-selection-wrapper {
   @include section-wrapper;
   text-align: center;
@@ -23,15 +19,16 @@
 
   .hour-picker-row {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 3rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
     margin-top: 1.5rem;
 
     .picker {
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 100%;
 
       .picker-label {
         font-weight: bold;
@@ -44,6 +41,8 @@
         flex-wrap: wrap;
         justify-content: center;
         gap: 0.5rem;
+        max-width: 900px;
+        margin: 0 auto;
       }
 
       .btn {

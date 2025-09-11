@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
-  effect,
   inject,
+  OnInit,
   signal,
   TemplateRef,
   viewChild,
@@ -20,13 +20,13 @@ import {
 } from 'date-fns';
 import { UniversalCalendarComponent } from '../../common/universal-calendar/universal-calendar.component';
 import { AuthService } from '../../../core/services/auth/auth.service';
-import { GmService } from '../../core/services/gm/gm.service';
-import { IAvailabilitySlot } from '../../../core/interfaces/i-gm-profile';
 import { TimeSlots } from '../../../core/enums/hours';
 import { DayDirection } from '../../../core/enums/days';
 import { GmAvailabilityStoreService } from '../../core/services/gm-availability-store/gm-availability-store.service';
 import { forkJoin, of } from 'rxjs';
 import { ToastService } from '../../../core/services/toast/toast.service';
+import { IAvailabilitySlot } from '../../../core/interfaces/i-availability-slot';
+import { GmSchedulingService } from '../../core/services/gm/gm-scheduling/gm-scheduling.service';
 
 @Component({
   selector: 'app-gm-availability',
@@ -34,80 +34,68 @@ import { ToastService } from '../../../core/services/toast/toast.service';
   imports: [CommonModule, UniversalCalendarComponent],
   templateUrl: './gm-availability.component.html',
 })
-export class GmAvailabilityComponent {
+export class GmAvailabilityComponent implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly gmService = inject(GmService);
+  private readonly gmScheduling = inject(GmSchedulingService);
   private readonly toastService = inject(ToastService);
   readonly availabilityStore = inject(GmAvailabilityStoreService);
 
   private readonly calendar = viewChild(UniversalCalendarComponent);
 
-  readonly gmId = this.auth.user()?.id!;
+  readonly userId = this.auth.user()?.id!;
   readonly selectedDate = signal<string | null>(null);
   readonly dayDirection = DayDirection;
   private originalDates = signal<Set<string>>(new Set());
 
-  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>(
-    'availabilitySuccessToast'
-  );
-  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>(
-    'availabilityErrorToast'
-  );
+  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>('availabilitySuccessToast');
+  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>('availabilityErrorToast');
 
   readonly lastError = signal<any | null>(null);
 
-
-  readonly allHours = Array.from(
-    { length: TimeSlots.end - TimeSlots.noonStart + 1 },
+  // Kafle godzinowe w pickerze "Od:" (12..22)
+  readonly startHours = Array.from(
+    { length: TimeSlots.end - TimeSlots.noonStart },
     (_, i) => TimeSlots.noonStart + i
   );
+
+  // Liczba bloków w kalendarzu = 11 (12..22)
+  private readonly calendarBlockCount = TimeSlots.end - TimeSlots.noonStart;
 
   readonly visibleDates = computed(() => {
     const start = startOfMonth(new Date());
     const end = endOfMonth(addMonths(new Date(), 1));
-    return eachDayOfInterval({ start, end }).map((d) =>
-      format(d, 'yyyy-MM-dd')
-    );
+    return eachDayOfInterval({ start, end }).map((d) => format(d, 'yyyy-MM-dd'));
   });
 
   readonly availabilityMapRaw = computed(() => {
     const map = new Map<string, IAvailabilitySlot[]>();
-
     for (const slot of this.availabilityStore.getAll()) {
-      if (!map.has(slot.date)) {
-        map.set(slot.date, []);
-      }
+      if (!map.has(slot.date)) map.set(slot.date, []);
       map.get(slot.date)!.push(slot);
     }
-
     return map;
   });
 
+  // Mapowanie do bloków [from, to) na siatkę 12..22
   readonly availabilityMap = computed(() => {
     const map = new Map<string, boolean[]>();
-
     for (const slot of this.availabilityStore.getAll()) {
-      const blocks = Array(this.allHours.length).fill(false);
-
+      const blocks = Array(this.calendarBlockCount).fill(false);
       for (let h = slot.fromHour; h < slot.toHour; h++) {
-        const idx = h - TimeSlots.noonStart;
-        if (idx >= 0 && idx < blocks.length) {
-          blocks[idx] = true;
-        }
+        const idx = h - TimeSlots.noonStart; // 12 -> 0 ... 22 -> 10
+        if (idx >= 0 && idx < blocks.length) blocks[idx] = true;
       }
-
       map.set(slot.date, blocks);
     }
-
     return map;
   });
 
-  constructor() {
-    effect(() => this.fetchAvailability());
+  ngOnInit(): void {
+    this.fetchAvailability();
   }
 
   fetchAvailability() {
-    this.gmService.getAvailability(this.gmId, this.visibleDates()).subscribe({
+    this.gmScheduling.getAvailability(this.userId, this.visibleDates()).subscribe({
       next: (slots) => {
         this.availabilityStore.setBulk(slots);
         this.originalDates.set(new Set(slots.map((s) => s.date)));
@@ -116,18 +104,15 @@ export class GmAvailabilityComponent {
     });
   }
 
+  // Używane przez UniversalCalendar do renderu dziennych bloków
   mapToAvailabilityBlocks = () => (slots: IAvailabilitySlot[]) => {
-    const blocks = Array(this.allHours.length).fill(false);
-
+    const blocks = Array(this.calendarBlockCount).fill(false); // 11 bloków
     for (const slot of slots) {
-      for (let h = slot.fromHour; h <= slot.toHour; h++) {
+      for (let h = slot.fromHour; h < slot.toHour; h++) {
         const idx = h - TimeSlots.noonStart;
-        if (idx >= 0 && idx < blocks.length) {
-          blocks[idx] = true;
-        }
+        if (idx >= 0 && idx < blocks.length) blocks[idx] = true;
       }
     }
-
     return blocks;
   };
 
@@ -138,7 +123,8 @@ export class GmAvailabilityComponent {
   onHourClicked(event: { date: string; hour: number }) {
     this.selectedDate.set(event.date);
     this.availabilityStore.setDay(event.date, {
-      gmId: this.gmId,
+      userId: this.userId,
+      workType: 'gm',
       date: event.date,
       fromHour: event.hour,
       toHour: event.hour + 1,
@@ -155,7 +141,8 @@ export class GmAvailabilityComponent {
     }
 
     const current = this.availabilityStore.getDay(date) ?? {
-      gmId: this.gmId,
+      userId: this.userId,
+      workType: 'gm' as const,
       date,
       fromHour: hour,
       toHour: hour + 1,
@@ -163,6 +150,8 @@ export class GmAvailabilityComponent {
 
     this.availabilityStore.setDay(date, {
       ...current,
+      userId: this.userId,
+      workType: 'gm',
       fromHour: hour,
       toHour: Math.max(hour + 1, current.toHour ?? hour + 1),
     });
@@ -173,7 +162,8 @@ export class GmAvailabilityComponent {
     if (!date) return;
 
     const current = this.availabilityStore.getDay(date) ?? {
-      gmId: this.gmId,
+      userId: this.userId,
+      workType: 'gm' as const,
       date,
       fromHour: TimeSlots.noonStart,
       toHour: hour,
@@ -181,6 +171,8 @@ export class GmAvailabilityComponent {
 
     this.availabilityStore.setDay(date, {
       ...current,
+      userId: this.userId,
+      workType: 'gm',
       fromHour: Math.min(current.fromHour, hour - 1),
       toHour: hour ?? TimeSlots.end,
     });
@@ -190,10 +182,11 @@ export class GmAvailabilityComponent {
     const date = this.selectedDate();
     if (!date) return;
     this.availabilityStore.setDay(date, {
-      gmId: this.gmId,
+      userId: this.userId,
+      workType: 'gm',
       date,
       fromHour: TimeSlots.noonStart,
-      toHour: TimeSlots.end,
+      toHour: TimeSlots.end, // 23 (czyli bloki 12..22)
     });
   }
 
@@ -213,11 +206,12 @@ export class GmAvailabilityComponent {
     return date ? this.availabilityStore.getDay(date)?.toHour ?? null : null;
   }
 
+  // Zwraca [from+1 .. 23], więc zawsze oferuje kafelek 23:00
   getEndHourOptions(): number[] {
     const from = this.getStartHour();
-    return from === null
-      ? []
-      : this.allHours.filter((h) => h > from && h <= TimeSlots.end);
+    if (from === null) return [];
+    const count = TimeSlots.end - from;
+    return Array.from({ length: count }, (_, i) => from + 1 + i);
   }
 
   changeDay(direction: DayDirection) {
@@ -250,15 +244,15 @@ export class GmAvailabilityComponent {
     const currentDates = new Set(current.map((s) => s.date));
     const original = this.originalDates();
 
-    const datesToDelete = Array.from(original).filter(
-      (d) => !currentDates.has(d)
-    );
+    const datesToDelete = Array.from(original).filter((d) => !currentDates.has(d));
 
     const delete$ = datesToDelete.length
-      ? this.gmService.deleteAvailability(this.gmId, datesToDelete)
+      ? this.gmScheduling.deleteAvailability(this.userId, datesToDelete)
       : of(null);
 
-    const upsert$ = this.gmService.upsertMany(current);
+    const upsert$ = this.gmScheduling.upsertMany(
+      current.map((s) => ({ ...s, userId: this.userId, workType: 'gm' as const }))
+    );
 
     forkJoin([delete$, upsert$]).subscribe({
       next: () => {
@@ -276,13 +270,12 @@ export class GmAvailabilityComponent {
       },
       error: (err) => {
         this.lastError.set(err);
-
         const template = this.availabilityErrorToast();
         if (template) {
           this.toastService.show({
             template,
             classname: 'bg-danger text-white',
-            header: `Błąd aktualizacji!`,
+            header: 'Błąd aktualizacji!',
           });
         }
       },

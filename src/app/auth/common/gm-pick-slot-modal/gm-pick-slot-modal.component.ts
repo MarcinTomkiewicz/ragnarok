@@ -10,9 +10,9 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject, of } from 'rxjs';
 import { startWith, switchMap, tap } from 'rxjs/operators';
-import { IGmData } from '../../../core/interfaces/i-gm-profile';
-import { GmService } from '../../core/services/gm/gm.service';
 import { GmSlotsMode } from '../../../core/enums/gm-slots-mode';
+import { IGmData } from '../../../core/interfaces/i-gm-profile';
+import { GmSchedulingService } from '../../core/services/gm/gm-scheduling/gm-scheduling.service';
 
 export interface ISuggestedSlot {
   date: string;
@@ -100,7 +100,7 @@ export interface ISuggestedSlot {
           Następny weekend
         </button>
         @if(extended().length){
-        <hr/>
+        <hr />
         <div>
           <div class="fw-semibold mb-2">Najbliższe dostępne</div>
           <div class="d-flex flex-wrap gap-2">
@@ -123,8 +123,7 @@ export interface ISuggestedSlot {
         }}
       </div>
       }
-      </div>
-
+    </div>
 
     <div class="modal-footer">
       <button class="btn btn-outline" (click)="close.emit()">Zamknij</button>
@@ -132,7 +131,7 @@ export interface ISuggestedSlot {
   `,
 })
 export class GmPickSlotModalComponent {
-  private readonly gmService = inject(GmService);
+  private readonly gmSchedulingService = inject(GmSchedulingService);
 
   @Input() gm!: IGmData;
   @Input() preferredDate!: string;
@@ -148,7 +147,7 @@ export class GmPickSlotModalComponent {
 
   readonly lastMode = signal<GmSlotsMode | null>(null);
 
-  private readonly quickGroups$ = this.gmService
+  private readonly quickGroups$ = this.gmSchedulingService
     .suggestSlotsAround(
       this.preferredDate,
       this.preferredStartHour,
@@ -162,7 +161,7 @@ export class GmPickSlotModalComponent {
     tap((mode) => this.lastMode.set(mode)),
     switchMap((mode) =>
       this.gm?.userId
-        ? this.gmService.moreSlots(
+        ? this.gmSchedulingService.moreSlots(
             this.gm.userId,
             this.preferredDate,
             this.duration,

@@ -12,61 +12,61 @@
   />
 
   @if (selectedDate()) {
-  <div class="date-label">
-    <h3>Dostępność dla: {{ selectedDate() }}</h3>
-  </div>
-
-  <div class="hour-picker-row">
-    <div class="picker">
-      <div class="picker-label">Od:</div>
-      <div class="hour-grid">
-        @for (hour of allHours; track hour) {
-        <button
-          class="btn btn-outline btn-sm"
-          [class.active]="getStartHour() === hour"
-          (click)="selectStartHour(hour)"
-        >
-          {{ hour }}:00
-        </button>
-        }
-      </div>
+    <div class="date-label">
+      <h3>Dostępność dla: {{ selectedDate() }}</h3>
     </div>
 
-    @if (getStartHour() !== null) {
-    <div class="picker">
-      <div class="picker-label">Do:</div>
-      <div class="hour-grid">
-        @for (hour of getEndHourOptions(); track hour) {
-        <button
-          class="btn btn-outline btn-sm"
-          [class.active]="getEndHour() === hour"
-          (click)="selectEndHour(hour)"
-        >
-          {{ hour }}:00
-        </button>
-        }
+    <div class="hour-picker-row">
+      <div class="picker">
+        <div class="picker-label">Od:</div>
+        <div class="hour-grid">
+          @for (hour of startHours; track hour) {
+            <button
+              class="btn btn-outline btn-sm"
+              [class.active]="getStartHour() === hour"
+              (click)="selectStartHour(hour)"
+            >
+              {{ hour }}:00
+            </button>
+          }
+        </div>
       </div>
+
+      @if (getStartHour() !== null) {
+        <div class="picker">
+          <div class="picker-label">Do:</div>
+          <div class="hour-grid">
+            @for (hour of getEndHourOptions(); track hour) {
+              <button
+                class="btn btn-outline btn-sm"
+                [class.active]="getEndHour() === hour"
+                (click)="selectEndHour(hour)"
+              >
+                {{ hour }}:00
+              </button>
+            }
+          </div>
+        </div>
+      }
     </div>
-    }
-  </div>
 
-  <div class="whole-day-row">
-    <button class="btn btn-outline" (click)="selectWholeDay()">
-      Cały dzień (12:00–23:00)
-    </button>
-    <button class="btn btn-outline btn-error" (click)="resetDayAvailability()">
-      Resetuj dostępność (niedostępny)
-    </button>
-  </div>
+    <div class="whole-day-row">
+      <button class="btn btn-outline" (click)="selectWholeDay()">
+        Cały dzień (12:00–23:00)
+      </button>
+      <button class="btn btn-outline btn-error" (click)="resetDayAvailability()">
+        Resetuj dostępność (niedostępny)
+      </button>
+    </div>
 
-  <div class="day-controls">
-    <button class="btn btn-secondary" (click)="changeDay(dayDirection.Prev)">
-      Poprzedni dzień
-    </button>
-    <button class="btn btn-secondary" (click)="changeDay(dayDirection.Next)">
-      Następny dzień
-    </button>
-  </div>
+    <div class="day-controls">
+      <button class="btn btn-secondary" (click)="changeDay(dayDirection.Prev)">
+        Poprzedni dzień
+      </button>
+      <button class="btn btn-secondary" (click)="changeDay(dayDirection.Next)">
+        Następny dzień
+      </button>
+    </div>
   }
 
   <div class="save-button">
@@ -75,12 +75,12 @@
     </button>
   </div>
 
-    <ng-template #availabilitySuccessToast>
+  <ng-template #availabilitySuccessToast>
     <strong>Sukces!</strong> Zaktualizowano dostępność.
   </ng-template>
 
   <ng-template #availabilityErrorToast>
     <strong>Błąd!</strong> Nie udało się zaktualizować dostępności.<br />
-    {{ lastError().message || lastError()  }}
+    {{ lastError().message || lastError() }}
   </ng-template>
 </div>

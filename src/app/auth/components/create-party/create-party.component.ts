@@ -17,14 +17,15 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { forkJoin, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
+import { InfoModalComponent } from '../../../common/info-modal/info-modal.component';
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
-import { CoworkerRoles } from '../../../core/enums/roles';
 import { PartyMemberStatus } from '../../../core/enums/party.enum';
+import { CoworkerRoles } from '../../../core/enums/roles';
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../core/interfaces/i-rpg-system';
 import { IUser } from '../../../core/interfaces/i-user';
@@ -36,14 +37,13 @@ import { ToastService } from '../../../core/services/toast/toast.service';
 import { hasMinimumCoworkerRole } from '../../../core/utils/required-roles';
 import { maxThreeStyles } from '../../../core/utils/tag-limiter';
 import { stringToSlug } from '../../../core/utils/type-mappers';
-import { GmService } from '../../core/services/gm/gm.service';
 import { PartyService } from '../../core/services/party/party.service';
-import { InfoModalComponent } from '../../../common/info-modal/info-modal.component';
 
+import { GmDirectoryService } from '../../core/services/gm/gm-directory/gm-directory.service';
 import { GmPickerComponent } from './gm-picker/gm-picker.component';
+import { PartyMembersPickerComponent } from './party-members-picker/party-members-picker.component';
 import { StyleTagsComponent } from './style-tags/style-tags.component';
 import { SystemsPickerComponent } from './systems-picker/systems-picker.component';
-import { PartyMembersPickerComponent } from './party-members-picker/party-members-picker.component';
 
 enum Modes {
   Edit = 'Zaktualizowano',
@@ -79,7 +79,7 @@ export class CreatePartyComponent {
   private readonly partyService = inject(PartyService);
   private readonly auth = inject(AuthService);
   private readonly backendService = inject(BackendService);
-  private readonly gmService = inject(GmService);
+  private readonly gmDirectoryService = inject(GmDirectoryService);
   private readonly systemService = inject(SystemService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
@@ -168,7 +168,7 @@ export class CreatePartyComponent {
   ngOnInit(): void {
     if (this.editMode && this.partySlug) this.loadPartyData();
 
-    this.gmService.getAllGms().subscribe((gms) => this.gmsList.set(gms));
+    this.gmDirectoryService.getAllGms().subscribe((gms) => this.gmsList.set(gms));
 
     this.backendService
       .getAll<IUser>('users', 'firstName', 'asc', {
@@ -191,7 +191,7 @@ export class CreatePartyComponent {
       .valueChanges.pipe(
         switchMap((gmId: string | null) =>
           gmId
-            ? this.gmService.getSystemsForGm(gmId)
+            ? this.gmDirectoryService.getSystemsForGm(gmId)
             : of<IRPGSystem[] | null>(null)
         ),
         takeUntilDestroyed(this.destroyRef)
@@ -206,7 +206,7 @@ export class CreatePartyComponent {
 
     const initialGm = this.teamForm.get('gmId')?.value as string | null;
     if (initialGm) {
-      this.gmService.getSystemsForGm(initialGm).subscribe((sys) => {
+      this.gmDirectoryService.getSystemsForGm(initialGm).subscribe((sys) => {
         this.allowedSystemIds = new Set(sys.map((s) => s.id));
         this.pruneSelectedSystems(this.allowedSystemIds!);
       });

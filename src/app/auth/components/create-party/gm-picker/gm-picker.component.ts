@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
-import { GmService } from '../../../core/services/gm/gm.service';
+import { GmDirectoryService } from '../../../core/services/gm/gm-directory/gm-directory.service';
 
 @Component({
   selector: 'app-gm-picker',
@@ -19,7 +19,7 @@ import { GmService } from '../../../core/services/gm/gm.service';
   styleUrl: './gm-picker.component.scss',
 })
 export class GmPickerComponent {
-  private gmService = inject(GmService);
+  private gmDirectoryService = inject(GmDirectoryService);
 
   gms = input.required<IGmData[]>();
   selectedId = input<string | null>(null);
@@ -52,6 +52,6 @@ export class GmPickerComponent {
   }
 
   gmName(gm: IGmData) {
-    return this.gmService.gmDisplayName(gm);
+    return this.gmDirectoryService.gmDisplayName(gm);
   }
 }

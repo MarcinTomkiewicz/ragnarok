@@ -27,10 +27,10 @@ export interface IGmData {
   useNickname: boolean;
 }
 
-export interface IAvailabilitySlot {
-  id?: string;
-  gmId: string;
-  date: string;
-  fromHour: number;
-  toHour: number;
-}
+// export interface IAvailabilitySlot {
+//   id?: string;
+//   gmId: string;
+//   date: string;
+//   fromHour: number;
+//   toHour: number;
+// }
