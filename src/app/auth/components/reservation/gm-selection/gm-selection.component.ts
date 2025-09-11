@@ -1,21 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import {
-  toObservable,
-  toSignal,
-  takeUntilDestroyed,
-} from '@angular/core/rxjs-interop';
+import { toObservable, toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { combineLatest, forkJoin, of } from 'rxjs';
-import {
-  distinctUntilChanged,
-  filter,
-  map,
-  startWith,
-  switchMap,
-  tap,
-} from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
 
 import { IGmData } from '../../../../core/interfaces/i-gm-profile';
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
@@ -23,11 +12,12 @@ import { IUser } from '../../../../core/interfaces/i-user';
 
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
 import { ReservationService } from '../../../core/services/reservation/reservation.service';
-import { GmService } from '../../../core/services/gm/gm.service';
 import { PartyService } from '../../../core/services/party/party.service';
 
 import { GmDetailsModalComponent } from '../../../../common/gm-details-modal/gm-details-modal.component';
 import { GmPickSlotModalComponent } from '../../../common/gm-pick-slot-modal/gm-pick-slot-modal.component';
+import { GmDirectoryService } from '../../../core/services/gm/gm-directory/gm-directory.service';
+import { GmSchedulingService } from '../../../core/services/gm/gm-scheduling/gm-scheduling.service';
 
 @Component({
   selector: 'app-gm-selection',
@@ -37,51 +27,39 @@ import { GmPickSlotModalComponent } from '../../../common/gm-pick-slot-modal/gm-
   styleUrl: './gm-selection.component.scss',
 })
 export class GmSelectionComponent {
-  // DI
   readonly store = inject(ReservationStoreService);
   private readonly fb = inject(FormBuilder);
   private readonly reservationService = inject(ReservationService);
-  private readonly gmService = inject(GmService);
+  private readonly gmDirectory = inject(GmDirectoryService);
+  private readonly gmScheduling = inject(GmSchedulingService);
   private readonly partyService = inject(PartyService);
   private readonly modal = inject(NgbModal);
   private readonly destroyRef = inject(DestroyRef);
 
-  // Dane
   readonly allSystems = signal<IRPGSystem[]>([]);
   readonly systems = signal<IRPGSystem[]>([]);
   readonly gms = signal<IGmData[]>([]);
   readonly allAvailableGms = signal<IGmData[]>([]);
-  readonly bySystemName = new Intl.Collator('pl', {
-    sensitivity: 'base',
-    numeric: true,
-  }).compare;
+  readonly bySystemName = new Intl.Collator('pl', { sensitivity: 'base', numeric: true }).compare;
   readonly supportedSystems = signal<IRPGSystem[]>([]);
 
-  // Tryb „zablokowanego” MG
   readonly lockedGm = signal<IGmData | null>(null);
   readonly lockedGmUser = signal<IUser | null>(null);
   readonly lockedGmWarn = signal<boolean>(false);
 
-  // UI
   readonly showAll = signal(false);
   readonly showSystemGms = signal(false);
   readonly showAllGmsButton = signal(false);
 
-  // Form
   readonly form: FormGroup = this.fb.group({
     systemId: [this.store.selectedSystemId()],
   });
 
   readonly isPartyGmLocked = computed(
-    () =>
-      !!this.store.selectedPartyId() &&
-      !!this.store.selectedGm() &&
-      this.store.needsGm()
+    () => !!this.store.selectedPartyId() && !!this.store.selectedGm() && this.store.needsGm()
   );
 
-  readonly canProceed = computed(
-    () => !!this.store.selectedGm() && !!this.form.value.systemId
-  );
+  readonly canProceed = computed(() => !!this.store.selectedGm() && !!this.form.value.systemId);
 
   private get startHour(): number | null {
     const t = this.store.selectedStartTime();
@@ -93,15 +71,13 @@ export class GmSelectionComponent {
   constructor() {
     forkJoin({
       all: this.reservationService.getAllSystems(),
-      supported: this.gmService.getSystemsWithAtLeastOneGm(),
+      supported: this.gmDirectory.getSystemsWithAtLeastOneGm(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ all, supported }) => {
         const by = this.bySystemName;
         const allSorted = [...all].sort((a, b) => by(a.name, b.name));
-        const supportedSorted = [...supported].sort((a, b) =>
-          by(a.name, b.name)
-        );
+        const supportedSorted = [...supported].sort((a, b) => by(a.name, b.name));
 
         this.allSystems.set(allSorted);
         this.supportedSystems.set(supportedSorted);
@@ -110,8 +86,7 @@ export class GmSelectionComponent {
 
         const ctrl = this.form.get('systemId')!;
         const sel = ctrl.value as string | null;
-        const isSupported =
-          !!sel && this.supportedSystems().some((s) => s.id === sel);
+        const isSupported = !!sel && this.supportedSystems().some((s) => s.id === sel);
 
         if (!isSupported) {
           ctrl.setValue(null, { emitEvent: true });
@@ -121,9 +96,7 @@ export class GmSelectionComponent {
 
     toObservable(this.isPartyGmLocked)
       .pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((locked) =>
-        locked ? this.enterLockedMode() : this.exitLockedMode()
-      );
+      .subscribe((locked) => (locked ? this.enterLockedMode() : this.exitLockedMode()));
 
     this.form
       .get('systemId')!
@@ -134,15 +107,10 @@ export class GmSelectionComponent {
         else this.updateLockedGmAvailability();
       });
 
-    const locked$ = toObservable(this.isPartyGmLocked).pipe(
-      distinctUntilChanged()
-    );
+    const locked$ = toObservable(this.isPartyGmLocked).pipe(distinctUntilChanged());
     const systemId$ = this.form
       .get('systemId')!
-      .valueChanges.pipe(
-        startWith(this.form.get('systemId')!.value as string | null),
-        distinctUntilChanged()
-      );
+      .valueChanges.pipe(startWith(this.form.get('systemId')!.value as string | null), distinctUntilChanged());
 
     const manualMode$ = toObservable(this.isPartyGmLocked).pipe(
       map((locked) => !locked),
@@ -150,12 +118,8 @@ export class GmSelectionComponent {
     );
 
     const date$ = toObservable(this.store.selectedDate).pipe(filter(Boolean));
-    const time$ = toObservable(this.store.selectedStartTime).pipe(
-      filter(Boolean)
-    );
-    const dur$ = toObservable(this.store.selectedDuration).pipe(
-      filter((n): n is number => n != null)
-    );
+    const time$ = toObservable(this.store.selectedStartTime).pipe(filter(Boolean));
+    const dur$ = toObservable(this.store.selectedDuration).pipe(filter((n): n is number => n != null));
 
     combineLatest([manualMode$, systemId$, date$, time$, dur$])
       .pipe(
@@ -164,7 +128,7 @@ export class GmSelectionComponent {
         }),
         filter(([manual, systemId]) => manual && !!systemId),
         switchMap(([_, systemId, date, startTime, duration]) =>
-          this.gmService.getAvailableGmsForSystem(
+          this.gmScheduling.getAvailableGmsForSystem(
             systemId as string,
             date as string,
             parseInt(startTime as string, 10),
@@ -187,7 +151,7 @@ export class GmSelectionComponent {
     const gmId = this.store.selectedGm();
     if (!gmId) return;
 
-    this.gmService
+    this.gmDirectory
       .getGmById(gmId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -200,18 +164,15 @@ export class GmSelectionComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((u) => this.lockedGmUser.set(u));
 
-    this.gmService
+    this.gmDirectory
       .getSystemsForGm(gmId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((list) => {
-        const sorted = [...list].sort((a, b) =>
-          this.bySystemName(a.name, b.name)
-        );
+        const sorted = [...list].sort((a, b) => this.bySystemName(a.name, b.name));
         this.systems.set(sorted);
         const current = this.form.value.systemId as string | null;
         const allowed = new Set(sorted.map((s) => s.id));
-        const next =
-          current && allowed.has(current) ? current : sorted[0]?.id ?? null;
+        const next = current && allowed.has(current) ? current : sorted[0]?.id ?? null;
         this.form.get('systemId')!.setValue(next, { emitEvent: false });
         this.store.selectedSystemId.set(next);
         this.updateLockedGmAvailability();
@@ -253,7 +214,7 @@ export class GmSelectionComponent {
       return;
     }
 
-    this.gmService
+    this.gmScheduling
       .getAvailableGmsForSystem(systemId, date, startHour, duration)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((list) => {
@@ -278,7 +239,7 @@ export class GmSelectionComponent {
     this.store.selectedGm.set(null);
     this.showAllGmsButton.set(false);
 
-    this.gmService
+    this.gmScheduling
       .getAvailableGmsForSystem(systemId, date, startHour, duration)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gms) => {
@@ -295,18 +256,13 @@ export class GmSelectionComponent {
     if (!gm) {
       const u = this.lockedGmUser();
       if (!u) return 'Mistrz Gry';
-      return u.nickname && u.useNickname
-        ? u.nickname
-        : u.firstName ?? u.email ?? 'Mistrz Gry';
+      return u.nickname && u.useNickname ? u.nickname : u.firstName ?? u.email ?? 'Mistrz Gry';
     }
-    return this.gmService.gmDisplayName(gm);
+    return this.gmDirectory.gmDisplayName(gm);
   }
 
   onCardClick(gm: IGmData): void {
-    const ref = this.modal.open(GmDetailsModalComponent, {
-      size: 'lg',
-      centered: true,
-    });
+    const ref = this.modal.open(GmDetailsModalComponent, { size: 'lg', centered: true });
     ref.componentInstance.gm = gm;
   }
 
@@ -316,10 +272,7 @@ export class GmSelectionComponent {
     const duration = this.store.selectedDuration();
     if (!date || !start || duration == null) return;
 
-    const ref = this.modal.open(GmPickSlotModalComponent, {
-      size: 'lg',
-      centered: true,
-    });
+    const ref = this.modal.open(GmPickSlotModalComponent, { size: 'lg', centered: true });
     const cmp = ref.componentInstance as GmPickSlotModalComponent;
     cmp.gm = gm;
     cmp.preferredDate = date;
@@ -329,9 +282,7 @@ export class GmSelectionComponent {
 
     cmp.confirm.subscribe((slot) => {
       this.store.selectedDate.set(slot.date);
-      this.store.selectedStartTime.set(
-        String(slot.startHour).padStart(2, '0') + ':00'
-      );
+      this.store.selectedStartTime.set(String(slot.startHour).padStart(2, '0') + ':00');
       this.store.selectedDuration.set(slot.duration);
       this.store.selectedGm.set(gm.userId);
       this.store.saveToStorage();
@@ -364,7 +315,7 @@ export class GmSelectionComponent {
     const duration = this.store.selectedDuration();
     if (!date || startHour == null || duration == null) return;
 
-    this.gmService
+    this.gmScheduling
       .getAllGmsForTimeRange(date, startHour, duration)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gms) => this.allAvailableGms.set(gms));
@@ -378,13 +329,9 @@ export class GmSelectionComponent {
 
   readonly gmsForSystemAll = toSignal(
     this.form.get('systemId')!.valueChanges.pipe(
-      startWith(this.form.get('systemId')!.value as string | null), // ⬅️ DODANE
+      startWith(this.form.get('systemId')!.value as string | null),
       distinctUntilChanged(),
-      switchMap((systemId: string | null) =>
-        systemId
-          ? this.gmService.getGmsForSystem(systemId)
-          : of([] as IGmData[])
-      )
+      switchMap((systemId: string | null) => (systemId ? this.gmDirectory.getGmsForSystem(systemId) : of([] as IGmData[])))
     ),
     { initialValue: [] as IGmData[] }
   );
@@ -398,15 +345,9 @@ export class GmSelectionComponent {
     this.showAll() ? this.allAvailableGms() : this.allAvailableGms().slice(0, 4)
   );
 
-  readonly visibleGms = computed(() =>
-    this.showAll() ? this.gms() : this.gms().slice(0, 4)
-  );
+  readonly visibleGms = computed(() => (this.showAll() ? this.gms() : this.gms().slice(0, 4)));
 
-  readonly shouldShowMoreButton = computed(
-    () => !this.showAll() && this.gms().length > 4
-  );
+  readonly shouldShowMoreButton = computed(() => !this.showAll() && this.gms().length > 4);
 
-  readonly shouldShowMoreGmsButton = computed(
-    () => !this.showAll() && this.allAvailableGms().length > 4
-  );
+  readonly shouldShowMoreGmsButton = computed(() => !this.showAll() && this.allAvailableGms().length > 4);
 }

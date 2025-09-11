@@ -11,10 +11,10 @@ import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
+  Validators
 } from '@angular/forms';
 import { Observable, of, switchMap } from 'rxjs';
+import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import {
   IGmData,
 } from '../../../core/interfaces/i-gm-profile';
@@ -23,9 +23,8 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { GmService } from '../../core/services/gm/gm.service';
-import { GmStyleTag, GmStyleTagLabels } from '../../../core/enums/gm-styles';
 import { maxThreeStyles } from '../../../core/utils/tag-limiter';
+import { GmDirectoryService } from '../../core/services/gm/gm-directory/gm-directory.service';
 
 @Component({
   selector: 'app-manage-gm',
@@ -37,7 +36,7 @@ import { maxThreeStyles } from '../../../core/utils/tag-limiter';
 export class ManageGmComponent {
   private readonly backend = inject(BackendService);
   private readonly imageStorage = inject(ImageStorageService);
-  private readonly gmService = inject(GmService);
+  private readonly gmDirectoryService = inject(GmDirectoryService);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly toastService = inject(ToastService);
@@ -199,7 +198,7 @@ export class ManageGmComponent {
 
           return this.backend.upsert('gm_profiles', payload);
         }),
-        switchMap(() => this.gmService.updateSpecialties(this.user.id, systems))
+        switchMap(() => this.gmDirectoryService.updateSpecialties(this.user.id, systems))
       )
       .subscribe({
         next: () => {

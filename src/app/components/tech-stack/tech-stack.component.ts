@@ -1,15 +1,15 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { GmDirectoryService } from '../../auth/core/services/gm/gm-directory/gm-directory.service';
+import { GmDetailsModalComponent } from '../../common/gm-details-modal/gm-details-modal.component';
+import { LoaderComponent } from '../../common/loader/loader.component';
+import { CoworkerRoles, RoleDisplay } from '../../core/enums/roles';
+import { IGmData } from '../../core/interfaces/i-gm-profile';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { LoaderService } from '../../core/services/loader/loader.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
-import { CoworkerRoles, RoleDisplay } from '../../core/enums/roles';
-import { IGmData } from '../../core/interfaces/i-gm-profile';
-import { LoaderComponent } from '../../common/loader/loader.component';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { GmDetailsModalComponent } from '../../common/gm-details-modal/gm-details-modal.component';
-import { GmService } from '../../auth/core/services/gm/gm.service';
 
 @Component({
   selector: 'app-tech-stack',
@@ -23,7 +23,7 @@ export class TechStackComponent implements OnInit {
   private readonly loader = inject(LoaderService);
   private readonly platform = inject(PlatformService);
   private readonly seo = inject(SeoService);
-  private readonly gmService = inject(GmService);
+  private readonly gmDirectoryService = inject(GmDirectoryService);
   private readonly modal = inject(NgbModal);
 
   readonly gms = signal<IGmData[]>([]);
@@ -88,7 +88,7 @@ export class TechStackComponent implements OnInit {
   }
 
   gmDisplayName(gm: IGmData): string {
-    return this.gmService.gmDisplayName(gm);
+    return this.gmDirectoryService.gmDisplayName(gm);
   }
 
 }

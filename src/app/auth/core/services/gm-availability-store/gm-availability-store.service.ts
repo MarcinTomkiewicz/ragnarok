@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { IAvailabilitySlot } from '../../../../core/interfaces/i-gm-profile';
+import { IAvailabilitySlot } from '../../../../core/interfaces/i-availability-slot';
 
 @Injectable({ providedIn: 'root' })
 export class GmAvailabilityStoreService {
