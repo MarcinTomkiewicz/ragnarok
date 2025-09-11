@@ -1,14 +1,14 @@
-import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../core/services/auth/auth.service';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NotificationBucket } from '../../../core/enums/notification-bucket';
 import { CoworkerRoles } from '../../../core/enums/roles';
+import { AuthService } from '../../../core/services/auth/auth.service';
 import {
   hasMinimumCoworkerRole,
   hasStrictCoworkerRole,
 } from '../../../core/utils/required-roles';
 import { NotificationService } from '../../core/services/notifications/notifications.service';
-import { NotificationBucket } from '../../../core/enums/notification-bucket';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { NotificationBadgeComponent } from '../notification-badge/notification-badge.component';
 
 type MenuItem = {
@@ -47,7 +47,9 @@ export class UserMenuPanelComponent {
   readonly notifLabels = computed(() => {
     const counts = this.notifCounts();
     const out = {} as Record<NotificationBucket, string>;
-    (Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>).forEach((k) => {
+    (
+      Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>
+    ).forEach((k) => {
       const bucket = NotificationBucket[k] as NotificationBucket;
       const n = counts[bucket] ?? 0;
       out[bucket] = n > 99 ? '99+' : String(n);
@@ -62,70 +64,84 @@ export class UserMenuPanelComponent {
 
     const sections: MenuSection[] = [];
 
-    sections.push({
-      title: 'Strefa użytkownika',
-      items: [
-        { label: 'Edytuj dane', path: '/auth/edit-data' },
-        { label: 'Rezerwuj salkę', path: '/auth/reservation' },
-        { label: 'Moje rezerwacje', path: '/auth/my-reservations' },
-      ],
-    });
-
-    sections.push({
-      title: 'Strefa Drużyn',
-      items: [
-        { label: 'Znajdź drużynę', path: '/auth/find-party' },
-        { label: 'Załóż drużynę', path: '/auth/create-party' },
-        {
-          label: 'Moje drużyny',
-          path: '/auth/my-parties',
-          badgeBucket: NotificationBucket.PartyMembershipRequests,
-        },
-      ],
-    });
-
-    if (strict(CoworkerRoles.Member)) {
-      sections.push({
-        title: 'Strefa Klubowicza',
-        items: [{ label: 'Moje benefity', path: '/auth/benefits' }],
-      });
-    }
-
-    if (strict(CoworkerRoles.Gm)) {
-      sections.push({
-        title: 'Strefa Mistrza Gry',
-        items: [
-          { label: 'Profil Mistrza Gry', path: '/auth/manage-gm' },
-          { label: 'Nadchodzące sesje', path: '/auth/upcoming-sessions' },
-          { label: 'Twoja dostępność', path: '/auth/availability' },
-        ],
-      });
-    }
-
-    const receptionItems: MenuItem[] = [];
-    if (min(CoworkerRoles.Gm)) {
-      receptionItems.push({ label: 'Dyspozycyjność na recepcji', path: '/auth/reception-availability' }, { label: 'Czas pracy', path: '/auth/work-log' });
-    }
+    // Rezerwacje
+    const reservations: MenuItem[] = [
+      { label: 'Rezerwuj salkę', path: '/auth/reservation' },
+      { label: 'Moje rezerwacje', path: '/auth/my-reservations' },
+    ];
     if (min(CoworkerRoles.Reception)) {
-      receptionItems.push(
+      reservations.push(
         { label: 'Nowa Rezerwacja', path: '/auth/guest-reservation' },
-        { label: 'Kalendarz Rezerwacji', path: '/auth/reservations-calendar' },
-        { label: 'Zarządzaj Drużynami', path: '/auth/party-list' },
+        { label: 'Kalendarz Rezerwacji', path: '/auth/reservations-calendar' }
       );
     }
-    if (receptionItems.length) {
-      sections.push({ title: 'Strefa Recepcji', items: receptionItems });
-    }
+    sections.push({ title: 'Rezerwacje', items: reservations });
 
+    // Drużyny
+    const parties: MenuItem[] = [
+      { label: 'Znajdź drużynę', path: '/auth/find-party' },
+      { label: 'Załóż drużynę', path: '/auth/create-party' },
+      {
+        label: 'Moje drużyny',
+        path: '/auth/my-parties',
+        badgeBucket: NotificationBucket.PartyMembershipRequests,
+      },
+    ];
     if (min(CoworkerRoles.Reception)) {
-      sections.push({
-        title: 'Strefa Admina',
-        items: [{ label: 'Zarządzaj Dostępnością', path: '/auth/availability-overview' },],
-        alwaysVisible: true,
+      parties.push({ label: 'Zarządzaj Drużynami', path: '/auth/party-list' });
+    }
+    sections.push({ title: 'Drużyny', items: parties });
+
+    // Dyspozycyjność
+    const availability: MenuItem[] = [];
+    if (strict(CoworkerRoles.Gm)) {
+      availability.push({
+        label: 'Dostępność Mistrza Gry',
+        path: '/auth/availability',
       });
     }
+    if (min(CoworkerRoles.Gm)) {
+      availability.push({
+        label: 'Dostępność na recepcji',
+        path: '/auth/reception-availability',
+      });
+    }
+    if (min(CoworkerRoles.Reception)) {
+      availability.push({
+        label: 'Podgląd dostępności',
+        path: '/auth/availability-overview',
+      });
+    }
+    if (availability.length)
+      sections.push({ title: 'Dyspozycyjność', items: availability });
 
-    return sections.filter((s) => s.alwaysVisible || s.items.length);
+    // Praca i czas
+    const workAndTime: MenuItem[] = [];
+    if (strict(CoworkerRoles.Gm)) {
+      workAndTime.push({
+        label: 'Nadchodzące sesje',
+        path: '/auth/upcoming-sessions',
+      });
+    }
+    if (min(CoworkerRoles.Gm)) {
+      workAndTime.push({ label: 'Czas pracy', path: '/auth/work-log' });
+    }
+    if (workAndTime.length)
+      sections.push({ title: 'Praca i czas', items: workAndTime });
+
+    // Konto i członkostwo
+    const account: MenuItem[] = [
+      { label: 'Edytuj dane', path: '/auth/edit-data' },
+    ];
+    if (min(CoworkerRoles.Gm)) {
+      account.push({ label: 'Profil Mistrza Gry', path: '/auth/manage-gm' });
+    }
+    if (strict(CoworkerRoles.Member)) {
+      account.push({ label: 'Moje benefity', path: '/auth/benefits' });
+    }
+    sections.push({ title: 'Konto i członkostwo', items: account });
+
+    return sections.filter((s) => s.items.length);
   });
 
   logout(): void {

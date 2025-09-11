@@ -2,26 +2,26 @@
   <span class="menu-title fw-bold text-center">
     Witaj, {{ usernameDisplay() }}!
   </span>
+  <hr class="menu-divider w-100 my-3" />
+  @for (section of menuSections(); track section.title; let idx = $index) { @if
+  (idx > 0) {
+  <hr class="menu-divider w-100 my-3" />
+  }
 
-  @for (section of menuSections(); track section.title; let idx = $index) {
-    @if (idx > 0) {
-      <hr class="menu-divider w-100 my-3" />
-    }
-
-    <div class="w-100">
-      <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
-        {{ section.title }}
-      </div>
-
-      @for (item of section.items; track item.path) {
-        <a class="menu-item w-100 text-center" [href]="item.path">
-          {{ item.label }}
-          @if (item.badgeBucket != null) {
-            <app-notification-badge [bucket]="item.badgeBucket" />
-          }
-        </a>
-      }
+  <div class="w-100">
+    <div class="text-muted fw-semibold text-uppercase small mb-2 text-center">
+      {{ section.title }}
     </div>
+
+    @for (item of section.items; track item.path) {
+    <a class="menu-item w-100 text-center" [href]="item.path">
+      {{ item.label }}
+      @if (item.badgeBucket != null) {
+      <app-notification-badge [bucket]="item.badgeBucket" />
+      }
+    </a>
+    }
+  </div>
   }
 
   <hr class="menu-divider w-100 my-3" />
