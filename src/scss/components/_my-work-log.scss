@@ -1,7 +1,6 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-/* wrapper komponentu – zwiększamy specyficzność, żeby nic z innych plików nie nadpisało */
 .worklog-wrapper {
   @include section-wrapper;
 
@@ -22,6 +21,7 @@
       color: $secondary-text-color;
       padding: 0.25rem 0.25rem 0.5rem;
       border-bottom: 1px solid $border-color;
+
       .col {
         font-size: $font-size-sm;
       }
@@ -70,16 +70,12 @@
         align-items: center;
         justify-content: center;
 
-        i {
-          font-size: 1rem;
-        }
+        i { font-size: 1rem; }
       }
 
       .form-group {
         margin-bottom: 0;
-        .form-label {
-          display: block;
-        }
+        .form-label { display: block; }
       }
     }
   }
@@ -92,9 +88,7 @@
     align-items: center;
     flex-wrap: wrap;
 
-    .summary {
-      font-size: $font-size-md;
-    }
+    .summary { font-size: $font-size-md; }
 
     .actions {
       display: flex;
@@ -104,14 +98,29 @@
 
   @media (max-width: 640px) {
     .worklog-table {
-      .worklog-header,
-      .worklog-row {
-        grid-template-columns: 1fr;
+      .worklog-header { display: none; }
+
+      .worklog-row { grid-template-columns: 1fr; }
+
+      .worklog-row .col-date {
+        display: flex;
+        align-items: baseline;
+        gap: .5rem;
+        justify-content: center;
+
+        .date-main { font-weight: 600; }
+        .date-sub {
+          font-size: $font-size-sm;
+          color: $secondary-text-color;
+        }
       }
+
       .col-hours .form-control {
         max-width: 100%;
         text-align: left;
       }
     }
+
+    .month-label-extra { display: none; }
   }
 }

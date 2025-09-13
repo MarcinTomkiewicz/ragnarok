@@ -16,7 +16,8 @@
         [class.active]="monthOffset() === 0"
         (click)="switchTo(0)"
       >
-        Bieżący miesiąc ({{ monthLabel() }})
+        Bieżący miesiąc
+        <span class="month-label-extra">({{ monthLabel() }})</span>
       </button>
     </div>
 
@@ -52,10 +53,12 @@
                   min="0"
                   max="16"
                   step="0.5"
+                  placeholder="Liczba godzin"
                   [value]="r.hours ?? ''"
                   (input)="onHoursInput(r.date, $event)"
                   aria-label="Godziny"
                 />
+
                 <span
                   class="number-input__arrow number-input__arrow--up"
                   aria-hidden="true"
