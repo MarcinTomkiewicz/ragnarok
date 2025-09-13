@@ -14,21 +14,15 @@ import { IWorkLog } from '../../../core/interfaces/i-work-log';
 import { format, parseISO } from 'date-fns';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { forkJoin, Observable } from 'rxjs';
-import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbAlertModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { pl } from 'date-fns/locale';
-
-type Row = {
-  date: string;
-  weekday: string;
-  hours: number | null;
-  comment: string;
-  id?: string;
-};
+import { Row } from '../../../core/types/row';
+import { IconClass } from '../../../core/enums/icons';
 
 @Component({
   selector: 'app-my-work-log',
   standalone: true,
-  imports: [CommonModule, NgbToastModule],
+  imports: [CommonModule, NgbToastModule, NgbAlertModule],
   templateUrl: './my-work-log.component.html',
   styleUrls: ['./my-work-log.component.scss'],
 })
@@ -38,6 +32,8 @@ export class MyWorkLogComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly userId = this.auth.user()?.id!;
+
+  readonly IconClass = IconClass;
 
   readonly toastSaved = viewChild<TemplateRef<unknown>>('toastSaved');
   readonly toastError = viewChild<TemplateRef<unknown>>('toastError');
@@ -56,10 +52,21 @@ export class MyWorkLogComponent implements OnInit {
   );
 
   readonly monthLabel = computed(() => {
-    const { start } = this.svc.computeMonthDays(this.monthOffset());
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
     const label = format(start, 'LLLL yyyy', { locale: pl });
     return label.charAt(0).toUpperCase() + label.slice(1);
   });
+
+  readonly canEdit = computed(() => {
+    if (this.monthOffset() === 0) return true;
+    const today = new Date();
+    return today.getDate() <= 5;
+  });
+
+  readonly isPrevMonthLocked = computed(
+    () => this.monthOffset() === -1 && !this.canEdit()
+  );
 
   ngOnInit(): void {
     this.load();
@@ -128,6 +135,16 @@ export class MyWorkLogComponent implements OnInit {
   }
 
   save() {
+    if (!this.canEdit()) {
+      const t = this.toastError();
+      if (t)
+        this.toast.show({
+          template: t,
+          classname: 'bg-danger text-white',
+          header: 'Błąd',
+        });
+      return;
+    }
     const rows = this.rows();
     const orig = this.original();
 

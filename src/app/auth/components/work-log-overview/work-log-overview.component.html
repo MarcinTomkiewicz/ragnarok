@@ -1,0 +1,112 @@
+<div class="worklogs-overview-wrapper">
+  <div class="container">
+    <h2 class="section-title mb-3">Ewidencja godzin — podgląd zbiorczy</h2>
+
+    <div class="btn-group mb-3">
+      <button
+        class="btn btn-outline"
+        [class.active]="monthOffset() === -1"
+        (click)="switchTo(-1)"
+      >
+        Poprzedni miesiąc
+      </button>
+
+      <button
+        class="btn btn-outline"
+        [class.active]="monthOffset() === 0"
+        (click)="switchTo(0)"
+      >
+        Bieżący miesiąc
+        <span class="month-label-extra">({{ currentMonthLabel() }})</span>
+      </button>
+    </div>
+
+    <div class="muted mb-2">
+      Przeglądasz: <strong>{{ viewedMonthLabel() }}</strong>
+    </div>
+
+    <div class="overview-table">
+      <div class="overview-header">
+        <div class="col col-user">
+          <button
+            type="button"
+            class="sort-btn"
+            (click)="setSort(WorklogSortField.User)"
+          >
+            Pracownik <i [class]="sortIcon(WorklogSortField.User)"></i>
+          </button>
+        </div>
+        <div class="col col-role">
+          <button
+            type="button"
+            class="sort-btn"
+            (click)="setSort(WorklogSortField.Role)"
+          >
+            Stanowisko <i [class]="sortIcon(WorklogSortField.Role)"></i>
+          </button>
+        </div>
+        <div class="col col-total text-end">
+          <button
+            type="button"
+            class="sort-btn sort-btn--right"
+            (click)="setSort(WorklogSortField.Total)"
+          >
+            Suma godzin <i [class]="sortIcon(WorklogSortField.Total)"></i>
+          </button>
+        </div>
+      </div>
+
+      @for (row of overview(); track row.user.id) {
+      <div
+        class="overview-row"
+        role="button"
+        (click)="toggleExpand(row.user.id)"
+        [class.expanded]="expandedUserId() === row.user.id"
+      >
+        <div class="col col-user">
+          <strong>{{ displayName(row.user) }}</strong>
+        </div>
+        <div class="col col-role">
+          {{ roleLabel(row.user) }}
+        </div>
+        <div class="col col-total text-end">
+          <span class="badge bg-secondary">{{ row.total }}</span>
+        </div>
+      </div>
+
+      @if (expandedUserId() === row.user.id) {
+      <div class="details">
+        <div class="details-header">
+          <div class="col col-date">Data</div>
+          <div class="col col-hours">Godziny</div>
+          <div class="col col-comment">Komentarz</div>
+        </div>
+
+        @for (r of selectedRows(); track r.date) {
+        <div class="details-row">
+          <div class="col col-date">
+            <div class="date-main">{{ formatDate(r.date) }}</div>
+            <div class="date-sub">{{ r.weekday }}</div>
+          </div>
+          <div class="col col-hours">{{ r.hours != null ? r.hours : "—" }}</div>
+          <div class="col col-comment">
+            <span class="comment" [class.muted]="!r.comment">{{
+              r.comment || "—"
+            }}</span>
+          </div>
+        </div>
+        }
+      </div>
+      } }
+
+      <!-- wiersz podsumowania -->
+      <div class="overview-footer">
+        <div class="col col-user"><strong>Razem</strong></div>
+        <div class="col col-role"></div>
+        <div class="col col-total text-end">
+          <span class="badge bg-success">{{ grandTotal() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
