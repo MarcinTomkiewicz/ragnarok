@@ -126,6 +126,12 @@ export class UserMenuPanelComponent {
     if (min(CoworkerRoles.Gm)) {
       workAndTime.push({ label: 'Czas pracy', path: '/auth/work-log' });
     }
+    if (min(CoworkerRoles.Reception)) {
+      workAndTime.push({
+        label: 'Ewidencja godzin',
+        path: '/auth/work-logs-overview',
+      });
+    }
     if (workAndTime.length)
       sections.push({ title: 'Praca i czas', items: workAndTime });
 

@@ -1,5 +1,6 @@
-import { CommonModule, JsonPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import {
   NgbAccordionModule,
@@ -8,20 +9,6 @@ import {
   NgbPaginationModule,
   NgbTypeaheadModule,
 } from '@ng-bootstrap/ng-bootstrap';
-import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
-import { CategoryType } from '../../core/enums/categories';
-import { FilterOperator } from '../../core/enums/filterOperator';
-import { IFilters } from '../../core/interfaces/i-filters';
-import { Category, Offer, Subcategory } from '../../core/interfaces/i-offers';
-import {
-  BackendService,
-  IPagination,
-} from '../../core/services/backend/backend.service';
-import { CategoryService } from '../../core/services/category/category.service';
-import { PlatformService } from '../../core/services/platform/platform.service';
-import { InfoModalComponent } from '../../common/info-modal/info-modal.component';
-import { SeoService } from '../../core/services/seo/seo.service';
-import { FormsModule } from '@angular/forms';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -32,13 +19,21 @@ import {
   switchMap,
   tap,
 } from 'rxjs';
-
-enum OfferKeys {
-  ID = 'id',
-  TITLE = 'title',
-  PRICE = 'price',
-  STOCK = 'stock',
-}
+import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
+import { InfoModalComponent } from '../../common/info-modal/info-modal.component';
+import { CategoryType } from '../../core/enums/categories';
+import { FilterOperator } from '../../core/enums/filterOperator';
+import { IconClass } from '../../core/enums/icons';
+import { OfferSortField, SortOrder } from '../../core/enums/search';
+import { IFilters } from '../../core/interfaces/i-filters';
+import { Category, Offer, Subcategory } from '../../core/interfaces/i-offers';
+import {
+  BackendService,
+  IPagination,
+} from '../../core/services/backend/backend.service';
+import { CategoryService } from '../../core/services/category/category.service';
+import { PlatformService } from '../../core/services/platform/platform.service';
+import { SeoService } from '../../core/services/seo/seo.service';
 
 @Component({
   selector: 'app-offers-list',
@@ -52,7 +47,6 @@ enum OfferKeys {
     NgbPaginationModule,
     NgbTypeaheadModule,
     FormsModule,
-    JsonPipe,
   ],
   templateUrl: './offers-list.component.html',
   styleUrl: './offers-list.component.scss',
@@ -78,24 +72,24 @@ export class OffersListComponent implements OnInit {
   pageSize = signal<number>(10);
   totalOffers = signal<number>(0);
 
-  offerLabels: Record<OfferKeys, string> = {
-    [OfferKeys.ID]: 'Domyślnie',
-    [OfferKeys.TITLE]: 'Tytuł',
-    [OfferKeys.PRICE]: 'Cena',
-    [OfferKeys.STOCK]: 'Stan',
+  offerLabels: Record<OfferSortField, string> = {
+    [OfferSortField.ID]: 'Domyślnie',
+    [OfferSortField.Title]: 'Tytuł',
+    [OfferSortField.Price]: 'Cena',
+    [OfferSortField.Stock]: 'Stan',
   };
 
   sortOrders = signal(
-    new Map<OfferKeys, 'asc' | 'desc'>([
-      [OfferKeys.TITLE, 'asc'],
-      [OfferKeys.PRICE, 'asc'],
-      [OfferKeys.STOCK, 'asc'],
-      [OfferKeys.ID, 'asc'],
+    new Map<OfferSortField, SortOrder>([
+      [OfferSortField.Title, SortOrder.Asc],
+      [OfferSortField.Price, SortOrder.Asc],
+      [OfferSortField.Stock, SortOrder.Asc],
+      [OfferSortField.ID, SortOrder.Asc],
     ])
   );
 
-  currentSorting = signal<OfferKeys>(OfferKeys.ID);
-  order = signal<'asc' | 'desc'>('asc');
+  currentSorting = signal<OfferSortField>(OfferSortField.ID);
+  order = signal<SortOrder>(SortOrder.Asc);
 
   modalOpened = false;
 
@@ -123,7 +117,7 @@ export class OffersListComponent implements OnInit {
     modalRef.componentInstance.message =
       'Tymczasowo oferta naszego sklepu jest dostępna tylko stacjonarnie w lokalu Ragnarok przy ul. Dolna Wilda 16A w Poznaniu.';
     modalRef.result.finally(() => {
-      this.modalOpened = false; // Ustaw na false, kiedy modal zostanie zamknięty
+      this.modalOpened = false;
     });
   }
 
@@ -142,8 +136,8 @@ export class OffersListComponent implements OnInit {
         : undefined,
     };
 
-    const sortingField: OfferKeys = this.currentSorting();
-    const sortingOrder = this.sortOrders().get(sortingField) ?? 'asc';
+    const sortingField: OfferSortField = this.currentSorting();
+    const sortingOrder = this.sortOrders().get(sortingField) ?? SortOrder.Asc;
 
     this.backendService
       .getAll<Offer>('offers', sortingField, sortingOrder, pagination)
@@ -166,7 +160,7 @@ export class OffersListComponent implements OnInit {
     });
   }
 
-  get sortFields(): OfferKeys[] {
+  get sortFields(): OfferSortField[] {
     return Array.from(this.sortOrders().keys());
   }
 
@@ -195,9 +189,10 @@ export class OffersListComponent implements OnInit {
     }
   }
 
-  sortBy(field: OfferKeys): void {
+  sortBy(field: OfferSortField): void {
     const currentOrder = this.sortOrders().get(field);
-    const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+    const newOrder =
+      currentOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc;
 
     this.sortOrders.update((orders) => {
       orders.set(field, newOrder);
@@ -208,39 +203,50 @@ export class OffersListComponent implements OnInit {
     this.loadOffers();
   }
 
-  getSortIcon(field: OfferKeys): string {
-    const order = this.sortOrders().get(field);
-    return order === 'asc'
-      ? 'bi bi-sort-alpha-down'
-      : 'bi bi-sort-alpha-down-alt';
+  getSortIcon(field: OfferSortField): string {
+    const order = this.sortOrders().get(field) ?? SortOrder.Asc;
+
+    const isNumeric =
+      field === OfferSortField.Price ||
+      field === OfferSortField.Stock ||
+      field === OfferSortField.ID;
+
+    if (isNumeric) {
+      return order === SortOrder.Asc
+        ? IconClass.NumericAsc
+        : IconClass.NumericDesc;
+    }
+    return order === SortOrder.Asc ? IconClass.AlphaAsc : IconClass.AlphaDesc;
   }
 
-search: OperatorFunction<string, Offer[]> = (text$: Observable<string>) =>
-  text$.pipe(
-    debounceTime(300),
-    distinctUntilChanged(),
-    switchMap((term: string) => {
-      if (term.length < 3) return of([]);
+  search: OperatorFunction<string, Offer[]> = (text$: Observable<string>) =>
+    text$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((term: string) => {
+        if (term.length < 3) return of([]);
 
-      if (this.offersFetched) {
-        return of(this.filterOffers(term));
-      }
+        if (this.offersFetched) {
+          return of(this.filterOffers(term));
+        }
 
-      return this.backendService.getAll<Offer>('offers', 'title', 'asc').pipe(
-        tap((offers) => {
-          this.allOffers = offers;
-          this.offersFetched = true;
-        }),
-        map(() => this.filterOffers(term))
-      );
-    })
-  );
+        return this.backendService
+          .getAll<Offer>('offers', OfferSortField.Title, SortOrder.Asc)
+          .pipe(
+            tap((offers) => {
+              this.allOffers = offers;
+              this.offersFetched = true;
+            }),
+            map(() => this.filterOffers(term))
+          );
+      })
+    );
 
-private filterOffers(term: string): Offer[] {
-  return this.allOffers.filter((offer) =>
-    offer.title.toLowerCase().includes(term.toLowerCase())
-  );
-}
+  private filterOffers(term: string): Offer[] {
+    return this.allOffers.filter((offer) =>
+      offer.title.toLowerCase().includes(term.toLowerCase())
+    );
+  }
 
   // formatowanie w dropdownie
   resultFormatter = (offer: Offer) => offer.title;

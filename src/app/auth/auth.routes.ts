@@ -160,11 +160,21 @@ export const AUTH_ROUTES: Routes = [
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
   {
-  path: 'work-log',
-  loadComponent: () =>
-    import('./components/my-work-log/my-work-log.component')
-      .then(m => m.MyWorkLogComponent),
-  canActivate: [AuthGuard],
-  data: { minCoworkerRole: CoworkerRoles.Gm },
-},
+    path: 'work-log',
+    loadComponent: () =>
+      import('./components/my-work-log/my-work-log.component').then(
+        (m) => m.MyWorkLogComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Gm },
+  },
+  {
+    path: 'work-logs-overview',
+    loadComponent: () =>
+      import(
+        './components/work-log-overview/work-log-overview.component'
+      ).then((m) => m.WorkLogOverviewComponent),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Reception },
+  },
 ];

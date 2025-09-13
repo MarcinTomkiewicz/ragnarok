@@ -16,9 +16,17 @@
         [class.active]="monthOffset() === 0"
         (click)="switchTo(0)"
       >
-        Bieżący miesiąc ({{ monthLabel() }})
+        Bieżący miesiąc
+        <span class="month-label-extra">({{ monthLabel() }})</span>
       </button>
     </div>
+
+    @if (isPrevMonthLocked()) {
+    <ngb-alert type="warning" [dismissible]="false" class="mb-3">
+      Edycja ewidencji za <strong>poprzedni miesiąc</strong> jest zablokowana po
+      <strong>5. dniu</strong> bieżącego miesiąca.
+    </ngb-alert>
+    }
 
     <div class="worklog-table">
       <div class="worklog-header">
@@ -52,10 +60,13 @@
                   min="0"
                   max="16"
                   step="0.5"
+                  placeholder="Liczba godzin"
                   [value]="r.hours ?? ''"
                   (input)="onHoursInput(r.date, $event)"
+                  [disabled]="!canEdit()"
                   aria-label="Godziny"
                 />
+
                 <span
                   class="number-input__arrow number-input__arrow--up"
                   aria-hidden="true"
@@ -77,7 +88,7 @@
               "
               aria-label="Przywróć wartości z bazy"
             >
-              <i class="bi bi-trash"></i>
+              <i [class]="IconClass.Trash"></i>
             </button>
           </div>
         </div>
@@ -97,6 +108,7 @@
               [value]="r.comment"
               (input)="onCommentInput(r.date, $event)"
               placeholder="np. event zewnętrzny"
+              [disabled]="!canEdit()"
               aria-label="Komentarz"
             />
           </div>
@@ -113,7 +125,13 @@
         <button class="btn btn-outline btn-sm" (click)="clearAll()">
           Wyczyść
         </button>
-        <button class="btn btn-success btn-sm" (click)="save()">Zapisz</button>
+        <button
+          class="btn btn-success btn-sm"
+          (click)="save()"
+          [disabled]="!canEdit()"
+        >
+          Zapisz
+        </button>
       </div>
     </div>
 
