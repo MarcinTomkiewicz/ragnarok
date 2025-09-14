@@ -3,6 +3,7 @@ import { LoginComponent } from './components/login/login.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { CoworkerRoles } from '../core/enums/roles';
 import { PartyResolver } from './core/resolvers/party-resolver';
+import { EventResolver } from './core/resolvers/event-resolver';
 
 export const AUTH_ROUTES: Routes = [
   { path: 'login', component: LoginComponent },
@@ -171,9 +172,37 @@ export const AUTH_ROUTES: Routes = [
   {
     path: 'work-logs-overview',
     loadComponent: () =>
-      import(
-        './components/work-log-overview/work-log-overview.component'
-      ).then((m) => m.WorkLogOverviewComponent),
+      import('./components/work-log-overview/work-log-overview.component').then(
+        (m) => m.WorkLogOverviewComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Reception },
+  },
+  // {
+  //   path: 'events',
+  //   loadComponent: () =>
+  //     import(
+  //       './components/events/events-admin-list/events-admin-list.component'
+  //     ).then((m) => m.EventsAdminListComponent),
+  //   canActivate: [AuthGuard],
+  //   data: { minCoworkerRole: CoworkerRoles.Reception },
+  // },
+  {
+    path: 'events/new',
+    loadComponent: () =>
+      import('./components/event-form/event-form.component').then(
+        (m) => m.EventFormComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Reception },
+  },
+  {
+    path: 'events/:slug/edit',
+    loadComponent: () =>
+      import('./components/event-form/event-form.component').then(
+        (m) => m.EventFormComponent
+      ),
+    resolve: { event: EventResolver },
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },

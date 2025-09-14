@@ -1,0 +1,60 @@
+@if (!canSignup) {
+<p>Nie masz uprawnień do zgłoszenia się jako prowadzący na ten event.</p>
+} @else {
+<form [formGroup]="form" (ngSubmit)="submit()">
+  @if (event().attractionType === 'SESSION') {
+  <div class="row">
+    <label>Salka</label>
+    <select formControlName="roomName" required>
+      <option value="" disabled>Wybierz salkę</option>
+      @for (r of event().rooms; track r) {
+      <option [value]="r">{{ r }}</option>
+      }
+    </select>
+  </div>
+  }
+
+  <div class="row">
+    <label>Tytuł</label>
+    <input type="text" formControlName="title" required />
+  </div>
+
+  <div class="row">
+    <label>System</label>
+    <input
+      type="text"
+      formControlName="systemId"
+      placeholder="UUID systemu (na razie)"
+    />
+  </div>
+
+  <div class="row">
+    <label>Opis</label>
+    <textarea rows="4" formControlName="description"></textarea>
+  </div>
+
+  <div class="row">
+    <label>Tagi stylu gry</label>
+    <input
+      type="text"
+      placeholder="narrative,rules-light,..."
+      [value]="form.value.playstyleTags?.join(',')"
+      (input)="onPlaystyleTagsInput($event)"
+    />
+  </div>
+
+  <div class="row">
+    <label>Triggery</label>
+    <input
+      type="text"
+      placeholder="..."
+      [value]="form.value.triggers?.join(',')"
+      (input)="onTriggersInput($event)"
+    />
+  </div>
+
+  <div class="actions">
+    <button type="submit">Zgłoś się</button>
+  </div>
+</form>
+}

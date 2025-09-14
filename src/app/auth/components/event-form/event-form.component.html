@@ -1,0 +1,371 @@
+<div class="event-form-panel full-height">
+  <div class="container">
+    <h2 class="section-title">{{ title() }}</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
+      @if (coverPreviewUrl() || form.value.coverImagePath) {
+      <div class="form-group">
+        <img
+          class="cover-preview"
+          [src]="coverPreviewUrl() || form.value.coverImagePath"
+          alt="Okładka"
+        />
+      </div>
+      }
+
+      <div class="form-group">
+        <label class="text-start">Nazwa</label>
+        <input type="text" class="form-control" formControlName="name" />
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Slug</label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="slug"
+          [disabled]="true"
+        />
+        <div class="form-text">
+          Slug generowany automatycznie na podstawie nazwy.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Okładka</label>
+        <input
+          type="file"
+          class="form-control"
+          (change)="onCoverChange($event)"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Opis krótki</label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="shortDescription"
+        />
+      </div>
+      <div class="form-group">
+        <label class="text-start">Opis długi</label>
+        <textarea
+          rows="6"
+          class="form-control"
+          formControlName="longDescription"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Salki</label>
+        <div class="chips">
+          @for (r of roomsList; track r) {
+          <label class="chip">
+            <input
+              type="checkbox"
+              [checked]="form.value.rooms?.includes(r)"
+              (change)="onToggleRoom(r, $event)"
+            />
+            {{ r }}
+          </label>
+          }
+        </div>
+      </div>
+
+      <div class="form-group flags-row">
+        <div class="form-check">
+          <input
+            id="isActive"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="isActive"
+          />
+          <label class="form-check-label" for="isActive">Aktywny</label>
+        </div>
+        <div class="form-check">
+          <input
+            id="isBeg"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="isForBeginners"
+          />
+          <label class="form-check-label" for="isBeg">Dla początkujących</label>
+        </div>
+        <div class="form-check">
+          <input
+            id="reqHosts"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="requiresHosts"
+          />
+          <label class="form-check-label" for="reqHosts"
+            >Wymaga prowadzących</label
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start me-3">Częstotliwość</label>
+        <div class="btn-group">
+          <input
+            type="radio"
+            class="btn-check"
+            id="occSingle"
+            [checked]="form.value.occurrenceMode === 'SINGLE'"
+            (change)="form.controls.occurrenceMode.setValue('SINGLE')"
+          />
+          <label class="btn btn-outline-primary" for="occSingle"
+            >Jednorazowy</label
+          >
+
+          <input
+            type="radio"
+            class="btn-check"
+            id="occRecur"
+            [checked]="form.value.occurrenceMode === 'RECURRENT'"
+            (change)="form.controls.occurrenceMode.setValue('RECURRENT')"
+          />
+          <label class="btn btn-outline-primary" for="occRecur"
+            >Cykliczny</label
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Typ wydarzenia</label>
+        <div ngbDropdown class="d-block">
+          <button
+            type="button"
+            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+            ngbDropdownToggle
+          >
+            {{ attractionLabel() }}
+          </button>
+          <div ngbDropdownMenu class="dropdown-pane">
+            <button
+              class="dropdown-item"
+              [class.active]="
+                form.value.attractionType === AttractionKind.Session
+              "
+              (click)="pickAttractionType(AttractionKind.Session)"
+            >
+              {{ AttractionKindLabel[AttractionKind.Session] }}
+            </button>
+            <button
+              class="dropdown-item"
+              [class.active]="
+                form.value.attractionType === AttractionKind.Discussion
+              "
+              (click)="pickAttractionType(AttractionKind.Discussion)"
+            >
+              {{ AttractionKindLabel[AttractionKind.Discussion] }}
+            </button>
+            <button
+              class="dropdown-item"
+              [class.active]="form.value.attractionType === AttractionKind.None"
+              (click)="pickAttractionType(AttractionKind.None)"
+            >
+              {{ AttractionKindLabel[AttractionKind.None] }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (form.value.occurrenceMode==='SINGLE') {
+      <div class="form-group">
+        <label class="text-start">Data</label>
+        <input type="date" class="form-control" formControlName="singleDate" />
+      </div>
+      } @else {
+      <div class="form-group">
+        <label class="text-start">Data startu cyklu</label>
+        <input type="date" class="form-control" formControlName="startDate" />
+      </div>
+      }
+
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Godzina rozpoczęcia</label>
+          <input type="time" class="form-control" formControlName="startTime" />
+        </div>
+        <div>
+          <label class="text-start">Godzina zakończenia</label>
+          <input type="time" class="form-control" formControlName="endTime" />
+        </div>
+      </div>
+
+      @if (form.value.occurrenceMode==='RECURRENT') {
+      <div class="form-group">
+        <label class="text-start">Powtarzanie</label>
+        <div ngbDropdown class="d-block">
+          <button
+            type="button"
+            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+            ngbDropdownToggle
+          >
+            {{ patternLabel() }}
+          </button>
+          <div ngbDropdownMenu class="dropdown-pane">
+            @for (o of patternOptions; track o.value) {
+            <button
+              class="dropdown-item"
+              [class.active]="form.value.recPattern === o.value"
+              (click)="pickPattern(o.value)"
+            >
+              {{ o.label }}
+            </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (form.value.recPattern==='WEEKLY_1' ||
+      form.value.recPattern==='WEEKLY_2') {
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Dzień tygodnia</label>
+          <div ngbDropdown class="d-block">
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
+              {{ weekdayLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (w of weekdays; track w.value) {
+              <button
+                class="dropdown-item"
+                [class.active]="form.value.weekday === w.value"
+                (click)="pickWeekday(w.value)"
+              >
+                {{ w.label }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-start">Wykluczenia w miesiącu</label>
+          <div ngbDropdown class="d-block">
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
+              {{ excludeNthLongLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (o of excludeNthOptions; track o.value) {
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="form.value.excludeNth === o.value"
+                (click)="pickExcludeNth(o.value)"
+              >
+                {{ excludeNthLongLabelFor(o.value) }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      } @if (form.value.recPattern==='MONTHLY_NTH') {
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Który</label>
+          <div ngbDropdown class="d-block">
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
+              {{ monthlyNthLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (o of monthlyNthOptions; track o.value) {
+              <button
+                class="dropdown-item"
+                [class.active]="form.value.monthlyNth === o.value"
+                (click)="pickMonthlyNth(o.value)"
+              >
+                {{ o.label }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="text-start">Dzień tygodnia</label>
+          <div ngbDropdown class="d-block">
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
+              {{ monthlyWeekdayLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (w of weekdays; track w.value) {
+              <button
+                class="dropdown-item"
+                [class.active]="form.value.monthlyWeekday === w.value"
+                (click)="pickMonthlyWeekday(w.value)"
+              >
+                {{ w.label }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      } @if (form.value.recPattern==='MONTHLY_DOM') {
+      <div class="form-group">
+        <label class="text-start">Dzień miesiąca</label>
+        <input
+          type="number"
+          min="1"
+          max="31"
+          class="form-control"
+          formControlName="dayOfMonth"
+        />
+      </div>
+      }
+
+      <div class="form-group">
+        <label class="text-start">Koniec cyklu</label>
+        <input type="date" class="form-control" formControlName="endDate" />
+      </div>
+      }
+
+      <div class="form-group">
+        <label class="text-start">Link do Facebooka</label>
+        <input type="url" class="form-control" formControlName="facebookLink" />
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Tagi (ustalane automatycznie)</label>
+        <div class="chips">
+          @for (t of form.value.tags; track t) {
+          <span class="chip">{{ EventTagLabel[t] }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">
+          {{ isEdit() ? "Zapisz zmiany" : "Utwórz wydarzenie" }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <ng-template #eventSuccessToast
+    ><strong>Sukces!</strong> Wydarzenie zostało zapisane.</ng-template
+  >
+  <ng-template #eventErrorToast
+    ><strong>Błąd!</strong> Nie udało się zapisać wydarzenia.</ng-template
+  >
+</div>
