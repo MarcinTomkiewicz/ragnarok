@@ -1,0 +1,117 @@
+<div class="events-admin-list">
+  <div class="container">
+    <h2 class="section-title">Wydarzenia</h2>
+
+    @if (eventsSig().length) {
+    <div class="events-tabs" role="tablist" aria-label="Lista eventów">
+      @for (e of eventsSig(); track e.slug) {
+      <button
+        type="button"
+        class="btn btn-outline-primary btn-sm"
+        role="tab"
+        [attr.aria-selected]="selected()?.slug === e.slug"
+        [class.active]="selected()?.slug === e.slug"
+        (click)="pickEvent(e.slug)"
+        [title]="e.name"
+      >
+        {{ e.name }}
+      </button>
+      }
+    </div>
+    } @else {
+    <p class="muted">Brak wydarzeń.</p>
+    } @let ev = selected(); @if (ev) {
+    <div class="event-details">
+      <div class="header">
+        <div class="title">
+          <h3>{{ ev.name }}</h3>
+          <div class="tags">
+            @if (ev.isForBeginners) {
+            <span class="tag">Dla początkujących</span> } @if (ev.requiresHosts)
+            { <span class="tag">Wymaga prowadzących</span> }
+          </div>
+        </div>
+        <div class="actions">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            (click)="goEdit()"
+          >
+            Edytuj
+          </button>
+        </div>
+      </div>
+
+      <div class="meta">
+        <div>
+          Godziny: {{ ev.startTime.slice(0, 5) }}–{{ ev.endTime.slice(0, 5) }}
+        </div>
+        <div>Salki: {{ (ev.rooms || []).join(", ") || "—" }}</div>
+        <div>Typ: {{ AttractionKindLabel[ev.attractionType] }}</div>
+        <div>
+          Zapisy prowadzących: {{ HostSignupScopeLabel[ev.hostSignup] }}
+        </div>
+      </div>
+
+      @if (ev.shortDescription) {
+      <div class="desc">{{ ev.shortDescription }}</div>
+      } @if (ev.singleDate) {
+      <div class="occ single">
+        <h4>Termin</h4>
+        <div class="dates">
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            (click)="goSignup(ev.singleDate)"
+          >
+            {{ ev.singleDate }}
+          </button>
+        </div>
+      </div>
+      } @else {
+      <div class="occ">
+        <h4>Terminy</h4>
+
+        <div class="month-block">
+          <div class="month-title">Ten miesiąc</div>
+          @if (occurrencesThisMonth().length) {
+          <div class="dates">
+            @for (d of occurrencesThisMonth(); track d) {
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              (click)="goSignup(d)"
+            >
+              {{ d }}
+            </button>
+            }
+          </div>
+          } @else {
+          <div class="muted">Brak terminów.</div>
+          }
+        </div>
+
+        <div class="month-block">
+          <div class="month-title">Przyszły miesiąc</div>
+          @if (occurrencesNextMonth().length) {
+          <div class="dates">
+            @for (d of occurrencesNextMonth(); track d) {
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              (click)="goSignup(d)"
+            >
+              {{ d }}
+            </button>
+            }
+          </div>
+          } @else {
+          <div class="muted">Brak terminów.</div>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

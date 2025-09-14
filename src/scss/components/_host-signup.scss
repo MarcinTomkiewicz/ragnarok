@@ -1,0 +1,103 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "layouts/form-panel";
+
+.host-signup-panel {
+  @include section-wrapper;
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .event-header {
+    text-align: center;
+    margin-bottom: 1rem;
+
+    .event-title {
+      margin: 0 0 .35rem 0;
+    }
+
+    .event-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      color: $secondary-text-color;
+      font-size: .95rem;
+
+      .separator { opacity: .6; }
+    }
+  }
+
+  .notice {
+    padding: .75rem .9rem;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    background: $bg-color-light;
+    color: $secondary-text-color;
+  }
+
+  .user-info-form {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      margin-bottom: .35rem;
+      font-weight: 600;
+    }
+  }
+
+  .dropdown-toggle-wide {
+    width: 100%;
+    max-width: 100%;
+  }
+  .dropdown-pane {
+    min-width: 100%;
+    padding: 0.5rem 0;
+  }
+  .dropdown-pane .dropdown-item.active {
+    background: rgba($primary-color, 0.12);
+    border-left: 2px solid $primary-color;
+  }
+
+  .preview-wrap {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-top: .5rem;
+  }
+
+  .host-image-preview {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+  }
+
+  app-systems-picker,
+  style-tags {
+    display: block;
+    padding: .25rem 0;
+  }
+
+  .actions {
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+
+    .btn { min-width: 120px; }
+  }
+
+  .muted { color: $secondary-text-color; }
+  .text-danger { color: $danger-color; }
+}

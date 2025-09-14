@@ -4,97 +4,122 @@
 
 .upcoming-events-section {
   @include section-wrapper;
-}
 
-.events-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  align-items: stretch;
-}
+  .desktop-only { display: none; }
+  .mobile-only  { display: block; }
 
-.event-card {
-  position: relative;
-  background-color: $bg-color;
-  border: 1px solid $border-color;
-  border-radius: 10px;
-  padding: 2rem;
-  text-align: center;
-  transition: all $transition-fast;
-  box-shadow: 0 0 10px rgba($secondary-color, 0.2);
-  display: flex;
-  flex-direction: column;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 20px rgba($secondary-color, 0.4);
+  @media (min-width: $breakpoint-lg) {
+    .desktop-only { display: grid; }
+    .mobile-only  { display: none; }
   }
 
-  .image-wrapper {
+  .events-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    align-items: stretch;
+    justify-items: center;
+  }
+
+  .event-card {
     position: relative;
-    margin-bottom: 1rem;
-
-    img {
-      width: 100%;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-  }
-
-  .beginner-label {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background-color: lighten($bg-color, 10%);
-    color: $success-color;
-    font-size: $font-size-xs;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-weight: 600;
-    box-shadow: 0 0 5px rgba($success-color, 0.3);
-    z-index: 3;
-  }
-
-  .event-content {
+    background-color: $bg-color;
+    border: 1px solid $border-color;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    transition: all $transition-fast;
+    box-shadow: 0 0 10px rgba($secondary-color, 0.2);
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-
-    h3 {
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-      min-height: 4.5rem;
-      @include truncate-lines(3)
+    max-width: 357px;
+    
+    @media (max-width: $breakpoint-sm) {
+      max-width: 310px;
     }
 
-    .event-date {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 20px rgba($secondary-color, 0.4);
+    }
+
+    .image-wrapper {
+      position: relative;
       margin-bottom: 1rem;
 
       img {
-        width: 16px;
-        height: 16px;
+        width: 100%;
+        border-radius: 8px;
+        object-fit: cover;
       }
 
-      span {
-        font-size: $font-size-sm;
+      .chip-row {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        display: inline-flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        z-index: 3;
       }
     }
 
-    p {
-      flex-grow: 0;
-      margin-bottom: 1rem;
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: $font-size-xs;
+      border: 1px solid $border-color;
+      background: lighten($bg-color, 4%);
+      color: $text-color;
+
+      &.chip-kind {
+        background: rgba($primary-color, 0.08);
+        border-color: rgba($primary-color, 0.35);
+        color: $primary-color;
+        font-weight: 600;
+      }
+      &.chip-beginners {
+        background: rgba($success-color, 0.1);
+        border-color: rgba($success-color, 0.35);
+        color: darken($success-color, 5%);
+        font-weight: 600;
+      }
     }
 
-    .event-actions {
-      margin-top: auto;
+    .event-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      padding: 1rem;
 
-      .btn {
-        margin-top: 1rem;
-        padding: 0.5rem 1.25rem;
+      h3 {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        min-height: 4.5rem;
+        @include truncate-lines(3);
+      }
+
+      .event-date {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+
+        img { width: 16px; height: 16px; }
+        span { font-size: $font-size-sm; }
+      }
+
+      p {
+        flex-grow: 0;
+        margin-bottom: 1rem;
+      }
+
+      .event-actions {
+        margin-top: auto;
+        .btn { margin-top: 1rem; padding: 0.5rem 1.25rem; }
       }
     }
   }

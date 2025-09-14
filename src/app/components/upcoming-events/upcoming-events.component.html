@@ -5,30 +5,58 @@
       Dołącz do nas na specjalne wydarzenia, warsztaty i sesje one-shot.
     </p>
 
-    <div class="events-grid">
-      @for (event of upcomingEvents; let i = $index; track i) {
-      <div class="event-card">
-        <div class="image-wrapper">
-          <img [src]="event.image" [alt]="event.name" />
-          @if (event.isForBeginners) {
-          <span class="beginner-label">Dla początkujących</span>
-          }
-        </div>
-        <div class="event-content">
-          <h3>{{ event.name }}</h3>
-          <div class="event-date">
-            <img src="/icons/calendar.svg" alt="calendar" />
-            <span>{{ event.eventDate | date: 'dd.MM.yyyy'}}</span>
+    <div class="events-grid desktop-only">
+      @for (event of upcomingEvents; track trackBySlugDate(event)) {
+        <div class="event-card">
+          <div class="image-wrapper">
+            <img [src]="event.coverUrl" [alt]="event.name" />
+            <div class="chip-row">
+              <span class="chip chip-kind">{{ getAttractionLabel(event.attractionKind) }}</span>
+              @if (event.isForBeginners) { <span class="chip chip-beginners">Dla początkujących</span> }
+            </div>
           </div>
-          <p>{{ event.shortDescription }}</p>
-          <div class="event-actions">
-            <a [routerLink]="['/event', event.id]" class="btn btn-outline">
-              Szczegóły
-            </a>
+          <div class="event-content">
+            <h3>{{ event.name }}</h3>
+            <div class="event-date">
+              <img src="/icons/calendar.svg" alt="calendar" />
+              <span>{{ event.occurrenceDate | date : 'dd.MM.yyyy' }}</span>
+            </div>
+            <p>{{ event.shortDescription }}</p>
+            <div class="event-actions">
+              <a [routerLink]="detailsLink(event)" class="btn btn-outline">Szczegóły</a>
+            </div>
           </div>
         </div>
-      </div>
       }
     </div>
+
+    <app-card-carousel class="mobile-only"
+                       [items]="upcomingEvents"
+                       [slideWidth]="357"
+                       [gap]="24"
+                       ariaLabel="Nadchodzące wydarzenia">
+      <ng-template let-event>
+        <div class="event-card">
+          <div class="image-wrapper">
+            <img [src]="event.coverUrl" [alt]="event.name" />
+            <div class="chip-row">
+              <span class="chip chip-kind">{{ getAttractionLabel(event.attractionKind) }}</span>
+              @if (event.isForBeginners) { <span class="chip chip-beginners">Dla początkujących</span> }
+            </div>
+          </div>
+          <div class="event-content">
+            <h3>{{ event.name }}</h3>
+            <div class="event-date">
+              <img src="/icons/calendar.svg" alt="calendar" />
+              <span>{{ event.occurrenceDate | date : 'dd.MM.yyyy' }}</span>
+            </div>
+            <p>{{ event.shortDescription }}</p>
+            <div class="event-actions">
+              <a [routerLink]="detailsLink(event)" class="btn btn-outline">Szczegóły</a>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </app-card-carousel>
   </div>
 </section>

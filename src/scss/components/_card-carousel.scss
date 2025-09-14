@@ -1,0 +1,70 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: $border-radius;
+  isolation: isolate;
+
+  .track {
+    display: flex;
+    width: 100%;
+    transition: transform $transition-fast;
+    z-index: 1;
+    &.no-anim { transition: none !important; }
+  }
+
+  .slide {
+    min-width: 0;
+    padding: 0;
+    &:last-child { margin-right: 0 !important; }
+  }
+
+  .nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 1px solid $border-color;
+    background: $bg-color-light;
+    color: $text-color;
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color $transition-fast, border-color $transition-fast;
+
+    &:hover { background: lighten($bg-color-light, 4%); }
+
+    &.prev { left: 8px; }
+    &.next { right: 8px; }
+
+    @media (max-width: $breakpoint-sm) {
+      width: 32px; height: 32px;
+      &.prev { left: 4px; }
+      &.next { right: 4px; }
+    }
+  }
+
+  .dots {
+    display: flex;
+    gap: .4rem;
+    justify-content: center;
+    margin-top: .75rem;
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: $border-color;
+      border: 0;
+      cursor: pointer;
+      &.active { background: $primary-color; }
+    }
+  }
+
+  @media (max-width: 360px) {
+    .nav { width: 34px; height: 34px; }
+  }
+}

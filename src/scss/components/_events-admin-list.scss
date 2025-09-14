@@ -1,0 +1,89 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "layouts/form-panel";
+
+.events-admin-list {
+  @include section-wrapper;
+
+  .events-tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid $border-color;
+
+    .btn {
+      white-space: nowrap;
+    }
+  }
+
+  .event-details {
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .title h3 {
+      margin: 0 0 0.25rem 0;
+    }
+
+    .tags {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      font-size: 0.8rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.5rem;
+      background: $bg-color-light;
+      border: 1px solid $border-color;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      color: $text-color; // zostaje neutral
+    }
+
+    .desc {
+      margin-bottom: 1rem;
+    }
+
+    .occ {
+      h4 {
+        margin: 0.5rem 0;
+      }
+
+      .month-block {
+        margin-bottom: 0.75rem;
+      }
+
+      .month-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .dates {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+
+        /* Używamy .btn btn-outline btn-sm – nic nie stylujemy dodatkowo */
+      }
+    }
+  }
+
+  .muted {
+    color: $secondary-text-color;
+  }
+}

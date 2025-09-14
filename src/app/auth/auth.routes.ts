@@ -178,15 +178,22 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
-  // {
-  //   path: 'events',
-  //   loadComponent: () =>
-  //     import(
-  //       './components/events/events-admin-list/events-admin-list.component'
-  //     ).then((m) => m.EventsAdminListComponent),
-  //   canActivate: [AuthGuard],
-  //   data: { minCoworkerRole: CoworkerRoles.Reception },
-  // },
+{
+  path: 'events',
+  loadComponent: () =>
+    import('./components/events-admin-list/events-admin-list.component')
+      .then(m => m.EventsAdminListComponent),
+  canActivate: [AuthGuard],
+  data: { minCoworkerRole: CoworkerRoles.Gm },
+},
+{
+  path: 'events/:slug/host-signup/:date',
+  loadComponent: () =>
+    import('./components/host-signup-form/host-signup-form.component')
+      .then(m => m.HostSignupFormComponent),
+  canActivate: [AuthGuard],
+  data: { minCoworkerRole: CoworkerRoles.Gm },
+},
   {
     path: 'events/new',
     loadComponent: () =>
@@ -206,4 +213,13 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
+  //   {
+  //   path: 'events/host-signup',
+  //   loadComponent: () =>
+  //     import('./components/host-signup-form/host-signup-form.component').then(
+  //       (m) => m.HostSignupFormComponent
+  //     ),
+  //   canActivate: [AuthGuard],
+  //   data: { minCoworkerRole: CoworkerRoles.Gm },
+  // },
 ];

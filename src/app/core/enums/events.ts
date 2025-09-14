@@ -27,8 +27,8 @@ export enum HostSignupScope {
   Staff = 'STAFF',
 }
 export const HostSignupScopeLabel: Record<HostSignupScope, string> = {
-  [HostSignupScope.Any]: 'Wszyscy (zalogowani)',
-  [HostSignupScope.Staff]: 'Pracownicy (GM+)',
+  [HostSignupScope.Any]: 'Zalogowani użytkownicy',
+  [HostSignupScope.Staff]: 'Pracownicy',
 };
 
 export enum RecurrenceKind {

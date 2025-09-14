@@ -1,60 +1,178 @@
-@if (!canSignup) {
-<p>Nie masz uprawnień do zgłoszenia się jako prowadzący na ten event.</p>
-} @else {
-<form [formGroup]="form" (ngSubmit)="submit()">
-  @if (event().attractionType === 'SESSION') {
-  <div class="row">
-    <label>Salka</label>
-    <select formControlName="roomName" required>
-      <option value="" disabled>Wybierz salkę</option>
-      @for (r of event().rooms; track r) {
-      <option [value]="r">{{ r }}</option>
+<div class="host-signup-panel">
+  <div class="container">
+    <h2 class="section-title mb-4">Zgłoszenie prowadzącego</h2>
+
+    @if (loadingSig()) {
+    <p class="muted">Ładowanie…</p>
+    } @else if (loadErrorSig()) {
+    <p class="muted">{{ loadErrorSig() }}</p>
+    } @else if (!evSig()) {
+    <p class="muted">Brak danych wydarzenia.</p>
+    } @else { @let ev = evSig();
+
+    <div class="event-header">
+      <h3 class="event-title">{{ ev!.name }}</h3>
+      <div class="event-meta">
+        <span class="meta-item">{{ formattedDateSig() }}</span>
+        <span class="separator">•</span>
+        <span class="meta-item"
+          >{{ ev!.startTime.slice(0, 5) }}–{{ ev!.endTime.slice(0, 5) }}</span
+        >
+        <span class="separator">•</span>
+        <span class="meta-item">{{ (ev!.rooms || []).join(", ") || "—" }}</span>
+      </div>
+    </div>
+
+    @if (!canSignup) {
+    <div class="notice">
+      Nie masz uprawnień do zgłoszenia się jako prowadzący na ten event.
+    </div>
+    } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
+      @if (ev!.rooms.length) {
+      <div class="form-group">
+        <label class="text-start">Salka</label>
+
+        <div class="d-block" ngbDropdown>
+          <button
+            type="button"
+            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+            ngbDropdownToggle
+            [disabled]="takenLoadingSig() || allRoomsTaken()"
+          >
+            {{ selectedRoomLabel() }}
+          </button>
+          <div ngbDropdownMenu class="dropdown-pane dropdown-list">
+            @for (r of (ev!.rooms || []); track r) {
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.active]="form.value.roomName === r"
+              [disabled]="isRoomTaken(r)"
+              (click)="pickRoom(r)"
+            >
+              {{ r }} @if (isRoomTaken(r)) {<span class="muted"
+                >&nbsp;— zajęta</span
+              >}
+            </button>
+            } @if (!ev!.rooms.length) {
+            <div class="dropdown-empty">Brak salek.</div>
+            }
+          </div>
+        </div>
+
+        @if (allRoomsTaken()) {
+        <div class="form-text text-danger mt-1">
+          Wszystkie salki są już zajęte w tym terminie.
+        </div>
+        }
+      </div>
       }
-    </select>
-  </div>
-  }
 
-  <div class="row">
-    <label>Tytuł</label>
-    <input type="text" formControlName="title" required />
-  </div>
+      <div class="form-group">
+        <label class="text-start">Tytuł</label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="title"
+          required
+        />
+      </div>
 
-  <div class="row">
-    <label>System</label>
-    <input
-      type="text"
-      formControlName="systemId"
-      placeholder="UUID systemu (na razie)"
-    />
-  </div>
+      <div class="form-group">
+        <label class="text-start">System</label>
+        @if (systemsLoadingSig()) {
+        <div class="muted">Ładowanie listy systemów…</div>
+        } @else {
+        <app-systems-picker
+          [systems]="systemsSig()"
+          [selectedIds]="form.value.systemId ? [form.value.systemId] : []"
+          (selectedChange)="onSystemsChange($event)"
+        >
+        </app-systems-picker>
+        }
+      </div>
 
-  <div class="row">
-    <label>Opis</label>
-    <textarea rows="4" formControlName="description"></textarea>
-  </div>
+      <div class="form-group">
+        <label class="text-start">Tagi stylu gry (max 3)</label>
+        <style-tags
+          [selected]="playstyleSelected()"
+          (selectedChange)="onStyleTagsChange($event)"
+        >
+        </style-tags>
+      </div>
 
-  <div class="row">
-    <label>Tagi stylu gry</label>
-    <input
-      type="text"
-      placeholder="narrative,rules-light,..."
-      [value]="form.value.playstyleTags?.join(',')"
-      (input)="onPlaystyleTagsInput($event)"
-    />
-  </div>
+      <div class="form-group">
+        <label class="text-start">Triggery (max 12)</label>
 
-  <div class="row">
-    <label>Triggery</label>
-    <input
-      type="text"
-      placeholder="..."
-      [value]="form.value.triggers?.join(',')"
-      (input)="onTriggersInput($event)"
-    />
-  </div>
+        @if (triggersLoadingSig()) {
+        <div class="muted">Ładowanie triggerów…</div>
+        } @else if (!triggersSig().length) {
+        <div class="muted">Brak triggerów.</div>
+        } @else {
+        <app-trigger-picker
+          [all]="triggersSig()"
+          [selected]="form.value.triggers ?? []"
+          [maxSelected]="12"
+          (selectedChange)="form.controls.triggers.setValue($event)"
+        >
+        </app-trigger-picker>
+        }
+      </div>
 
-  <div class="actions">
-    <button type="submit">Zgłoś się</button>
+      <div class="form-group">
+        <label class="text-start">Obrazek sesji (opcjonalnie)</label>
+        <input
+          type="file"
+          accept="image/*"
+          class="form-control"
+          (change)="onImageChange($event)"
+        />
+        @if (hostImagePreviewUrlSig()) {
+        <div class="preview-wrap">
+          <img
+            class="host-image-preview"
+            [src]="hostImagePreviewUrlSig()!"
+            alt="Podgląd obrazka"
+          />
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            (click)="clearImage()"
+          >
+            Usuń obrazek
+          </button>
+        </div>
+        }
+        <div class="form-text">
+          Najlepiej obraz poziomy; większe pliki zostaną skompresowane
+          (AVIF/WebP, ~max 1600×1200).
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-outline" (click)="goBack()">
+          Wstecz
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="(ev!.rooms.length && allRoomsTaken()) || form.invalid"
+        >
+          Zgłoś się
+        </button>
+      </div>
+    </form>
+    }
+
+    <!-- Toastery (jak w CreateParty) -->
+    <ng-template #hostSuccessToast>
+      <strong>Sukces!</strong> Zgłoszenie zostało zapisane.
+    </ng-template>
+
+    <ng-template #hostErrorToast>
+      <strong>Błąd!</strong> Nie udało się zapisać zgłoszenia.
+    </ng-template>
+    }
   </div>
-</form>
-}
+</div>

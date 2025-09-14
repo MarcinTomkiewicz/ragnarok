@@ -92,18 +92,20 @@ export class UserMenuPanelComponent {
     }
     sections.push({ title: 'Drużyny', items: parties });
 
-    // Wydarzenia (NOWE)
-    const eventsAdmin: MenuItem[] = [];
+    const events: MenuItem[] = [];
+    if (min(CoworkerRoles.Gm)) {
+      events.push({
+        label: 'Zgłoś się jako prowadzący',
+        path: '/auth/events/host-signup',
+      });
+    }
     if (min(CoworkerRoles.Reception)) {
-      eventsAdmin.push(
+      events.push(
         { label: 'Nowy event', path: '/auth/events/new' },
         { label: 'Lista eventów', path: '/auth/events' }
       );
-      // jeśli kiedyś będziemy mieli licznik zgłoszeń prowadzących:
-      // eventsAdmin.push({ label: 'Zgłoszenia prowadzących', path: '/auth/events/hosts', badgeBucket: NotificationBucket.EventHostRequests });
     }
-    if (eventsAdmin.length)
-      sections.push({ title: 'Wydarzenia', items: eventsAdmin });
+    if (events.length) sections.push({ title: 'Wydarzenia', items: events });
 
     // Dyspozycyjność
     const availability: MenuItem[] = [];
