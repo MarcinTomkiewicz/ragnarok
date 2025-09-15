@@ -8,7 +8,7 @@ import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { IFilter } from '../../interfaces/i-filters';
 import { SupabaseService } from '../supabase/supabase.service';
-import { toCamelCase, toSnakeKey } from '../../utils/type-mappers';
+import { toCamelCase, toSnakeKey, toSnakeCase } from '../../utils/type-mappers';
 import { ImageStorageService } from './image-storage/image-storage.service';
 import { applyFilters } from '../../utils/query';
 import { FilterOperator } from '../../enums/filterOperator';
