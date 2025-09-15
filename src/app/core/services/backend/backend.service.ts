@@ -162,7 +162,7 @@ export class BackendService {
 createMany<T>(table: string, data: T[]): Observable<T[]> {
   if (!data.length) return of([]);
 
-  const snakeData = data.map((item) => toSnakeCase(item));
+  const snakeData = toSnakeCase(data);
 
   return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
     map((response) => {
