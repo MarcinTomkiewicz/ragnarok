@@ -159,16 +159,18 @@ export class BackendService {
     );
   }
 
-  createMany<T>(table: string, data: T[]): Observable<T[]> {
-    if (!data.length) return of([]);
+createMany<T>(table: string, data: T[]): Observable<T[]> {
+  if (!data.length) return of([]);
 
-    return from(this.supabase.from(table).insert(data).select('*')).pipe(
-      map((response) => {
-        if (response.error) throw new Error(response.error.message);
-        return (response.data || []).map((item) => toCamelCase<T>(item));
-      })
-    );
-  }
+  const snakeData = data.map((item) => toSnakeCase(item));
+
+  return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
+    map((response) => {
+      if (response.error) throw new Error(response.error.message);
+      return (response.data || []).map((item) => toCamelCase<T>(item));
+    })
+  );
+}
 
   update<T>(table: string, id: string | number, data: Partial<T>): Observable<T> {
     return from(
