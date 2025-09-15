@@ -1,13 +1,12 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { addDays, parseISO, isAfter, isEqual } from 'date-fns';
+import { addDays, isAfter, isEqual, parseISO } from 'date-fns';
 
-import { EventService } from '../../core/services/event/event.service';
-import { ImageStorageService } from '../../core/services/backend/image-storage/image-storage.service';
-import { EventFull } from '../../core/interfaces/i-events';
 import { AttractionKind, AttractionKindLabel } from '../../core/enums/events';
-import { CardCarouselComponent } from '../../common/card-carousel/card-carousel.component';
+import { EventFull } from '../../core/interfaces/i-events';
+import { ImageStorageService } from '../../core/services/backend/image-storage/image-storage.service';
+import { EventService } from '../../core/services/event/event.service';
 
 type UpcomingCard = {
   id: string;
@@ -25,7 +24,7 @@ type UpcomingCard = {
 @Component({
   selector: 'app-upcoming-events',
   standalone: true,
-  imports: [RouterLink, CommonModule, CardCarouselComponent],
+  imports: [RouterLink, CommonModule],
   templateUrl: './upcoming-events.component.html',
   styleUrl: './upcoming-events.component.scss',
 })
@@ -58,7 +57,11 @@ export class UpcomingEventsComponent {
     });
   }
 
-  private nextOccurrencesFor(ev: EventFull, fromIso: string, toIso: string): string[] {
+  private nextOccurrencesFor(
+    ev: EventFull,
+    fromIso: string,
+    toIso: string
+  ): string[] {
     const out = this.events.listOccurrencesFE(ev, fromIso, toIso);
     const from = parseISO(fromIso);
     return out.filter((d) => {
