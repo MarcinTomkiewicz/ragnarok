@@ -2,16 +2,15 @@ import { inject, Injectable } from '@angular/core';
 import {
   PostgrestResponse,
   PostgrestSingleResponse,
-  SupabaseClient,
 } from '@supabase/supabase-js';
 import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IFilter } from '../../interfaces/i-filters';
-import { SupabaseService } from '../supabase/supabase.service';
-import { toCamelCase, toSnakeKey, toSnakeCase } from '../../utils/type-mappers';
-import { ImageStorageService } from './image-storage/image-storage.service';
-import { applyFilters } from '../../utils/query';
 import { FilterOperator } from '../../enums/filterOperator';
+import { IFilter } from '../../interfaces/i-filters';
+import { applyFilters } from '../../utils/query';
+import { toCamelCase, toSnakeCase, toSnakeKey } from '../../utils/type-mappers';
+import { SupabaseService } from '../supabase/supabase.service';
+import { ImageStorageService } from './image-storage/image-storage.service';
 
 export interface IPagination {
   page?: number;
@@ -37,7 +36,7 @@ export class BackendService {
     if (joins) {
       select = `*, ${joins}`;
     }
-    
+
     let query = this.supabase.from(table).select(select);
     query = applyFilters(query, pagination?.filters);
 
@@ -103,16 +102,19 @@ export class BackendService {
     });
   }
 
-  getBySlug<T extends object>(table: string, slug: string): Observable<T | null> {
-  return from(
-    this.supabase.from(table).select('*').eq('slug', slug).single()
-  ).pipe(
-    map((response: PostgrestSingleResponse<T>) => {
-      if (response.error || !response.data) return null;
-      return toCamelCase<T>(response.data); // Konwertujemy na camelCase, jak to robimy w innych metodach
-    })
-  );
-}
+  getBySlug<T extends object>(
+    table: string,
+    slug: string
+  ): Observable<T | null> {
+    return from(
+      this.supabase.from(table).select('*').eq('slug', slug).single()
+    ).pipe(
+      map((response: PostgrestSingleResponse<T>) => {
+        if (response.error || !response.data) return null;
+        return toCamelCase<T>(response.data); // Konwertujemy na camelCase, jak to robimy w innych metodach
+      })
+    );
+  }
 
   getCount<T extends object>(
     table: string,
@@ -159,20 +161,24 @@ export class BackendService {
     );
   }
 
-createMany<T>(table: string, data: T[]): Observable<T[]> {
-  if (!data.length) return of([]);
+  createMany<T>(table: string, data: T[]): Observable<T[]> {
+    if (!data.length) return of([]);
 
-  const snakeData = toSnakeCase(data);
+    const snakeData = toSnakeCase(data);
 
-  return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
-    map((response) => {
-      if (response.error) throw new Error(response.error.message);
-      return (response.data || []).map((item) => toCamelCase<T>(item));
-    })
-  );
-}
+    return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
+      map((response) => {
+        if (response.error) throw new Error(response.error.message);
+        return (response.data || []).map((item) => toCamelCase<T>(item));
+      })
+    );
+  }
 
-  update<T>(table: string, id: string | number, data: Partial<T>): Observable<T> {
+  update<T>(
+    table: string,
+    id: string | number,
+    data: Partial<T>
+  ): Observable<T> {
     return from(
       this.supabase.from(table).update(data).eq('id', id).single()
     ).pipe(
