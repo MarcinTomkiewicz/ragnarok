@@ -158,13 +158,13 @@ export class EventDetailsComponent {
   // godziny — jeden label
   readonly timeRangeLabel = computed(() => {
     const ev = this.event();
-    if (!ev) return '—';
+    if (!ev) return '-';
     const st = (ev.startTime ?? '').slice(0, 5);
     const et = (ev.endTime ?? '').slice(0, 5);
-    if (!st && !et) return '—';
+    if (!st && !et) return ' - ';
     if (st === '00:00' && (!et || et === '23:59')) return 'Cały dzień';
-    if (st && et) return `${st}–${et}`;
-    return st || et || '—';
+    if (st && et) return `${st} - ${et}`;
+    return st || et || '-';
   });
 
   // tagi + chip „Nabór MG” jeśli potrzeba prowadzących
