@@ -13,8 +13,8 @@
 
   @media (max-width: $breakpoint-md) {
     .events-grid > .event-card:nth-child(3) {
-      grid-column: 1 / -1;       // span na obie kolumny
-      justify-self: center;       // środek
+      grid-column: 1 / -1;       
+      justify-self: center;      
     }
   }
 
