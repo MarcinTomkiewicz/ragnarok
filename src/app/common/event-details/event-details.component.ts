@@ -143,10 +143,10 @@ export class EventDetailsComponent {
 
   
 private readonly tagBadgeClass: Record<EventTag, string> = {
-  [EventTag.Beginners]: 'member',      // „Dla początkujących” — zielonkawy akcent
-  [EventTag.Session]: 'gm',            // „Sesja” — fioletowy akcent (GM)
-  [EventTag.Discussion]: 'muted',      // „Dyskusja” — spokojniejszy
-  [EventTag.Entertainment]: 'golden',  // „Rozrywka” — złoty akcent
+  [EventTag.Beginners]: 'green',
+  [EventTag.Session]: 'violet',
+  [EventTag.Discussion]: 'muted',
+  [EventTag.Entertainment]: 'golden',
 };
 
 readonly tagBadges = computed(() => {

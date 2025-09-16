@@ -62,6 +62,9 @@
 @import "layouts/table";
 @import "layouts/form-panel";
 
+// Utilities
+@import "utilities/tag-badge-aliases";
+
 // Vendors (Bootstrap)
 @import "bootstrap/scss/bootstrap";
 @import "bootstrap-icons/font/bootstrap-icons";
