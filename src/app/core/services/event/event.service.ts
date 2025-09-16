@@ -128,63 +128,97 @@ export class EventService {
 
   updateEvent(
     id: string,
-    patch: Partial<EventFull>,
+    patch: Partial<EventFull> & { recurrence?: RecurrenceRule | null },
     coverFile?: File,
     regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE'
   ): Observable<void> {
     const { recurrence, tags, rooms, ...core } = patch;
-    const ops: Observable<unknown>[] = [];
+    const ops: Observable<void>[] = [];
 
+    // ——— core (new_events): tylko jeśli jest co patchować
     if (Object.keys(core).length) {
-      ops.push(this.backend.update('new_events', id, toSnakeCase(core)));
+      // toSnakeCase zwraca any/unknown — ujednolicamy do Partial<Record<string, unknown>>
+      const coreSnake = toSnakeCase(core) as Partial<Record<string, unknown>>;
+
+      ops.push(
+        this.backend
+          .update<Record<string, unknown>>('new_events', id, coreSnake)
+          .pipe(map(() => void 0))
+      );
     }
+
+    // ——— TAGI
     if (Array.isArray(tags)) {
       ops.push(
-        this.backend.delete('event_tags', {
-          event_id: { operator: FilterOperator.EQ, value: id },
-        } as any)
-      );
-      if (tags.length)
-        ops.push(
-          this.backend.createMany(
-            'event_tags',
-            tags.map((t) => ({ event_id: id, tag: t }))
+        this.backend
+          .delete('event_tags', {
+            event_id: { operator: FilterOperator.EQ, value: id },
+          } as any)
+          .pipe(
+            switchMap(() =>
+              tags.length
+                ? this.backend.createMany(
+                    'event_tags',
+                    tags.map((t) => ({ event_id: id, tag: t }))
+                  )
+                : of(void 0)
+            ),
+            map(() => void 0)
           )
-        );
+      );
     }
+
+    // ——— ROOMS
     if (Array.isArray(rooms)) {
       ops.push(
-        this.backend.delete('event_rooms', {
-          event_id: { operator: FilterOperator.EQ, value: id },
-        } as any)
-      );
-      if (rooms.length)
-        ops.push(
-          this.backend.createMany(
-            'event_rooms',
-            rooms.map((r) => ({ event_id: id, room_name: r }))
+        this.backend
+          .delete('event_rooms', {
+            event_id: { operator: FilterOperator.EQ, value: id },
+          } as any)
+          .pipe(
+            switchMap(() =>
+              rooms.length
+                ? this.backend.createMany(
+                    'event_rooms',
+                    rooms.map((r) => ({ event_id: id, room_name: r }))
+                  )
+                : of(void 0)
+            ),
+            map(() => void 0)
           )
-        );
-    }
-    if (recurrence !== undefined) {
-      ops.push(
-        this.backend.delete('event_recurrence', {
-          event_id: { operator: FilterOperator.EQ, value: id },
-        } as any)
       );
-      if (recurrence) {
+    }
+
+    // ——— RECURRENCE: undefined = brak zmian, null = usuń, obiekt = upsert
+    if (recurrence !== undefined) {
+      if (recurrence === null) {
         ops.push(
-          this.backend.create('event_recurrence', {
-            event_id: id,
-            kind: recurrence.kind,
-            interval: recurrence.interval,
-            byweekday: recurrence.byweekday ?? null,
-            monthly_nth: recurrence.monthlyNth ?? null,
-            monthly_weekday: recurrence.monthlyWeekday ?? null,
-            start_date: recurrence.startDate,
-            end_date: recurrence.endDate ?? null,
-            exdates: recurrence.exdates ?? [],
-          })
+          this.backend
+            .delete('event_recurrence', {
+              event_id: { operator: FilterOperator.EQ, value: id },
+            } as any)
+            .pipe(map(() => void 0))
+        );
+      } else {
+        ops.push(
+          this.backend
+            .upsert(
+              'event_recurrence',
+              {
+                event_id: id,
+                kind: recurrence.kind,
+                interval: recurrence.interval,
+                byweekday: recurrence.byweekday ?? null,
+                monthly_nth: recurrence.monthlyNth ?? null,
+                monthly_weekday: recurrence.monthlyWeekday ?? null,
+                // monthly_day_of_month: recurrence.dayOfMonth ?? null, // tylko jeśli masz tę kolumnę w DB
+                start_date: recurrence.startDate,
+                end_date: recurrence.endDate ?? null,
+                exdates: recurrence.exdates ?? [],
+              } as any,
+              'event_id'
+            )
+            .pipe(map(() => void 0))
         );
       }
     }
@@ -216,16 +250,16 @@ export class EventService {
   }
 
   private uploadCover(eventId: string, file: File): Observable<void> {
-  const basePath = `events/${eventId}`;
-  return this.images
-    .uploadOrReplaceImage(file, basePath, null)
-    .pipe(
+    const basePath = `events/${eventId}`;
+    return this.images.uploadOrReplaceImage(file, basePath, null).pipe(
       switchMap((fullPath) =>
-        this.backend.update('new_events', eventId, { cover_image_path: fullPath } as any)
+        this.backend.update('new_events', eventId, {
+          cover_image_path: fullPath,
+        } as any)
       ),
       map(() => void 0)
     );
-}
+  }
 
   listOccurrencesFE(ev: EventFull, fromIso: string, toIso: string): string[] {
     const out: string[] = [];
