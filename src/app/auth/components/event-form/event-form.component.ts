@@ -36,7 +36,11 @@ import {
   MonthlyNth,
   MonthlyNthLabel,
 } from '../../../core/enums/events';
-import { formatYmdLocal, weekdayOptionsPl } from '../../../core/utils/weekday-options';
+import {
+  formatYmdLocal,
+  weekdayOptionsPl,
+} from '../../../core/utils/weekday-options';
+import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
 
 type OccurrenceMode = 'SINGLE' | 'RECURRENT';
 type RecPattern = 'WEEKLY_1' | 'WEEKLY_2' | 'MONTHLY_NTH' | 'MONTHLY_DOM';
@@ -54,6 +58,7 @@ export class EventFormComponent implements OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly images = inject(ImageStorageService);
   private readonly destroyRef = inject(DestroyRef);
 
   event = input<EventFull | null>(null);
@@ -76,9 +81,18 @@ export class EventFormComponent implements OnDestroy {
 
   readonly patternOptions: { value: RecPattern; label: string }[] = [
     { value: 'WEEKLY_1', label: WeeklyIntervalLabel[WeeklyInterval.EveryWeek] },
-    { value: 'WEEKLY_2', label: WeeklyIntervalLabel[WeeklyInterval.EveryTwoWeeks] },
-    { value: 'MONTHLY_NTH', label: RecurrenceKindLabel[RecurrenceKind.MonthlyNthWeekday] },
-    { value: 'MONTHLY_DOM', label: RecurrenceKindLabel[RecurrenceKind.MonthlyDayOfMonth] },
+    {
+      value: 'WEEKLY_2',
+      label: WeeklyIntervalLabel[WeeklyInterval.EveryTwoWeeks],
+    },
+    {
+      value: 'MONTHLY_NTH',
+      label: RecurrenceKindLabel[RecurrenceKind.MonthlyNthWeekday],
+    },
+    {
+      value: 'MONTHLY_DOM',
+      label: RecurrenceKindLabel[RecurrenceKind.MonthlyDayOfMonth],
+    },
   ];
 
   readonly monthlyNthOptions = [
@@ -130,7 +144,9 @@ export class EventFormComponent implements OnDestroy {
     return this.form.controls;
   }
   isEdit = computed(() => !!this.event());
-  title = computed(() => (this.isEdit() ? 'Edytuj wydarzenie' : 'Nowe wydarzenie'));
+  title = computed(() =>
+    this.isEdit() ? 'Edytuj wydarzenie' : 'Nowe wydarzenie'
+  );
 
   readonly successTpl = viewChild<TemplateRef<unknown>>('eventSuccessToast');
   readonly errorTpl = viewChild<TemplateRef<unknown>>('eventErrorToast');
@@ -164,11 +180,15 @@ export class EventFormComponent implements OnDestroy {
       } else if (e.recurrence) {
         this.f.occurrenceMode.setValue('RECURRENT');
         if (e.recurrence.kind === RecurrenceKind.Weekly) {
-          this.f.recPattern.setValue(e.recurrence.interval === 2 ? 'WEEKLY_2' : 'WEEKLY_1');
+          this.f.recPattern.setValue(
+            e.recurrence.interval === 2 ? 'WEEKLY_2' : 'WEEKLY_1'
+          );
           this.f.weekday.setValue(e.recurrence.byweekday?.[0] ?? 4);
         } else if (e.recurrence.kind === RecurrenceKind.MonthlyNthWeekday) {
           this.f.recPattern.setValue('MONTHLY_NTH');
-          this.f.monthlyNth.setValue(e.recurrence.monthlyNth ?? MonthlyNth.First);
+          this.f.monthlyNth.setValue(
+            e.recurrence.monthlyNth ?? MonthlyNth.First
+          );
           this.f.monthlyWeekday.setValue(e.recurrence.monthlyWeekday ?? 4);
         } else if (e.recurrence.kind === RecurrenceKind.MonthlyDayOfMonth) {
           this.f.recPattern.setValue('MONTHLY_DOM');
@@ -187,7 +207,10 @@ export class EventFormComponent implements OnDestroy {
     }
 
     this.f.occurrenceMode.valueChanges
-      .pipe(startWith(this.f.occurrenceMode.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.f.occurrenceMode.value),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((mode) => {
         if (mode === 'SINGLE') {
           this.f.singleDate.addValidators([Validators.required]);
@@ -201,7 +224,10 @@ export class EventFormComponent implements OnDestroy {
       });
 
     this.f.recPattern.valueChanges
-      .pipe(startWith(this.f.recPattern.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.f.recPattern.value),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((p) => {
         if (p === 'WEEKLY_1' || p === 'WEEKLY_2') {
           this.f.weekday.addValidators([Validators.required]);
@@ -214,7 +240,11 @@ export class EventFormComponent implements OnDestroy {
           this.f.weekday.clearValidators();
           this.f.dayOfMonth.clearValidators();
         } else {
-          this.f.dayOfMonth.addValidators([Validators.required, Validators.min(1), Validators.max(31)]);
+          this.f.dayOfMonth.addValidators([
+            Validators.required,
+            Validators.min(1),
+            Validators.max(31),
+          ]);
           this.f.weekday.clearValidators();
           this.f.monthlyNth.clearValidators();
           this.f.monthlyWeekday.clearValidators();
@@ -243,14 +273,43 @@ export class EventFormComponent implements OnDestroy {
       this.f.tags.setValue(Array.from(tags));
     };
     applyTags();
-    this.f.isForBeginners.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(applyTags);
-    this.f.attractionType.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(applyTags);
+    this.f.isForBeginners.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(applyTags);
+    this.f.attractionType.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(applyTags);
 
-    this.f.excludeNth.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
-    this.f.startDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
-    this.f.endDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
-    this.f.weekday.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
+    this.f.excludeNth.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
+    this.f.startDate.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
+    this.f.endDate.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
+    this.f.weekday.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
   }
+
+  coverCdnUrl = computed<string | null>(() => {
+    // priorytet: nowo wybrany plik -> blob URL
+    const blob = this.coverPreviewUrl();
+    if (blob) return blob;
+
+    // edycja istniejącego eventu: weź path z formularza albo z inputu `event`
+    const path =
+      this.form.value.coverImagePath || this.event()?.coverImagePath || null;
+    if (!path) return null;
+
+    // jeśli to już pełny URL – oddaj jak jest
+    if (/^https?:\/\//i.test(path)) return path;
+
+    // w pozostałych przypadkach wygeneruj publiczny CDN URL
+    return this.images.getOptimizedPublicUrl(path, 800, 450);
+  });
 
   patternLabel(): string {
     const p = this.f.recPattern.value as RecPattern;
@@ -281,7 +340,12 @@ export class EventFormComponent implements OnDestroy {
   excludeNthLongLabelFor(v: number): string {
     if (v === 0) return 'Nie wykluczaj';
     if (v === -1) return 'Wyklucz ostatnie wystąpienie w miesiącu';
-    const map: Record<number, string> = { 1: 'pierwsze', 2: 'drugie', 3: 'trzecie', 4: 'czwarte' };
+    const map: Record<number, string> = {
+      1: 'pierwsze',
+      2: 'drugie',
+      3: 'trzecie',
+      4: 'czwarte',
+    };
     const which = map[v] ?? String(v);
     return `Wyklucz ${which} wystąpienie w miesiącu`;
   }
@@ -376,24 +440,42 @@ export class EventFormComponent implements OnDestroy {
       endTime: v.endTime + ':00',
       rooms: v.rooms,
       tags: v.tags,
-      singleDate: v.occurrenceMode === 'SINGLE' ? v.singleDate || undefined : undefined,
+      singleDate:
+        v.occurrenceMode === 'SINGLE' ? v.singleDate || undefined : undefined,
       recurrence,
     } satisfies Omit<EventFull, 'id'>;
 
     const file = this.coverFile();
     const save$ = this.isEdit()
-      ? this.events.updateEvent(this.event()!.id, basePayload as Partial<EventFull>, file ?? undefined, 'REPLACE_FUTURE')
-      : this.events.createEvent(basePayload, file ?? undefined, 'REPLACE_FUTURE').pipe(switchMap(() => of(void 0)));
+      ? this.events.updateEvent(
+          this.event()!.id,
+          basePayload as Partial<EventFull>,
+          file ?? undefined,
+          'REPLACE_FUTURE'
+        )
+      : this.events
+          .createEvent(basePayload, file ?? undefined, 'REPLACE_FUTURE')
+          .pipe(switchMap(() => of(void 0)));
 
     save$.subscribe({
       next: () => {
         const tpl = this.successTpl();
-        if (tpl) this.toast.show({ template: tpl, classname: 'bg-success text-white', header: 'Zapisano wydarzenie' });
+        if (tpl)
+          this.toast.show({
+            template: tpl,
+            classname: 'bg-success text-white',
+            header: 'Zapisano wydarzenie',
+          });
         this.saved.emit();
       },
       error: () => {
         const tpl = this.errorTpl();
-        if (tpl) this.toast.show({ template: tpl, classname: 'bg-danger text-white', header: 'Nie udało się zapisać wydarzenia' });
+        if (tpl)
+          this.toast.show({
+            template: tpl,
+            classname: 'bg-danger text-white',
+            header: 'Nie udało się zapisać wydarzenia',
+          });
       },
     });
   }
@@ -430,27 +512,45 @@ export class EventFormComponent implements OnDestroy {
     this.f.exdates.setValue(ex);
   }
 
+  private computeExcludedNthWeekdays(
+    startIso: string,
+    endIso: string,
+    weekday0to6: number,
+    nth: ExcludeNth
+  ): string[] {
+    const out: string[] = [];
+    const start = new Date(startIso + 'T00:00:00');
+    const end = new Date(endIso + 'T00:00:00');
 
-private computeExcludedNthWeekdays(startIso: string, endIso: string, weekday0to6: number, nth: ExcludeNth): string[] {
-  const out: string[] = [];
-  const start = new Date(startIso + 'T00:00:00');
-  const end = new Date(endIso + 'T00:00:00');
+    const cur = new Date(
+      Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1)
+    );
+    const endMonth = new Date(
+      Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1)
+    );
 
-  const cur = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
-  const endMonth = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1));
-
-  while (cur <= endMonth) {
-    const d = this.nthWeekdayOfMonth(cur.getUTCFullYear(), cur.getUTCMonth(), weekday0to6, nth);
-    if (d) {
-      const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      if (local >= start && local <= end) out.push(formatYmdLocal(local));
+    while (cur <= endMonth) {
+      const d = this.nthWeekdayOfMonth(
+        cur.getUTCFullYear(),
+        cur.getUTCMonth(),
+        weekday0to6,
+        nth
+      );
+      if (d) {
+        const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        if (local >= start && local <= end) out.push(formatYmdLocal(local));
+      }
+      cur.setUTCMonth(cur.getUTCMonth() + 1);
     }
-    cur.setUTCMonth(cur.getUTCMonth() + 1);
+    return out;
   }
-  return out;
-}
 
-  private nthWeekdayOfMonth(year: number, month0: number, weekday: number, n: number): Date | null {
+  private nthWeekdayOfMonth(
+    year: number,
+    month0: number,
+    weekday: number,
+    n: number
+  ): Date | null {
     if (n > 0) {
       const first = new Date(year, month0, 1);
       const shift = (weekday - first.getDay() + 7) % 7;

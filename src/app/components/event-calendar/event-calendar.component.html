@@ -2,22 +2,21 @@
   <div class="container">
     <h2 class="section-title">Kalendarz wydarzeń</h2>
     <p class="section-subtitle">
-      Witamy w kalendarzu wydarzeń RPG! Znajdziesz tu sesje prowadzone przez różnych Mistrzów Gry,
-      wydarzenia otwarte oraz spotkania tematyczne. Nasz kalendarz to nie tylko daty – to bramy do
-      światów pełnych magii, tajemnic i heroicznych czynów. Przeglądaj wydarzenia, wybieraj ulubione
-      systemy i dołącz do przygody!
+      Witamy w kalendarzu wydarzeń RPG! Znajdziesz tu sesje prowadzone przez
+      różnych Mistrzów Gry, wydarzenia otwarte oraz spotkania tematyczne.
+      Przeglądaj wydarzenia, wybieraj ulubione systemy i dołącz do przygody!
     </p>
 
     <div class="event-section">
       <h3 class="event-header">Wydarzenia cykliczne</h3>
       <app-event-list
-        [events]="recurringEvents"
+        [events]="$any(recurringEvents$ | async) ?? []"
         [recurring]="true"
       ></app-event-list>
 
       <h3 class="event-header">Wydarzenia jednorazowe</h3>
       <app-event-list
-        [events]="singleEvents"
+        [events]="$any(singleEvents$ | async) ?? []"
         [recurring]="false"
       ></app-event-list>
     </div>

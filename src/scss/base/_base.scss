@@ -13,16 +13,9 @@ body {
   @include responsive-font-size(12px);
 }
 
-/* Resetowanie niechcianych stylów dla wszystkich elementów */
 * {
   box-sizing: border-box;
 }
-
-// @media (max-width: $breakpoint-sm) {
-//   body {
-//     padding-top: $navbar-height!important;
-//   }
-// }
 
 ::-webkit-scrollbar {
   width: 12px;

@@ -3,11 +3,11 @@
     <h2 class="section-title">{{ title() }}</h2>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
-      @if (coverPreviewUrl() || form.value.coverImagePath) {
+      @if (coverPreviewUrl() || coverCdnUrl()) {
       <div class="form-group">
         <img
           class="cover-preview"
-          [src]="coverPreviewUrl() || form.value.coverImagePath"
+          [src]="coverPreviewUrl() || coverCdnUrl()!"
           alt="Okładka"
         />
       </div>
