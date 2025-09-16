@@ -8,7 +8,7 @@ import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { IFilter } from '../../interfaces/i-filters';
 import { SupabaseService } from '../supabase/supabase.service';
-import { toCamelCase, toSnakeKey } from '../../utils/type-mappers';
+import { toCamelCase, toSnakeKey, toSnakeCase } from '../../utils/type-mappers';
 import { ImageStorageService } from './image-storage/image-storage.service';
 import { applyFilters } from '../../utils/query';
 import { FilterOperator } from '../../enums/filterOperator';
@@ -159,16 +159,18 @@ export class BackendService {
     );
   }
 
-  createMany<T>(table: string, data: T[]): Observable<T[]> {
-    if (!data.length) return of([]);
+createMany<T>(table: string, data: T[]): Observable<T[]> {
+  if (!data.length) return of([]);
 
-    return from(this.supabase.from(table).insert(data).select('*')).pipe(
-      map((response) => {
-        if (response.error) throw new Error(response.error.message);
-        return (response.data || []).map((item) => toCamelCase<T>(item));
-      })
-    );
-  }
+  const snakeData = toSnakeCase(data);
+
+  return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
+    map((response) => {
+      if (response.error) throw new Error(response.error.message);
+      return (response.data || []).map((item) => toCamelCase<T>(item));
+    })
+  );
+}
 
   update<T>(table: string, id: string | number, data: Partial<T>): Observable<T> {
     return from(
