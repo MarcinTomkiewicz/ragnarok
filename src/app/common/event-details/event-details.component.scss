@@ -1,14 +1,10 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/components"; // dla @include section-wrapper
 
 .event-details-section {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 3rem 2rem;
-
-  @media (max-width: $breakpoint-md) {
-    padding: 2rem 1rem;
-  }
+  // Spójny wrapper sekcji jak w innych ekranach
+  @include section-wrapper;
 
   .container {
     max-width: $container-width-lg;
@@ -16,63 +12,95 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 1.25rem;
+
+    @media (max-width: $breakpoint-md) {
+      gap: 1rem;
+    }
   }
 
+  /* === Okładka === */
   .event-image-wrapper {
     width: 100%;
-    max-width: 800px;
+    max-width: 768px;
+    margin: 0 auto;
+    border-radius: $border-radius;
     overflow: hidden;
-    border-radius: 8px;
     box-shadow: $card-shadow;
+    background: $bg-color-light;
+
+    aspect-ratio: 3 / 2;
+
+    @media (max-width: $breakpoint-sm) {
+      aspect-ratio: 16 / 10;
+    }
   }
 
   .event-image {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
     object-fit: cover;
   }
 
+  /* === Tytuł i opis === */
+  .section-title {
+    margin: 0.5rem 0 0.25rem;
+    text-align: center;
+    text-wrap: balance;
+  }
+
   .event-description {
     width: 100%;
-    margin-top: 2rem;
+    max-width: 960px;
+    margin: 1rem auto 0;
     text-align: left;
 
-    p {
-      margin-bottom: 1rem;
-      line-height: 1.6;
+    .event-paragraph {
+      margin: 0 0 1rem;
+      line-height: 1.65;
     }
   }
 
-  .event-table {
-    width: 100%;
-    margin-top: 2rem;
-    color: $text-color;
+  /* === Tabela detali ===
+     Korzystamy z globalnych styli .table.table-dark-style.
+     Lokalnie wymuszamy wyrównanie do lewej i lekki odstęp od góry. */
+  .table.table-dark-style {
+    margin-top: 1rem;
 
-    th {
-      width: 30%;
-      font-weight: bold;
-      vertical-align: top;
-    }
-
+    th,
     td {
-      width: 70%;
+      text-align: left; // wymóg: zawartość do lewej
     }
+  }
 
-    tr {
-      border-bottom: 1px solid $border-color;
+  /* Sekcja list tagów/pomieszczeń — używamy globalnych klas .tag-badges / .tag-badge.
+     Tutaj tylko kontrola marginesów względem tabeli. */
+  .tags-wrapper,
+  .rooms-wrapper {
+    margin-top: 0.25rem;
+  }
+
+  .rooms-grid {
+    @include mg-grid(4); // 3 kolumny, na md: 2, na sm: 1
+    gap: 0.5rem; // nadpisanie default 2rem z mixina
+    margin-top: 0; // bez dodatkowego odstępu w tabeli
+    width: min-content;
+
+    .tag-badge.muted {
+      width: fit-content;
     }
+  }
 
-    @media (max-width: $breakpoint-sm) {
-      th,
-      td {
-        display: block;
-        width: 100%;
-      }
-
-      th {
-        margin-top: 1rem;
-      }
+  /* Druk */
+  @media print {
+    .btn,
+    .ngb-alert {
+      display: none !important;
+    }
+    .event-image-wrapper {
+      box-shadow: none;
+      border-radius: 0;
     }
   }
 }
