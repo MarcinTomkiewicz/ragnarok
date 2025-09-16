@@ -1,17 +1,16 @@
 $tag-badge-aliases: (
-  violet: gm,
-  green: reception,
-  blue: owner,
-  amber: member,
-  gray: muted,
+  'violet': 'gm',
+  'green' : 'reception',
+  'blue'  : 'owner',
+  'amber' : 'member',
+  'gray'  : 'muted',
 ) !default;
 
 .tag-badge {
   @each $alias, $base in $tag-badge-aliases {
-    &.#{$alias} {
-      @extend .tag-badge;
-      @extend .#{$base};
+    // .tag-badge już nadaje bazowe style – nie extendujemy go drugi raz
+    &.#{unquote($alias)} {
+      @extend .#{unquote($base)};
     }
   }
 }
-

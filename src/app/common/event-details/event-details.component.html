@@ -1,37 +1,67 @@
-@if (vm().event) {
+@let v = vm(); @if (v.loading) {
 <section class="event-details-section">
   <div class="container">
-    <h2 class="section-title text-center">{{ vm().event?.name }}</h2>
-    @if (vm().event?.singleDate && vm().isArchive) {
+    <h2 class="section-title">Wczytywanie…</h2>
+
+    <div class="event-image-wrapper">
+      <div class="skeleton-cover skeleton-box" aria-hidden="true"></div>
+    </div>
+
+    <div class="skeleton-table" role="status" aria-label="Ładowanie szczegółów">
+      @for (i of [0,1,2,3,4]; track i) {
+      <div class="skeleton-row">
+        <span class="skeleton-cell skeleton-box"></span>
+        <span class="skeleton-cell skeleton-box"></span>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+} @else if (v.error) {
+<ngb-alert type="danger">{{ v.error }}</ngb-alert>
+} @else if (v.event) {
+<section class="event-details-section">
+  <div class="container">
+    <h2 class="section-title text-center">{{ v.event.name }}</h2>
+
+    @if (v.event.singleDate && v.isArchive) {
     <ngb-alert type="danger" class="w-100 text-center">
       UWAGA! Wydarzenie archiwalne!
     </ngb-alert>
-    } @if (vm().cover.hasImage) {
+    }
+
     <div class="event-image-wrapper">
+      @if (v.cover.hasImage) {
       <img
         class="event-image"
-        [src]="vm().cover.src"
-        [srcset]="vm().cover.srcset!"
-        [sizes]="vm().cover.sizesAttr!"
-        [alt]="vm().cover.alt"
+        [src]="v.cover.src"
+        [srcset]="v.cover.srcset!"
+        [sizes]="v.cover.sizesAttr!"
+        [alt]="v.cover.alt"
         loading="lazy"
         decoding="async"
       />
+      } @else {
+      <img
+        class="event-image"
+        [src]="v.cover.src"
+        [alt]="v.cover.alt || 'Brak okładki'"
+        loading="lazy"
+        decoding="async"
+      />
+      }
     </div>
-    } @else {
-    <div class="event-image-wrapper">
-      <img
-        class="event-image"
-        [src]="vm().cover.src"
-        [alt]="vm().cover.alt || 'Brak okładki'"
-        loading="lazy"
-        decoding="async"
-      />
+
+    @if (v.chips.length) {
+    <div class="tag-badges chip-row">
+      @for (c of v.chips; track c.key) {
+      <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span>
+      }
     </div>
     }
 
     <div class="event-description">
-      @let paragraphs = (vm().event?.longDescription ?? '').split('\n'); @for
+      @let paragraphs = (v.event.longDescription).split('\n'); @for
       (paragraph of paragraphs; let i = $index; track i) { @if
       (paragraph.trim().length) {
       <p class="event-paragraph">{{ paragraph }}</p>
@@ -42,45 +72,27 @@
       <tbody>
         <tr>
           <th scope="row">
-            {{ vm().event?.recurrence ? "Następna data:" : "Data spotkania:" }}
+            {{ v.event.recurrence ? "Następna data:" : "Data spotkania:" }}
           </th>
           <td>
-            @if (vm().event?.singleDate) {
-            {{ vm().event?.singleDate | date : "dd.MM.yyyy" }}
+            @if (v.event.singleDate) {
+            {{ v.event.singleDate | date : "dd.MM.yyyy" }}
             } @else { — }
           </td>
         </tr>
 
         <tr>
-          <th scope="row">Godzina rozpoczęcia:</th>
-          <td>{{ (vm().event?.startTime ?? "").substring(0, 5) }}</td>
-        </tr>
-
-        <tr>
-          <th scope="row">Godzina zakończenia:</th>
-          <td>{{ (vm().event?.endTime ?? "").substring(0, 5) }}</td>
-        </tr>
-
-        <tr>
-          <th scope="row">Strefa czasowa:</th>
-          <td>{{ vm().event?.timezone }}</td>
-        </tr>
-
-        <tr>
-          <th scope="row">Koszt uczestnictwa:</th>
-          <td>
-            <span class="text-muted">Do ustalenia</span>
-            <!-- TODO: po dodaniu pola cost do EventFull, podmień na realną wartość -->
-          </td>
+          <th scope="row">Godziny:</th>
+          <td>{{ v.timeRangeLabel }}</td>
         </tr>
 
         <tr>
           <th scope="row">Link do wydarzenia:</th>
           <td>
-            @if (vm().event?.facebookLink) {
+            @if (v.event.facebookLink) {
             <button
               class="btn btn-info btn-sm"
-              (click)="openFacebook(vm().event?.facebookLink!)"
+              (click)="openFacebook(v.event.facebookLink!)"
             >
               Zobacz na Facebooku
             </button>
@@ -90,45 +102,31 @@
           </td>
         </tr>
 
-        @if (vm().tagBadges.length) {
+        @if (v.chips.length) {
         <tr>
           <th scope="row" class="td-40">Tagi:</th>
           <td class="td-60">
             <div class="tag-badges">
-              @for (t of vm().tagBadges; track t.key) {
-              <span class="tag-badge {{ t.cssClass }}">{{ t.label }}</span>
+              @for (c of v.chips; track c.key) {
+              <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span>
               }
             </div>
           </td>
         </tr>
-        } @if (vm().event?.rooms?.length) {
+        } @if (v.event.rooms.length) {
         <tr>
-          <th scope="row" class="td-40">Sale:</th>
+          <th scope="row" class="td-40">Salki:</th>
           <td class="td-60">
             <div class="rooms-grid">
-              @for (room of vm().event?.rooms; track room) {
+              @for (room of v.event.rooms; track room) {
               <span class="tag-badge muted room-badge">{{ room }}</span>
               }
             </div>
           </td>
         </tr>
         }
-
-        <tr>
-          <th scope="row">Dla początkujących:</th>
-          <td>{{ vm().event?.isForBeginners ? "Tak" : "Nie" }}</td>
-        </tr>
-
-        <tr>
-          <th scope="row">Wymaga prowadzących:</th>
-          <td>{{ vm().event?.requiresHosts ? "Tak" : "Nie" }}</td>
-        </tr>
       </tbody>
     </table>
   </div>
 </section>
-} @else if (vm().error) {
-<ngb-alert type="danger">{{ vm().error }}</ngb-alert>
-} @else if (vm().loading) {
-<p>Ładowanie…</p>
 }
