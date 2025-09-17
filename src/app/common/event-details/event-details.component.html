@@ -61,12 +61,16 @@
     }
 
     <div class="event-description">
-      @let paragraphs = (v.event.longDescription).split('\n'); @for
-      (paragraph of paragraphs; let i = $index; track i) { @if
-      (paragraph.trim().length) {
+      @let paragraphs = (v.event.longDescription).split('\n'); @for (paragraph
+      of paragraphs; let i = $index; track i) { @if (paragraph.trim().length) {
       <p class="event-paragraph">{{ paragraph }}</p>
       } }
     </div>
+
+    @if (v.event && hasOccurrence()) {
+    <app-event-hosts-list [eventId]="eventId()!" [dateIso]="occurrenceDate()!">
+    </app-event-hosts-list>
+    }
 
     <table class="table table-dark-style align-middle font-size-small">
       <tbody>

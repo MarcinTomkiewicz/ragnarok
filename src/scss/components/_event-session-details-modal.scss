@@ -1,0 +1,47 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.session-modal {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.2fr);
+  gap: 1rem;
+
+  @media (max-width: $breakpoint-md) {
+    grid-template-columns: 1fr;
+  }
+
+  .left {
+    background: $bg-color-light;
+    border-radius: $border-radius;
+    overflow: hidden;
+    min-height: 240px;
+    display: flex; align-items: center; justify-content: center;
+
+    img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .no-image { padding: 2rem 0; }
+  }
+
+  .right {
+    padding: 1rem;
+    border-radius: $border-radius;
+
+    .row-item {
+      display: flex; align-items: baseline; gap: .5rem; margin-bottom: .5rem;
+      &.column { flex-direction: column; align-items: flex-start; gap: .35rem; }
+
+      .muted { color: $secondary-text-color; }
+      .tags {
+        display: flex; flex-wrap: wrap; gap: .35rem;
+      }
+
+      .desc {
+        white-space: pre-wrap;
+        line-height: 1.5;
+        margin: 0;
+      }
+    }
+  }
+}

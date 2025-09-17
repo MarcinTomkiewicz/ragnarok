@@ -21,11 +21,12 @@ import {
   map,
   switchMap,
 } from 'rxjs/operators';
+import { EventHostsListComponent } from '../event-hosts-list/event-hosts-list.component';
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [NgbAlertModule, DatePipe],
+  imports: [NgbAlertModule, DatePipe, EventHostsListComponent],
   templateUrl: './event-details.component.html',
   styleUrl: './event-details.component.scss',
 })
@@ -41,6 +42,9 @@ export class EventDetailsComponent {
   private readonly loading = signal(true);
   private readonly errorMessage = signal<string | null>(null);
   private readonly today = signal(formatYmdLocal(new Date()));
+
+  readonly hasOccurrence = computed(() => !!this.occurrenceDate());
+  readonly eventId = computed(() => this.event()?.id ?? null);
 
   // routing inputs
   private readonly slug$ = this.route.paramMap.pipe(
@@ -167,7 +171,6 @@ export class EventDetailsComponent {
     return st || et || '-';
   });
 
-  // tagi + chip „Nabór MG” jeśli potrzeba prowadzących
   private readonly tagBadgeClass: Record<EventTag, string> = {
     [EventTag.Beginners]: 'green',
     [EventTag.Session]: 'violet',

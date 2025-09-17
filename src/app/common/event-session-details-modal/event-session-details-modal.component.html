@@ -1,0 +1,59 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ host.title || 'Szczegóły sesji' }}</h5>
+  <button type="button" class="btn-close" aria-label="Zamknij" (click)="close()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="session-modal">
+    <div class="left">
+      @if (host.imageUrl) {
+        <img [src]="host.imageUrl" [alt]="host.title || 'Ilustracja sesji'" />
+      } @else {
+        <div class="no-image muted">Brak ilustracji</div>
+      }
+    </div>
+
+    <div class="right card-dark">
+      <div class="row-item">
+        <span class="muted">Prowadzący:</span>
+        <span>
+          {{ hostDisplayName || (host.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący') }}
+        </span>
+      </div>
+
+      <div class="row-item">
+        <span class="muted">System:</span>
+        <span>{{ host.system?.name || '—' }}</span>
+      </div>
+
+      @if (host.playstyleTags.length) {
+        <div class="row-item column">
+          <span class="muted">Styl:</span>
+          <div class="tags">
+            @for (t of host.playstyleTags; track t) {
+              <span class="tag-badge violet">{{ GmStyleTagLabels[t] }}</span>
+            }
+          </div>
+        </div>
+      }
+
+      @if (host.triggers.length) {
+        <div class="row-item column">
+          <span class="muted">Triggery:</span>
+          <div class="tags">
+            @for (tr of host.triggers; track tr) {
+              <span class="tag-badge muted">{{ tr }}</span>
+            }
+          </div>
+        </div>
+      }
+
+      @if (host.description) {
+        <div class="row-item column">
+          <span class="muted">Opis:</span>
+          <p class="desc">{{ host.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>
