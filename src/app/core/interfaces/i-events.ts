@@ -18,6 +18,7 @@ export interface EventCore {
   endTime: string;
   tags: EventTag[];
   rooms: string[];
+  entryFeePln: number;
 }
 
 export interface RecurrenceRule {

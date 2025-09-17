@@ -13,7 +13,10 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDropdownModule,
+  NgbTooltipModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { startWith, switchMap, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Rooms, SortedRooms } from '../../../core/enums/rooms';
@@ -48,7 +51,12 @@ type RecPattern = 'WEEKLY_1' | 'WEEKLY_2' | 'MONTHLY_NTH' | 'MONTHLY_DOM';
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbDropdownModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgbDropdownModule,
+    NgbTooltipModule,
+  ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss',
 })
@@ -66,6 +74,7 @@ export class EventFormComponent implements OnDestroy {
 
   coverFile = signal<File | null>(null);
   coverPreviewUrl = signal<string | null>(null);
+  private readonly coverMode = signal<'keep' | 'file' | 'remove'>('keep');
   roomsList = SortedRooms;
 
   AttractionKind = AttractionKind;
@@ -122,16 +131,19 @@ export class EventFormComponent implements OnDestroy {
     isActive: [true],
     isForBeginners: [false],
     requiresHosts: [false],
-    attractionType: [AttractionKind.None],
+    entryFeePln: [0, [Validators.min(0)]],
+    blockSlots: [true],
+
+    attractionType: [AttractionKind.Session],
     hostSignup: [HostSignupScope.Staff],
-    startTime: ['17:00', [Validators.required]],
-    endTime: ['23:00', [Validators.required]],
+    startTime: ['', [Validators.required]],
+    endTime: ['', [Validators.required]],
     occurrenceMode: ['RECURRENT' as OccurrenceMode],
     singleDate: [''],
     startDate: [''],
     endDate: [''],
     recPattern: ['WEEKLY_1' as RecPattern],
-    weekday: [4],
+    weekday: [0],
     excludeNth: [ExcludeNth.None as number],
     monthlyNth: [MonthlyNth.First as number],
     monthlyWeekday: [4],
@@ -152,10 +164,8 @@ export class EventFormComponent implements OnDestroy {
   readonly errorTpl = viewChild<TemplateRef<unknown>>('eventErrorToast');
 
   ngOnInit() {
-    const fromInput = this.event();
-    const fromRoute = this.route.snapshot.data['event'] as EventFull | null;
-    const e = fromInput ?? fromRoute;
-
+    const e = (this.event() ??
+      this.route.snapshot.data['event']) as EventFull | null;
     if (e) {
       this.f.slug.setValue(e.slug);
       this.form.patchValue({
@@ -168,6 +178,8 @@ export class EventFormComponent implements OnDestroy {
         isActive: e.isActive,
         isForBeginners: e.isForBeginners,
         requiresHosts: e.requiresHosts,
+        entryFeePln: e.entryFeePln ?? 0,
+
         attractionType: e.attractionType,
         hostSignup: e.hostSignup,
         startTime: e.startTime.slice(0, 5),
@@ -295,22 +307,20 @@ export class EventFormComponent implements OnDestroy {
   }
 
   coverCdnUrl = computed<string | null>(() => {
-    // priorytet: nowo wybrany plik -> blob URL
     const blob = this.coverPreviewUrl();
     if (blob) return blob;
 
-    // edycja istniejącego eventu: weź path z formularza albo z inputu `event`
+    if (this.coverMode() === 'remove') return null;
+
     const path =
-      this.form.value.coverImagePath || this.event()?.coverImagePath || null;
+      this.form.value.coverImagePath ?? this.event()?.coverImagePath ?? null;
     if (!path) return null;
 
-    // jeśli to już pełny URL – oddaj jak jest
     if (/^https?:\/\//i.test(path)) return path;
-
-    // w pozostałych przypadkach wygeneruj publiczny CDN URL
     return this.images.getOptimizedPublicUrl(path, 800, 450);
   });
 
+  // Labels...
   patternLabel(): string {
     const p = this.f.recPattern.value as RecPattern;
     const o = this.patternOptions.find((x) => x.value === p);
@@ -323,16 +333,19 @@ export class EventFormComponent implements OnDestroy {
     return HostSignupScopeLabel[this.f.hostSignup.value];
   }
   weekdayLabel(): string {
-    const v = this.f.weekday.value ?? 4;
-    return this.weekdays.find((w) => w.value === v)?.label ?? '—';
+    return (
+      this.weekdays.find((w) => w.value === (this.f.weekday.value ?? 4))
+        ?.label ?? '—'
+    );
   }
   monthlyWeekdayLabel(): string {
-    const v = this.f.monthlyWeekday.value ?? 4;
-    return this.weekdays.find((w) => w.value === v)?.label ?? '—';
+    return (
+      this.weekdays.find((w) => w.value === (this.f.monthlyWeekday.value ?? 4))
+        ?.label ?? '—'
+    );
   }
   monthlyNthLabel(): string {
-    const curr = this.form.value.monthlyNth as MonthlyNth;
-    return MonthlyNthLabel[curr] ?? '';
+    return MonthlyNthLabel[this.form.value.monthlyNth as MonthlyNth] ?? '';
   }
   excludeNthLongLabel(): string {
     return this.excludeNthLongLabelFor(this.form.value.excludeNth as number);
@@ -354,10 +367,24 @@ export class EventFormComponent implements OnDestroy {
     const input = ev.target as HTMLInputElement | null;
     const file = input?.files?.[0] ?? null;
     this.coverFile.set(file);
+
     const prev = this.coverPreviewUrl();
     if (prev) URL.revokeObjectURL(prev);
     this.coverPreviewUrl.set(file ? URL.createObjectURL(file) : null);
+
+    this.coverMode.set(file ? 'file' : 'keep');
   }
+
+  removeCover() {
+    const prev = this.coverPreviewUrl();
+    if (prev) URL.revokeObjectURL(prev);
+
+    this.coverPreviewUrl.set(null);
+    this.coverFile.set(null);
+    this.f.coverImagePath.setValue('');
+    this.coverMode.set('remove');
+  }
+
   pickAttractionType(kind: AttractionKind) {
     this.f.attractionType.setValue(kind);
   }
@@ -440,21 +467,28 @@ export class EventFormComponent implements OnDestroy {
       endTime: v.endTime + ':00',
       rooms: v.rooms,
       tags: v.tags,
+      /** NOWE */
+      entryFeePln: Number(v.entryFeePln ?? 0),
       singleDate:
         v.occurrenceMode === 'SINGLE' ? v.singleDate || undefined : undefined,
       recurrence,
     } satisfies Omit<EventFull, 'id'>;
 
     const file = this.coverFile();
+    const blockSlots = !!v.blockSlots; // tylko runtime
+
     const save$ = this.isEdit()
       ? this.events.updateEvent(
           this.event()!.id,
           basePayload as Partial<EventFull>,
           file ?? undefined,
-          'REPLACE_FUTURE'
+          'REPLACE_FUTURE',
+          { blockSlots }
         )
       : this.events
-          .createEvent(basePayload, file ?? undefined, 'REPLACE_FUTURE')
+          .createEvent(basePayload, file ?? undefined, 'REPLACE_FUTURE', {
+            blockSlots,
+          })
           .pipe(switchMap(() => of(void 0)));
 
     save$.subscribe({

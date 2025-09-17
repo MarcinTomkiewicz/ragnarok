@@ -201,6 +201,7 @@ export class EventDetailsComponent {
     ),
     cover: this.cover(),
     timeRangeLabel: this.timeRangeLabel(),
+    entryFeePln: this.event()?.entryFeePln ?? 0,
     chips: this.chips(),
   }));
 
@@ -216,12 +217,17 @@ export class EventDetailsComponent {
     if (!link || !this.platform.isBrowser) return;
     window.open(link, '_blank', 'noopener,noreferrer');
   }
+
+  setEventFee(fee: number): string {
+    return fee && fee > 0 ? `${fee} zł` : 'Bezpłatne';
+  }
 }
 
 /** Utilities */
 function isIsoDate(s: string | null): s is string {
   return !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
+
 function addDaysIso(isoYmd: string, days: number): string {
   const d = new Date(isoYmd + 'T00:00:00');
   d.setDate(d.getDate() + days);

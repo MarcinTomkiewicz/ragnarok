@@ -24,7 +24,6 @@
           type="text"
           class="form-control"
           formControlName="slug"
-          [disabled]="true"
         />
         <div class="form-text">
           Slug generowany automatycznie na podstawie nazwy.
@@ -33,11 +32,21 @@
 
       <div class="form-group">
         <label class="text-start">Okładka</label>
-        <input
-          type="file"
-          class="form-control"
-          (change)="onCoverChange($event)"
-        />
+        <div class="row-inline cover-row">
+          <input
+            type="file"
+            class="form-control"
+            (change)="onCoverChange($event)"
+          />
+          <button
+            type="button"
+            class="btn btn-outline-danger w-auto"
+            (click)="removeCover()"
+            [disabled]="!coverPreviewUrl() && !form.value.coverImagePath"
+          >
+            Usuń okładkę
+          </button>
+        </div>
       </div>
 
       <div class="form-group">
@@ -83,6 +92,7 @@
           />
           <label class="form-check-label" for="isActive">Aktywny</label>
         </div>
+
         <div class="form-check">
           <input
             id="isBeg"
@@ -92,6 +102,7 @@
           />
           <label class="form-check-label" for="isBeg">Dla początkujących</label>
         </div>
+
         <div class="form-check">
           <input
             id="reqHosts"
@@ -103,6 +114,36 @@
             >Wymaga prowadzących</label
           >
         </div>
+
+        <div
+          class="form-check"
+          [ngbTooltip]="
+            'Gdy odznaczone – salki blokujemy dopiero po zgłoszeniu prowadzącego.'
+          "
+          placement="top"
+          container="body"
+        >
+          <input
+            id="blockSlots"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="blockSlots"
+          />
+          <label class="form-check-label" for="blockSlots"
+            >Zablokuj terminy od razu</label
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Koszt uczestnictwa (PLN)</label>
+        <input
+          type="number"
+          class="form-control"
+          formControlName="entryFeePln"
+          min="0"
+          step="1"
+        />
       </div>
 
       <div class="form-group">

@@ -1,193 +1,111 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
-@import "layouts/form-panel"; // dla @include section-wrapper
+@import "layouts/form-panel";
 
-.event-details-section {
-  // Ujednolicony wrapper sekcji (padding, tło, kolory, spacing)
+.event-form-panel {
   @include section-wrapper;
 
-  .container {
-    max-width: $container-width-lg;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
+  .flags-row {
+    display: grid;
+    gap: 0.75rem 1.25rem;
+    @media (min-width: $breakpoint-md) {
+      /* było repeat(3, ...) – teraz 4 kolumny, żeby checkbox blokady wszedł obok */
+      grid-template-columns: repeat(4, max-content);
+      align-items: center;
+    }
+    .form-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+    }
+  }
+
+  /* Dla wiersza z plikiem + przyciskiem – 2 kolumny: 1fr + auto */
+  .row-inline.cover-row {
+    grid-template-columns: 1fr auto;
     align-items: center;
-    gap: 1.25rem;
-
-    @media (max-width: $breakpoint-md) {
-      gap: 1rem;
-    }
   }
 
-  /* === Obrazek okładki === */
-  .event-image-wrapper {
-    width: 100%;
-    max-width: 1024px;
-    margin: 0 auto;
-    border-radius: $border-radius;
-    overflow: hidden;
-    box-shadow: $card-shadow;
-    background: $bg-color-light;
-
-    // Stabilne ratio dla layoutu, obrazek wypełni i przytnie się do kadru
-    aspect-ratio: 3 / 2;
-
-    @media (max-width: $breakpoint-sm) {
-      aspect-ratio: 16 / 10;
-    }
-  }
-
-  .event-image {
-    width: 100%;
-    height: 100%;
+  .cover-preview {
     display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    width: 100%;
+    max-height: 240px;
     object-fit: cover;
   }
 
-  /* === Tytuł i opis === */
-  .section-title {
-    margin: 0.5rem 0 0.25rem;
-    text-align: center;
-    text-wrap: balance; // ładniejsze łamanie
+  .user-info-form {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
   }
 
-  .event-description {
-    width: 100%;
-    max-width: 960px;
-    margin: 1rem auto 0;
-    text-align: left;
-
-    .event-paragraph {
-      margin: 0 0 1rem;
-      line-height: 1.65;
-    }
+  .form-group {
+    margin-bottom: 1rem;
   }
 
-  /* === Tabela detali === */
-  // Używacie klas: table table-dark-style align-middle font-size-small
-  .table.table-dark-style {
-    --tbl-border: #{$border-color};
-    --tbl-accent: rgba($primary-color, 0.12);
-
-    width: 100%;
-    margin-top: 1rem;
-    border-collapse: collapse;
-    color: $text-color;
-    background: transparent;
-
-    th,
-    td {
-      padding: 0.75rem 0.75rem;
-      border-bottom: 1px solid var(--tbl-border);
-    }
-
-    th {
-      width: 32%;
-      font-weight: 600;
-      vertical-align: top;
-    }
-
-    td {
-      width: 68%;
-    }
-
-    tr:hover {
-      background: var(--tbl-accent);
-    }
-
-    &.align-middle {
-      th,
-      td {
-        vertical-align: middle;
-      }
-    }
-
-    &.font-size-small {
-      font-size: 0.95rem;
-
-      @media (max-width: $breakpoint-sm) {
-        font-size: 0.9rem;
-      }
-    }
-
-    // Mobile – stack wierszy
+  .row-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
     @media (max-width: $breakpoint-sm) {
-      th,
-      td {
-        display: block;
-        width: 100%;
-      }
-      th {
-        padding-bottom: 0.25rem;
-        border-bottom: none;
-        margin-top: 0.75rem;
-      }
-      td {
-        padding-top: 0;
-      }
-      tr {
-        padding: 0.25rem 0;
-      }
+      grid-template-columns: 1fr;
     }
   }
 
-  /* === Listy tagów i sal === */
-  .tags,
-  .rooms {
+  .dropdown-toggle-wide {
+    width: 100%;
+    max-width: 100%;
+  }
+  .dropdown-pane {
+    min-width: 100%;
+    padding: 0.5rem 0;
+  }
+  .dropdown-pane .dropdown-item.active {
+    background: rgba($primary-color, 0.12);
+    border-left: 2px solid $primary-color;
+  }
+
+  .chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-
-    &.list-inline {
-      margin: 0; // reset BS
-    }
-
-    .badge {
-      font-weight: 500;
-      padding: 0.4rem 0.6rem;
-      border-radius: 0.5rem;
-    }
   }
-
-  .w-100 {
-    width: 100%;
-  }
-
-  .event-header-actions {
-    display: flex;
-    gap: 0.75rem;
+  .chip {
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid $border-color;
+    border-radius: 1rem;
+    background: $bg-color-light;
+    cursor: pointer;
+    transition: background-color $transition-fast, border-color $transition-fast, color $transition-fast;
   }
-
-  .alert,
-  .ngb-alert {
-    margin-top: 0.5rem;
+  .chip input[type="checkbox"] {
+    position: absolute;
+    inset: 0;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
   }
-
-  .btn.btn-info.btn-sm {
-    background: rgba($primary-color, 0.15);
+  .chip:has(input[type="checkbox"]:checked) {
+    background: rgba($primary-color, 0.12);
+    border-color: $primary-color;
     color: $primary-color;
-    border-color: transparent;
-    transition: background-color $transition-fast, color $transition-fast;
-
-    &:hover {
-      background: rgba($primary-color, 0.25);
-    }
-    &:focus-visible {
-      outline: 2px solid $primary-color;
-      outline-offset: 2px;
-    }
+  }
+  .chip:has(input[type="checkbox"]:focus-visible) {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
   }
 
-  @media print {
-    .btn,
-    .ngb-alert {
-      display: none !important;
-    }
-    .event-image-wrapper {
-      box-shadow: none;
-      border-radius: 0;
-    }
+  .actions {
+    margin-top: 1.25rem;
   }
 }

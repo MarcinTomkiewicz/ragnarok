@@ -47,10 +47,11 @@ export class EventService {
   createEvent(
     payload: EventForCreate,
     coverFile?: File,
-    regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE'
+    regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE',
+    opts?: { blockSlots?: boolean } // NEW
   ): Observable<{ id: string; slug: string }> {
     const { recurrence, tags = [], rooms = [], ...coreRaw } = payload as any;
-    const core = { ...coreRaw };
+    const core = { ...coreRaw }; // zawiera entryFeePln – toSnakeCase → entry_fee_pln
 
     return from(
       this.supabase
@@ -60,11 +61,10 @@ export class EventService {
         .single()
     ).pipe(
       switchMap(({ data, error }) => {
-        if (error || !data?.id) {
+        if (error || !data?.id)
           return throwError(
             () => error ?? new Error('Insert new_events failed')
           );
-        }
         const eventId = data.id as string;
 
         const writes: Observable<unknown>[] = [];
@@ -119,7 +119,12 @@ export class EventService {
           switchMap(() =>
             coverFile ? this.uploadCover(eventId, coverFile) : of(void 0)
           ),
-          switchMap(() => this.ensureReservationsClient(fullEv, regenMode)),
+          // NEW: tylko jeśli blockSlots !== false
+          switchMap(() =>
+            opts?.blockSlots === false
+              ? of(void 0)
+              : this.ensureReservationsClient(fullEv, regenMode)
+          ),
           map(() => ({ id: eventId, slug: data.slug as string }))
         );
       })
@@ -130,24 +135,24 @@ export class EventService {
     id: string,
     patch: Partial<EventFull> & { recurrence?: RecurrenceRule | null },
     coverFile?: File,
-    regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE'
+    regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE',
+    opts?: { blockSlots?: boolean } // NEW
   ): Observable<void> {
     const { recurrence, tags, rooms, ...core } = patch;
     const ops: Observable<void>[] = [];
 
-    // ——— core (new_events): tylko jeśli jest co patchować
     if (Object.keys(core).length) {
-      // toSnakeCase zwraca any/unknown — ujednolicamy do Partial<Record<string, unknown>>
-      const coreSnake = toSnakeCase(core) as Partial<Record<string, unknown>>;
-
       ops.push(
         this.backend
-          .update<Record<string, unknown>>('new_events', id, coreSnake)
+          .update<Record<string, unknown>>(
+            'new_events',
+            id,
+            toSnakeCase(core) as any
+          )
           .pipe(map(() => void 0))
       );
     }
 
-    // ——— TAGI
     if (Array.isArray(tags)) {
       ops.push(
         this.backend
@@ -168,7 +173,6 @@ export class EventService {
       );
     }
 
-    // ——— ROOMS
     if (Array.isArray(rooms)) {
       ops.push(
         this.backend
@@ -189,7 +193,6 @@ export class EventService {
       );
     }
 
-    // ——— RECURRENCE: undefined = brak zmian, null = usuń, obiekt = upsert
     if (recurrence !== undefined) {
       if (recurrence === null) {
         ops.push(
@@ -211,7 +214,6 @@ export class EventService {
                 byweekday: recurrence.byweekday ?? null,
                 monthly_nth: recurrence.monthlyNth ?? null,
                 monthly_weekday: recurrence.monthlyWeekday ?? null,
-                // monthly_day_of_month: recurrence.dayOfMonth ?? null, // tylko jeśli masz tę kolumnę w DB
                 start_date: recurrence.startDate,
                 end_date: recurrence.endDate ?? null,
                 exdates: recurrence.exdates ?? [],
@@ -232,8 +234,11 @@ export class EventService {
         coverFile ? this.uploadCover(id, coverFile) : of(void 0)
       ),
       switchMap(() => this.getById(id)),
+      // NEW: tylko jeśli blockSlots !== false
       switchMap((full) =>
-        full ? this.ensureReservationsClient(full, regenMode) : of(void 0)
+        full && opts?.blockSlots !== false
+          ? this.ensureReservationsClient(full, regenMode)
+          : of(void 0)
       ),
       map(() => void 0)
     );
@@ -356,6 +361,7 @@ export class EventService {
       singleDate: row.single_date ?? undefined,
       tags,
       rooms,
+      entryFeePln: Number(row.entry_fee_pln ?? 0),
       recurrence: rec,
     };
   }
