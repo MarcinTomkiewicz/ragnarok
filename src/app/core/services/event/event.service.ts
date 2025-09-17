@@ -48,10 +48,10 @@ export class EventService {
     payload: EventForCreate,
     coverFile?: File,
     regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE',
-    opts?: { blockSlots?: boolean } // NEW
+    opts?: { blockSlots?: boolean }
   ): Observable<{ id: string; slug: string }> {
     const { recurrence, tags = [], rooms = [], ...coreRaw } = payload as any;
-    const core = { ...coreRaw }; // zawiera entryFeePln – toSnakeCase → entry_fee_pln
+    const core = { ...coreRaw };
 
     return from(
       this.supabase
@@ -119,7 +119,6 @@ export class EventService {
           switchMap(() =>
             coverFile ? this.uploadCover(eventId, coverFile) : of(void 0)
           ),
-          // NEW: tylko jeśli blockSlots !== false
           switchMap(() =>
             opts?.blockSlots === false
               ? of(void 0)
@@ -136,7 +135,7 @@ export class EventService {
     patch: Partial<EventFull> & { recurrence?: RecurrenceRule | null },
     coverFile?: File,
     regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE',
-    opts?: { blockSlots?: boolean } // NEW
+    opts?: { blockSlots?: boolean }
   ): Observable<void> {
     const { recurrence, tags, rooms, ...core } = patch;
     const ops: Observable<void>[] = [];
@@ -234,7 +233,6 @@ export class EventService {
         coverFile ? this.uploadCover(id, coverFile) : of(void 0)
       ),
       switchMap(() => this.getById(id)),
-      // NEW: tylko jeśli blockSlots !== false
       switchMap((full) =>
         full && opts?.blockSlots !== false
           ? this.ensureReservationsClient(full, regenMode)

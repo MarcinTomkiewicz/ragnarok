@@ -201,7 +201,7 @@ export class EventDetailsComponent {
     ),
     cover: this.cover(),
     timeRangeLabel: this.timeRangeLabel(),
-    entryFeePln: this.event()?.entryFeePln ?? 0,
+    feeLabel: this.setEventFee(this.event()?.entryFeePln ?? 0),
     chips: this.chips(),
   }));
 

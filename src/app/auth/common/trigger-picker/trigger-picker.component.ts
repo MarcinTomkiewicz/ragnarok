@@ -13,6 +13,7 @@ import { IContentTrigger } from '../../../core/interfaces/i-content-trigger';
         class="form-control"
         placeholder="Szukaj triggerów…"
         (input)="onSearch($event)"
+        [disabled]="disabled()"
       />
     </div>
 
@@ -20,14 +21,14 @@ import { IContentTrigger } from '../../../core/interfaces/i-content-trigger';
       @for (t of baseSorted(); track t.slug) {
       <div
         class="style-checkbox"
-        [class.disabled]="isDisabled(t.slug)"
+        [class.disabled]="globalDisabledOrMax(t.slug)"
         [class.highlight]="matchesQuery(t)"
       >
         <input
           class="style-checkbox-input"
           type="checkbox"
           [checked]="isSelected(t.slug)"
-          [disabled]="isDisabled(t.slug)"
+          [disabled]="globalDisabledOrMax(t.slug)"
           (change)="toggle(t.slug)"
           id="trigger_{{ t.slug }}"
         />
@@ -39,7 +40,6 @@ import { IContentTrigger } from '../../../core/interfaces/i-content-trigger';
     </div>
   `,
   styles: `
-
 @import 'abstracts/variables';
 
 .style-checkbox.highlight {
@@ -47,10 +47,9 @@ import { IContentTrigger } from '../../../core/interfaces/i-content-trigger';
   border-color: $primary-color;
   box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.15);
 
-  .style-checkbox-label {
-    color: $primary-color;
-  }
+  .style-checkbox-label { color: $primary-color; }
 }
+.style-checkbox.disabled { opacity: .6; pointer-events: none; }
 `,
 })
 export class TriggerPickerComponent {
@@ -58,15 +57,16 @@ export class TriggerPickerComponent {
   selected = input<string[]>([]);
   selectedChange = output<string[]>();
   maxSelected = input<number>(Infinity);
+  disabled = input<boolean>(false);
 
   private term = signal('');
 
-  // zawsze alfabetycznie (PL)
   baseSorted = computed(() =>
     [...this.all()].sort((a, b) => a.label.localeCompare(b.label, 'pl'))
   );
 
   onSearch(ev: Event) {
+    if (this.disabled()) return;
     this.term.set((ev.target as HTMLInputElement).value ?? '');
   }
 
@@ -74,23 +74,25 @@ export class TriggerPickerComponent {
     return this.selected().includes(slug);
   }
 
-  isDisabled(slug: string): boolean {
+  // globalne disabled lub limit max
+  globalDisabledOrMax(slug: string): boolean {
+    if (this.disabled()) return true;
     const sel = this.selected();
     return sel.length >= this.maxSelected() && !sel.includes(slug);
   }
 
   toggle(slug: string) {
+    if (this.disabled()) return;
     const sel = this.selected();
     const i = sel.indexOf(slug);
     if (i >= 0) {
       this.selectedChange.emit(sel.filter((s) => s !== slug));
       return;
     }
-    if (this.isDisabled(slug)) return;
+    if (this.globalDisabledOrMax(slug)) return;
     this.selectedChange.emit([...sel, slug]);
   }
 
-  // zamiast filtrowania: tylko sygnalizujemy dopasowanie (do podświetlenia całego chipa)
   matchesQuery(t: IContentTrigger): boolean {
     const q = this.term().trim().toLowerCase();
     if (q.length < 2) return false;
