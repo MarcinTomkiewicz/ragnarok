@@ -1,309 +1,210 @@
+<!-- host-signup-form.component.html -->
 <div class="host-signup-panel">
   <div class="container">
     <h2 class="section-title mb-4">Zgłoszenie prowadzącego</h2>
 
     @if (loadingSig()) {
-    <p class="muted">Ładowanie…</p>
+      <p class="muted">Ładowanie…</p>
     } @else if (loadErrorSig()) {
-    <p class="muted">{{ loadErrorSig() }}</p>
+      <p class="muted">{{ loadErrorSig() }}</p>
     } @else if (!evSig()) {
-    <p class="muted">Brak danych wydarzenia.</p>
+      <p class="muted">Brak danych wydarzenia.</p>
     } @else { @let ev = evSig();
 
-    <div class="event-header">
-      <h3 class="event-title">{{ ev!.name }}</h3>
-      <div class="event-meta">
-        <span class="meta-item">{{ formattedDateSig() }}</span>
-        <span class="separator">•</span>
-        <span class="meta-item"
-          >{{ ev!.startTime.slice(0, 5) }}–{{ ev!.endTime.slice(0, 5) }}</span
-        >
-        <span class="separator">•</span>
-        <span class="meta-item">{{ (ev!.rooms || []).join(", ") || "-" }}</span>
+      <div class="event-header">
+        <h3 class="event-title">{{ ev!.name }}</h3>
+        <div class="event-meta">
+          <span class="meta-item">{{ formattedDateSig() }}</span>
+          <span class="separator">•</span>
+          <span class="meta-item">{{ ev!.startTime.slice(0, 5) }}–{{ ev!.endTime.slice(0, 5) }}</span>
+          <span class="separator">•</span>
+          <span class="meta-item">{{ (ev!.rooms || []).join(", ") || "-" }}</span>
+        </div>
       </div>
-    </div>
 
-    @if (isStaffSig()) {
-    <div class="card card-dark admin-preview">
-      <h5 class="title-dark mb-2">Zgłoszenia – podgląd salek</h5>
+      @if (isStaffSig()) {
+        <div class="card card-dark admin-preview">
+          <h5 class="title-dark mb-2">Zgłoszenia – podgląd salek</h5>
 
-      <div class="admin-room">
-        <div class="form-group">
-          <label class="text-start">Salka</label>
-          <div class="d-block" ngbDropdown>
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
-              {{ selectedRoomViewSig() || "Wybierz salkę" }}
-            </button>
-            <div ngbDropdownMenu class="dropdown-pane dropdown-list">
-              @for (r of (ev!.rooms || []); track r) {
-              <button
-                type="button"
-                class="dropdown-item"
-                (click)="pickRoomView(r)"
-              >
-                {{ r }}
-              </button>
-              } @if (!ev!.rooms.length) {
-              <div class="dropdown-empty">Brak salek.</div>
-              }
+          <div class="admin-room">
+            <div class="form-group">
+              <label class="text-start">Salka</label>
+              <div class="d-block" ngbDropdown>
+                <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+                  {{ selectedRoomViewSig() || "Wybierz salkę" }}
+                </button>
+                <div ngbDropdownMenu class="dropdown-pane dropdown-list">
+                  @for (r of (ev!.rooms || []); track r) {
+                    <button type="button" class="dropdown-item" (click)="pickRoomView(r)">{{ r }}</button>
+                  } @if (!ev!.rooms.length) {
+                    <div class="dropdown-empty">Brak salek.</div>
+                  }
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      @if (staffVmSig()) {
-      <div class="meta-grid">
-        <div class="muted">MG:</div>
-        <div>{{ staffVmSig()!.gmName }}</div>
-        <div class="muted">Salka:</div>
-        <div>{{ staffVmSig()!.room }}</div>
-        <div class="muted">Tytuł:</div>
-        <div>{{ staffVmSig()!.title }}</div>
-        <div class="muted">System:</div>
-        <div>{{ staffVmSig()!.systemName }}</div>
-        <div class="muted">Styl:</div>
-        <div>
-          @if (staffVmSig()!.styles.length) {
-          <div class="tag-badges">
-            @for (t of staffVmSig()!.styles; track t) {
-            <span class="tag-badge golden">{{ t }}</span> }
-          </div>
-          } @else { <em>—</em> }
-        </div>
-        <div class="muted">Triggery:</div>
-        <div>
-          @if (staffVmSig()!.triggers.length) {
-          <div class="tag-badges">
-            @for (tr of staffVmSig()!.triggers; track tr) {
-            <span class="tag-badge violet">{{ tr }}</span> }
-          </div>
-          } @else { Brak triggerów }
-        </div>
-        <div class="muted">Opis:</div>
-        <div class="card-text-dark truncate-4">
-          {{ staffVmSig()!.description || "-" }}
-        </div>
-      </div>
+          @if (staffVmSig()) {
+            <div class="meta-grid">
+              <div class="muted">MG:</div><div>{{ staffVmSig()!.gmName }}</div>
+              <div class="muted">Salka:</div><div>{{ staffVmSig()!.room }}</div>
+              <div class="muted">Tytuł:</div><div>{{ staffVmSig()!.title }}</div>
 
-      @if (staffVmSig()!.imageUrl) {
-      <div class="image-wrap mt-2">
-        <img [src]="staffVmSig()!.imageUrl!" alt="Obraz sesji" />
-      </div>
-      } } @else if (selectedRoomViewSig()) {
-      <div class="card-text-dark mt-2">
-        <em>Brak zgłoszenia w tej salce.</em>
-      </div>
+              @if (isSessionSig()) {
+                <div class="muted">System:</div><div>{{ staffVmSig()!.systemName }}</div>
+                <div class="muted">Styl:</div>
+                <div>
+                  @if (staffVmSig()!.styles.length) {
+                    <div class="tag-badges">
+                      @for (t of staffVmSig()!.styles; track t) { <span class="tag-badge golden">{{ t }}</span> }
+                    </div>
+                  } @else { <em>—</em> }
+                </div>
+                <div class="muted">Triggery:</div>
+                <div>
+                  @if (staffVmSig()!.triggers.length) {
+                    <div class="tag-badges">
+                      @for (tr of staffVmSig()!.triggers; track tr) { <span class="tag-badge violet">{{ tr }}</span> }
+                    </div>
+                  } @else { Brak triggerów }
+                </div>
+              }
+
+              <div class="muted">Opis:</div><div class="card-text-dark truncate-4">{{ staffVmSig()!.description || "-" }}</div>
+            </div>
+
+            @if (staffVmSig()!.imageUrl) {
+              <div class="image-wrap mt-2">
+                <img [src]="staffVmSig()!.imageUrl!" alt="Obraz sesji" />
+              </div>
+            }
+          } @else if (selectedRoomViewSig()) {
+            <div class="card-text-dark mt-2"><em>Brak zgłoszenia w tej salce.</em></div>
+          }
+        </div>
       }
-    </div>
-    }
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
-      @if (ev!.rooms.length) {
-      <div class="form-group">
-        <label class="text-start">Salka</label>
-        <div class="d-block" ngbDropdown>
-          <button
-            type="button"
-            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-            ngbDropdownToggle
-            [disabled]="takenLoadingSig() || allRoomsTaken()"
-          >
-            {{ selectedRoomLabel() }}
-          </button>
-          <div ngbDropdownMenu class="dropdown-pane dropdown-list">
-            @for (r of (ev!.rooms || []); track r) {
-            <button
-              type="button"
-              class="dropdown-item"
-              [class.active]="form.value.roomName === r"
-              [disabled]="isRoomTaken(r)"
-              (click)="pickRoom(r)"
-            >
-              {{ r }} @if (isRoomTaken(r)) {
-              <span class="muted">&nbsp;— zajęta</span> }
-            </button>
-            } @if (!ev!.rooms.length) {
-            <div class="dropdown-empty">Brak salek.</div>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
+        @if (ev!.rooms.length > 1) {
+          <div class="form-group">
+            <label class="text-start">Salka</label>
+            <div class="d-block" ngbDropdown>
+              <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle [disabled]="takenLoadingSig() || allRoomsTaken()">
+                {{ selectedRoomLabel() }}
+              </button>
+              <div ngbDropdownMenu class="dropdown-pane dropdown-list">
+                @for (r of (ev!.rooms || []); track r) {
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    [class.active]="form.value.roomName === r"
+                    [disabled]="isRoomTaken(r)"
+                    (click)="pickRoom(r)">
+                    {{ r }} @if (isRoomTaken(r)) { <span class="muted">&nbsp;— zajęta</span> }
+                  </button>
+                } @if (!ev!.rooms.length) {
+                  <div class="dropdown-empty">Brak salek.</div>
+                }
+              </div>
+            </div>
+            @if (allRoomsTaken()) {
+              <div class="form-text text-danger mt-1">Wszystkie salki są już zajęte w tym terminie.</div>
             }
           </div>
-        </div>
-        @if (allRoomsTaken()) {
-        <div class="form-text text-danger mt-1">
-          Wszystkie salki są już zajęte w tym terminie.
-        </div>
+        } @else if (ev!.rooms.length === 1) {
+          <div class="form-group">
+            <label class="text-start">Salka</label>
+            <div class="notice">
+              {{ ev!.rooms[0] }} @if (isRoomTaken(ev!.rooms[0])) { <span class="muted">— zajęta</span> }
+            </div>
+          </div>
         }
-      </div>
-      }
 
-      <div class="form-group">
-        <label class="text-start">Tytuł</label>
-        <input
-          type="text"
-          class="form-control"
-          formControlName="title"
-          [disabled]="detailsDisabledSig()"
-        />
-      </div>
-
-      <div class="form-group">
-        <label class="text-start">Obrazek sesji</label>
-        <div class="row-inline">
-          <input
-            type="file"
-            accept="image/*"
-            class="form-control"
-            (change)="onImageChange($event)"
-            [disabled]="detailsDisabledSig()"
-          />
-          <button
-            type="button"
-            class="btn btn-outline-danger w-auto"
-            (click)="clearNewImage()"
-            [disabled]="!hostImagePreviewUrlSig()"
-          >
-            Usuń nowo dodany
-          </button>
-          <button
-            type="button"
-            class="btn btn-outline-danger w-auto"
-            (click)="removeExistingImage()"
-            [disabled]="!existingImageUrlSig() || detailsDisabledSig()"
-          >
-            Usuń istniejący
-          </button>
+        <div class="form-group">
+          <label class="text-start">Temat</label>
+          <input type="text" class="form-control" formControlName="title" />
         </div>
-        @if (hostImagePreviewUrlSig() || existingImageUrlSig()) {
-        <div class="preview-wrap">
-          <img
-            class="host-image-preview"
-            [src]="hostImagePreviewUrlSig() || existingImageUrlSig()!"
-            alt="Podgląd obrazka"
-          />
-        </div>
-        }
-        <div class="form-text">
-          Najlepiej obraz poziomy; większe pliki zostaną skompresowane
-          (AVIF/WebP, ~max 1600×1200).
-        </div>
-      </div>
 
-      <div class="form-group">
-        <label class="text-start">System</label>
-        @if (systemsLoadingSig()) {
-        <div class="muted">Ładowanie listy systemów…</div>
-        } @else {
-        <app-systems-picker
-          [systems]="systemsSig()"
-          [selectedIds]="selectedSystemIdsView()"
-          (selectedChange)="onSystemsChange($event)"
-          [disabled]="detailsDisabledSig()"
-        >
-        </app-systems-picker>
-        }
-      </div>
-
-      <div class="form-group">
-        <label class="text-start">Tagi stylu gry (max 3)</label>
-        <style-tags
-          [selected]="playstyleViewSig()"
-          (selectedChange)="onStyleTagsChange($event)"
-          [disabled]="detailsDisabledSig()"
-        >
-        </style-tags>
-      </div>
-
-      <div class="form-group">
-        <label class="text-start">Triggery (max 12)</label>
-        @if (triggersLoadingSig()) {
-        <div class="muted">Ładowanie triggerów…</div>
-        } @else if (!triggersSig().length) {
-        <div class="muted">Brak triggerów.</div>
-        } @else {
-        <app-trigger-picker
-          [all]="triggersSig()"
-          [selected]="triggersViewSig()"
-          [maxSelected]="12"
-          (selectedChange)="form.controls.triggers.setValue($event)"
-          [disabled]="detailsDisabledSig()"
-        >
-        </app-trigger-picker>
-        }
-      </div>
-
-      <div class="form-group">
-        <label class="text-start">Opis</label>
-        <textarea
-          rows="4"
-          class="form-control"
-          formControlName="description"
-          [disabled]="detailsDisabledSig()"
-          [rows]="10"
-        ></textarea>
-      </div>
-
-      <div class="actions">
-        <button type="button" class="btn btn-outline btn-sm" (click)="goBack()">
-          Wstecz
-        </button>
-
-        @if (mySignupSig()) {
-        <div class="inline-actions">
-          @if (!allowFullEditSig()) {
-          <button
-            type="button"
-            class="btn btn-outline btn-sm"
-            (click)="enableDetailsEdit()"
-          >
-            Edytuj szczegóły
-          </button>
-          } @else {
-          <button
-            type="button"
-            class="btn btn-outline btn-sm"
-            (click)="cancelDetailsEdit()"
-          >
-            Anuluj edycję
-          </button>
+        <div class="form-group">
+          <label class="text-start">Obrazek</label>
+          <div class="row-inline">
+            <input type="file" accept="image/*" class="form-control" (change)="onImageChange($event)" />
+            <button type="button" class="btn btn-outline-danger w-auto" (click)="clearNewImage()" [disabled]="!hostImagePreviewUrlSig()">Usuń nowo dodany</button>
+            <button type="button" class="btn btn-outline-danger w-auto" (click)="removeExistingImage()" [disabled]="!existingImageUrlSig()">Usuń istniejący</button>
+          </div>
+          @if (hostImagePreviewUrlSig() || existingImageUrlSig()) {
+            <div class="preview-wrap">
+              <img class="host-image-preview" [src]="hostImagePreviewUrlSig() || existingImageUrlSig()!" alt="Podgląd obrazka" />
+            </div>
           }
-          <button
-            type="button"
-            class="btn btn-outline-danger btn-sm"
-            (click)="resign()"
-          >
-            Zrezygnuj z prowadzenia
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary btn-sm"
-            [disabled]="
-              (ev!.rooms.length && allRoomsTaken()) || !form.value.roomName
-            "
-          >
-            Zapisz zmiany
-          </button>
+          <div class="form-text">Najlepiej obraz poziomy; większe pliki zostaną skompresowane (AVIF/WebP, ~max 1600×1200).</div>
         </div>
-        } @else {
-        <button
-          type="submit"
-          class="btn btn-primary btn-sm"
-          [disabled]="(ev!.rooms.length && allRoomsTaken()) || form.invalid"
-        >
-          Zgłoś się
-        </button>
-        }
-      </div>
-    </form>
 
-    <ng-template #hostSuccessToast
-      ><strong>Sukces!</strong> Zgłoszenie zostało zapisane.</ng-template
-    >
-    <ng-template #hostErrorToast
-      ><strong>Błąd!</strong> Nie udało się zapisać zgłoszenia.</ng-template
-    >
+        @if (isSessionSig()) {
+          <div class="form-group">
+            <label class="text-start">System</label>
+            @if (systemsLoadingSig()) {
+              <div class="muted">Ładowanie listy systemów…</div>
+            } @else {
+              <app-systems-picker
+                [systems]="systemsSig()"
+                [selectedIds]="selectedSystemIdsView()"
+                (selectedChange)="onSystemsChange($event)">
+              </app-systems-picker>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="text-start">Tagi stylu gry (max 3)</label>
+            <style-tags
+              [selected]="playstyleViewSig()"
+              (selectedChange)="onStyleTagsChange($event)">
+            </style-tags>
+          </div>
+
+          <div class="form-group">
+            <label class="text-start">Triggery (max 12)</label>
+            @if (triggersLoadingSig()) {
+              <div class="muted">Ładowanie triggerów…</div>
+            } @else if (!triggersSig().length) {
+              <div class="muted">Brak triggerów.</div>
+            } @else {
+              <app-trigger-picker
+                [all]="triggersSig()"
+                [selected]="triggersViewSig()"
+                [maxSelected]="12"
+                (selectedChange)="form.controls.triggers.setValue($event)">
+              </app-trigger-picker>
+            }
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="text-start">Opis</label>
+          <textarea class="form-control" formControlName="description" rows="10"></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-outline btn-sm" (click)="goBack()">Wstecz</button>
+
+          @if (mySignupSig()) {
+            <div class="inline-actions">
+              @if (!allowFullEditSig()) {
+                <button type="button" class="btn btn-outline btn-sm" (click)="enableDetailsEdit()">Edytuj szczegóły</button>
+              } @else {
+                <button type="button" class="btn btn-outline btn-sm" (click)="cancelDetailsEdit()">Anuluj edycję</button>
+              }
+              <button type="button" class="btn btn-outline-danger btn-sm" (click)="resign()">Zrezygnuj z prowadzenia</button>
+              <button type="submit" class="btn btn-primary btn-sm" [disabled]="(ev!.rooms.length && allRoomsTaken()) || (ev!.rooms.length > 1 && !form.value.roomName)">Zapisz zmiany</button>
+            </div>
+          } @else {
+            <button type="submit" class="btn btn-primary btn-sm" [disabled]="(ev!.rooms.length && allRoomsTaken()) || form.invalid">Zgłoś się</button>
+          }
+        </div>
+      </form>
+
+      <ng-template #hostSuccessToast><strong>Sukces!</strong> Zgłoszenie zostało zapisane.</ng-template>
+      <ng-template #hostErrorToast><strong>Błąd!</strong> Nie udało się zapisać zgłoszenia.</ng-template>
     }
   </div>
 </div>

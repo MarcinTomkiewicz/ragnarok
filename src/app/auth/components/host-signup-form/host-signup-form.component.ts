@@ -1,3 +1,4 @@
+// host-signup-form.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, inject, signal, TemplateRef, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,7 +13,7 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { EventService } from '../../../core/services/event/event.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { HostSignupScope } from '../../../core/enums/events';
+import { AttractionKind, HostSignupScope } from '../../../core/enums/events';
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { GmStyleTag } from '../../../core/enums/gm-styles';
 import { CoworkerRoles } from '../../../core/enums/roles';
@@ -51,6 +52,8 @@ export class HostSignupFormComponent {
   private readonly images = inject(ImageStorageService);
 
   readonly evSig = signal<EventFull | null>(null);
+  readonly isSessionSig = computed(() => this.evSig()?.attractionType === AttractionKind.Session);
+
   readonly dateSig = signal<string | null>(null);
   readonly signupsSig = signal<IEventHost[]>([]);
   readonly mySignupSig = signal<IEventHost | null>(null);
@@ -161,9 +164,11 @@ export class HostSignupFormComponent {
     const roomCtrl = this.form.controls.roomName;
     if (ev.rooms?.length) {
       roomCtrl.addValidators([Validators.required]);
+      // wstępnie wyczyść – ustawimy zaraz właściwą wartość
       roomCtrl.setValue('');
     } else {
       roomCtrl.clearValidators();
+      roomCtrl.setValue('');
     }
     roomCtrl.updateValueAndValidity({ emitEvent: false });
 
@@ -180,12 +185,33 @@ export class HostSignupFormComponent {
         const mine = me ? signups.find(s => s.hostUserId === me.id) ?? null : null;
         this.mySignupSig.set(mine);
 
-        const taken = new Set<string>(
+        const takenFromSignups = new Set<string>(
           signups
             .filter(s => !!s.roomName && (!mine || s.hostUserId !== mine.hostUserId))
             .map(s => s.roomName as string)
         );
-        this.takenRoomsSig.set(taken);
+
+        const rooms = ev.rooms ?? [];
+        this.hosts
+          .listExternallyBlockedRooms(ev.id, date, rooms, ev.startTime, ev.endTime)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: (ext) => {
+              ext.forEach((r) => takenFromSignups.add(r));
+              this.takenRoomsSig.set(takenFromSignups);
+
+              // auto-wybór jedynej salki (jeśli nie mam już zgłoszenia)
+              if (!mine && rooms.length === 1) {
+                this.form.controls.roomName.setValue(rooms[0], { emitEvent: false });
+              }
+            },
+            error: () => {
+              this.takenRoomsSig.set(takenFromSignups);
+              if (!mine && rooms.length === 1) {
+                this.form.controls.roomName.setValue(rooms[0], { emitEvent: false });
+              }
+            },
+          });
 
         if (this.isStaffSig()) {
           this.selectedRoomViewSig.set(signups[0]?.roomName ?? null);
@@ -210,7 +236,7 @@ export class HostSignupFormComponent {
         if (mine) {
           this.form.patchValue(
             {
-              roomName: mine.roomName ?? '',
+              roomName: mine.roomName ?? (ev.rooms?.length === 1 ? ev.rooms[0] : ''),
               title: mine.title ?? '',
               systemId: mine.systemId ?? '',
               description: mine.description ?? '',
@@ -222,6 +248,7 @@ export class HostSignupFormComponent {
           this.syncViewFromForm();
           this.setDetailsEnabled(false);
         } else {
+          // nowy zapis – pola edytowalne, a single-room już ustawione wyżej
           this.setDetailsEnabled(true);
           this.syncViewFromForm();
         }
@@ -267,6 +294,7 @@ export class HostSignupFormComponent {
     const ev = this.evSig();
     const v = this.form.value.roomName;
     if (!ev?.rooms?.length) return 'Brak salek';
+    if (ev.rooms.length === 1) return ev.rooms[0];
     if (!v) {
       const allTaken = ev.rooms.every(r => this.takenRoomsSig().has(r));
       return allTaken ? 'Brak wolnych salek' : 'Wybierz salkę';
@@ -275,7 +303,8 @@ export class HostSignupFormComponent {
   }
   isRoomTaken(r: string): boolean {
     const mine = this.mySignupSig();
-    return this.takenRoomsSig().has(r) || (!!mine && mine.roomName !== r && this.signupsSig().some(s => s.roomName === r));
+    if (mine && mine.roomName === r) return false;
+    return this.takenRoomsSig().has(r);
   }
   allRoomsTaken(): boolean {
     const ev = this.evSig();
@@ -337,10 +366,11 @@ export class HostSignupFormComponent {
   }
   cancelDetailsEdit() {
     const mine = this.mySignupSig();
+    const ev = this.evSig();
     if (mine) {
       this.form.patchValue(
         {
-          roomName: mine.roomName ?? '',
+          roomName: mine.roomName ?? (ev?.rooms?.length === 1 ? ev.rooms[0] : ''),
           title: mine.title ?? '',
           systemId: mine.systemId ?? '',
           description: mine.description ?? '',
@@ -383,26 +413,39 @@ export class HostSignupFormComponent {
 
     if (ev.rooms?.length) {
       if (this.allRoomsTaken()) return;
-      if (!this.form.value.roomName) return;
+      if (ev.rooms.length > 1 && !this.form.value.roomName) return;
     }
 
     const mine = this.mySignupSig();
     const user = this.auth.user()!;
     const v = this.form.getRawValue();
+    const isSession = this.isSessionSig();
+
+    const resolvedRoom =
+      ev.rooms?.length ? (ev.rooms.length === 1 ? ev.rooms[0] : v.roomName) : null;
 
     if (mine) {
       const allow = this.allowFullEditSig();
-      const patch: any = { roomName: v.roomName || null };
+      const patch: any = { roomName: resolvedRoom || null };
+
       if (allow) {
         patch.title = v.title;
-        patch.systemId = v.systemId || null;
-        patch.description = v.description || null;
-        patch.triggers = v.triggers ?? [];
-        patch.playstyleTags = v.playstyleTags ?? [];
+        if (isSession) {
+          patch.systemId = v.systemId || null;
+          patch.description = v.description || null;
+          patch.triggers = v.triggers ?? [];
+          patch.playstyleTags = v.playstyleTags ?? [];
+        } else {
+          patch.systemId = null;
+          patch.triggers = [];
+          patch.playstyleTags = [];
+          patch.description = v.description || null;
+        }
         const file = this.hostImageFileSig();
         if (file) patch.imageFile = file;
         else if (this.removeExistingImageSig()) patch.imagePath = null;
       }
+
       this.hosts.updateHost(mine.id, patch).subscribe({
         next: () => this.afterSaveSuccess(),
         error: err => this.afterSaveError(err),
@@ -414,14 +457,14 @@ export class HostSignupFormComponent {
     const payload: IEventHostCreate = {
       eventId: ev.id,
       occurrenceDate: date,
-      roomName: ev.rooms?.length ? v.roomName : null,
+      roomName: ev.rooms?.length ? resolvedRoom : null,
       hostUserId: user.id,
       role: ev.hostSignup,
       title: v.title,
-      systemId: v.systemId || null,
+      systemId: isSession ? (v.systemId || null) : null,
       description: v.description || null,
-      triggers: v.triggers ?? [],
-      playstyleTags: v.playstyleTags ?? [],
+      triggers: isSession ? (v.triggers ?? []) : [],
+      playstyleTags: isSession ? (v.playstyleTags ?? []) : [],
       imageFile: file ?? null,
     };
 
@@ -434,7 +477,7 @@ export class HostSignupFormComponent {
   resign() {
     const mine = this.mySignupSig();
     if (!mine) return;
-    this.hosts.deleteSignup(mine.id).subscribe({
+    this.hosts.deleteHost(mine.id).subscribe({
       next: () => this.afterSaveSuccess(),
       error: err => this.afterSaveError(err),
     });

@@ -253,15 +253,26 @@ export class EventService {
   }
 
   private uploadCover(eventId: string, file: File): Observable<void> {
-    const basePath = `events/${eventId}`;
-    return this.images.uploadOrReplaceImage(file, basePath, null).pipe(
-      switchMap((fullPath) =>
-        this.backend.update('new_events', eventId, {
-          cover_image_path: fullPath,
-        } as any)
-      ),
-      map(() => void 0)
-    );
+    const basePath = `events/${eventId}/cover`;
+    return this.images
+      .transcodeAndUpload(file, basePath, {
+        keepBaseName: true,
+        uniqueStrategy: 'date',
+        dateFormat: 'dd-MM-yyyy-HHmmss',
+        prefer: 'avif',
+        quality: 0.82,
+        maxW: 1600,
+        maxH: 1200,
+        largerFallbackFactor: 1.15,
+      })
+      .pipe(
+        switchMap((fullPath) =>
+          this.backend.update('new_events', eventId, {
+            cover_image_path: fullPath,
+          } as any)
+        ),
+        map(() => void 0)
+      );
   }
 
   listOccurrencesFE(ev: EventFull, fromIso: string, toIso: string): string[] {
@@ -307,6 +318,7 @@ export class EventService {
         start_time: start,
         duration_hours: durHours,
         status: 'confirmed',
+        auto_reservation: true,
       }))
     );
 
@@ -361,6 +373,7 @@ export class EventService {
       rooms,
       entryFeePln: Number(row.entry_fee_pln ?? 0),
       recurrence: rec,
+      autoReservation: !!row.auto_reservation,
     };
   }
 

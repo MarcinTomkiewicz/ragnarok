@@ -19,6 +19,7 @@ export interface EventCore {
   tags: EventTag[];
   rooms: string[];
   entryFeePln: number;
+  autoReservation: boolean;
 }
 
 export interface RecurrenceRule {

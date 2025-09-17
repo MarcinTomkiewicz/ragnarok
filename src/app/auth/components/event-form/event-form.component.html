@@ -20,11 +20,7 @@
 
       <div class="form-group">
         <label class="text-start">Slug</label>
-        <input
-          type="text"
-          class="form-control"
-          formControlName="slug"
-        />
+        <input type="text" class="form-control" formControlName="slug" />
         <div class="form-text">
           Slug generowany automatycznie na podstawie nazwy.
         </div>
@@ -185,6 +181,7 @@
           </button>
           <div ngbDropdownMenu class="dropdown-pane">
             <button
+              type="button"
               class="dropdown-item"
               [class.active]="
                 form.value.attractionType === AttractionKind.Session
@@ -194,6 +191,7 @@
               {{ AttractionKindLabel[AttractionKind.Session] }}
             </button>
             <button
+              type="button"
               class="dropdown-item"
               [class.active]="
                 form.value.attractionType === AttractionKind.Discussion
@@ -203,6 +201,7 @@
               {{ AttractionKindLabel[AttractionKind.Discussion] }}
             </button>
             <button
+              type="button"
               class="dropdown-item"
               [class.active]="form.value.attractionType === AttractionKind.None"
               (click)="pickAttractionType(AttractionKind.None)"
@@ -250,6 +249,7 @@
           <div ngbDropdownMenu class="dropdown-pane">
             @for (o of patternOptions; track o.value) {
             <button
+              type="button"
               class="dropdown-item"
               [class.active]="form.value.recPattern === o.value"
               (click)="pickPattern(o.value)"
@@ -277,6 +277,7 @@
             <div ngbDropdownMenu class="dropdown-pane">
               @for (w of weekdays; track w.value) {
               <button
+                type="button"
                 class="dropdown-item"
                 [class.active]="form.value.weekday === w.value"
                 (click)="pickWeekday(w.value)"
@@ -328,6 +329,7 @@
             <div ngbDropdownMenu class="dropdown-pane">
               @for (o of monthlyNthOptions; track o.value) {
               <button
+                type="button"
                 class="dropdown-item"
                 [class.active]="form.value.monthlyNth === o.value"
                 (click)="pickMonthlyNth(o.value)"

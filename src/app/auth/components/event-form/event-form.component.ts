@@ -467,15 +467,15 @@ export class EventFormComponent implements OnDestroy {
       endTime: v.endTime + ':00',
       rooms: v.rooms,
       tags: v.tags,
-      /** NOWE */
       entryFeePln: Number(v.entryFeePln ?? 0),
       singleDate:
         v.occurrenceMode === 'SINGLE' ? v.singleDate || undefined : undefined,
       recurrence,
+      autoReservation: v.blockSlots
     } satisfies Omit<EventFull, 'id'>;
 
     const file = this.coverFile();
-    const blockSlots = !!v.blockSlots; // tylko runtime
+    const blockSlots = !!v.blockSlots; 
 
     const save$ = this.isEdit()
       ? this.events.updateEvent(
@@ -501,6 +501,7 @@ export class EventFormComponent implements OnDestroy {
             header: 'Zapisano wydarzenie',
           });
         this.saved.emit();
+        this.router.navigate(['/events'])
       },
       error: () => {
         const tpl = this.errorTpl();
