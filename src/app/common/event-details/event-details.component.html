@@ -24,7 +24,13 @@
   <div class="container">
     <h2 class="section-title text-center">{{ v.event.name }}</h2>
 
-    @if (v.event.singleDate && v.isArchive) {
+    @if (v.chips.length) {
+    <div class="tag-badges chip-row">
+      @for (c of v.chips; track c.key) {
+      <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span>
+      }
+    </div>
+    } @if (v.event.singleDate && v.isArchive) {
     <ngb-alert type="danger" class="w-100 text-center">
       UWAGA! Wydarzenie archiwalne!
     </ngb-alert>
@@ -52,14 +58,6 @@
       }
     </div>
 
-    @if (v.chips.length) {
-    <div class="tag-badges chip-row">
-      @for (c of v.chips; track c.key) {
-      <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span>
-      }
-    </div>
-    }
-
     <div class="event-description">
       @let paragraphs = (v.event.longDescription).split('\n'); @for (paragraph
       of paragraphs; let i = $index; track i) { @if (paragraph.trim().length) {
@@ -67,6 +65,7 @@
       } }
     </div>
 
+    <h3 class="section-title text-center">Sesje do wyboru</h3>
     @if (v.event && hasOccurrence()) {
     <app-event-hosts-list [eventId]="eventId()!" [dateIso]="occurrenceDate()!">
     </app-event-hosts-list>

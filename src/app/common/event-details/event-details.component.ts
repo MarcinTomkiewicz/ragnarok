@@ -204,7 +204,6 @@ export class EventDetailsComponent {
     chips: this.chips(),
   }));
 
-  // SEO
   private readonly setSeo = effect(() => {
     const ev = this.event();
     if (ev) {

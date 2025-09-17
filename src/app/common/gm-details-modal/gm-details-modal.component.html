@@ -11,12 +11,12 @@
 <div class="modal-body">
   <div class="gm-card-modal">
     <div class="gm-top-row">
-      <div class="card-dark avatar-card">
+      <div class="card card-dark avatar-card">
         <div class="gm-card-avatar">
           <img [src]="gm.image" [alt]="gmDisplayName(gm)" />
         </div>
       </div>
-      <div class="card-dark info-card">
+      <div class="card card-dark info-card">
         <h5>Informacje podstawowe</h5>
         <div class="card-text-dark mb-2">
           <strong>Wiek:</strong> {{ gm.age ?? "Nie podano" }}
@@ -46,12 +46,12 @@
 
     <!-- Sekcja 2 -->
     <div class="gm-mid-row">
-      <div class="card-dark">
-        <h6 class="title-dark">Opis skrócony</h6>
-        <div class="card-text-dark truncate-3">{{ gm.shortDescription }}</div>
+      <div class="card card-dark">
+        <h5 class="title-dark">Opis skrócony</h5>
+        <div class="card-text-dark truncate-3 mt-2">{{ gm.shortDescription }}</div>
       </div>
 
-      <div class="card-dark">
+      <div class="card card-dark">
         <h5>Systemy RPG</h5>
         @if (!isLoading()) {
         <div class="gm-card-tags mt-2">
@@ -66,7 +66,7 @@
     </div>
 
     <!-- Sekcja 3 -->
-    <div class="card-dark gm-bottom-row">
+    <div class="card card-dark gm-bottom-row">
       <h5>Doświadczenie</h5>
       @for (experience of experienceParagraphs; track $index) {
       <div

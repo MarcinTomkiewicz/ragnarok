@@ -1,11 +1,11 @@
 <div class="modal-header">
-  <h5 class="modal-title">{{ host.title || 'Szczegóły sesji' }}</h5>
+  <h5 class="modal-title">{{ host.title || "Szczegóły sesji" }}</h5>
   <button type="button" class="btn-close" aria-label="Zamknij" (click)="close()"></button>
 </div>
 
 <div class="modal-body">
   <div class="session-modal">
-    <div class="left">
+    <div class="left card card-dark">
       @if (host.imageUrl) {
         <img [src]="host.imageUrl" [alt]="host.title || 'Ilustracja sesji'" />
       } @else {
@@ -13,47 +13,56 @@
       }
     </div>
 
-    <div class="right card-dark">
+    <div class="card card-dark right ">
       <div class="row-item">
         <span class="muted">Prowadzący:</span>
         <span>
-          {{ hostDisplayName || (host.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący') }}
+          {{
+            hostDisplayName ||
+              (host.role === HostSignupScope.Staff ? "Prowadzący (staff)" : "Prowadzący")
+          }}
         </span>
       </div>
 
       <div class="row-item">
         <span class="muted">System:</span>
-        <span>{{ host.system?.name || '—' }}</span>
+        <span>{{ host.system?.name || "—" }}</span>
       </div>
 
       @if (host.playstyleTags.length) {
-        <div class="row-item column">
+        <div class="row-item">
           <span class="muted">Styl:</span>
           <div class="tags">
             @for (t of host.playstyleTags; track t) {
-              <span class="tag-badge violet">{{ GmStyleTagLabels[t] }}</span>
+              <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
             }
           </div>
         </div>
       }
 
-      @if (host.triggers.length) {
-        <div class="row-item column">
-          <span class="muted">Triggery:</span>
+      <div class="row-item">
+        <span class="muted">Triggery:</span>
+        @if (host.triggers.length) {
           <div class="tags">
             @for (tr of host.triggers; track tr) {
-              <span class="tag-badge muted">{{ tr }}</span>
+              <span class="tag-badge violet">{{ triggerLabel(tr) }}</span>
             }
           </div>
-        </div>
-      }
-
-      @if (host.description) {
-        <div class="row-item column">
-          <span class="muted">Opis:</span>
-          <p class="desc">{{ host.description }}</p>
-        </div>
-      }
+        } @else {
+          <div class="muted">Brak triggerów</div>
+        }
+      </div>
     </div>
   </div>
+
+  @if (descriptionParagraphs.length) {
+    <div class="card card-dark desc-card">
+      <h5 class="title-dark">Opis sesji</h5>
+      <div class="desc-body">
+        @for (p of descriptionParagraphs; track $index) {
+          <p class="desc" [class.empty]="!p.trim()">{{ p }}</p>
+        }
+      </div>
+    </div>
+  }
 </div>

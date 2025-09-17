@@ -1,56 +1,74 @@
 <div class="hosts-list-section">
   @if (loadingSig()) {
-    <div class="skeleton-grid">
-      <div class="skeleton-card" *ngFor="let i of [1,2,3,4]"></div>
-    </div>
+  <div class="skeleton-grid">
+    <div class="skeleton-card" *ngFor="let i of [1, 2, 3, 4]"></div>
+  </div>
   } @else if (errorSig()) {
-    <div class="error">{{ errorSig() }}</div>
+  <div class="error">{{ errorSig() }}</div>
   } @else if (!hasItems()) {
-    <div class="empty muted">Brak zgłoszonych sesji na tę datę.</div>
+  <div class="empty muted">Brak zgłoszonych sesji na tę datę.</div>
   } @else {
-    <div class="sessions-grid">
-      @for (h of itemsSig(); track h.id) {
-        <article class="session-card card-dark" (click)="openDetails(h)" role="button" tabindex="0">
-          @if (h.imageUrl) {
-            <div class="image-wrap">
-              <img [src]="h.imageUrl" alt="{{ h.title || 'Ilustracja sesji' }}" loading="lazy" decoding="async" />
-            </div>
+  <div class="sessions-grid">
+    @for (h of itemsSig(); track h.id) {
+    <article
+      class="session-card card-dark"
+      (click)="openDetails(h)"
+      role="button"
+      tabindex="0"
+    >
+      <div class="content">
+        <h4 class="title-dark session-title">{{ h.title || "Sesja" }}</h4>
+        @if (h.imageUrl) {
+        <div class="image-wrap">
+          <img
+            [src]="h.imageUrl"
+            alt="{{ h.title || 'Ilustracja sesji' }}"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        }
+
+        <div class="meta-row">
+          <span class="muted">System:</span>
+          <span>{{ h.system?.name || "—" }}</span>
+        </div>
+
+        <div class="meta-row">
+          <span class="muted">Salka:</span>
+          <span>{{ h.roomName || "—" }}</span>
+        </div>
+
+        <div class="meta-row">
+          <span class="muted">Prowadzący:</span>
+          @if (h.role === HostRole.Staff) {
+          <button
+            class="btn btn-primary btn-sm"
+            (click)="openGmProfile(h, $event)"
+          >
+            {{ listDisplayName(h) }}
+          </button>
+          } @else {
+          <span>{{ listDisplayName(h) }}</span>
           }
-          <div class="content">
-            <h4 class="title-dark session-title">{{ h.title || 'Sesja' }}</h4>
+        </div>
 
-            <div class="meta-row">
-              <span class="muted">System:</span>
-              <span>{{ h.system?.name || '—' }}</span>
-            </div>
+        <div class="meta-row tags mt-3">
+          @if (h.playstyleTags.length) { @for (t of h.playstyleTags; track t) {
+          <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
+          } }
+        </div>
 
-            <div class="meta-row">
-              <span class="muted">Prowadzący:</span>
-              @if (h.role === HostSignupScope.Staff) {
-                <a class="host-link" (click)="openGmProfile(h, $event)">{{ listDisplayName(h) }}</a>
-              } @else {
-                <span>{{ listDisplayName(h) }}</span>
-              }
-            </div>
-
-            @if (h.playstyleTags.length) {
-              <div class="tags">
-                @for (t of h.playstyleTags; track t) {
-                  <span class="tag-badge violet">{{ GmStyleTagLabels[t] }}</span>
-                }
-              </div>
-            }
-
-            @if (h.triggers.length) {
-              <div class="triggers mt-2">
-                @for (tr of h.triggers; track tr) {
-                  <span class="tag-badge muted">{{ tr }}</span>
-                }
-              </div>
-            }
-          </div>
-        </article>
-      }
-    </div>
+        <div class="triggers mt-2">
+          @if (h.triggersTop.length) { @for (tr of h.triggersTop; track tr) {
+          <span class="tag-badge violet">{{ tr }}</span>
+          } } @if (h.triggersExtraCount > 0) {
+          <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
+          }
+        </div>
+      </div>
+    </article>
+    }
+  </div>
   }
 </div>

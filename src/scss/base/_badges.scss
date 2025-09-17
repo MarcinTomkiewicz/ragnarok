@@ -26,7 +26,7 @@
     color: $secondary-text-color;
   }
 
-  &.club {
+  &.golden {
     @include gold-gradient-text;
     border-color: lighten($primary-color, 10%);
     box-shadow: 0 0 8px rgba($secondary-color, 0.35);
@@ -38,10 +38,8 @@
     border-color: $secondary-color;
   }
 
-  &.golden {
-    @include gold-gradient-text;
-    border-color: lighten($secondary-color, 10%);
-    background: rgba(232, 188, 88, 0.12);
+  &.club {
+    color: $primary-color;
   }
 
   &.gm {

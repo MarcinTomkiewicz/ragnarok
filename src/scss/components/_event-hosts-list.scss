@@ -21,6 +21,7 @@
   .sessions-grid {
     @include mg-grid(4);
     gap: 1rem;
+    align-items: stretch; // upewnia się, że grid-items się rozciągają
   }
 
   .session-card {
@@ -28,8 +29,12 @@
     flex-direction: column;
     cursor: pointer;
     overflow: hidden;
+    border: 1px solid $border-color;
     border-radius: $border-radius;
-    transition: transform .12s ease, box-shadow .12s ease;
+    transition: all $transition-fast;
+    box-shadow: 0 0 10px rgba($secondary-color, 0.2);
+    height: 100%; // pełna wysokość komórki
+    max-width: 255px;
 
     &:hover { transform: translateY(-2px); box-shadow: $card-shadow; }
 
@@ -38,6 +43,7 @@
       aspect-ratio: 16 / 10;
       background: $bg-color-light;
       overflow: hidden;
+      margin-bottom: 10px;
 
       img {
         width: 100%; height: 100%;
@@ -46,11 +52,16 @@
     }
 
     .content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
       padding: .75rem .9rem;
 
       .session-title {
-        margin: 0 0 .25rem;
+        margin: 0;
         @include truncate-lines(2);
+        @include flex-wrapper(row, center, center);
+        min-height: 3.1em;
       }
 
       .meta-row {
@@ -59,9 +70,16 @@
         .muted { color: $secondary-text-color; }
       }
 
-      .tags, .triggers {
+      .tags {
         margin-top: .35rem;
         display: flex; flex-wrap: wrap; gap: .35rem;
+        min-height: 1.6rem; 
+      }
+
+      .triggers {
+        margin-top: .35rem;
+        display: flex; flex-wrap: wrap; gap: .35rem;
+        min-height: 1.6rem; 
       }
 
       .host-link {
