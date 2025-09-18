@@ -114,6 +114,12 @@
   }
 
   .admin-preview.card {
+    --card-bg: #{$bg-color-light};
+    --card-border: #{$border-color};
+    --card-radius: #{$border-radius};
+    --card-shadow: #{$card-shadow};
+    --card-fg: #{$text-color};
+
     max-width: 640px;
     margin: 0 auto 1rem;
     padding: 1rem;

@@ -5,98 +5,102 @@
 .events-admin-list {
   @include section-wrapper;
 
-  /* --- zakładki z eventami --- */
+  .card.card-dark {
+    padding: 1rem;
+  }
+
   .events-tabs {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: max-content;
-    gap: .5rem;
-    overflow-x: auto;
-    padding-bottom: .5rem;
+    @include flex-wrapper(row, flex-start, center);
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.5rem;
     margin-bottom: 1rem;
     border-bottom: 1px solid $border-color;
 
-    .btn { white-space: nowrap; }
-  }
-
-  /* --- karta eventu (tryb tabs) — kotwica zwiększająca specyficzność --- */
-  .event-card.card.card-dark {
-    background-color: $bg-color-light; /* tło kart w projekcie */
-    color: $text-color;
-    border: 1px solid $border-color;
-    border-radius: $border-radius;
-    box-shadow: $card-shadow;
-    transition: box-shadow $transition-fast, border-color $transition-fast;
-
-    &:hover {
-      box-shadow: 0 0 20px rgba($secondary-color, 0.4); /* alias do $box-shadow jeśli chcesz 1:1 */
-      border-color: lighten($border-color, 5%);
+    .btn {
+      white-space: nowrap;
     }
   }
 
-  /* układ wewnątrz karty */
   .event-details {
     @extend .form-panel;
 
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      @include flex-wrapper(row, space-between, flex-start);
       gap: 1rem;
-      margin-bottom: .75rem;
-    }
+      margin-bottom: 0.75rem;
+      width: 100%;
 
-    .title h3 { margin: 0; color: $text-color; }
-
-    .tags {
-      display: flex; gap: .5rem; margin-top: .25rem;
-
-      .tag {
-        font-size: $font-size-sm;
-        padding: .15rem .5rem;
-        border-radius: $border-radius;
-        background: $bg-color;
-        border: 1px solid $border-color;
-        color: $secondary-text-color;
+      @media (max-width: $breakpoint-xs) {
+        @include flex-wrapper(column, flex-start, flex-start);
+        gap: 0.5rem;
+        /* tylko przycisk Edytuj w panelu kart (tabs) */
+        & .actions > .btn.btn-primary {
+          padding: 0.25rem 0.75rem;
+        }
       }
     }
 
-    .meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
-      gap: .25rem .75rem;
-      margin: .25rem 0 .75rem;
-
-      dt { font-weight: 600; color: $secondary-text-color; margin: 0; }
-      dd { margin: 0; color: $text-color; }
-      > div { display: grid; grid-template-columns: auto 1fr; gap: .5rem; }
+    .title h3 {
+      margin: 0;
+      @include gold-gradient-text;
     }
 
-    .desc { margin-bottom: 1rem; color: $secondary-text-color; }
+    .tags {
+      @include flex-wrapper(row, flex-start, flex-start);
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+      flex-wrap: wrap;
+    }
+
+    .meta {
+      @include flex-wrapper(row, flex-start, flex-start);
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      width: 100%;
+
+      dt {
+        font-weight: 600;
+        color: $secondary-text-color;
+        margin: 0;
+      }
+      dd {
+        margin: 0;
+        color: $text-color;
+      }
+      > div {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem;
+      }
+    }
+
+    .desc {
+      margin: 1rem 0;
+      color: $secondary-text-color;
+      width: 100%;
+    }
 
     .occ {
-      h4 { margin: .5rem 0; color: $text-color; }
-      .month-block { margin-bottom: .75rem; }
-      .month-title { font-weight: 600; margin-bottom: .25rem; color: $secondary-text-color; }
+      @include flex-wrapper(column, flex-start, flex-start);
+      width: 100%;
+      h4 {
+        margin: 0.5rem 0;
+        color: $text-color;
+      }
+      .month-block {
+        margin-bottom: 0.75rem;
+      }
+      .month-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: $secondary-text-color;
+      }
 
       .dates {
-        display: flex; flex-wrap: wrap; gap: .5rem;
-
-        /* dostosowanie outline’owych przycisków do palety */
-        .btn.btn-outline {
-          border-color: $border-color;
-          color: $text-color;
-          background-color: transparent;
-          transition: background-color $transition-fast, border-color $transition-fast;
-
-          &:hover {
-            background-color: $secondary-button-hover-color;
-            border-color: lighten($border-color, 8%);
-            color: $button-text-color;
-          }
-
-          &.btn-sm { font-size: $font-size-sm; }
-        }
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
       }
     }
   }
@@ -109,14 +113,23 @@
       color: $text-color;
       border: 1px solid $border-color;
       border-radius: $border-radius;
-      padding: .5rem .75rem;
-      transition: background-color $transition-fast, border-color $transition-fast;
+      padding: 0.5rem 0.75rem;
+      transition: background-color $transition-fast,
+        border-color $transition-fast;
 
-      &:hover { background: $bg-color-light; border-color: lighten($border-color, 5%); }
-      &:focus { outline: none; box-shadow: 0 0 0 2px rgba($primary-color, .25); }
+      &:hover {
+        background: $bg-color-light;
+        border-color: lighten($border-color, 5%);
+      }
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba($primary-color, 0.25);
+      }
     }
 
-    .panel-title { width: 100%; }
+    .panel-title {
+      width: 100%;
+    }
 
     /* treść panelu — kotwica zwiększająca specyficzność */
     .panel-card {
@@ -127,16 +140,29 @@
     }
 
     .panel-content {
-      padding-top: .25rem;
+      padding-top: 0.25rem;
 
       .meta--compact {
-        dt { font-weight: 600; color: $secondary-text-color; margin: 0; }
-        dd { margin: 0; color: $text-color; }
-        > div { display: grid; grid-template-columns: 140px 1fr; gap: .5rem; }
+        dt {
+          font-weight: 600;
+          color: $secondary-text-color;
+          margin: 0;
+        }
+        dd {
+          margin: 0;
+          color: $text-color;
+        }
+        > div {
+          display: grid;
+          grid-template-columns: 140px 1fr;
+          gap: 0.5rem;
+        }
       }
 
       .occ .dates {
-        display: flex; flex-wrap: wrap; gap: .5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
 
         .btn.btn-outline {
           border-color: $border-color;
@@ -153,14 +179,16 @@
     }
   }
 
-  .muted { color: $secondary-text-color; }
+  .muted {
+    color: $secondary-text-color;
+  }
 }
 
 /* --- responsywność na Twoich breakpointach --- */
 @media (max-width: $breakpoint-sm) {
   .events-admin-list {
     .events-accordion [ngbaccordionheader] button[ngbaccordionbutton] {
-      padding: .5rem;
+      padding: 0.5rem;
     }
     .event-details .meta > div {
       grid-template-columns: 1fr; /* nie łamiemy info na 3–4 linie, ale czytelnie na mobile */

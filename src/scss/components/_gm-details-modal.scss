@@ -5,6 +5,11 @@
   @include flex-wrapper(column, flex-start, center);
   gap: 2rem;
 
+    .card-dark {
+    --card-border: #{$primary-color}; 
+    --card-fg:     #{$primary-color}; 
+    }
+
   .gm-top-row {
     @include flex-wrapper(row, flex-start, stretch);
     flex-wrap: wrap;

@@ -1,11 +1,17 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+/* USTAW TOKENY DLA TEGO KONKRETNEGO TYPU KARTY */
+.party-card {
+  --card-bg:     #{$bg-color-light};
+  --card-border: #{$border-color};
+  --card-radius: #{$border-radius};
+  --card-shadow: #{$card-shadow};
+  --card-fg:     #{$text-color};
+}
+
+/* Layout/sizing – bez dotykania bazowych właściwości karty */
 .party-card.card-dark {
-  background-color: $bg-color-light;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  box-shadow: $card-shadow;
   padding: 0.5rem;
   min-width: 300px;
   max-width: 350px;
@@ -23,46 +29,14 @@
   position: relative;
 }
 
-.party-card .card-meta {
-  @include flex-wrapper(row, flex-start, flex-start);
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  width: 100%;
-}
-
-.party-card .party-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
-}
-
+/* ... reszta BEZ zmian (meta, badges, actions itd.) ... */
+.party-card .card-meta { @include flex-wrapper(row, flex-start, flex-start); flex-wrap: wrap; gap: 0.25rem; width: 100%; }
+.party-card .party-content { display: flex; flex-direction: column; gap: 0.5rem; flex: 1 1 auto; min-height: 0; width: 100%; }
 .party-card .card-text-dark,
 .party-card .card-meta,
-.party-card .badge {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.party-card .card-meta .badge {
-  margin-right: 0.25rem;
-  margin-bottom: 0.25rem;
-}
-
-.party-card .card-actions {
-  margin-top: auto;
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-
-  .btn {
-    font-size: $font-size-xs;
-    padding: 0.4rem 0.8rem;
-  }
-}
+.party-card .badge { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+.party-card .card-meta .badge { margin-right: 0.25rem; margin-bottom: 0.25rem; }
+.party-card .card-actions { margin-top: auto; display: flex; justify-content: center; gap: 0.75rem; .btn { font-size: $font-size-xs; padding: 0.4rem 0.8rem; } }
 
 .pending-requests {
   @include flex-wrapper(row, space-between, center);

@@ -1,16 +1,30 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+/* DOMYŚLNE TOKENY KARTY (fallbacki) */
 .card {
-  border-radius: $border-radius;
+  --card-bg:        #{$bg-color-light};
+  --card-fg:        #{$text-color};
+  --card-border:    #{$border-color};
+  --card-radius:    #{$border-radius};
+  --card-shadow:    #{$card-shadow};
+
+  background-color: var(--card-bg);
+  color:            var(--card-fg);
+  border:           1px solid var(--card-border);
+  border-radius:    var(--card-radius);
+  box-shadow:       var(--card-shadow);
+  transition:       box-shadow $transition-fast, border-color $transition-fast;
 }
 
+/* Wariant „dark” – ustawia tylko tokeny, nie właściwości */
 .card.card-dark {
-  background-color: $bg-color;
-  border: 1px solid $primary-color;
-  color: $primary-color;
+  --card-bg:        #{$bg-color};
+  --card-fg:        #{$primary-color};
+  --card-border:    #{$primary-color};
 }
 
+/* Reszta – zostaje jak u Ciebie (może też korzystać z tokenów, ale nie musi) */
 .card .card-title,
 .card .card-header.title-dark,
 .card .header-dark { 
@@ -26,9 +40,7 @@
   color: $primary-color;
   font-size: $font-size-md;
 
-  &.large {
-    @include responsive-font-size(18px);
-  }
+  &.large { @include responsive-font-size(18px); }
 }
 
 .card-body { 

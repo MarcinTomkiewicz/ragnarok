@@ -1,22 +1,26 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+/* Tokeny dla rezerwacji */
+.reservation-card {
+  --card-bg:     #{$bg-color-light};
+  --card-border: #{$border-color};
+  --card-radius: #{$border-radius};
+  --card-shadow: #{$card-shadow};
+  --card-fg:     #{$text-color};
+}
+
+/* Layout/sizing */
 .reservation-card.card-dark {
-  background-color: $bg-color-light;
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-  box-shadow: $card-shadow;
   padding: 0.5rem;
   width: 350px;
-  @media (max-width: $breakpoint-sm) {
-    width: 300px;
-  }
+  @media (max-width: $breakpoint-sm) { width: 300px; }
 }
 
 .reservation-card .card-body {
   @include flex-wrapper(column, flex-start, stretch);
   min-height: 316px;
-  gap: 0.75rem; /* ← to jest Twoje „+8px pod badge” */
+  gap: 0.75rem;
   text-align: left;
 }
 

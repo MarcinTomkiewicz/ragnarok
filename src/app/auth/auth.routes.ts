@@ -184,7 +184,7 @@ export const AUTH_ROUTES: Routes = [
     import('./components/events-admin-list/events-admin-list.component')
       .then(m => m.EventsAdminListComponent),
   canActivate: [AuthGuard],
-  data: { minCoworkerRole: CoworkerRoles.Gm },
+  data: { minCoworkerRole: CoworkerRoles.User },
 },
 {
   path: 'events/:slug/host-signup/:date',
@@ -213,13 +213,4 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
-  //   {
-  //   path: 'events/host-signup',
-  //   loadComponent: () =>
-  //     import('./components/host-signup-form/host-signup-form.component').then(
-  //       (m) => m.HostSignupFormComponent
-  //     ),
-  //   canActivate: [AuthGuard],
-  //   data: { minCoworkerRole: CoworkerRoles.Gm },
-  // },
 ];
