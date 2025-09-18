@@ -1,17 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { EventFull } from '../../../core/interfaces/i-events';
 import { EventService } from '../../../core/services/event/event.service';
 import { formatYmdLocal } from '../../../core/utils/weekday-options';
-import { AttractionKindLabel, HostSignupScopeLabel } from '../../../core/enums/events';
+import {
+  AttractionKindLabel,
+  HostSignupScopeLabel,
+} from '../../../core/enums/events';
+import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+
+type ViewMode = 'tabs' | 'accordion';
 
 @Component({
   selector: 'app-events-admin-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgbAccordionModule],
   templateUrl: './events-admin-list.component.html',
   styleUrls: ['./events-admin-list.component.scss'],
 })
@@ -29,8 +35,15 @@ export class EventsAdminListComponent {
     { initialValue: [] as EventFull[] }
   );
 
-  selectedSlug = signal<string | null>(null);
-  selected = computed<EventFull | null>(() => {
+  // tryb widoku
+  readonly viewMode = signal<ViewMode>('tabs');
+  setViewMode(m: ViewMode) {
+    if (this.viewMode() !== m) this.viewMode.set(m);
+  }
+
+  // wybór eventu (dla trybu "tabs")
+  private readonly selectedSlug = signal<string | null>(null);
+  readonly selected = computed<EventFull | null>(() => {
     const list = this.eventsSig();
     if (!list.length) return null;
     const slug = this.selectedSlug() ?? list[0]?.slug ?? null;
@@ -51,25 +64,27 @@ export class EventsAdminListComponent {
     };
   }
 
-  occurrencesThisMonth = computed<string[]>(() => {
+  // occurrences dla aktualnie wybranego (tabs)
+  readonly occurrencesThisMonth = computed<string[]>(() => {
     const ev = this.selected();
     if (!ev) return [];
     const { thisFrom, thisTo } = this.rangeFromTo();
     return this.eventService.listOccurrencesFE(ev, thisFrom, thisTo);
   });
 
-  occurrencesNextMonth = computed<string[]>(() => {
+  readonly occurrencesNextMonth = computed<string[]>(() => {
     const ev = this.selected();
     if (!ev) return [];
     const { nextFrom, nextTo } = this.rangeFromTo();
     return this.eventService.listOccurrencesFE(ev, nextFrom, nextTo);
   });
 
-  trackBySlug(_i: number, e: EventFull) {
-    return e.slug;
-  }
-  trackByDate(_i: number, d: string) {
-    return d;
+  // occurrences dla konkretnego eventu (accordion) – bez zapisywania w signals
+  listOccurrences(ev: EventFull, which: 'this' | 'next'): string[] {
+    const { thisFrom, thisTo, nextFrom, nextTo } = this.rangeFromTo();
+    return which === 'this'
+      ? this.eventService.listOccurrencesFE(ev, thisFrom, thisTo)
+      : this.eventService.listOccurrencesFE(ev, nextFrom, nextTo);
   }
 
   pickEvent(slug: string) {
@@ -77,14 +92,27 @@ export class EventsAdminListComponent {
   }
 
   goSignup(dateIso: string) {
-    const ev = this.selected();
-    if (!ev) return;
-    this.router.navigate(['/auth/events', ev.slug, 'host-signup', dateIso]);
+    const ev = this.viewMode() === 'tabs' ? this.selected() : null;
+    const slug = ev?.slug ?? this.selectedSlug() ?? null;
+    const resolvedSlug = slug ?? this.eventsSig()[0]?.slug;
+    if (!resolvedSlug) return;
+    this.router.navigate([
+      '/auth/events',
+      resolvedSlug,
+      'host-signup',
+      dateIso,
+    ]);
+  }
+
+  goSignupFor(slug: string, dateIso: string) {
+    if (!slug) return;
+    this.router.navigate(['/auth/events', slug, 'host-signup', dateIso]);
   }
 
   goEdit() {
-    const ev = this.selected();
-    if (!ev) return;
-    this.router.navigate(['/auth/events', ev.slug, 'edit']);
+    const ev = this.viewMode() === 'tabs' ? this.selected() : null;
+    const slug = ev?.slug ?? this.selectedSlug() ?? this.eventsSig()[0]?.slug;
+    if (!slug) return;
+    this.router.navigate(['/auth/events', slug, 'edit']);
   }
 }
