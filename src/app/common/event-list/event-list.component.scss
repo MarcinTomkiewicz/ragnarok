@@ -1,7 +1,108 @@
 @import "abstracts/variables";
+@import "abstracts/mixins";
 
-.icon {
-    height: 2em;
-    width: 2em;
-    filter: $icon-filter-dark;
+.event-list-grid {
+  @include data-grid(.5rem);
+  font-family: $font-family-base;
+
+  .grid-header {
+    @include data-grid-row(
+      1fr 140px 110px 1.4fr 140px 140px,
+      .5rem .25rem,
+      transparent,
+      0,
+      .5rem
+    );
+    font-weight: 700;
+    color: $secondary-text-color;
+    padding-bottom: .25rem;
+    border-bottom: 1px solid $border-color;
+
+    > .col { text-align: center; } 
   }
+
+  .grid-row {
+    @include data-grid-row(
+      1fr 140px 110px 1.4fr 140px 140px,
+      .5rem .25rem,
+      transparent,
+      0,
+      .5rem
+    );
+    @include data-grid-row-divider($border-color);
+    @include responsive-font-size(12px);
+
+    &:hover { background: $bg-color-light; }
+
+    > .col-desc { text-align: left }
+  }
+
+  .name {
+    cursor: pointer;
+    &:hover { text-decoration: underline; }
+  }
+
+
+  .large-screens { display: inline-flex; align-items: center; gap: .35rem; }
+  .small-screens { display: none; }
+
+
+  img.icon { width: 20px; height: 20px; display: block; }
+  i.icon   { font-size: 20px; line-height: 20px; display: inline-block; }
+}
+
+.icon-link {
+  @include flex-center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover { opacity: .9; }
+}
+
+@media (max-width: $breakpoint-lg) {
+  .event-list-grid {
+    .grid-header,
+    .grid-row {
+      grid-template-columns: 1fr 140px 110px 120px 120px; 
+    }
+
+    .col-desc { display: none !important; }
+
+    .large-screens { display: none !important; }
+    .small-screens { display: inline-flex !important; }
+
+    .grid-row {
+      .col-details,
+      .col-fb { @include flex-center; } 
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .event-list-grid {
+    .grid-header,
+    .grid-row {
+      grid-template-columns: 1fr 130px 100px 100px;
+    }
+    .col-fb { display: none !important; }
+  }
+}
+
+@media (max-width: $breakpoint-xs) {
+  .event-list-grid {
+    .grid-header,
+    .grid-row {
+      grid-template-columns: 1fr 110px 80px;
+    }
+    .col-time { display: none !important; }
+
+    .grid-row .col-details { @include flex-center; }
+  }
+}

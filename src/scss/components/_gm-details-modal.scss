@@ -5,6 +5,11 @@
   @include flex-wrapper(column, flex-start, center);
   gap: 2rem;
 
+    .card-dark {
+    --card-border: #{$primary-color}; 
+    --card-fg:     #{$primary-color}; 
+    }
+
   .gm-top-row {
     @include flex-wrapper(row, flex-start, stretch);
     flex-wrap: wrap;
@@ -36,6 +41,7 @@
       padding: 1rem;
       height: auto;
       @include flex-wrapper(column, flex-start, flex-start);
+      border: 1px solid $primary-color;
 
       .card-text-dark {
         margin-bottom: 0.5rem;
@@ -61,7 +67,8 @@
     }
 
     .card-dark {
-      min-height: 120px;
+      min-height: 157px;
+      height: 100%;
     }
   }
 
@@ -79,7 +86,7 @@
     aspect-ratio: 1;
     border-radius: 50%;
     overflow: hidden;
-    border: 1px solid $border-color;
+    border: 1px solid $primary-color;
 
     img {
       width: 100%;

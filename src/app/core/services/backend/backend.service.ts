@@ -2,16 +2,15 @@ import { inject, Injectable } from '@angular/core';
 import {
   PostgrestResponse,
   PostgrestSingleResponse,
-  SupabaseClient,
 } from '@supabase/supabase-js';
 import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IFilter } from '../../interfaces/i-filters';
-import { SupabaseService } from '../supabase/supabase.service';
-import { toCamelCase, toSnakeKey, toSnakeCase } from '../../utils/type-mappers';
-import { ImageStorageService } from './image-storage/image-storage.service';
-import { applyFilters } from '../../utils/query';
 import { FilterOperator } from '../../enums/filterOperator';
+import { IFilter } from '../../interfaces/i-filters';
+import { applyFilters } from '../../utils/query';
+import { toCamelCase, toSnakeCase, toSnakeKey } from '../../utils/type-mappers';
+import { SupabaseService } from '../supabase/supabase.service';
+import { ImageStorageService } from './image-storage/image-storage.service';
 
 export interface IPagination {
   page?: number;
@@ -34,10 +33,8 @@ export class BackendService {
     processImages = true
   ): Observable<T[]> {
     let select = '*';
-    if (joins) {
-      select = `*, ${joins}`;
-    }
-    
+    if (joins) select = `*, ${joins}`;
+
     let query = this.supabase.from(table).select(select);
     query = applyFilters(query, pagination?.filters);
 
@@ -78,9 +75,7 @@ export class BackendService {
     height?: number,
     processImages = true
   ): Observable<T | null> {
-    return from(
-      this.supabase.from(table).select('*').eq('id', id).single()
-    ).pipe(
+    return from(this.supabase.from(table).select('*').eq('id', id).single()).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
         const camel = response.data ? toCamelCase<T>(response.data) : null;
@@ -95,35 +90,26 @@ export class BackendService {
     if (!ids.length) return of([]);
     return this.getAll<T>(table, undefined, 'asc', {
       filters: {
-        id: {
-          operator: FilterOperator.IN,
-          value: ids,
-        },
+        id: { operator: FilterOperator.IN, value: ids },
       },
     });
   }
 
   getBySlug<T extends object>(table: string, slug: string): Observable<T | null> {
-  return from(
-    this.supabase.from(table).select('*').eq('slug', slug).single()
-  ).pipe(
-    map((response: PostgrestSingleResponse<T>) => {
-      if (response.error || !response.data) return null;
-      return toCamelCase<T>(response.data); // Konwertujemy na camelCase, jak to robimy w innych metodach
-    })
-  );
-}
+    return from(this.supabase.from(table).select('*').eq('slug', slug).single()).pipe(
+      map((response: PostgrestSingleResponse<T>) => {
+        if (response.error || !response.data) return null;
+        return toCamelCase<T>(response.data);
+      })
+    );
+  }
 
   getCount<T extends object>(
     table: string,
     filters?: { [key: string]: any }
   ): Observable<number> {
-    let query = this.supabase
-      .from(table)
-      .select('*', { count: 'exact', head: true });
-
+    let query = this.supabase.from(table).select('*', { count: 'exact', head: true });
     query = applyFilters(query, filters);
-
     return from(query).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
@@ -137,11 +123,9 @@ export class BackendService {
     filters: Record<string, any>
   ): Observable<T | null> {
     let query = this.supabase.from(table).select('*');
-
     for (const [key, value] of Object.entries(filters)) {
       query = query.eq(toSnakeKey(key), value);
     }
-
     return from(query.maybeSingle()).pipe(
       map((response: PostgrestSingleResponse<any>) => {
         if (response.error || !response.data) return null;
@@ -150,8 +134,11 @@ export class BackendService {
     );
   }
 
+  // --- MUTACJE: zawsze snake_case + select('*') ---
+
   create<T>(table: string, data: T): Observable<T> {
-    return from(this.supabase.from(table).insert(data).single()).pipe(
+    const snake = toSnakeCase(data);
+    return from(this.supabase.from(table).insert(snake).select('*').single()).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
         return response.data;
@@ -159,22 +146,21 @@ export class BackendService {
     );
   }
 
-createMany<T>(table: string, data: T[]): Observable<T[]> {
-  if (!data.length) return of([]);
-
-  const snakeData = toSnakeCase(data);
-
-  return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
-    map((response) => {
-      if (response.error) throw new Error(response.error.message);
-      return (response.data || []).map((item) => toCamelCase<T>(item));
-    })
-  );
-}
+  createMany<T>(table: string, data: T[]): Observable<T[]> {
+    if (!data.length) return of([]);
+    const snakeData = toSnakeCase(data);
+    return from(this.supabase.from(table).insert(snakeData).select('*')).pipe(
+      map((response) => {
+        if (response.error) throw new Error(response.error.message);
+        return (response.data || []).map((item) => toCamelCase<T>(item));
+      })
+    );
+  }
 
   update<T>(table: string, id: string | number, data: Partial<T>): Observable<T> {
+    const snake = toSnakeCase(data);
     return from(
-      this.supabase.from(table).update(data).eq('id', id).single()
+      this.supabase.from(table).update(snake).eq('id', id).select('*').single()
     ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
@@ -183,16 +169,10 @@ createMany<T>(table: string, data: T[]): Observable<T[]> {
     );
   }
 
-  upsert<T>(
-    table: string,
-    data: T,
-    conflictTarget: string = 'id'
-  ): Observable<T> {
+  upsert<T>(table: string, data: T, conflictTarget: string = 'id'): Observable<T> {
+    const snake = toSnakeCase(data);
     return from(
-      this.supabase
-        .from(table)
-        .upsert(data, { onConflict: conflictTarget })
-        .single()
+      this.supabase.from(table).upsert(snake, { onConflict: conflictTarget }).select('*').single()
     ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
@@ -201,18 +181,11 @@ createMany<T>(table: string, data: T[]): Observable<T[]> {
     );
   }
 
-  upsertMany<T>(
-    table: string,
-    data: T[],
-    conflictTarget: string = 'id'
-  ): Observable<T[]> {
+  upsertMany<T>(table: string, data: T[], conflictTarget: string = 'id'): Observable<T[]> {
     if (!data.length) return of([]);
-
+    const snake = toSnakeCase(data);
     return from(
-      this.supabase
-        .from(table)
-        .upsert(data, { onConflict: conflictTarget })
-        .select()
+      this.supabase.from(table).upsert(snake, { onConflict: conflictTarget }).select()
     ).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
@@ -226,13 +199,11 @@ createMany<T>(table: string, data: T[]): Observable<T[]> {
     filters: string | number | Record<string, any>
   ): Observable<void> {
     let query = this.supabase.from(table).delete();
-
     if (typeof filters === 'object') {
       query = applyFilters(query, filters);
     } else {
       query = query.eq('id', filters);
     }
-
     return from(query).pipe(
       map((response) => {
         if (response.error) throw new Error(response.error.message);

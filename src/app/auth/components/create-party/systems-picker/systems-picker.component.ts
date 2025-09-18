@@ -10,10 +10,11 @@ import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
   styleUrl: './systems-picker.component.scss'
 })
 export class SystemsPickerComponent {
- systems = input.required<IRPGSystem[]>();
+  systems = input.required<IRPGSystem[]>();
   allowedIds = input<Set<string> | null>(null);
   selectedIds = input<string[]>([]);
   gmSelected = input(false);
+  disabled = input<boolean>(false);
 
   selectedChange = output<string[]>();
 
@@ -32,17 +33,21 @@ export class SystemsPickerComponent {
   });
 
   onSearch(ev: Event) {
+    if (this.disabled()) return;               // honoruj disabled
     this.term.set((ev.target as HTMLInputElement).value ?? '');
   }
 
   onSelect(ev: Event) {
+    if (this.disabled()) return;               // honoruj disabled
     const target = ev.target as HTMLSelectElement;
     const values = Array.from(target.selectedOptions).map((o) => o.value);
-    const next = [...this.selectedIds(), ...values.filter((v) => !this.selectedIds().includes(v))];
-    this.emitLimited(next);
+    const curr = this.selectedIds();
+    const merged = [...curr, ...values.filter((v) => !curr.includes(v))];
+    this.emitLimited(merged);
   }
 
   remove(id: string) {
+    if (this.disabled()) return;               // honoruj disabled
     const next = this.selectedIds().filter((x) => x !== id);
     this.selectedChange.emit(next);
   }

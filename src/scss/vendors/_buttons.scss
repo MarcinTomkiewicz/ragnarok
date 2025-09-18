@@ -72,6 +72,23 @@
     }
   }
 
+  &.btn-outline-primary {
+    background-color: transparent;
+    border: 1px solid $primary-color;
+    color: $primary-color;
+
+    &:hover:not(:disabled) {
+      background-color: $primary-color;
+      color: $bg-color;
+    }
+
+    &:disabled {
+      border-color: lighten($primary-color, 25%);
+      color: lighten($primary-color, 25%);
+      background-color: transparent;
+    }
+  }
+
   &.btn-outline {
     background-color: transparent;
     border: 1px solid $text-color;
@@ -160,9 +177,35 @@
     }
   }
 
-  &.btn-close-x{
-    padding: 0.10rem 0.35rem;
+  &.btn-close-x {
+    padding: 0.1rem 0.35rem;
     font-size: $font-size-xs;
     text-align: center;
   }
+}
+
+.btn-check {
+  position: absolute;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+}
+
+.btn-check:checked + .btn-outline-primary,
+.btn-outline-primary.active {
+  background-color: $primary-color;
+  color: $bg-color;
+  border-color: $primary-color;
+}
+
+.btn-check:focus + .btn-outline-primary,
+.btn-outline-primary:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+  outline: 0;
+}
+
+.btn-group {
+  display: inline-flex;
+  gap: 0.5rem;
+
+  flex-wrap: wrap;
 }

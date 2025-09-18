@@ -1,18 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, combineLatest, forkJoin, from, of } from 'rxjs';
 import { concatMap, find, map, switchMap } from 'rxjs/operators';
-import { BackendService } from '../../../../../core/services/backend/backend.service';
-import { ReservationService } from '../../reservation/reservation.service';
-import { AvailabilityService } from '../../availability/availability.service';
-import { GmDirectoryService } from '../gm-directory/gm-directory.service';
-import { IAvailabilitySlot } from '../../../../../core/interfaces/i-availability-slot';
-import { ReservationStatus } from '../../../../../core/interfaces/i-reservation';
-import { IGmData } from '../../../../../core/interfaces/i-gm-profile';
 import { GmSlotsMode } from '../../../../../core/enums/gm-slots-mode';
+import { IAvailabilitySlot } from '../../../../../core/interfaces/i-availability-slot';
+import { IGmData } from '../../../../../core/interfaces/i-gm-profile';
+import { ReservationStatus } from '../../../../../core/interfaces/i-reservation';
+import { AvailabilityService } from '../../availability/availability.service';
+import { ReservationService } from '../../reservation/reservation.service';
+import { GmDirectoryService } from '../gm-directory/gm-directory.service';
 
 @Injectable({ providedIn: 'root' })
 export class GmSchedulingService {
-  private readonly backend = inject(BackendService);
   private readonly reservations = inject(ReservationService);
   private readonly availability = inject(AvailabilityService);
   private readonly directory = inject(GmDirectoryService);
@@ -36,7 +34,6 @@ export class GmSchedulingService {
     return this.availability.getAvailability(gmId, dates, 'gm');
   }
 
-  // ⬇️ przyjmujemy wyłącznie timed GM (kompilator dopilnuje godzin)
   upsertAvailability(
     entry: IAvailabilitySlot & {
       workType: 'gm';
@@ -386,7 +383,6 @@ export class GmSchedulingService {
     const db = Math.abs(b - preferredStartHour);
     if (da !== db) return da - db;
 
-    // preferuj godziny po tej samej stronie co preferowana; wcześniej lub później
     const sideA = a <= preferredStartHour ? -1 : 1;
     const sideB = b <= preferredStartHour ? -1 : 1;
     if (sideA !== sideB) return sideA - sideB;

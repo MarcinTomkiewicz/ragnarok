@@ -1,0 +1,109 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "layouts/form-panel";
+
+.event-form-panel {
+  @include section-wrapper;
+
+  .flags-row {
+    display: grid;
+    gap: 0.75rem 1.25rem;
+    @media (min-width: $breakpoint-md) {
+      grid-template-columns: repeat(4, max-content);
+      align-items: center;
+    }
+    .form-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+    }
+  }
+
+  .row-inline.cover-row {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .cover-preview {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+  }
+
+  .user-info-form {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .row-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .dropdown-toggle-wide {
+    width: 100%;
+    max-width: 100%;
+  }
+  .dropdown-pane {
+    min-width: 100%;
+    padding: 0.5rem 0;
+  }
+  .dropdown-pane .dropdown-item.active {
+    background: rgba($primary-color, 0.12);
+    border-left: 2px solid $primary-color;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid $border-color;
+    border-radius: 1rem;
+    background: $bg-color-light;
+    cursor: pointer;
+    transition: background-color $transition-fast, border-color $transition-fast, color $transition-fast;
+  }
+  .chip input[type="checkbox"] {
+    position: absolute;
+    inset: 0;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .chip:has(input[type="checkbox"]:checked) {
+    background: rgba($primary-color, 0.12);
+    border-color: $primary-color;
+    color: $primary-color;
+  }
+  .chip:has(input[type="checkbox"]:focus-visible) {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+
+  .actions {
+    margin-top: 1.25rem;
+  }
+}

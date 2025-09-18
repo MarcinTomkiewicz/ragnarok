@@ -1,12 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Component, OnInit, inject } from '@angular/core';
+import { map, shareReplay } from 'rxjs';
 import { EventListComponent } from '../../common/event-list/event-list.component';
-import { FilterOperator } from '../../core/enums/filterOperator';
-import { EventData } from '../../core/interfaces/i-event';
-import { BackendService } from '../../core/services/backend/backend.service';
-import { EventsService } from '../../core/services/events/events.service';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { formatYmdLocal } from '../../core/utils/weekday-options';
+import { EventService } from '../../core/services/event/event.service';
 
 @Component({
   selector: 'app-event-calendar',
@@ -16,35 +14,33 @@ import { SeoService } from '../../core/services/seo/seo.service';
   styleUrl: './event-calendar.component.scss',
 })
 export class EventCalendarComponent implements OnInit {
-  recurringEvents: EventData[] = [];
-  singleEvents: EventData[] = [];
-
-  private readonly eventsService = inject(EventsService);
+  private readonly eventsService = inject(EventService);
   private readonly seo = inject(SeoService);
+
+  private readonly today = formatYmdLocal(new Date());
+
+  private readonly all$ = this.eventsService.getAllActive().pipe(
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+
+  recurringEvents$ = this.all$.pipe(
+    map(list => list.filter(e => !!e.recurrence))
+  );
+
+  singleEvents$ = this.all$.pipe(
+    map(list =>
+      list
+        .filter(e => !!e.singleDate && e.singleDate! >= this.today)
+        .sort((a, b) => {
+          const da = a.singleDate!, db = b.singleDate!;
+          if (da < db) return -1;
+          if (da > db) return 1;
+          return (a.startTime ?? '').localeCompare(b.startTime ?? '');
+        })
+    )
+  );
 
   ngOnInit(): void {
     this.seo.setTitleAndMeta('Kalendarz Wydarzeń');
-
-    const today = new Date().toISOString().split('T')[0];
-
-    this.eventsService.getRecurringEvents().subscribe({
-      next: (recurring) => {
-        this.recurringEvents = this.eventsService.processRecurringEvents(
-          recurring,
-          today,
-          1
-        );
-      },
-      error: (err) =>
-        console.error('Błąd podczas pobierania cyklicznych wydarzeń:', err),
-    });
-
-    this.eventsService.getSingleEvents().subscribe({
-      next: (single) => {
-        this.singleEvents = single.filter((e) => e.eventDate >= today);
-      },
-      error: (err) =>
-        console.error('Błąd podczas pobierania jednorazowych wydarzeń:', err),
-    });
   }
 }

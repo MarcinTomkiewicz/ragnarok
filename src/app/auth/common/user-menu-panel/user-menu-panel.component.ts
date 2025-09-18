@@ -92,6 +92,20 @@ export class UserMenuPanelComponent {
     }
     sections.push({ title: 'Drużyny', items: parties });
 
+    const events: MenuItem[] = [];
+    if (min(CoworkerRoles.Reception)) {
+      events.push(
+        { label: 'Zarządzaj wydarzeniami', path: '/auth/events' },
+        { label: 'Nowe wydarzenie', path: '/auth/events/new' }
+      );
+    } else if (min(CoworkerRoles.User)) {
+      events.push({
+        label: 'Poprowadź wydarzenie',
+        path: '/auth/events',
+      });
+    }
+    if (events.length) sections.push({ title: 'Wydarzenia', items: events });
+
     // Dyspozycyjność
     const availability: MenuItem[] = [];
     if (strict(CoworkerRoles.Gm)) {
