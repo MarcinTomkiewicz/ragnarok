@@ -183,7 +183,7 @@ export class EventHostsService {
       ? this.images
           .transcodeAndUpload(
             imageFile,
-            `events/${rest.eventId}/hosts/${rest.occurrenceDate}`,
+            `events/${rest.eventId}/hosts/${rest.occurrenceDate}`, // spójna ścieżka
             {
               keepBaseName: true,
               uniqueStrategy: 'date',
@@ -195,18 +195,28 @@ export class EventHostsService {
               largerFallbackFactor: 1.15,
             }
           )
-          .pipe(catchError(() => of(null)))
-      : of(null);
+          // jeśli upload padnie – NIE zapisujemy rekordu z null
+          .pipe(
+            // jak chcesz zdebugować: tap(p => console.log('uploaded path:', p)),
+            switchMap((p) =>
+              p ? of(p) : throwError(() => new Error('Upload failed'))
+            )
+          )
+      : of<string | undefined>(undefined);
 
     return precheck$.pipe(
       switchMap(() => upload$),
-      switchMap((imagePath) => {
-        const payload = { ...rest, imagePath };
+      switchMap((uploadedPath) => {
+        const payload = uploadedPath
+          ? { ...rest, imagePath: uploadedPath }
+          : { ...rest };
+
         return this.backend.create(
           'event_occurrence_hosts',
           toSnakeCase(payload) as any
         );
       }),
+
       catchError((err) => {
         const domain = HostSignupConflictError.fromSupabase(err, {
           eventId: rest.eventId,
@@ -251,191 +261,193 @@ export class EventHostsService {
   }
 
   updateHost(id: string, patch: IEventHostUpdate): Observable<void> {
-    const { imageFile, ...rest } = patch;
+  const { imageFile, ...rest } = patch;
 
-    const prev$ = this.backend.getById<IEventHost>(
-      'event_occurrence_hosts',
-      id,
-      undefined,
-      undefined,
-      false
-    ) as Observable<IEventHost>;
+  const prev$ = this.backend.getById<IEventHost>(
+    'event_occurrence_hosts',
+    id,
+    undefined,
+    undefined,
+    false
+  ) as Observable<IEventHost>;
 
-    const upload$ = imageFile
-      ? this.images
-          .transcodeAndUpload(imageFile, `hosts/${id}`, {
-            keepBaseName: true,
-            uniqueStrategy: 'date',
-            dateFormat: 'dd-MM-yyyy-HHmmss',
-            prefer: 'avif',
-            quality: 0.82,
-            maxW: 1600,
-            maxH: 1200,
-            largerFallbackFactor: 1.15,
-          })
-          .pipe(
-            map((p) => p ?? undefined),
-            catchError(() => of(undefined))
-          )
-      : of(undefined);
+  return prev$.pipe(
+    // 1) Precheck konfliktu sali (tylko jeśli zmieniamy salę i jest wskazana)
+    switchMap((prev) => {
+      const nextRoom = (rest.roomName as string | null | undefined) ?? prev.roomName;
+      const roomChanged = (prev.roomName || null) !== (nextRoom || null);
 
-    return prev$.pipe(
-      // precheck gdy zmienia się sala
-      switchMap((prev) => {
-        const nextRoom =
-          (rest.roomName as string | null | undefined) ?? prev.roomName;
-        const roomChanged = (prev.roomName || null) !== (nextRoom || null);
-        if (roomChanged && nextRoom) {
+      if (roomChanged && nextRoom) {
+        return this.fetchEventMeta(prev.eventId).pipe(
+          switchMap(({ start_time, end_time }) =>
+            this.assertRoomFree(
+              prev.eventId,
+              prev.occurrenceDate,
+              nextRoom,
+              start_time,
+              end_time,
+              prev.role as HostSignupScope
+            )
+          ),
+          map(() => prev)
+        );
+      }
+      return of(prev);
+    }),
+
+    switchMap((prev) => {
+      const upload$ = imageFile
+        ? this.images
+            .transcodeAndUpload(
+              imageFile,
+              // spójnie z createSignup:
+              `events/${prev.eventId}/hosts/${prev.occurrenceDate}`,
+              {
+                keepBaseName: true,
+                uniqueStrategy: 'date',
+                dateFormat: 'dd-MM-yyyy-HHmmss',
+                prefer: 'avif',
+                quality: 0.82,
+                maxW: 1600,
+                maxH: 1200,
+                largerFallbackFactor: 1.15,
+              }
+            )
+            .pipe(
+              map((p) => p ?? undefined),
+              catchError(() => of(undefined))
+            )
+        : of<string | undefined>(undefined);
+
+      return upload$.pipe(
+        switchMap((newImg) => {
+          const core: Record<string, unknown> = { ...rest };
+          if (newImg !== undefined) core['imagePath'] = newImg;
+
+          const snake = toSnakeCase(core) as Partial<Record<string, unknown>>;
+          return this.backend.update('event_occurrence_hosts', id, snake).pipe(map(() => prev));
+        }),
+
+        switchMap((prev) => {
+          const nextRoom = (rest.roomName as string | null | undefined) ?? prev.roomName;
+          const roomChanged = (prev.roomName || null) !== (nextRoom || null);
+          const sysChanged =
+            Object.prototype.hasOwnProperty.call(rest, 'systemId') &&
+            (rest.systemId ?? null) !== (prev.systemId ?? null);
+
+          if (!prev.roomName && !nextRoom && !sysChanged) return of(void 0);
+
           return this.fetchEventMeta(prev.eventId).pipe(
-            switchMap(({ start_time, end_time }) =>
-              this.assertRoomFree(
-                prev.eventId,
-                prev.occurrenceDate,
-                nextRoom,
-                start_time,
-                end_time,
-                prev.role as HostSignupScope
-              )
-            ),
-            map(() => prev)
-          );
-        }
-        return of(prev);
-      }),
-      // zapis hosta
-      switchMap((prev) =>
-        upload$.pipe(
-          switchMap((newImg) => {
-            const core: Record<string, unknown> = { ...rest };
-            if (newImg !== undefined) core['imagePath'] = newImg;
-            const snake = toSnakeCase(core) as Partial<Record<string, unknown>>;
-            return this.backend
-              .update('event_occurrence_hosts', id, snake)
-              .pipe(map(() => prev));
-          }),
-          // obsługa rezerwacji zależnie od auto_reservation
-          switchMap((prev) => {
-            const nextRoom =
-              (rest.roomName as string | null | undefined) ?? prev.roomName;
-            const roomChanged = (prev.roomName || null) !== (nextRoom || null);
-            const sysChanged =
-              Object.prototype.hasOwnProperty.call(rest, 'systemId') &&
-              (rest.systemId ?? null) !== (prev.systemId ?? null);
+            switchMap(({ start_time, end_time, auto_reservation }) => {
+              const duration_hours = this.diffHours(start_time, end_time);
 
-            if (!prev.roomName && !nextRoom && !sysChanged) return of(void 0);
-
-            return this.fetchEventMeta(prev.eventId).pipe(
-              switchMap(({ start_time, end_time, auto_reservation }) => {
-                if (auto_reservation) {
-                  const duration_hours = this.diffHours(start_time, end_time);
-
-                  if (roomChanged) {
-                    const clear$ = prev.roomName
-                      ? this.backend
-                          .upsert(
-                            'reservations',
-                            {
-                              event_id: prev.eventId,
-                              room_name: prev.roomName,
-                              date: prev.occurrenceDate,
-                              start_time,
-                              duration_hours, // ⬅️ ZOSTAJE
-                              status: 'confirmed',
-                              gm_id: null,
-                              system_id: null,
-                            } as any,
-                            'event_id,room_name,date,start_time'
-                          )
-                          .pipe(map(() => void 0))
-                      : of(void 0);
-
-                    const set$ = nextRoom
-                      ? this.backend
-                          .upsert(
-                            'reservations',
-                            {
-                              event_id: prev.eventId,
-                              room_name: nextRoom,
-                              date: prev.occurrenceDate,
-                              start_time,
-                              duration_hours, // ⬅️ ZOSTAJE
-                              status: 'confirmed',
-                              gm_id: prev.hostUserId,
-                              system_id: rest.systemId ?? prev.systemId ?? null,
-                            } as any,
-                            'event_id,room_name,date,start_time'
-                          )
-                          .pipe(map(() => void 0))
-                      : of(void 0);
-
-                    return forkJoin([clear$, set$]).pipe(map(() => void 0));
-                  }
-
-                  if (sysChanged && nextRoom) {
-                    return this.backend
-                      .upsert(
-                        'reservations',
-                        {
-                          event_id: prev.eventId,
-                          room_name: nextRoom,
-                          date: prev.occurrenceDate,
-                          start_time,
-                          duration_hours, // ⬅️ ZOSTAJE
-                          status: 'confirmed',
-                          gm_id: prev.hostUserId,
-                          system_id: rest.systemId ?? null,
-                        } as any,
-                        'event_id,room_name,date,start_time'
-                      )
-                      .pipe(map(() => void 0));
-                  }
-
-                  return of(void 0);
-                }
-
-                // auto_reservation = false: to my zarządzamy fizycznymi rekordami
+              if (auto_reservation) {
                 if (roomChanged) {
-                  const del$ = prev.roomName
-                    ? this.deleteHostReservation(
-                        prev.eventId,
-                        prev.occurrenceDate,
-                        prev.roomName,
-                        prev.hostUserId
-                      )
+                  const clear$ = prev.roomName
+                    ? this.backend
+                        .upsert(
+                          'reservations',
+                          {
+                            event_id: prev.eventId,
+                            room_name: prev.roomName,
+                            date: prev.occurrenceDate,
+                            start_time,
+                            duration_hours,
+                            status: 'confirmed',
+                            gm_id: null,
+                            system_id: null,
+                          } as any,
+                          'event_id,room_name,date,start_time'
+                        )
+                        .pipe(map(() => void 0))
                     : of(void 0);
 
-                  const ins$ = nextRoom
-                    ? this.ensureHostReservation(
-                        prev.eventId,
-                        prev.occurrenceDate,
-                        nextRoom,
-                        prev.hostUserId,
-                        (rest.systemId ?? prev.systemId) || null
-                      )
+                  const set$ = nextRoom
+                    ? this.backend
+                        .upsert(
+                          'reservations',
+                          {
+                            event_id: prev.eventId,
+                            room_name: nextRoom,
+                            date: prev.occurrenceDate,
+                            start_time,
+                            duration_hours,
+                            status: 'confirmed',
+                            gm_id: prev.hostUserId,
+                            system_id: (rest.systemId ?? prev.systemId) || null,
+                          } as any,
+                          'event_id,room_name,date,start_time'
+                        )
+                        .pipe(map(() => void 0))
                     : of(void 0);
 
-                  return forkJoin([del$, ins$]).pipe(map(() => void 0));
+                  return forkJoin([clear$, set$]).pipe(map(() => void 0));
                 }
 
                 if (sysChanged && nextRoom) {
-                  return this.updateHostReservationSystem(
-                    prev.eventId,
-                    prev.occurrenceDate,
-                    nextRoom,
-                    prev.hostUserId,
-                    rest.systemId ?? null,
-                    false
-                  );
+                  return this.backend
+                    .upsert(
+                      'reservations',
+                      {
+                        event_id: prev.eventId,
+                        room_name: nextRoom,
+                        date: prev.occurrenceDate,
+                        start_time,
+                        duration_hours,
+                        status: 'confirmed',
+                        gm_id: prev.hostUserId,
+                        system_id: rest.systemId ?? null,
+                      } as any,
+                      'event_id,room_name,date,start_time'
+                    )
+                    .pipe(map(() => void 0));
                 }
 
                 return of(void 0);
-              })
-            );
-          })
-        )
-      )
-    );
-  }
+              }
+
+              if (roomChanged) {
+                const del$ = prev.roomName
+                  ? this.deleteHostReservation(
+                      prev.eventId,
+                      prev.occurrenceDate,
+                      prev.roomName,
+                      prev.hostUserId
+                    )
+                  : of(void 0);
+
+                const ins$ = nextRoom
+                  ? this.ensureHostReservation(
+                      prev.eventId,
+                      prev.occurrenceDate,
+                      nextRoom,
+                      prev.hostUserId,
+                      (rest.systemId ?? prev.systemId) || null
+                    )
+                  : of(void 0);
+
+                return forkJoin([del$, ins$]).pipe(map(() => void 0));
+              }
+
+              if (sysChanged && nextRoom) {
+                return this.updateHostReservationSystem(
+                  prev.eventId,
+                  prev.occurrenceDate,
+                  nextRoom,
+                  prev.hostUserId,
+                  rest.systemId ?? null,
+                  false
+                );
+              }
+
+              return of(void 0);
+            })
+          );
+        })
+      );
+    })
+  );
+}
 
   deleteHost(id: string): Observable<void> {
     const prev$ = this.backend.getById<IEventHost>(
