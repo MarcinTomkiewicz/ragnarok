@@ -466,6 +466,8 @@ export class CreatePartyComponent {
   // Submit
   // =========================
   onSubmit(): void {
+    console.log(this.teamForm.valid, this.teamForm.value);
+    
     if (!this.teamForm.valid) return;
 
     const teamData: IParty = {

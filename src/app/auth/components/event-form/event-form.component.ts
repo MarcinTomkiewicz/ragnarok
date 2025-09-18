@@ -475,7 +475,7 @@ export class EventFormComponent implements OnDestroy {
     } satisfies Omit<EventFull, 'id'>;
 
     const file = this.coverFile();
-    const blockSlots = !!v.blockSlots; 
+    const blockSlots = !!v.blockSlots;
 
     const save$ = this.isEdit()
       ? this.events.updateEvent(
@@ -501,7 +501,7 @@ export class EventFormComponent implements OnDestroy {
             header: 'Zapisano wydarzenie',
           });
         this.saved.emit();
-        this.router.navigate(['/events'])
+        this.router.navigate(['/auth/events']);
       },
       error: () => {
         const tpl = this.errorTpl();
