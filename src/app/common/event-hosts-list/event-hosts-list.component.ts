@@ -6,7 +6,7 @@ import { combineLatest, forkJoin, of } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import { EventHostsService } from '../../core/services/event-hosts/event-hosts.service';
-import { IEventHost } from '../../core/interfaces/i-event-host';
+import { HostCardVM, IEventHost } from '../../core/interfaces/i-event-host';
 import { IRPGSystem } from '../../core/interfaces/i-rpg-system';
 import { IGmData } from '../../core/interfaces/i-gm-profile';
 import { ImageStorageService } from '../../core/services/backend/image-storage/image-storage.service';
@@ -20,16 +20,6 @@ import { BackendService } from '../../core/services/backend/backend.service';
 import { IContentTrigger } from '../../core/interfaces/i-content-trigger';
 import { FilterOperator } from '../../core/enums/filterOperator';
 import { HostSignupScope } from '../../core/enums/events';
-
-type HostCardVM = IEventHost & {
-  system?: IRPGSystem | null;
-  imageUrl?: string | null;
-  displayName?: string | null;
-  gm?: IGmData | null;
-  // te są już po mapowaniu na PL
-  triggersTop: string[];
-  triggersExtraCount: number;
-};
 
 @Component({
   selector: 'app-event-hosts-list',

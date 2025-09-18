@@ -112,19 +112,19 @@ export class EventService {
           );
         }
         if (recurrence) {
-          writes.push(
-            this.backend.create('event_recurrence', {
-              eventId,
-              kind: recurrence.kind,
-              interval: recurrence.interval,
-              byweekday: recurrence.byweekday ?? null,
-              monthlyNth: recurrence.monthlyNth ?? null,
-              monthlyWeekday: recurrence.monthlyWeekday ?? null,
-              startDate: recurrence.startDate,
-              endDate: recurrence.endDate ?? null,
-              exdates: recurrence.exdates ?? [],
-            } as any)
-          );
+          const recRow = toSnakeCase({
+            eventId,
+            kind: recurrence.kind,
+            interval: recurrence.interval,
+            byweekday: recurrence.byweekday ?? null,
+            monthlyNth: recurrence.monthlyNth ?? null,
+            monthlyWeekday: recurrence.monthlyWeekday ?? null,
+            dayOfMonth: recurrence.dayOfMonth ?? null, // <<< KLUCZOWE
+            startDate: recurrence.startDate,
+            endDate: recurrence.endDate ?? null,
+            exdates: recurrence.exdates ?? [],
+          });
+          writes.push(this.backend.create('event_recurrence', recRow));
         }
 
         const writes$ = writes.length
@@ -223,23 +223,21 @@ export class EventService {
             .pipe(map(() => void 0))
         );
       } else {
+        const recRow = toSnakeCase({
+          eventId: id,
+          kind: recurrence.kind,
+          interval: recurrence.interval,
+          byweekday: recurrence.byweekday ?? null,
+          monthlyNth: recurrence.monthlyNth ?? null,
+          monthlyWeekday: recurrence.monthlyWeekday ?? null,
+          dayOfMonth: recurrence.dayOfMonth ?? null,
+          startDate: recurrence.startDate,
+          endDate: recurrence.endDate ?? null,
+          exdates: recurrence.exdates ?? [],
+        });
         ops.push(
           this.backend
-            .upsert(
-              'event_recurrence',
-              {
-                eventId: id,
-                kind: recurrence.kind,
-                interval: recurrence.interval,
-                byweekday: recurrence.byweekday ?? null,
-                monthlyNth: recurrence.monthlyNth ?? null,
-                monthlyWeekday: recurrence.monthlyWeekday ?? null,
-                startDate: recurrence.startDate,
-                endDate: recurrence.endDate ?? null,
-                exdates: recurrence.exdates ?? [],
-              } as any,
-              'event_id'
-            )
+            .upsert('event_recurrence', recRow, 'event_id')
             .pipe(map(() => void 0))
         );
       }
@@ -554,6 +552,7 @@ export class EventService {
           byweekday: recRow.byweekday ?? undefined,
           monthlyNth: recRow.monthlyNth ?? undefined,
           monthlyWeekday: recRow.monthlyWeekday ?? undefined,
+          dayOfMonth: recRow.dayOfMonth ?? undefined,
           startDate: recRow.startDate,
           endDate: recRow.endDate ?? undefined,
           exdates: recRow.exdates ?? [],
@@ -635,6 +634,37 @@ export class EventService {
           }
         }
         m.setMonth(m.getMonth() + Math.max(1, r.interval));
+      }
+    }
+
+    if (r.kind === 'MONTHLY_DAY_OF_MONTH' && r.dayOfMonth) {
+      const interval = Math.max(1, r.interval || 1);
+      // zaczynamy od pierwszego dnia miesiąca „start”
+      const firstMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+
+      for (
+        let m = new Date(firstMonth);
+        m <= rangeTo;
+        m.setMonth(m.getMonth() + 1)
+      ) {
+        // filtruj miesiące zgodnie z interwałem
+        const monthsFromStart =
+          (m.getFullYear() - firstMonth.getFullYear()) * 12 +
+          (m.getMonth() - firstMonth.getMonth());
+        if (monthsFromStart % interval !== 0) continue;
+
+        const lastDay = new Date(
+          m.getFullYear(),
+          m.getMonth() + 1,
+          0
+        ).getDate();
+        if (r.dayOfMonth >= 1 && r.dayOfMonth <= lastDay) {
+          const d = new Date(m.getFullYear(), m.getMonth(), r.dayOfMonth);
+          if (d >= rangeFrom && d <= rangeTo) {
+            const iso = formatYmdLocal(d);
+            if (!ex.has(iso)) out.push(iso);
+          }
+        }
       }
     }
 

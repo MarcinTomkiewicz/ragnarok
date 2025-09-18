@@ -6,7 +6,7 @@
   } @else if (errorSig()) {
   <div class="error">{{ errorSig() }}</div>
   } @else if (!hasItems()) {
-  <div class="empty muted">Brak zgłoszonych sesji na tę datę.</div>
+  <div class="empty muted">Brak zgłoszonych sesji na najbliższe wydarzenie.</div>
   } @else {
   <div class="sessions-grid">
     @for (h of itemsSig(); track h.id) {
@@ -31,12 +31,12 @@
 
         <div class="meta-row">
           <span class="muted">System:</span>
-          <span>{{ h.system?.name || "—" }}</span>
+          <span class="text-start">{{ h.system?.name || "—" }}</span>
         </div>
 
         <div class="meta-row">
           <span class="muted">Salka:</span>
-          <span>{{ h.roomName || "—" }}</span>
+          <span class="text-start">{{ h.roomName || "—" }}</span>
         </div>
 
         <div class="meta-row">

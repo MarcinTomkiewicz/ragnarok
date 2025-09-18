@@ -325,11 +325,10 @@ export class EventHostsService {
             if (!prev.roomName && !nextRoom && !sysChanged) return of(void 0);
 
             return this.fetchEventMeta(prev.eventId).pipe(
-              switchMap(({ start_time, auto_reservation }) => {
-                // Zdarzenia z auto_reservation = true: NIE tworzymy / NIE kasujemy wierszy rezerwacji,
-                // jedynie aktualizujemy (lub czyścimy) powiązania gm/system na już istniejących slotach.
+              switchMap(({ start_time, end_time, auto_reservation }) => {
                 if (auto_reservation) {
-                  // zmiana sali: wyczyść stare powiązanie, ustaw nowe
+                  const duration_hours = this.diffHours(start_time, end_time);
+
                   if (roomChanged) {
                     const clear$ = prev.roomName
                       ? this.backend
@@ -340,6 +339,8 @@ export class EventHostsService {
                               room_name: prev.roomName,
                               date: prev.occurrenceDate,
                               start_time,
+                              duration_hours, // ⬅️ ZOSTAJE
+                              status: 'confirmed',
                               gm_id: null,
                               system_id: null,
                             } as any,
@@ -357,6 +358,8 @@ export class EventHostsService {
                               room_name: nextRoom,
                               date: prev.occurrenceDate,
                               start_time,
+                              duration_hours, // ⬅️ ZOSTAJE
+                              status: 'confirmed',
                               gm_id: prev.hostUserId,
                               system_id: rest.systemId ?? prev.systemId ?? null,
                             } as any,
@@ -368,7 +371,6 @@ export class EventHostsService {
                     return forkJoin([clear$, set$]).pipe(map(() => void 0));
                   }
 
-                  // tylko zmiana systemu – uaktualnij powiązanie w tej samej sali
                   if (sysChanged && nextRoom) {
                     return this.backend
                       .upsert(
@@ -378,6 +380,8 @@ export class EventHostsService {
                           room_name: nextRoom,
                           date: prev.occurrenceDate,
                           start_time,
+                          duration_hours, // ⬅️ ZOSTAJE
+                          status: 'confirmed',
                           gm_id: prev.hostUserId,
                           system_id: rest.systemId ?? null,
                         } as any,
@@ -448,9 +452,9 @@ export class EventHostsService {
           switchMap(() => {
             if (!prev.roomName) return of(void 0);
             return this.fetchEventMeta(prev.eventId).pipe(
-              switchMap(({ start_time, auto_reservation }) => {
+              switchMap(({ start_time, end_time, auto_reservation }) => {
                 if (auto_reservation) {
-                  // nie kasujemy slotu – czyścimy przypięcie GM/system
+                  const duration_hours = this.diffHours(start_time, end_time);
                   return this.backend
                     .upsert(
                       'reservations',
@@ -459,6 +463,8 @@ export class EventHostsService {
                         room_name: prev.roomName,
                         date: prev.occurrenceDate,
                         start_time,
+                        duration_hours, // ⬅️ ZOSTAJE
+                        status: 'confirmed', // ⬅️ OK
                         gm_id: null,
                         system_id: null,
                       } as any,
@@ -508,7 +514,6 @@ export class EventHostsService {
           status: 'confirmed',
           gm_id: hostUserId,
           system_id: systemId,
-          auto_reservation: false, // ⬅ manualny wpis (ważne!)
         } as any;
         return this.backend.create('reservations', row).pipe(map(() => void 0));
       }),
@@ -541,34 +546,62 @@ export class EventHostsService {
     roomName: string,
     hostUserId: string,
     systemId: string | null,
-    forceAutoMode?: boolean // kiedy wywołane z update i wiemy, że auto=true
+    forceAutoMode?: boolean
   ) {
     return this.fetchEventMeta(eventId).pipe(
-      switchMap(({ start_time, auto_reservation }) => {
+      switchMap(({ start_time, end_time, auto_reservation }) => {
         const auto = forceAutoMode ?? auto_reservation;
-        const conflict = auto
-          ? 'event_id,room_name,date,start_time'
-          : 'event_id,room_name,date,start_time,gm_id';
+        const duration_hours = this.diffHours(start_time, end_time);
 
+        if (auto) {
+          // AUTO: upsert po unikatowym slocie (event_id, room_name, date, start_time)
+          return this.backend
+            .upsert(
+              'reservations',
+              {
+                event_id: eventId,
+                room_name: roomName,
+                date: dateIso,
+                start_time,
+                duration_hours, // wymagane NOT NULL
+                status: 'confirmed',
+                gm_id: hostUserId,
+                system_id: systemId,
+              } as any,
+              'event_id,room_name,date,start_time'
+            )
+            .pipe(map(() => void 0));
+        }
+
+        // MANUAL: znajdź konkretny rekord po filtrach i zaktualizuj tylko system_id
         return this.backend
-          .upsert(
+          .getAll<any>(
             'reservations',
+            undefined,
+            'asc',
             {
-              event_id: eventId,
-              room_name: roomName,
-              date: dateIso,
-              start_time,
-              gm_id: hostUserId,
-              system_id: systemId,
-              ...(auto
-                ? {
-                    /* nie zmieniamy flagi auto_reservation */
-                  }
-                : { auto_reservation: false }),
-            } as any,
-            conflict
+              filters: {
+                event_id: { operator: FilterOperator.EQ, value: eventId },
+                room_name: { operator: FilterOperator.EQ, value: roomName },
+                date: { operator: FilterOperator.EQ, value: dateIso },
+                start_time: { operator: FilterOperator.EQ, value: start_time },
+                gm_id: { operator: FilterOperator.EQ, value: hostUserId },
+              } as any,
+            },
+            undefined,
+            undefined,
+            false
           )
-          .pipe(map(() => void 0));
+          .pipe(
+            map((rows) => rows?.[0] ?? null),
+            switchMap((row) => {
+              if (!row?.id) return of(void 0); // brak slota = nic nie zmieniamy
+              // klucz: snake_case w payloadzie, bo update() nie snake’uje
+              return this.backend
+                .update('reservations', row.id, { system_id: systemId } as any)
+                .pipe(map(() => void 0));
+            })
+          );
       })
     );
   }

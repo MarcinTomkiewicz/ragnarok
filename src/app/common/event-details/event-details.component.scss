@@ -57,18 +57,26 @@
   }
 
   .chip-row {
-    // width: 100%;
-    // max-width: 960px;
     margin: 0 auto;
-    // text-align: left;
   }
 
   .table.table-dark-style {
     margin-top: 0.5rem;
+    width: 100%;
+    table-layout: fixed;
 
     th,
     td {
       text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    & tbody tr > th:first-child {
+      width: 40%;
+    }
+    & tbody tr > td:last-child {
+      width: 60%;
     }
   }
 
@@ -78,10 +86,6 @@
     gap: 0.5rem;
     margin-top: 0;
     width: min-content;
-
-    .tag-badge.muted {
-      width: fit-content;
-    }
   }
 
   /* Skeleton loader */

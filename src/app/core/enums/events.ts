@@ -14,11 +14,13 @@ export const EventTagLabel: Record<EventTag, string> = {
 export enum AttractionKind {
   Session = 'SESSION',
   Discussion = 'DISCUSSION',
+  Entertainment = 'ENTERTAINMENT',
   None = 'NONE',
 }
 export const AttractionKindLabel: Record<AttractionKind, string> = {
   [AttractionKind.Session]: 'Sesja RPG',
   [AttractionKind.Discussion]: 'Dyskusja',
+  [AttractionKind.Entertainment]: 'Rozrywka',
   [AttractionKind.None]: 'Rozrywka',
 };
 

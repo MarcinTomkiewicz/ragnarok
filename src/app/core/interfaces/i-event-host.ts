@@ -1,5 +1,7 @@
 import { HostSignupScope } from "../enums/events";
 import { GmStyleTag } from "../enums/gm-styles";
+import { IGmData } from "./i-gm-profile";
+import { IRPGSystem } from "./i-rpg-system";
 
 
 export interface IEventHost {
@@ -23,4 +25,13 @@ export type IEventHostCreate = Omit<IEventHost, 'id' | 'imagePath'> & {
 
 export type IEventHostUpdate = Partial<Omit<IEventHost, 'id' | 'eventId' | 'occurrenceDate'>> & {
   imageFile?: File | null;
+};
+
+export type HostCardVM = IEventHost & {
+  system?: IRPGSystem | null;
+  imageUrl?: string | null;
+  displayName?: string | null;
+  gm?: IGmData | null;
+  triggersTop: string[];
+  triggersExtraCount: number;
 };

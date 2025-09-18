@@ -68,7 +68,7 @@ export class EventsAdminListComponent {
   };
 
   readonly visibleEvents = computed<EventFull[]>(() =>
-    (this.eventsSig() ?? []).filter(this.canSeeEvent)
+    (this.eventsSig() ?? []).filter(event => event.requiresHosts && this.canSeeEvent(event))
   );
 
   // wybór w tabsach – na bazie *visibleEvents*
