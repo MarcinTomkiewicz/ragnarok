@@ -12,32 +12,31 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABA
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   throw new Error("SUPABASE_URL or SUPABASE_*_KEY not set");
 }
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false },
-});
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
 const outDir = resolve(__dirname, "dynamic");
 mkdirSync(outDir, { recursive: true });
 
 async function main() {
-  const events = await selectArray(
-    sb.from("new_events").select("slug").eq("is_active", true),
-    r => r.slug
+  const events = await selectMap(
+    sb.from("new_events").select("slug,updated_at").eq("is_active", true),
+    r => ({ slug: r.slug, lastmod: r.updated_at ?? undefined })
   );
 
-  const offers = await selectArray(
+  const offers = await selectMap(
     sb.from("offers").select("id").eq("is_active", true),
-    r => r.id
+    r => ({ id: r.id })
   );
 
-  const offersSlugs = await selectArray(
-    sb.from("offer_pages").select("slug"),
-    r => r.slug
+  const offersSlugs = await selectMap(
+    sb.from("offer_pages").select("slug,created_at"),
+    r => ({ slug: r.slug, lastmod: r.created_at ?? undefined })
   );
 
-  const specials = await selectArray(
+  const specials = await selectMap(
     sb.from("specials").select("id").eq("active", true),
-    r => r.id
+    r => ({ id: r.id })
   );
 
   writeJson("events.json", events);
@@ -45,13 +44,15 @@ async function main() {
   writeJson("offers-slugs.json", offersSlugs);
   writeJson("specials.json", specials);
 
-  console.log(`[dynamic] events=${events.length} offers=${offers.length} offersSlugs=${offersSlugs.length} specials=${specials.length}`);
+  console.log(
+    `[dynamic] events=${events.length} offers=${offers.length} offersSlugs=${offersSlugs.length} specials=${specials.length}`
+  );
 }
 
-async function selectArray(q, map) {
+async function selectMap(q, map) {
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []).map(map).filter(v => v !== null && v !== undefined);
+  return (data ?? []).map(map);
 }
 
 function writeJson(name, arr) {
