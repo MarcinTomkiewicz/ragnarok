@@ -37,7 +37,7 @@
 
     &:hover,
     &:focus {
-      background-color: $hover-color;
+      background-color: $hover-color!important;
       color: $bg-color;
     }
   }

@@ -55,14 +55,7 @@
     margin-bottom: 1.5rem;
 
     a {
-      color: $primary-color;
-      text-decoration: underline;
-      border: none;
-      padding: 0;
-
-      &:hover {
-        text-decoration: none;
-      }
+      @extend .link-muted;
     }
   }
 

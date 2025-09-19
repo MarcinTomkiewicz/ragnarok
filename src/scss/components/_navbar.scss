@@ -15,7 +15,6 @@
   z-index: 1000;
   box-shadow: 0 0 10px rgba($secondary-color, 0.2);
   flex-wrap: wrap;
-  
 
   @media (max-width: $breakpoint-md) {
     padding: 0 0.5rem;
@@ -41,6 +40,11 @@
       font-size: $font-size-xs;
       font-weight: 600;
       font-family: $font-family-base;
+
+      // dopasowanie kolorów do paska
+      --link-color: #{$text-color};
+      --link-hover-color: #{$primary-color};
+      @extend .link-plain;
     }
 
     @media (max-width: $breakpoint-md) {
