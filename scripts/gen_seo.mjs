@@ -27,12 +27,10 @@ const staticRoutes = [
   "/memberships",
 ];
 
-const dyn = {
-  events: readJsonArray("dynamic/events.json"),
-  offers: readJsonArray("dynamic/offers.json"),
-  offersPage: readJsonArray("dynamic/offers-slugs.json"),
-  specials: readJsonArray("dynamic/specials.json"),
-};
+const dynEvents = readJsonArray("dynamic/events.json");
+const dynOffers = readJsonArray("dynamic/offers.json");
+const dynOffersPages = readJsonArray("dynamic/offers-slugs.json");
+const dynSpecials = readJsonArray("dynamic/specials.json");
 
 function readJsonArray(rel) {
   const p = resolve(__dirname, rel);
@@ -45,33 +43,74 @@ function readJsonArray(rel) {
   }
 }
 
-const urls = new Set(staticRoutes.map((p) => `${BASE_URL}${p}`));
-dyn.events.forEach((slug) =>
-  urls.add(`${BASE_URL}/events/${encodeURIComponent(slug)}`)
-);
-dyn.offers.forEach((id) =>
-  urls.add(`${BASE_URL}/offer/${encodeURIComponent(id)}`)
-);
-dyn.offersPage.forEach((slug) =>
-  urls.add(`${BASE_URL}/offers/${encodeURIComponent(slug)}`)
-);
-dyn.specials.forEach((id) =>
-  urls.add(`${BASE_URL}/special/${encodeURIComponent(id)}`)
-);
-
 const now = new Date().toISOString();
+
+const entries = [];
+
+for (const p of staticRoutes) {
+  entries.push({
+    loc: `${BASE_URL}${p}`,
+    lastmod: now,
+    prio: p === "/" ? "1.0" : "0.7",
+  });
+}
+
+for (const e of dynEvents) {
+  const slug = typeof e === "string" ? e : e.slug;
+  const lm = typeof e === "string" ? undefined : e.lastmod;
+  if (!slug) continue;
+  entries.push({
+    loc: `${BASE_URL}/events/${encodeURIComponent(slug)}`,
+    lastmod: lm ?? now,
+    prio: "0.7",
+  });
+}
+
+for (const o of dynOffers) {
+  const id = typeof o === "string" || typeof o === "number" ? o : o.id;
+  const lm = typeof o === "object" ? o.lastmod : undefined;
+  if (id === undefined || id === null) continue;
+  entries.push({
+    loc: `${BASE_URL}/offer/${encodeURIComponent(id)}`,
+    lastmod: lm ?? now,
+    prio: "0.7",
+  });
+}
+
+for (const op of dynOffersPages) {
+  const slug = typeof op === "string" ? op : op.slug;
+  const lm = typeof op === "string" ? undefined : op.lastmod;
+  if (!slug) continue;
+  entries.push({
+    loc: `${BASE_URL}/offers/${encodeURIComponent(slug)}`,
+    lastmod: lm ?? now,
+    prio: "0.7",
+  });
+}
+
+for (const s of dynSpecials) {
+  const id = typeof s === "string" || typeof s === "number" ? s : s.id;
+  const lm = typeof s === "object" ? s.lastmod : undefined;
+  if (id === undefined || id === null) continue;
+  entries.push({
+    loc: `${BASE_URL}/special/${encodeURIComponent(id)}`,
+    lastmod: lm ?? now,
+    prio: "0.7",
+  });
+}
+
 const sitemap =
   `<?xml version="1.0" encoding="UTF-8"?>\n` +
   `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-  Array.from(urls)
-    .sort()
+  entries
+    .sort((a, b) => a.loc.localeCompare(b.loc))
     .map(
-      (u) =>
+      ({ loc, lastmod, prio }) =>
         `  <url>\n` +
-        `    <loc>${u}</loc>\n` +
-        `    <lastmod>${now}</lastmod>\n` +
+        `    <loc>${loc}</loc>\n` +
+        `    <lastmod>${new Date(lastmod).toISOString()}</lastmod>\n` +
         `    <changefreq>weekly</changefreq>\n` +
-        `    <priority>${u === `${BASE_URL}/` ? "1.0" : "0.7"}</priority>\n` +
+        `    <priority>${prio}</priority>\n` +
         `  </url>`
     )
     .join("\n") +
@@ -84,9 +123,8 @@ Disallow: /admin
 Disallow: /auth
 Sitemap: ${BASE_URL}/sitemap.xml
 `;
-
 writeFileSync(resolve(distBrowser, "robots.txt"), robots, "utf-8");
 
 console.log(
-  `[seo] generated ${urls.size} urls -> dist/ragnarok/browser/sitemap.xml & robots.txt`
+  `[seo] generated ${entries.length} urls -> dist/ragnarok/browser/sitemap.xml & robots.txt`
 );

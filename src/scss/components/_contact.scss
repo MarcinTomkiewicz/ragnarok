@@ -82,3 +82,15 @@
     }
   }
 }
+
+app-map {
+  display: block;
+  --map-height: 300px;
+}
+
+app-map .gmap-container {
+  height: var(--map-height, 300px);
+  border-radius: $border-radius;
+  overflow: hidden;
+  box-shadow: $box-shadow;
+}

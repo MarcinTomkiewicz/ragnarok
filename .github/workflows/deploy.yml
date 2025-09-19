@@ -43,7 +43,6 @@ jobs:
       - name: Fetch dynamic URLs (Supabase)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          # Prefer service role (read-only, ograniczony do select); fallback na anon:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: node scripts/fetch-dynamic.mjs
@@ -59,11 +58,21 @@ jobs:
           test -f dist/ragnarok/browser/sitemap.xml
           echo "[ok] robots & sitemap present"
 
+      - name: Preview robots/sitemap (head)
+        run: |
+          sed -n '1,20p' dist/ragnarok/browser/robots.txt
+          sed -n '1,20p' dist/ragnarok/browser/sitemap.xml
+
+      - name: Validate sitemap size (rough)
+        run: |
+          COUNT=$(grep -c '<url>' dist/ragnarok/browser/sitemap.xml || true)
+          test "$COUNT" -gt 0
+          echo "[ok] urls in sitemap: $COUNT"
+
       - name: Pack dist (browser + server)
         run: |
           TAR_PATH="$RUNNER_TEMP/ragnarok-dist.tgz"
           echo "TAR_PATH=$TAR_PATH" >> "$GITHUB_ENV"
-          # Spakuj tylko wytworzone katalogi:
           tar -czf "$TAR_PATH" -C dist/ragnarok browser server
           ls -lh "$TAR_PATH"
 
