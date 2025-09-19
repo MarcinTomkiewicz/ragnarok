@@ -9,6 +9,7 @@ import { OverlayService } from '../../core/services/overlay.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SendGridService } from '../../core/services/send-grid/send-grid.service';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { MapComponent } from '../../common/map/map.component';
 
 declare const google: any;
 
@@ -21,6 +22,7 @@ declare const google: any;
     NgbToastModule,
     NgbProgressbarModule,
     GoogleMapsModule,
+    MapComponent
   ],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],

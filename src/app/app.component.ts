@@ -1,81 +1,98 @@
-import { CommonModule, ViewportScroller } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { Event, NavigationEnd, Router, RouterOutlet } from '@angular/router';
-import { FooterComponent } from './components/footer/footer.component';
-import { HeaderComponent } from './components/header/header.component';
-import { NavbarComponent } from './components/navbar/navbar.component';
+import { Component, DestroyRef, effect, inject } from '@angular/core';
+import {
+  Router,
+  RouterOutlet,
+  ActivatedRoute,
+  NavigationEnd,
+} from '@angular/router';
+import { filter, map } from 'rxjs/operators';
+
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TrackingService } from './core/services/tracking/tracking.service';
+import { SeoService } from './core/services/seo/seo.service';
 import { PlatformService } from './core/services/platform/platform.service';
-import { SeoService } from './core/services/seo/seo.service'; // Wstrzykiwanie SeoService
+import { ENV_GTM_ID } from './core/tokens';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { HeaderComponent } from './components/header/header.component';
+import { FooterComponent } from './components/footer/footer.component';
 import { ToastContainerComponent } from './common/toast-container/toast-container.component';
 import { LoaderComponent } from './common/loader/loader.component';
-import { scrollToElementWithOffset } from './core/utils/scroll-to-top';
-
-declare let fbq: Function;
-declare let gtag: Function;
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule,
-    FooterComponent,
     RouterOutlet,
     NavbarComponent,
     HeaderComponent,
+    FooterComponent,
     ToastContainerComponent,
     LoaderComponent,
   ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
 })
 export class AppComponent {
   private readonly router = inject(Router);
-  private readonly platformService = inject(PlatformService);
-  private readonly seoService = inject(SeoService);
+  private readonly rootRoute = inject(ActivatedRoute);
+  private readonly tracking = inject(TrackingService);
+  private readonly seo = inject(SeoService);
+  private readonly platform = inject(PlatformService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly GTM_ID = inject(ENV_GTM_ID);
 
-  ngOnInit(): void {
-    if (this.platformService.isBrowser) {
-      this.seoService.setTitleAndMeta('Strona Główna');
-      this.seoService.loadTrackingScripts();
+  constructor() {
+    // 1) Start GTM (jeden skrypt; GA/FB w kontenerze)
+    this.tracking.initGtm(this.GTM_ID);
 
-      this.router.events.subscribe((event: Event) => {
-        if (event instanceof NavigationEnd) {
-          this.trackPageView(event.urlAfterRedirects);
+    // 2) Reaguj na zmiany nawigacji
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        map(() => this.deepestChild(this.rootRoute)),
+        map((route) => ({
+          title: route?.snapshot.data?.['title'] as string | undefined,
+          description: route?.snapshot.data?.['description'] as
+            | string
+            | undefined,
+          image: route?.snapshot.data?.['image'] as string | undefined,
+          url: this.router.url,
+        })),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(({ title, description, image, url }) => {
+        // SEO – jeśli brak tytułu w data, ustaw sensowny fallback
+        const pageTitle = title ?? this.titleFromUrl(url);
+        this.seo.setTitleAndMeta(pageTitle, description, image);
 
-          if (
-            event.urlAfterRedirects === '/' ||
-            event.urlAfterRedirects.startsWith('/#')
-          ) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else {
-            // Używamy uniwersalnej funkcji scrollującej
-            scrollToElementWithOffset(
-              'router-outlet',
-              60,
-              this.platformService
-            );
-          }
+        // PageView (po gotowości GTM)
+        if (this.platform.isBrowser) {
+          this.tracking.whenReady(() => {
+            this.tracking.pushEvent('page_view', {
+              page_path: url,
+              page_location: location.href,
+              page_title: document.title,
+            });
+          });
         }
       });
-    }
   }
 
-  private trackPageView(url: string): void {
-    if (typeof gtag === 'function') {
-      gtag('event', 'page_view', { page_path: url });
-    }
+  // Znajdź najgłębszą aktywną trasę (tam zwykle trzymamy data.title)
+  private deepestChild(route: ActivatedRoute): ActivatedRoute | null {
+    let r: ActivatedRoute | null = route;
+    while (r?.firstChild) r = r.firstChild;
+    return r;
+  }
 
-    if (typeof fbq === 'function') {
-      fbq('track', 'PageView', { page_path: url });
-
-      const events: Record<string, string> = {
-        '/services': 'ViewServices',
-        '/contact': 'ViewContact',
-      };
-
-      if (events[url]) {
-        fbq('track', events[url]);
-      }
-    }
+  // Prosty fallback tytułu z URL
+  private titleFromUrl(url: string): string {
+    if (!url || url === '/') return 'Strona główna';
+    const last = url
+      .split('?')[0]
+      .split('#')[0]
+      .split('/')
+      .filter(Boolean)
+      .pop()!;
+    return last.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
   }
 }

@@ -2,14 +2,15 @@
   <div class="container">
     <h2 class="section-title">Kontakt</h2>
     <p class="section-subtitle">
-      Skontaktuj się z nami w sprawie rezerwacji, współpracy lub organizacji wydarzeń.
-      Jesteśmy tu, by odpowiedzieć na każde Twoje pytanie!
+      Skontaktuj się z nami w sprawie rezerwacji, współpracy lub organizacji
+      wydarzeń. Jesteśmy tu, by odpowiedzieć na każde Twoje pytanie!
     </p>
 
     <div class="contact-grid">
       <div class="contact-box">
         <h3 class="contact-title">
-          <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Kontakt ogólny
+          <img src="icons/4.svg" alt="Ikona gwiazdy" class="icon" /> Kontakt
+          ogólny
         </h3>
         <p>
           <img src="icons/1.svg" alt="Ikona rogu" class="icon" />
@@ -19,7 +20,9 @@
         <p>
           <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
           <strong>E-mail:</strong>
-          <a href="mailto:ragnarok@ragnarok-rooms.pl">ragnarok&#64;ragnarok-rooms.pl</a>
+          <a href="mailto:ragnarok@ragnarok-rooms.pl"
+            >ragnarok&#64;ragnarok-rooms.pl</a
+          >
         </p>
 
         <h3 class="contact-title">
@@ -33,7 +36,9 @@
         <p>
           <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
           <strong>E-mail:</strong>
-          <a href="mailto:ragnarok@ragnarok-rooms.pl">ragnarok&#64;ragnarok-rooms.pl</a>
+          <a href="mailto:ragnarok@ragnarok-rooms.pl"
+            >ragnarok&#64;ragnarok-rooms.pl</a
+          >
         </p>
       </div>
 
@@ -50,7 +55,9 @@
         <p>
           <img src="icons/2.svg" alt="Ikona kruka" class="icon" />
           <strong>E-mail:</strong>
-          <a href="mailto:ragnarok@ragnarok-rooms.pl">ragnarok&#64;ragnarok-rooms.pl</a>
+          <a href="mailto:ragnarok@ragnarok-rooms.pl"
+            >ragnarok&#64;ragnarok-rooms.pl</a
+          >
         </p>
 
         <h3 class="contact-title">
@@ -64,11 +71,19 @@
 
     <div class="map-wrapper">
       <h3 class="contact-title">
-        <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Znajdź nas na mapie
+        <img src="icons/3.svg" alt="Ikona drakkara" class="icon" /> Znajdź nas
+        na mapie
       </h3>
-      <google-map width="100%" height="300" [options]="options">
+      <app-map
+        [center]="{ lat: 52.39693009077769, lng: 16.92630935511027 }"
+        [zoom]="17"
+        [mapId]="'Ragnarok'"
+        [showMarker]="true"
+      >
+      </app-map>
+      <!-- <google-map width="100%" height="300" [options]="options">
         <map-advanced-marker [options]="markerOptions"></map-advanced-marker>
-      </google-map>
+      </google-map> -->
     </div>
   </div>
 </section>
