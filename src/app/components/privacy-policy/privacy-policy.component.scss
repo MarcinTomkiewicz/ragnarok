@@ -53,10 +53,6 @@
   .contact-info {
     font-size: 0.95rem;
     margin-bottom: 1.5rem;
-
-    a {
-      @extend .link-muted;
-    }
   }
 
   address {
