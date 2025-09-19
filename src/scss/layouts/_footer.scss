@@ -11,16 +11,28 @@
   }
 
   .footer-columns {
-    display: flex;
+    @include flex-wrapper(row, space-between, flex-start);
     flex-wrap: wrap;
-    justify-content: space-between;
     gap: 2rem;
+
+    @media (max-width: $breakpoint-md) {
+      @include flex-wrapper(column, center, center);
+      text-align: center;
+    }
   }
 
   .footer-column {
     flex: 1 1 280px;
     display: flex;
     flex-direction: column;
+
+    @media (max-width: $breakpoint-md) {
+      flex: 0 1 auto;
+      align-items: center;
+      text-align: center;
+      max-width: 720px;
+      width: 100%;
+    }
   }
 
   .footer-logo {
@@ -47,23 +59,22 @@
     padding: 0;
     margin: 0;
 
+    @media (max-width: $breakpoint-md) {
+      @include flex-center;
+      flex-direction: column;
+      width: 100%;
+    }
+
     li {
       margin-bottom: 0.5rem;
 
       a,
       button {
-        font-size: $font-size-md;
-        color: $text-color;
+        --link-color: #{$text-color};
+        --link-hover-color: #{$primary-color};
         opacity: 0.8;
-        text-decoration: none;
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-        transition: color $transition-fast, opacity $transition-fast;
 
         &:hover {
-          color: $primary-color;
           opacity: 1;
         }
       }
@@ -77,6 +88,10 @@
       gap: 0.5rem;
       font-size: $font-size-sm;
       opacity: 0.8;
+
+      @media (max-width: $breakpoint-md) {
+        justify-content: center;
+      }
 
       i {
         color: $primary-color;
@@ -124,26 +139,16 @@
     opacity: 0.6;
 
     p {
-      display: flex;
-      justify-content: center;
+      @include flex-center;
       flex-wrap: wrap;
       gap: 0.25rem;
 
       a,
       button {
-        font-size: $font-size-sm;
-        color: $text-color;
+        --link-color: #{$text-color};
+        --link-hover-color: #{$primary-color};
         opacity: 0.8;
-        background: none;
-        border: none;
-        cursor: pointer;
-        text-decoration: none;
-        padding: 0;
-
-        &:hover {
-          color: $primary-color;
-          opacity: 1;
-        }
+        &:hover { opacity: 1; }
       }
     }
 
@@ -154,9 +159,7 @@
 
         a,
         button {
-          &::after {
-            content: "";
-          }
+          &::after { content: ""; }
         }
       }
     }
@@ -167,9 +170,7 @@
     }
 
     @media (max-width: $breakpoint-sm) {
-      .separator {
-        display: none;
-      }
+      .separator { display: none; }
     }
   }
 }

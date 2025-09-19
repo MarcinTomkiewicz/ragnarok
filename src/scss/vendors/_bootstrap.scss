@@ -46,10 +46,10 @@ p {
   @include responsive-font-size(12px);;
 }
 
-a {
-  color: $primary-color;
-  text-decoration: none;
-}
+// a {
+//   color: $primary-color;
+//   text-decoration: none;
+// }
 
 .table-transparent,
 .table-transparent > tbody > tr,

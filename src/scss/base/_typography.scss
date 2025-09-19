@@ -40,15 +40,15 @@ p {
   margin-bottom: 1rem;
 }
 
-a {
-  color: $link-color;
-  text-decoration: none;
-  transition: color $transition-fast;
+// a {
+//   color: $link-color;
+//   text-decoration: none;
+//   transition: color $transition-fast;
 
-  &:hover {
-    color: $link-hover-color;
-  }
-}
+//   &:hover {
+//     color: $link-hover-color;
+//   }
+// }
 
 .font-size-small {
   font-size: $font-size-sm;

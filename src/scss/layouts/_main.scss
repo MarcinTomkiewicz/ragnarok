@@ -68,13 +68,13 @@ main {
     }
   }
 
-  a {
-    font-weight: 600;
-    text-decoration: underline;
-    color: $link-color;
+  // a {
+  //   font-weight: 600;
+  //   text-decoration: underline;
+  //   color: $link-color;
 
-    &:hover {
-      color: $link-hover-color;
-    }
-  }
+  //   &:hover {
+  //     color: $link-hover-color;
+  //   }
+  // }
 }

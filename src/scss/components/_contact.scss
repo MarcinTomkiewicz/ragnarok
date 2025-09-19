@@ -39,17 +39,6 @@
         margin: 0.5rem 0;
         font-size: 0.95rem;
 
-        a {
-          color: $primary-color;
-          text-decoration: none;
-          border: none;
-
-          &:hover {
-            color: $hover-color;
-            @include gold-gradient-text;
-          }
-        }
-
         .icon {
           width: 1rem;
           margin-right: 0.4rem;
@@ -58,6 +47,10 @@
       }
     }
   }
+
+  // .contact-section .contact-box p a {
+  //   @extend .link-gold-hover;
+  // }
 
   .map-wrapper {
     margin-top: 3rem;
