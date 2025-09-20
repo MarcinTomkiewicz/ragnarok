@@ -20,25 +20,45 @@
     }
   }
 
-  .menu-title {
-    font-size: $font-size-sm;
-    color: $secondary-text-color;
-    padding: 0.5rem 1.25rem;
-  }
-
-  .menu-item {
+  & .menu-item {
     font-weight: 600;
     color: $primary-color;
     padding: 0.5rem 1.25rem;
-    text-decoration: none;
     display: block;
     border-radius: 0;
+    text-decoration: none;
     transition: background $transition-fast, color $transition-fast;
 
-    &:hover,
-    &:focus {
-      background-color: $hover-color!important;
-      color: $bg-color;
+    /* neutralizacja globalnego a.scss */
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: currentColor !important;
+    &::after { content: none !important; }
+  }
+
+  /* desktop: zachowaj highlight tła na hover/focus */
+  @media (hover: hover) and (pointer: fine) {
+    & .menu-item:hover,
+    & .menu-item:focus {
+      background-color: $hover-color !important;
+      color: $bg-color !important;
+    }
+  }
+
+  /* klawiatura: dostępność */
+  & .menu-item:focus-visible {
+    background-color: $hover-color !important;
+    color: $bg-color !important;
+    outline: 0;
+  }
+
+  /* mobile: brak hovera i brak „migającego” underline */
+  @media (hover: none), (pointer: coarse) {
+    & .menu-item:hover,
+    & .menu-item:active {
+      background-color: transparent !important;
+      color: $primary-color !important;
     }
   }
 
