@@ -1,6 +1,10 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+/* ==========================
+   NAV BAR (light)
+   ========================== */
+
 .nav-bar {
   width: 100%;
   height: $navbar-height;
@@ -16,9 +20,7 @@
   box-shadow: 0 0 10px rgba($secondary-color, 0.2);
   flex-wrap: wrap;
 
-  @media (max-width: $breakpoint-md) {
-    padding: 0 0.5rem;
-  }
+  @media (max-width: $breakpoint-md) { padding: 0 0.5rem; }
 
   .navbar-brand {
     font-family: $font-family-base;
@@ -36,23 +38,106 @@
     align-items: center;
     flex-wrap: wrap;
 
-    li a {
-      font-size: $font-size-xs;
-      font-weight: 600;
-      font-family: $font-family-base;
+    li { position: relative; }
 
-      // dopasowanie kolorów do paska
-      --link-color: #{$text-color};
-      --link-hover-color: #{$primary-color};
-      @extend .link-plain;
+    /* Link w top-nav – bez extendów, z lokalnym resetem gradientu */
+    li a {
+      font: 600 $font-size-xs $font-family-base;
+      padding: .35rem .5rem;
+      color: $text-color;
+      text-decoration: none;
+      background-color: transparent;
+      /* wyłącz „kreskę”/pseudo z globalnych linków */
+      &::after { content: none; }
+      /* neutralizuj globalny gold-gradient w stanie bazowym */
+      background-image: none;
+      -webkit-background-clip: border-box;
+      background-clip: border-box;
+      -webkit-text-fill-color: currentColor;
+      transition: background-color $transition-fast, color $transition-fast;
+
+      /* desktop: złote tło + ciemny tekst */
+      @media (hover:hover) and (pointer:fine) {
+        &:hover,
+        &:focus {
+          /* najpierw ubij gradient z globalnego a:hover */
+          background-image: none;
+          -webkit-background-clip: border-box;
+          background-clip: border-box;
+          -webkit-text-fill-color: currentColor;
+
+          background-color: $text-color;
+          color: $bg-color;
+          text-decoration: none;
+        }
+      }
+
+      &:focus-visible {
+        background-image: none;
+        -webkit-background-clip: border-box;
+        background-clip: border-box;
+        -webkit-text-fill-color: currentColor;
+
+        background-color: $text-color;
+        color: $bg-color;
+        outline: 0;
+        border-radius: 4px;
+      }
+
+      /* mobile: bez efektu hover */
+      @media (hover:none), (pointer:coarse) {
+        &:hover, &:active {
+          background-color: transparent;
+          color: $text-color;
+        }
+      }
     }
 
-    @media (max-width: $breakpoint-md) {
-      display: none;
+    @media (max-width: $breakpoint-md) { display: none; }
+  }
+
+  /* ==========================
+     Dropdown w top-nav
+     ========================== */
+
+  .nav-bar-nav .dropdown-menu {
+    background-color: $bg-color;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0 0 $border-radius $border-radius;
+    margin-top: .25rem;
+    min-width: 12rem;
+    z-index: 1001;
+    background-clip: padding-box;
+
+    &[data-popper-placement^="top"] {
+      border-radius: $border-radius $border-radius 0 0;
+      margin-top: 0;
+      margin-bottom: .25rem;
     }
   }
 
-  // Mobile toolbar (d20 + user menu)
+  .nav-bar-nav .dropdown-item {
+    padding: .5rem 1.25rem;
+    color: $primary-color;
+    border-radius: 0;
+    text-decoration: none;
+    transition: background $transition-fast, color $transition-fast;
+
+    @media (hover:hover) and (pointer:fine) {
+      &:hover,
+      &:focus { background-color: $hover-color; color: $bg-color; }
+    }
+    &:focus-visible { background-color: $hover-color; color: $bg-color; outline: 0; }
+
+    @media (hover:none), (pointer:coarse) {
+      &:hover, &:active { background-color: transparent; color: $primary-color; }
+    }
+  }
+
+  /* ==========================
+     Mobile toolbar
+     ========================== */
   .nav-bar-mobile {
     display: none;
 
@@ -63,115 +148,18 @@
       margin-left: auto;
       padding-right: 1rem;
 
-      .user-menu {
-        cursor: pointer;
-      }
-
+      .user-menu { cursor: pointer; }
       .offcanvas-toggle {
-        background: none;
-        border: none;
-        padding: 0;
-        cursor: pointer;
-
+        background: none; border: 0; padding: 0; cursor: pointer;
         img {
-          width: 32px;
-          height: 32px;
-          filter: $icon-filter;
+          width: 32px; height: 32px; filter: $icon-filter;
           transition: transform $transition-fast;
-
-          &:hover {
-            transform: rotate(20deg);
-          }
+          &:hover { transform: rotate(20deg); }
         }
       }
     }
   }
 
-  .d20-icon {
-    transition: transform 0.2s ease-in-out;
-  }
-
-  .d20-icon.spin {
-    transform: rotate(360deg);
-  }
-}
-
-.offcanvas-menu {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 2rem;
-  height: 100%;
-  width: 100%;
-
-  .menu-title {
-    font-size: $font-size-xl;
-    font-weight: bold;
-    margin-bottom: 2rem;
-    color: $text-color;
-  }
-
-  .offcanvas-links {
-    list-style: none;
-    padding: 0;
-
-    li {
-      margin-bottom: 1rem;
-
-      a {
-        display: block;
-        padding: 0.5rem 0;
-        font-size: $font-size-sm;
-        font-weight: 600;
-        font-family: $font-family-base;
-        color: $text-color;
-        text-decoration: none;
-
-        &:hover {
-          color: $primary-color;
-        }
-      }
-
-      .offcanvas-toggle-submenu {
-        width: 100%;
-        background: none;
-        border: none;
-        padding: 0.5rem 0;
-        font-size: $font-size-sm;
-        font-weight: 600;
-        font-family: $font-family-base;
-        color: $text-color;
-        display: flex;
-        justify-content: center;
-        cursor: pointer;
-
-        &:hover {
-          color: $primary-color;
-        }
-
-        span {
-          transition: transform $transition-fast;
-
-          &.expanded {
-            transform: rotate(180deg);
-          }
-        }
-      }
-
-      .offcanvas-submenu {
-        display: none;
-        list-style: none;
-        padding-left: 1rem;
-        margin-top: 0.25rem;
-
-        &.open {
-          display: block;
-        }
-
-        li a {
-          font-size: $font-size-xs;
-          padding: 0.3rem 0;
-        }
-      }
-    }
-  }
+  .d20-icon { transition: transform .2s ease-in-out; }
+  .d20-icon.spin { transform: rotate(360deg); }
 }
