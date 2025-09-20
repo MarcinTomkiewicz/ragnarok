@@ -213,4 +213,12 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
+  {
+  path: 'reception-roster',
+  loadComponent: () =>
+    import('./components/reception-roster-editor/reception-roster-editor.component')
+      .then(m => m.ReceptionRosterEditorComponent),
+  canActivate: [AuthGuard],
+  data: { strictCoworkerRole: CoworkerRoles.Owner },
+},
 ];

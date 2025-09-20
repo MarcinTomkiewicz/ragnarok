@@ -1,0 +1,98 @@
+<div class="roster-wrapper">
+  <div class="container">
+    <h2 class="section-title mb-3">Grafik recepcji</h2>
+
+    <div class="btn-group mb-3">
+      <button class="btn btn-outline" [class.active]="monthOffset() === 0" (click)="switchTo(0)">
+        Bieżący miesiąc
+      </button>
+      <button class="btn btn-outline" [class.active]="monthOffset() === 1" (click)="switchTo(1)">
+        Przyszły miesiąc
+      </button>
+    </div>
+
+    <div class="roster-table">
+      <div class="roster-header">
+        <div class="col col-date">Data</div>
+        <div class="col col-reception">Recepcja</div>
+        <div class="col col-event">Event zewnętrzny</div>
+        <div class="col col-actions"></div>
+      </div>
+
+      @for (r of rows(); track r.date) {
+      <div class="roster-row">
+        <div class="col col-date">
+          <div class="date-main">{{ formatDate(r.date) }}</div>
+          <div class="date-sub">{{ r.weekday }}</div>
+        </div>
+
+        <!-- Recepcja -->
+        <div class="col col-reception">
+          <div ngbDropdown class="dropdown">
+            <button class="btn btn-outline dropdown-toggle" ngbDropdownToggle>
+              @if (r.receptionistId) { {{ displayNameById(r.receptionistId) }} } @else { Wybierz }
+            </button>
+            <div ngbDropdownMenu>
+              @for (uid of r.receptionistCandidates; track uid) {
+                <button class="dropdown-item" (click)="chooseReceptionist(r.date, uid)">
+                  {{ displayNameById(uid) }}
+                </button>
+              }
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" (click)="chooseReceptionist(r.date, null)">— Brak —</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event zewnętrzny -->
+        <div class="col col-event">
+          <div ngbDropdown class="dropdown">
+            <button class="btn btn-outline dropdown-toggle"
+                    ngbDropdownToggle
+                    [disabled]="!r.externalEventId">
+              @if (!r.externalEventId) {
+                Brak eventu w ten dzień
+              } @else {
+                @if (r.externalRunnerId) { {{ displayNameById(r.externalRunnerId) }} } @else { Wybierz prowadzącego }
+              }
+            </button>
+            <div ngbDropdownMenu>
+              @if (r.externalEventId) {
+                @for (uid of r.externalRunnerCandidates; track uid) {
+                  <button class="dropdown-item" (click)="chooseExternalRunner(r.date, uid)">
+                    {{ displayNameById(uid) }}
+                  </button>
+                }
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" (click)="chooseExternalRunner(r.date, null)">— Brak —</button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="col col-actions text-end">
+          <button class="btn btn-outline btn-sm" (click)="clearRow(r.date)" title="Wyczyść">
+            <i [class]="IconClass.Trash"></i>
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Podsumowania (tylko recepcja, 6h/d) -->
+    <div class="roster-summary mt-3">
+      <h3 class="h6 mb-2">Podsumowanie (Recepcja, 6h/d)</h3>
+      <ul class="list-unstyled">
+        @for (t of totalsList(); track t.userId) {
+          <li>
+            <strong>{{ displayNameById(t.userId) }}</strong> — {{ t.total }} h
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="actions mt-3">
+      <button class="btn btn-success btn-sm" (click)="save()">Zapisz</button>
+    </div>
+  </div>
+</div>

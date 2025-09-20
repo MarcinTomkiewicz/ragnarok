@@ -1,0 +1,113 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.roster-wrapper {
+  @include section-wrapper;
+
+  .section-title {
+    text-align: center; // jak w overview
+  }
+
+  .roster-table {
+    display: grid;
+    gap: 0.5rem;
+
+    .roster-header,
+    .roster-row {
+      display: grid;
+      grid-template-columns: 160px 220px 220px 1fr; // Data | Recepcja | Event | Akcje
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .roster-header {
+      font-weight: 700;
+      color: $secondary-text-color;
+      padding: 0.25rem 0.25rem 0.5rem;
+      border-bottom: 1px solid $border-color;
+
+      .col { font-size: $font-size-sm; }
+      .col-actions { text-align: right; }
+    }
+
+    .roster-row {
+      padding: 0.25rem;
+      border-bottom: 1px dashed $border-color;
+
+      .col-date {
+        .date-main { font-weight: 600; }
+        .date-sub  { font-size: $font-size-xs; color: $secondary-text-color; }
+      }
+
+      // przyciski z dropdownem wyglądają jak form-control (spójnie z worklogiem)
+      .dropdown .btn.dropdown-toggle {
+        @include form-control;
+        width: 100%;
+        text-align: left;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+
+        &[disabled] {
+          opacity: .6;
+          cursor: not-allowed;
+          background-color: $bg-color-light;
+        }
+      }
+
+      .col-actions { text-align: right; }
+
+      .reset-btn {
+        padding: 0.3rem 0.5rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        i { font-size: 1rem; }
+      }
+    }
+  }
+
+  .roster-summary {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid $border-color;
+
+    h3 { font-weight: 600; }
+    ul { margin: 0; }
+    li { padding: 0.125rem 0; }
+  }
+
+  .actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  // Mobile
+  @media (max-width: 640px) {
+    .roster-table {
+      .roster-header { display: none; }
+      .roster-row { grid-template-columns: 1fr; }
+
+      .col-date {
+        display: flex;
+        align-items: baseline;
+        gap: .5rem;
+        justify-content: center;
+
+        .date-main { font-weight: 600; }
+        .date-sub  { font-size: $font-size-sm; color: $secondary-text-color; }
+      }
+
+      .dropdown .btn.dropdown-toggle {
+        max-width: 100%;
+        text-align: left;
+      }
+    }
+  }
+}

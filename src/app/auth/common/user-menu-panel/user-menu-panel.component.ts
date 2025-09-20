@@ -146,6 +146,12 @@ export class UserMenuPanelComponent {
         path: '/auth/work-logs-overview',
       });
     }
+    if (strict(CoworkerRoles.Owner)) {
+      sections.push({
+        title: 'Grafik',
+        items: [{ label: 'Grafik recepcji', path: '/auth/reception-roster' }],
+      });
+    }
     if (workAndTime.length)
       sections.push({ title: 'Praca i czas', items: workAndTime });
 
