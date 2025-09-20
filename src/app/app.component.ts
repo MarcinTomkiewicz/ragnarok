@@ -41,10 +41,8 @@ export class AppComponent {
   private readonly GTM_ID = inject(ENV_GTM_ID);
 
   constructor() {
-    // 1) Start GTM (jeden skrypt; GA/FB w kontenerze)
     this.tracking.initGtm(this.GTM_ID);
 
-    // 2) Reaguj na zmiany nawigacji
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -60,11 +58,9 @@ export class AppComponent {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(({ title, description, image, url }) => {
-        // SEO – jeśli brak tytułu w data, ustaw sensowny fallback
         const pageTitle = title ?? this.titleFromUrl(url);
         this.seo.setTitleAndMeta(pageTitle, description, image);
 
-        // PageView (po gotowości GTM)
         if (this.platform.isBrowser) {
           this.tracking.whenReady(() => {
             this.tracking.pushEvent('page_view', {
@@ -75,16 +71,40 @@ export class AppComponent {
           });
         }
       });
+
+       this.router.events
+    .pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      takeUntilDestroyed(this.destroyRef)
+    )
+    .subscribe((e) => {
+      if (!this.platform.isBrowser) return;
+
+      const url = e.urlAfterRedirects || e.url;
+      const cleanPath = url.split('?')[0].split('#')[0];
+
+      if (cleanPath === '/') return;
+
+      requestAnimationFrame(() => {
+        const target = document.getElementById('router-outlet');
+        const nav = document.querySelector('.nav-bar') as HTMLElement | null;
+        const offset = nav?.getBoundingClientRect().height ?? 0;
+
+        const top = target
+          ? target.getBoundingClientRect().top + window.scrollY - offset
+          : 0;
+
+        window.scrollTo({ top, behavior: 'smooth' });
+      });
+    });
   }
 
-  // Znajdź najgłębszą aktywną trasę (tam zwykle trzymamy data.title)
   private deepestChild(route: ActivatedRoute): ActivatedRoute | null {
     let r: ActivatedRoute | null = route;
     while (r?.firstChild) r = r.firstChild;
     return r;
   }
 
-  // Prosty fallback tytułu z URL
   private titleFromUrl(url: string): string {
     if (!url || url === '/') return 'Strona główna';
     const last = url
