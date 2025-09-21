@@ -1,0 +1,14 @@
+<div class="my-roster-wrapper">
+  <div class="container">
+    <h2 class="section-title">Mój grafik</h2>
+
+    <app-universal-calendar
+      [dailyDataMap]="dailyDataMap()"
+      [mapDailyToHourlyAvailability]="mapDailyToHourlyAvailability()"
+      [mapDailyToDayFlags]="mapDailyToDayFlags()"
+      [editMode]="false"
+      [alwaysClickable]="false"
+      (monthChanged)="onMonthChanged($event)">
+    </app-universal-calendar>
+  </div>
+</div>

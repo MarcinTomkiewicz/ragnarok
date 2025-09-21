@@ -1,0 +1,166 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.roster-wrapper {
+  @include section-wrapper;
+
+  .section-title { text-align: center; }
+
+  .roster-table {
+    @include data-grid($columns: .5rem); // tylko gap między wierszami
+
+    // nadpisanie globalnego .col (flex) – tutaj używamy CSS Grid
+    .col {
+      flex: initial !important;
+      width: auto !important;
+      min-width: 0;
+    }
+
+    .roster-header {
+      @include data-grid-row(
+        $columns: 160px 220px minmax(300px, 1fr) auto, // Data | Recepcja | Event | Akcje
+        $pad: .25rem .25rem .5rem,
+        $bg: transparent,
+        $radius: 0,
+        $gap: .5rem
+      );
+      font-weight: 700;
+      color: $secondary-text-color;
+      border-bottom: 1px solid $border-color;
+
+      .col { font-size: $font-size-sm; }
+      .col-actions { text-align: right; }
+    }
+
+    .roster-row {
+      @include data-grid-row(
+        $columns: 160px 220px minmax(300px, 1fr) auto,
+        $pad: .25rem,
+        $bg: transparent,
+        $radius: 0,
+        $gap: .5rem
+      );
+      @include data-grid-row-divider($border-color);
+
+      .col-date {
+        .date-main { font-weight: 600; }
+        .date-sub  { font-size: $font-size-xs; color: $secondary-text-color; }
+      }
+
+      /* PRZYCISKI DROPDOWN – wspólna baza + caret */
+      .dropdown .btn.dropdown-toggle {
+        @include form-control;
+        position: relative;      // kontekst dla ::after
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        text-align: left;
+        overflow: hidden;        // ellipsis tylko na przycisku (nie na kolumnie)
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 2.25rem;  // miejsce na caret
+
+        &::after {
+          position: absolute;
+          right: .75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          margin-left: 0;        // nadpisanie bootstrap
+        }
+
+        &[disabled] {
+          opacity: .6;
+          cursor: not-allowed;
+          background-color: $bg-color-light;
+        }
+      }
+
+      /* Recepcja – jak form-control, pełna szerokość */
+      .col-reception .dropdown .btn.dropdown-toggle {
+        width: 100%;
+      }
+
+      /* Event – przycisk tylko tak szeroki, jak treść; reszta kolumny pusta */
+      .col-event {
+        // brak ellipsis na kolumnie (żeby nie ucinać menu!)
+        .dropdown {
+          justify-self: start;   // trzymaj przy lewej krawędzi kolumny
+        }
+        .dropdown .btn.dropdown-toggle {
+          width: auto;
+          max-width: 100%;       // bezpiecznik
+        }
+      }
+
+      .col-actions {
+        text-align: right;
+        justify-self: end;       // kosz po prawej, zajmuje tylko tyle ile potrzebuje
+      }
+
+      .reset-btn {
+        padding: 0.3rem 0.5rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        i { font-size: 1rem; }
+      }
+    }
+  }
+
+  .roster-summary {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid $border-color;
+
+    h3 { font-weight: 600; }
+    ul { margin: 0; }
+    li { padding: 0.125rem 0; }
+  }
+
+  .actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  // Mobile
+  @media (max-width: 640px) {
+    .roster-table {
+      .roster-header { display: none; }
+
+      // jeden column layout na wiersz
+      .roster-row {
+        grid-template-columns: 1fr !important;
+        row-gap: .5rem;
+      }
+
+      .col-date {
+        display: flex;
+        align-items: baseline;
+        gap: .5rem;
+        justify-content: center;
+
+        .date-main { font-weight: 600; }
+        .date-sub  { font-size: $font-size-sm; color: $secondary-text-color; }
+      }
+
+      .dropdown .btn.dropdown-toggle {
+        max-width: 100%;
+        text-align: left;
+      }
+    }
+  }
+}
+
+/* Sizing menu dropdown – dopasuj do treści, nie do pełnej kolumny */
+.roster-wrapper .roster-table .dropdown-menu {
+  min-width: max-content;
+  width: auto;
+  max-width: 100%;
+}

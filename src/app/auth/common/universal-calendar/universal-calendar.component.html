@@ -1,68 +1,52 @@
 <div class="calendar-nav">
-  <button
-    class="btn btn-sm btn-outline"
-    (click)="prevMonth()"
-    [style.visibility]="canGoPrev() ? 'visible' : 'hidden'"
-  >
-    «
-  </button>
-
+  <button class="btn btn-sm btn-outline" (click)="prevMonth()" [style.visibility]="canGoPrev() ? 'visible' : 'hidden'">«</button>
   <span class="calendar-title">{{ formattedCurrentMonth() }}</span>
-
-  <button
-    class="btn btn-sm btn-outline"
-    (click)="nextMonth()"
-    [style.visibility]="canGoNext() ? 'visible' : 'hidden'"
-  >
-    »
-  </button>
+  <button class="btn btn-sm btn-outline" (click)="nextMonth()" [style.visibility]="canGoNext() ? 'visible' : 'hidden'">»</button>
 </div>
 
 <div class="calendar">
   <div class="calendar-header">
     @for (dayName of dayNames; track dayName) {
-    <div class="day-name">{{ dayName }}</div>
+      <div class="day-name">{{ dayName }}</div>
     }
   </div>
 
   <div class="calendar-body" [class]="modeClass()">
     @for (day of visibleDays(); track trackByDate(day)) {
-    <div
-      class="calendar-day"
-      [class.outside-month]="!isSameMonth(day, currentMonth())"
-      [class.selected]="selectedDate() === format(day, 'yyyy-MM-dd')"
-      [class.reserved]="!editMode() && isReserved(day)"
-      [class.disabled]="
-        isPastDay(day) ||
-        !isSameMonth(day, currentMonth()) ||
-        (!editMode() && (selectionDisabled() || isReserved(day)))
-      "
-      (click)="handleClick(day)"
-    >
-      <div class="day-header">
-        <span class="day-number">{{ format(day, "d") }}</span>
-        @if (getDayFlags(day).externalOnly) {
-        <span
-          class="uc-indicator uc-indicator--external"
-          aria-label="Tylko eventy"
-          title="Tylko eventy"
-        ></span>
-        }
-      </div>
+      <div class="calendar-day"
+           [class.outside-month]="!isSameMonth(day, currentMonth())"
+           [class.selected]="selectedDate() === format(day, 'yyyy-MM-dd')"
+           [class.reserved]="!editMode() && isReserved(day)"
+           [class.disabled]="isPastDay(day) || !isSameMonth(day, currentMonth())"
+           (click)="handleClick(day)">
+        <div class="day-header">
+          <span class="day-number">{{ format(day, "d") }}</span>
+          @if (getDayFlags(day).externalOnly && !getDayFlags(day).externalEventName) {
+            <span class="uc-indicator uc-indicator--external"
+                  aria-label="Tylko eventy"
+                  title="Tylko eventy"></span>
+          }
+        </div>
 
-      @if (canShowHours(day)) {
-      <div class="hour-grid">
-        @for (isTaken of getHourlyAvailability(day); let i = $index; track i) {
-        <div
-          class="hour-block"
-          [class.taken]="isTaken"
-          [title]="17 + i + ':00 - ' + (18 + i) + ':00'"
-          (click)="onHourClick(day, i)"
-        ></div>
+        @if (canShowHours(day)) {
+          <div class="hour-grid">
+            @if (getDayFlags(day).externalEventName) {
+              <div class="external-event"
+                   [title]="getDayFlags(day).externalEventName">
+                {{ getDayFlags(day).externalEventName }}
+              </div>
+            } @else {
+              @for (isTaken of getHourlyAvailability(day); let i = $index; track i) {
+                <div class="hour-block"
+                     [class.taken]="isTaken"
+                     [title]="12 + i + ':00 - ' + (13 + i) + ':00'"
+                     (click)="onHourClick(day, i)">
+                </div>
+              }
+            }
+          </div>
         }
       </div>
-      }
-    </div>
     }
   </div>
 </div>
