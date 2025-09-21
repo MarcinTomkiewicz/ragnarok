@@ -194,7 +194,7 @@ export const AUTH_ROUTES: Routes = [
         (m) => m.HostSignupFormComponent
       ),
     canActivate: [AuthGuard],
-    data: { minCoworkerRole: CoworkerRoles.Gm },
+    data: { minCoworkerRole: CoworkerRoles.User },
   },
   {
     path: 'events/new',

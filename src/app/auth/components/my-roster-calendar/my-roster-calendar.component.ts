@@ -22,13 +22,10 @@ export class MyRosterCalendarComponent {
 
   private readonly meId = computed(() => this.auth.user()?.id ?? '');
 
-  /** Map<yyyy-MM-dd, IReceptionSchedule[]> tylko z moimi wpisami */
   readonly dailyDataMap = signal<Map<string, IReceptionSchedule[]>>(new Map());
 
-  /** Map<externalEventId, shortName> do podpisów */
   private readonly shortNameByEventId = signal<Map<string, string>>(new Map());
 
-  /** ładowanie grafiku + shortName’ów dla widocznych dni */
   onMonthChanged(dates: string[]) {
     const userId = this.meId();
     if (!userId || dates.length === 0) {
@@ -39,7 +36,6 @@ export class MyRosterCalendarComponent {
 
     this.scheduleService.getForDates(dates).subscribe({
       next: (all) => {
-        // tylko moje przydziały (recepcja lub external)
         const mine = all.filter(
           s => s.receptionistId === userId || s.externalRunnerId === userId
         );
@@ -51,7 +47,6 @@ export class MyRosterCalendarComponent {
         });
         this.dailyDataMap.set(byDate);
 
-        // Zbierz unikalne externalEventId i pobierz shortName’y (po weekdayach – jak w appce).
         const needIds = Array.from(
           new Set(mine.map(s => s.externalEventId).filter((x): x is string => !!x))
         );
@@ -81,11 +76,7 @@ export class MyRosterCalendarComponent {
     });
   }
 
-  /** items (IReceptionSchedule[]) -> boolean[] na kropki godzinowe
-   *  UWAGA: odwracamy logikę:
-   *  - jeśli jestem na recepcji → ZIELONE kropki (czyli brak .taken) => zwracamy same false
-   *  - jeśli nie jestem → CZERWONE kropki (wszystkie .taken)        => zwracamy same true
-   */
+  
 mapDailyToHourlyAvailability = () => (items: unknown[]) => {
   const userId = this.meId();
   const rows = items as IReceptionSchedule[];
@@ -95,19 +86,16 @@ mapDailyToHourlyAvailability = () => (items: unknown[]) => {
 
   const totalBlocks = TimeSlots.end - TimeSlots.noonStart;
 
-  // Dzień z recepcją LUB zewnętrznym eventem = "zielony"
   if (hasReception || hasExternal) {
-    return Array<boolean>(totalBlocks).fill(false); // same false => zielone kropki w trybie readonly
+    return Array<boolean>(totalBlocks).fill(false);
   }
 
-  // Brak przydziału = "czerwony"
-  // Prawie wszystkie na true (czerwone), ale zostaw 1 false, żeby NIE aktywować "reserved"
+  
   const mostlyRed = Array<boolean>(totalBlocks).fill(true);
-  mostlyRed[0] = false; // dowolny indeks; ważne, by nie było all-true
+  mostlyRed[0] = false;
   return mostlyRed;
 };
 
-  /** items (IReceptionSchedule[]) -> IDayFlags (externalOnly + nazwa eventu) */
   mapDailyToDayFlags = () => (items: unknown[]): IDayFlags => {
     const userId = this.meId();
     const rows = items as IReceptionSchedule[];
@@ -118,7 +106,7 @@ mapDailyToHourlyAvailability = () => (items: unknown[]) => {
     if (!hasReception && myExternal?.externalEventId) {
       out.externalOnly = true;
       const name = this.shortNameByEventId().get(myExternal.externalEventId) ?? null;
-      if (name) out.externalEventName = name; // to pokaże label zamiast kropek
+      if (name) out.externalEventName = name;
     }
     return out;
   };
