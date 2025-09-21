@@ -5,6 +5,7 @@ import { BackendService } from '../../../../core/services/backend/backend.servic
 import { FilterOperator } from '../../../../core/enums/filterOperator';
 import {
   IAvailabilitySlot,
+  IDayFlags,
   WorkType,
 } from '../../../../core/interfaces/i-availability-slot';
 import { toSnakeCase } from '../../../../core/utils/type-mappers';
@@ -94,4 +95,14 @@ export class AvailabilityService {
       work_type: { value: workType, operator: FilterOperator.EQ },
     });
   }
+
+  mapSlotsToDayFlags(slots: IAvailabilitySlot[]): IDayFlags {
+  const external = slots.find(
+    (s) => s.workType === 'external_event' && (s as any).externalEventOnly
+  );
+  if (external) {
+    return { externalOnly: true, externalEventName: 'EV' }; // w praktyce: nazwa zewnętrznego eventu
+  }
+  return {};
+}
 }

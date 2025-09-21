@@ -20,6 +20,7 @@ import {
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Rooms } from '../../../core/enums/rooms';
+import { IDayFlags } from '../../../core/interfaces/i-availability-slot';
 
 @Component({
   selector: 'app-universal-calendar',
@@ -29,7 +30,6 @@ import { Rooms } from '../../../core/enums/rooms';
   styleUrl: './universal-calendar.component.scss',
 })
 export class UniversalCalendarComponent {
-  // === Inputs ===
   readonly dailyDataMap = input<Map<string, unknown[]>>(new Map());
   readonly mapDailyToHourlyAvailability = input<Function>();
   readonly selectedDate = input<string | null>(null);
@@ -39,16 +39,12 @@ export class UniversalCalendarComponent {
   readonly isMemberClubBlocked = input<boolean>(false);
   readonly alwaysClickable = input<boolean>(false);
   readonly mapDailyToDayFlags =
-    input<
-      (items: unknown[]) => { externalOnly?: boolean } | null | undefined
-    >();
+    input<(items: unknown[]) => IDayFlags | null | undefined>();
 
-  // === Outputs ===
   readonly dateSelected = output<string | null>();
   readonly dateClicked = output<string>();
   readonly hourClicked = output<{ date: string; hour: number }>();
 
-  // === Calendar Logic ===
   readonly currentMonth = signal(new Date());
   readonly minMonth = startOfMonth(new Date());
   readonly maxMonth = startOfMonth(addMonths(new Date(), 1));
@@ -62,9 +58,7 @@ export class UniversalCalendarComponent {
 
   constructor() {
     effect(() => {
-      const visibleDates = this.visibleDays().map((d) =>
-        format(d, 'yyyy-MM-dd')
-      );
+      const visibleDates = this.visibleDays().map(d => format(d, 'yyyy-MM-dd'));
       this.monthChanged.emit(visibleDates);
     });
   }
@@ -76,12 +70,8 @@ export class UniversalCalendarComponent {
   );
 
   readonly visibleDays = computed(() => {
-    const start = startOfWeek(startOfMonth(this.currentMonth()), {
-      weekStartsOn: 1,
-    });
-    const end = endOfWeek(endOfMonth(this.currentMonth()), {
-      weekStartsOn: 1,
-    });
+    const start = startOfWeek(startOfMonth(this.currentMonth()), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(this.currentMonth()), { weekStartsOn: 1 });
     return eachDayOfInterval({ start, end });
   });
 
@@ -103,7 +93,6 @@ export class UniversalCalendarComponent {
       const blocks = mapFn?.(items) ?? [];
       availability.set(key, blocks);
     }
-
     return availability;
   });
 
@@ -121,11 +110,9 @@ export class UniversalCalendarComponent {
 
   onHourClick(day: Date, hourIndex: number) {
     if (!this.editMode()) return;
-
     const dateStr = format(day, 'yyyy-MM-dd');
     const baseHour = 12;
     const hour = baseHour + hourIndex;
-
     this.hourClicked.emit({ date: dateStr, hour });
   }
 
@@ -149,7 +136,6 @@ export class UniversalCalendarComponent {
       const start = startOfWeek(today, { weekStartsOn: 1 });
       const end = endOfWeek(today, { weekStartsOn: 1 });
       const blockedDates: string[] = [];
-
       let currentDate = start;
       while (currentDate <= end) {
         blockedDates.push(format(currentDate, 'yyyy-MM-dd'));
@@ -164,20 +150,15 @@ export class UniversalCalendarComponent {
     const key = format(date, 'yyyy-MM-dd');
     const hourly = this.hourlyAvailabilityMap().get(key);
     const isBlockedDay = this.blockedDatesForThisWeek().includes(key);
-    return isBlockedDay || (hourly?.every((slot) => slot) ?? false);
+    return isBlockedDay || (hourly?.every(slot => slot) ?? false);
   };
 
   canShowHours(date: Date): boolean {
     return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
   }
 
-  canEditDay(date: Date): boolean {
-    if (!this.editMode()) return false;
-    return !this.isPastDay(date) && this.isSameMonth(date, this.currentMonth());
-  }
-
   readonly dayFlagsMap = computed(() => {
-    const flags = new Map<string, { externalOnly?: boolean }>();
+    const flags = new Map<string, IDayFlags>();
     const fn = this.mapDailyToDayFlags();
     for (const date of this.visibleDays()) {
       const key = format(date, 'yyyy-MM-dd');
@@ -188,7 +169,7 @@ export class UniversalCalendarComponent {
     return flags;
   });
 
-  getDayFlags(date: Date): { externalOnly?: boolean } {
+  getDayFlags(date: Date): IDayFlags {
     const key = format(date, 'yyyy-MM-dd');
     return this.dayFlagsMap().get(key) ?? {};
   }
@@ -196,20 +177,14 @@ export class UniversalCalendarComponent {
   handleClick(date: Date) {
     const formatted = format(date, 'yyyy-MM-dd');
     const isReservedDay = this.isReserved(date);
-
-    const canEdit = this.editMode();
     const isDisabled =
       this.selectionDisabled() ||
       this.isPastDay(date) ||
       !this.isSameMonth(date, this.currentMonth());
 
-    if (
-      !canEdit &&
-      (isDisabled || (!this.alwaysClickable() && isReservedDay))
-    ) {
+    if (!this.editMode() && (isDisabled || (!this.alwaysClickable() && isReservedDay))) {
       return;
     }
-
     const isSameDate = this.selectedDate() === formatted;
     this.dateSelected.emit(isSameDate ? null : formatted);
     this.dateClicked.emit(formatted);

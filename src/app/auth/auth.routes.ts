@@ -178,22 +178,24 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
-{
-  path: 'events',
-  loadComponent: () =>
-    import('./components/events-admin-list/events-admin-list.component')
-      .then(m => m.EventsAdminListComponent),
-  canActivate: [AuthGuard],
-  data: { minCoworkerRole: CoworkerRoles.User },
-},
-{
-  path: 'events/:slug/host-signup/:date',
-  loadComponent: () =>
-    import('./components/host-signup-form/host-signup-form.component')
-      .then(m => m.HostSignupFormComponent),
-  canActivate: [AuthGuard],
-  data: { minCoworkerRole: CoworkerRoles.Gm },
-},
+  {
+    path: 'events',
+    loadComponent: () =>
+      import('./components/events-admin-list/events-admin-list.component').then(
+        (m) => m.EventsAdminListComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.User },
+  },
+  {
+    path: 'events/:slug/host-signup/:date',
+    loadComponent: () =>
+      import('./components/host-signup-form/host-signup-form.component').then(
+        (m) => m.HostSignupFormComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Gm },
+  },
   {
     path: 'events/new',
     loadComponent: () =>
@@ -214,11 +216,21 @@ export const AUTH_ROUTES: Routes = [
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
   {
-  path: 'reception-roster',
-  loadComponent: () =>
-    import('./components/reception-roster-editor/reception-roster-editor.component')
-      .then(m => m.ReceptionRosterEditorComponent),
-  canActivate: [AuthGuard],
-  data: { strictCoworkerRole: CoworkerRoles.Owner },
-},
+    path: 'reception-roster',
+    loadComponent: () =>
+      import(
+        './components/reception-roster-editor/reception-roster-editor.component'
+      ).then((m) => m.ReceptionRosterEditorComponent),
+    canActivate: [AuthGuard],
+    data: { strictCoworkerRole: CoworkerRoles.Owner },
+  },
+  {
+    path: 'my-roster',
+    loadComponent: () =>
+      import(
+        './components/my-roster-calendar/my-roster-calendar.component'
+      ).then((m) => m.MyRosterCalendarComponent),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Gm },
+  },
 ];

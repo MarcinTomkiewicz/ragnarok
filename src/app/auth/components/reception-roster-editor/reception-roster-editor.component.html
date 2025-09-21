@@ -39,7 +39,7 @@
                 </button>
               }
               <div class="dropdown-divider"></div>
-              <button class="dropdown-item" (click)="chooseReceptionist(r.date, null)">— Brak —</button>
+              <button class="dropdown-item" (click)="chooseReceptionist(r.date, null)">- Brak -</button>
             </div>
           </div>
         </div>
@@ -64,7 +64,7 @@
                   </button>
                 }
                 <div class="dropdown-divider"></div>
-                <button class="dropdown-item" (click)="chooseExternalRunner(r.date, null)">— Brak —</button>
+                <button class="dropdown-item" (click)="chooseExternalRunner(r.date, null)">- Brak -</button>
               }
             </div>
           </div>
@@ -85,7 +85,7 @@
       <ul class="list-unstyled">
         @for (t of totalsList(); track t.userId) {
           <li>
-            <strong>{{ displayNameById(t.userId) }}</strong> — {{ t.total }} h
+            <strong>{{ displayNameById(t.userId) }}</strong> - {{ t.total }} h
           </li>
         }
       </ul>

@@ -1,0 +1,25 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.my-roster-wrapper {
+  @include section-wrapper;
+
+  .section-title {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  
+  .calendar .external-event {
+    display: inline-block;
+    padding: 2px 6px;
+    font-weight: 700;
+    font-size: 10px;
+    line-height: 1;
+    border-radius: 4px;
+    max-width: 100%;
+    @include cell-ellipsis;
+    cursor: default;
+    user-select: none;
+  }
+}

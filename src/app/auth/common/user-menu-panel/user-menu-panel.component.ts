@@ -130,6 +130,8 @@ export class UserMenuPanelComponent {
       sections.push({ title: 'Dyspozycyjność', items: availability });
 
     // Praca i czas
+    // ...
+    // Praca i czas
     const workAndTime: MenuItem[] = [];
     if (strict(CoworkerRoles.Gm)) {
       workAndTime.push({
@@ -137,6 +139,19 @@ export class UserMenuPanelComponent {
         path: '/auth/upcoming-sessions',
       });
     }
+    if (min(CoworkerRoles.Gm)) {
+      workAndTime.push(
+        { label: 'Czas pracy', path: '/auth/work-log' },
+        { label: 'Mój grafik', path: '/auth/my-roster' } 
+      );
+    }
+    if (min(CoworkerRoles.Reception)) {
+      workAndTime.push({
+        label: 'Ewidencja godzin',
+        path: '/auth/work-logs-overview',
+      });
+    }
+
     if (min(CoworkerRoles.Gm)) {
       workAndTime.push({ label: 'Czas pracy', path: '/auth/work-log' });
     }

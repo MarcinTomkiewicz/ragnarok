@@ -73,10 +73,10 @@
     &.calendar-mode-reservation,
     &.calendar-mode-readonly {
       .hour-block {
-        background-color: $success-color; // domyślnie wolne
+        background-color: $success-color;
 
         &.taken {
-          background-color: $danger-color; // zajęte
+          background-color: $danger-color;
         }
       }
 
@@ -108,7 +108,7 @@
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        line-height: 1; // brak „podskakiwania” kropek
+        line-height: 1;
       }
 
       .day-number {
@@ -116,7 +116,7 @@
       }
 
       .hour-grid {
-        margin-top: 0.35rem; // lekki oddech pod nagłówkiem
+        margin-top: 0.35rem;
       }
 
       &.outside-month {
@@ -167,3 +167,29 @@
     background: #ff9800;
   }
 }
+
+.calendar .calendar-body .calendar-day .hour-grid .external-event {
+  background: transparent !important;
+  border: 0 !important;
+  width: auto;
+  height: auto;
+
+
+  color: $text-color !important;
+  font-weight: 600;
+  font-size: 10px;              
+  line-height: 1;
+  letter-spacing: .2px;
+  padding: 0;
+  margin: 0;
+
+  grid-column: 1 / -1;
+  justify-self: start;
+  align-self: center;
+
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+

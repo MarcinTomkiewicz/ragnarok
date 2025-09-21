@@ -23,11 +23,12 @@ import { AuthService } from '../../../core/services/auth/auth.service';
 import { TimeSlots } from '../../../core/enums/hours';
 import { DayDirection } from '../../../core/enums/days';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { IAvailabilitySlot } from '../../../core/interfaces/i-availability-slot';
+import { IAvailabilitySlot, IDayFlags } from '../../../core/interfaces/i-availability-slot';
 import { AvailabilityService } from '../../core/services/availability/availability.service';
 import { AvailabilityStoreService } from '../../core/services/availability-store/availability-store.service';
 import { NgbAlert } from '@ng-bootstrap/ng-bootstrap';
 import { forkJoin, of, combineLatest } from 'rxjs';
+import { ExternalEventsService } from '../../core/services/external-events/external-events.service';
 
 type TimedReception = IAvailabilitySlot & {
   workType: 'reception';
@@ -49,6 +50,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly availability = inject(AvailabilityService);
   private readonly toast = inject(ToastService);
+  private readonly events = inject(ExternalEventsService);
   readonly store = inject(AvailabilityStoreService);
 
   private readonly calendar = viewChild(UniversalCalendarComponent);
@@ -58,6 +60,9 @@ export class ReceptionAvailabilityComponent implements OnInit {
 
   readonly selectedDate = signal<string | null>(null);
   readonly lastError = signal<any | null>(null);
+
+  /** Mapa: 'yyyy-MM-dd' -> externalEvent.shortName (jeśli istnieje) */
+  readonly eventShortNameByDate = signal<Map<string, string>>(new Map());
 
   onExternalOnlyChange(evt: Event) {
     const input = evt.target as HTMLInputElement | null;
@@ -69,11 +74,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
     if (!e) return '';
     if (typeof e === 'string') return e;
     if (typeof e?.message === 'string') return e.message;
-    try {
-      return JSON.stringify(e);
-    } catch {
-      return String(e);
-    }
+    try { return JSON.stringify(e); } catch { return String(e); }
   });
 
   private readonly originalReceptionDates = signal<Set<string>>(new Set());
@@ -89,9 +90,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
   readonly visibleDates = computed(() => {
     const start = startOfMonth(new Date());
     const end = endOfMonth(addMonths(new Date(), 1));
-    return eachDayOfInterval({ start, end }).map((d) =>
-      format(d, 'yyyy-MM-dd')
-    );
+    return eachDayOfInterval({ start, end }).map(d => format(d, 'yyyy-MM-dd'));
   });
 
   private isTimedReception = (s: IAvailabilitySlot): s is TimedReception =>
@@ -102,17 +101,24 @@ export class ReceptionAvailabilityComponent implements OnInit {
   private isExternalOnly = (s: IAvailabilitySlot): s is ExternalOnly =>
     s.workType === 'external_event' && (s as any).externalEventOnly === true;
 
-  // map dla kalendarza – wrzucamy WYŁĄCZNIE timed reception
+  /** Dane dla kalendarza: wrzucamy timed reception + external-only (żeby flags miały kontekst dnia) */
   readonly availabilityMapRaw = computed(() => {
     const map = new Map<string, IAvailabilitySlot[]>();
+
     for (const slot of this.store.getAll('reception')) {
       if (!this.isTimedReception(slot)) continue;
+      if (!map.has(slot.date)) map.set(slot.date, []);
+      map.get(slot.date)!.push(slot);
+    }
+    for (const slot of this.store.getAll('external_event')) {
+      if (!this.isExternalOnly(slot)) continue;
       if (!map.has(slot.date)) map.set(slot.date, []);
       map.get(slot.date)!.push(slot);
     }
     return map;
   });
 
+  /** Godzinówki dla kropek (tylko recepcja) */
   readonly availabilityMap = computed(() => {
     const map = new Map<string, boolean[]>();
     for (const slot of this.store.getAll('reception')) {
@@ -127,7 +133,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
     return map;
   });
 
-  // czy w wybranym dniu jest external only
+  /** Czy w wybranym dniu jest external-only */
   readonly selectedExternalOnly = computed(() => {
     const d = this.selectedDate();
     if (!d) return false;
@@ -139,30 +145,49 @@ export class ReceptionAvailabilityComponent implements OnInit {
     this.fetchAvailability();
   }
 
+  /** Reaguje na zmiany zakresu w kalendarzu — pobiera shortName’y eventów */
+  onMonthChanged = (visibleDates: string[]) => {
+    if (!visibleDates?.length) {
+      this.eventShortNameByDate.set(new Map());
+      return;
+    }
+    const weekdays = Array.from(new Set(visibleDates.map(d => new Date(d).getDay())));
+    this.events.getActiveForWeekdays(weekdays).subscribe({
+      next: (defs) => {
+        // Mapujemy weekday -> shortName (jeśli masz wiele eventów na ten dzień tyg., dopasuj wg własnych reguł)
+        const byWeekday = new Map<number, string>();
+        for (const ev of defs) {
+          if (ev?.weekday != null && ev?.shortName) {
+            byWeekday.set(ev.weekday, ev.shortName);
+          }
+        }
+        const map = new Map<string, string>();
+        for (const d of visibleDates) {
+          const wd = new Date(d).getDay();
+          const sn = byWeekday.get(wd);
+          if (sn) map.set(d, sn);
+        }
+        this.eventShortNameByDate.set(map);
+      },
+      error: () => this.eventShortNameByDate.set(new Map()),
+    });
+  };
+
   fetchAvailability() {
     combineLatest([
-      this.availability.getAvailability(
-        this.userId,
-        this.visibleDates(),
-        'reception'
-      ),
-      this.availability.getAvailability(
-        this.userId,
-        this.visibleDates(),
-        'external_event'
-      ),
+      this.availability.getAvailability(this.userId, this.visibleDates(), 'reception'),
+      this.availability.getAvailability(this.userId, this.visibleDates(), 'external_event'),
     ]).subscribe({
       next: ([reception, external]) => {
-        // czyścimy tylko te dwa workType, potem ładujemy wsad
         this.store.clearByWorkType('reception');
         this.store.clearByWorkType('external_event');
         this.store.setBulk([...reception, ...external]);
 
         this.originalReceptionDates.set(
-          new Set(reception.filter(this.isTimedReception).map((s) => s.date))
+          new Set(reception.filter(this.isTimedReception).map(s => s.date))
         );
         this.originalExternalDates.set(
-          new Set(external.filter(this.isExternalOnly).map((s) => s.date))
+          new Set(external.filter(this.isExternalOnly).map(s => s.date))
         );
       },
       error: (err) =>
@@ -170,7 +195,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
     });
   }
 
-  // dla UniversalCalendar: mapujemy listę slotów -> boolean[]
+  // dla UniversalCalendar: slots -> boolean[]
   mapToAvailabilityBlocks = () => (slots: IAvailabilitySlot[]) => {
     const blocks = Array(this.calendarBlockCount).fill(false);
     for (const slot of slots) {
@@ -183,12 +208,37 @@ export class ReceptionAvailabilityComponent implements OnInit {
     return blocks;
   };
 
+  /** Flags: externalOnly + externalEventName (shortName) jeśli event istnieje */
+  readonly mapDailyToDayFlags = () => (items: unknown[]): IDayFlags => {
+    const slots = items as IAvailabilitySlot[];
+
+    const hasReceptionTimed = slots.some(s =>
+      s.workType === 'reception' &&
+      typeof (s as any).fromHour === 'number' &&
+      typeof (s as any).toHour === 'number'
+    );
+    const hasExternalOnly = slots.some(s =>
+      s.workType === 'external_event' && (s as any).externalEventOnly === true
+    );
+
+    const out: IDayFlags = {};
+    if (!hasReceptionTimed && hasExternalOnly) {
+      out.externalOnly = true;
+      const date = (slots[0] as IAvailabilitySlot | undefined)?.date;
+      if (date) {
+        const sn = this.eventShortNameByDate().get(date);
+        if (sn) out.externalEventName = sn;
+      }
+    }
+    return out;
+  };
+
   onDaySelected(date: string | null) {
     this.selectedDate.set(date);
   }
 
   onHourClicked(event: { date: string; hour: number }) {
-    if (this.selectedExternalOnly()) return; // zablokowane w trybie external-only
+    if (this.selectedExternalOnly()) return;
     this.selectedDate.set(event.date);
     this.store.setDay({
       userId: this.userId,
@@ -204,7 +254,6 @@ export class ReceptionAvailabilityComponent implements OnInit {
     if (!date) return;
 
     if (checked) {
-      // usuń godziny recepcji i ustaw external-only
       this.store.removeDay(date, 'reception');
       this.store.setDay({
         userId: this.userId,
@@ -213,7 +262,6 @@ export class ReceptionAvailabilityComponent implements OnInit {
         externalEventOnly: true,
       } as ExternalOnly);
     } else {
-      // usuń external-only, nie ustawiaj godzin (użytkownik wybierze)
       this.store.removeDay(date, 'external_event');
     }
   }
@@ -228,9 +276,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
       return;
     }
 
-    const current = this.store.getDay(date, 'reception') as
-      | TimedReception
-      | undefined;
+    const current = this.store.getDay(date, 'reception') as TimedReception | undefined;
     const next: TimedReception = {
       userId: this.userId,
       workType: 'reception',
@@ -246,10 +292,7 @@ export class ReceptionAvailabilityComponent implements OnInit {
     const date = this.selectedDate();
     if (!date) return;
 
-    const current = (this.store.getDay(
-      date,
-      'reception'
-    ) as TimedReception) ?? {
+    const current = (this.store.getDay(date, 'reception') as TimedReception) ?? {
       userId: this.userId,
       workType: 'reception' as const,
       date,
@@ -299,13 +342,12 @@ export class ReceptionAvailabilityComponent implements OnInit {
     return s ? s.toHour : null;
   }
 
-  // [from+1 .. 23] – zawsze kafelek 23:00
   getEndHourOptions(): number[] {
     const from = this.getStartHour();
     if (from === null) return [];
     const count = TimeSlots.end - from;
     return Array.from({ length: count }, (_, i) => from + 1 + i);
-  }
+    }
 
   changeDay(direction: DayDirection) {
     const current = this.selectedDate();
@@ -333,23 +375,13 @@ export class ReceptionAvailabilityComponent implements OnInit {
   }
 
   saveAvailability() {
-    // obecny stan
-    const timedReception = this.store
-      .getAll('reception')
-      .filter(this.isTimedReception);
-    const externalOnly = this.store
-      .getAll('external_event')
-      .filter(this.isExternalOnly);
+    const timedReception = this.store.getAll('reception').filter(this.isTimedReception);
+    const externalOnly = this.store.getAll('external_event').filter(this.isExternalOnly);
 
-    // wyznacz dni do kasowania (oddzielnie dla recepcji i external)
-    const nowReceptionDates = new Set(timedReception.map((s) => s.date));
-    const nowExternalDates = new Set(externalOnly.map((s) => s.date));
-    const delReception = Array.from(this.originalReceptionDates()).filter(
-      (d) => !nowReceptionDates.has(d)
-    );
-    const delExternal = Array.from(this.originalExternalDates()).filter(
-      (d) => !nowExternalDates.has(d)
-    );
+    const nowReceptionDates = new Set(timedReception.map(s => s.date));
+    const nowExternalDates = new Set(externalOnly.map(s => s.date));
+    const delReception = Array.from(this.originalReceptionDates()).filter(d => !nowReceptionDates.has(d));
+    const delExternal = Array.from(this.originalExternalDates()).filter(d => !nowExternalDates.has(d));
 
     const deleteReception$ = delReception.length
       ? this.availability.delete(this.userId, delReception, 'reception')
@@ -392,8 +424,6 @@ export class ReceptionAvailabilityComponent implements OnInit {
     });
   }
 
-  readonly successTpl = viewChild<TemplateRef<unknown>>(
-    'availabilitySuccessToast'
-  );
+  readonly successTpl = viewChild<TemplateRef<unknown>>('availabilitySuccessToast');
   readonly errorTpl = viewChild<TemplateRef<unknown>>('availabilityErrorToast');
 }

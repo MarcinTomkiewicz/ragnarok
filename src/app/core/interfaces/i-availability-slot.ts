@@ -27,3 +27,8 @@ export type IAvailabilityExternalOnly = AvailabilityBase & {
 };
 
 export type IAvailabilitySlot = IAvailabilityTimed | IAvailabilityExternalOnly;
+
+export interface IDayFlags {
+  externalOnly?: boolean;
+  externalEventName?: string;
+}

@@ -4,26 +4,28 @@
 .roster-wrapper {
   @include section-wrapper;
 
-  .section-title {
-    text-align: center; // jak w overview
-  }
+  .section-title { text-align: center; }
 
   .roster-table {
-    display: grid;
-    gap: 0.5rem;
+    @include data-grid($columns: .5rem); // tylko gap między wierszami
 
-    .roster-header,
-    .roster-row {
-      display: grid;
-      grid-template-columns: 160px 220px 220px 1fr; // Data | Recepcja | Event | Akcje
-      gap: 0.5rem;
-      align-items: center;
+    // nadpisanie globalnego .col (flex) – tutaj używamy CSS Grid
+    .col {
+      flex: initial !important;
+      width: auto !important;
+      min-width: 0;
     }
 
     .roster-header {
+      @include data-grid-row(
+        $columns: 160px 220px minmax(300px, 1fr) auto, // Data | Recepcja | Event | Akcje
+        $pad: .25rem .25rem .5rem,
+        $bg: transparent,
+        $radius: 0,
+        $gap: .5rem
+      );
       font-weight: 700;
       color: $secondary-text-color;
-      padding: 0.25rem 0.25rem 0.5rem;
       border-bottom: 1px solid $border-color;
 
       .col { font-size: $font-size-sm; }
@@ -31,23 +33,42 @@
     }
 
     .roster-row {
-      padding: 0.25rem;
-      border-bottom: 1px dashed $border-color;
+      @include data-grid-row(
+        $columns: 160px 220px minmax(300px, 1fr) auto,
+        $pad: .25rem,
+        $bg: transparent,
+        $radius: 0,
+        $gap: .5rem
+      );
+      @include data-grid-row-divider($border-color);
 
       .col-date {
         .date-main { font-weight: 600; }
         .date-sub  { font-size: $font-size-xs; color: $secondary-text-color; }
       }
 
-      // przyciski z dropdownem wyglądają jak form-control (spójnie z worklogiem)
+      /* PRZYCISKI DROPDOWN – wspólna baza + caret */
       .dropdown .btn.dropdown-toggle {
         @include form-control;
-        width: 100%;
-        text-align: left;
+        position: relative;      // kontekst dla ::after
+        min-width: 0;
         display: inline-flex;
         align-items: center;
         justify-content: space-between;
         gap: .5rem;
+        text-align: left;
+        overflow: hidden;        // ellipsis tylko na przycisku (nie na kolumnie)
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 2.25rem;  // miejsce na caret
+
+        &::after {
+          position: absolute;
+          right: .75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          margin-left: 0;        // nadpisanie bootstrap
+        }
 
         &[disabled] {
           opacity: .6;
@@ -56,7 +77,27 @@
         }
       }
 
-      .col-actions { text-align: right; }
+      /* Recepcja – jak form-control, pełna szerokość */
+      .col-reception .dropdown .btn.dropdown-toggle {
+        width: 100%;
+      }
+
+      /* Event – przycisk tylko tak szeroki, jak treść; reszta kolumny pusta */
+      .col-event {
+        // brak ellipsis na kolumnie (żeby nie ucinać menu!)
+        .dropdown {
+          justify-self: start;   // trzymaj przy lewej krawędzi kolumny
+        }
+        .dropdown .btn.dropdown-toggle {
+          width: auto;
+          max-width: 100%;       // bezpiecznik
+        }
+      }
+
+      .col-actions {
+        text-align: right;
+        justify-self: end;       // kosz po prawej, zajmuje tylko tyle ile potrzebuje
+      }
 
       .reset-btn {
         padding: 0.3rem 0.5rem;
@@ -92,7 +133,12 @@
   @media (max-width: 640px) {
     .roster-table {
       .roster-header { display: none; }
-      .roster-row { grid-template-columns: 1fr; }
+
+      // jeden column layout na wiersz
+      .roster-row {
+        grid-template-columns: 1fr !important;
+        row-gap: .5rem;
+      }
 
       .col-date {
         display: flex;
@@ -110,4 +156,11 @@
       }
     }
   }
+}
+
+/* Sizing menu dropdown – dopasuj do treści, nie do pełnej kolumny */
+.roster-wrapper .roster-table .dropdown-menu {
+  min-width: max-content;
+  width: auto;
+  max-width: 100%;
 }
