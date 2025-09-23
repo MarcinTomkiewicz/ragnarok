@@ -118,13 +118,11 @@ export class UserMenuPanelComponent {
       sections.push({ title: 'Dyspozycyjność', items: availability });
     }
 
-    // Praca i czas
     const workAndTime: MenuItem[] = [];
     if (strict(CoworkerRoles.Gm)) {
       workAndTime.push({ label: 'Nadchodzące sesje', path: '/auth/upcoming-sessions' });
     }
     if (min(CoworkerRoles.Gm)) {
-      // Uporządkowany porządek: najpierw „Czas pracy”, potem „Mój grafik”
       workAndTime.push(
         { label: 'Czas pracy', path: '/auth/work-log' },
         { label: 'Mój grafik', path: '/auth/my-roster' },
@@ -137,7 +135,6 @@ export class UserMenuPanelComponent {
       sections.push({ title: 'Praca i czas', items: workAndTime });
     }
 
-    // Sekcja właścicielska – osobno „Grafik recepcji”
     if (strict(CoworkerRoles.Owner)) {
       sections.push({
         title: 'Grafik',
@@ -145,7 +142,6 @@ export class UserMenuPanelComponent {
       });
     }
 
-    // Konto i członkostwo
     const account: MenuItem[] = [{ label: 'Edytuj dane', path: '/auth/edit-data' }];
     if (min(CoworkerRoles.Gm)) {
       account.push({ label: 'Profil Mistrza Gry', path: '/auth/manage-gm' });
