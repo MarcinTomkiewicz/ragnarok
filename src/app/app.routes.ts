@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { ADMIN_ROUTES } from './admin/admin-routing';
-import { AUTH_ROUTES } from './auth/auth.routes';
 import { NotAuthorizedComponent } from './common/not-authorized/not-authorized.component';
 import { NotFoundComponent } from './common/not-found/not-found.component';
+import { AUTH_ROUTES } from './auth/core/routes';
 
 export const routes: Routes = [
   { path: 'admin', children: ADMIN_ROUTES },
