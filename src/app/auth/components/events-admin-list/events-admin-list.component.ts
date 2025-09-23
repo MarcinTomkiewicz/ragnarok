@@ -48,7 +48,6 @@ export class EventsAdminListComponent {
     if (this.viewMode() !== m) this.viewMode.set(m);
   }
 
-  // surowa lista
   readonly eventsSig = toSignal(
     this.eventService
       .getAllActive()
@@ -63,15 +62,24 @@ export class EventsAdminListComponent {
     if (ev.hostSignup === HostSignupScope.Staff) {
       return hasMinimumCoworkerRole(u, CoworkerRoles.Gm);
     }
-    // HostSignupScope.Any – wystarczy zalogowany (User)
+
     return hasMinimumCoworkerRole(u, CoworkerRoles.User);
   };
 
+  private eventHasFutureOccurrence(ev: EventFull): boolean {
+    if (ev.singleDate) return this.isFutureDate(ev.singleDate);
+
+    const { thisFrom, nextTo } = this.occRange();
+    const occ = this.eventService.listOccurrencesFE(ev, thisFrom, nextTo);
+    return occ.some((d) => this.isFutureDate(d));
+  }
+
   readonly visibleEvents = computed<EventFull[]>(() =>
-    (this.eventsSig() ?? []).filter(event => event.requiresHosts && this.canSeeEvent(event))
+    (this.eventsSig() ?? [])
+      .filter((ev) => ev.requiresHosts && this.canSeeEvent(ev))
+      .filter((ev) => this.eventHasFutureOccurrence(ev))
   );
 
-  // wybór w tabsach – na bazie *visibleEvents*
   private readonly selectedSlug = signal<string | null>(null);
   readonly selected = computed<EventFull | null>(() => {
     const list = this.visibleEvents();
@@ -105,22 +113,19 @@ export class EventsAdminListComponent {
     const ev = this.selected();
     if (!ev) return [];
     const { thisFrom, thisTo } = this.occRange();
-    return this.eventService.listOccurrencesFE(ev, thisFrom, thisTo);
+    return this.eventService
+      .listOccurrencesFE(ev, thisFrom, thisTo)
+      .filter((d) => this.isFutureDate(d));
   });
+
   readonly occurrencesNextMonth = computed<string[]>(() => {
     const ev = this.selected();
     if (!ev) return [];
     const { nextFrom, nextTo } = this.occRange();
-    return this.eventService.listOccurrencesFE(ev, nextFrom, nextTo);
+    return this.eventService
+      .listOccurrencesFE(ev, nextFrom, nextTo)
+      .filter((d) => this.isFutureDate(d));
   });
-
-  // ---- TERMINY (accordion) – sync helper ----
-  listOccurrences(ev: EventFull, which: 'this' | 'next'): string[] {
-    const { thisFrom, thisTo, nextFrom, nextTo } = this.occRange();
-    return which === 'this'
-      ? this.eventService.listOccurrencesFE(ev, thisFrom, thisTo)
-      : this.eventService.listOccurrencesFE(ev, nextFrom, nextTo);
-  }
 
   // ---- PEŁNOŚĆ: eventId -> date -> {count, capacity, isFull} ----
   readonly fullnessAll = toSignal(
@@ -193,6 +198,11 @@ export class EventsAdminListComponent {
     if (this.isMine(ev.id, dateIso)) return true;
     return !this.isFull(ev.id, dateIso);
   }
+  private readonly todayYmd = computed(() => formatYmdLocal(new Date()));
+
+  private isFutureDate = (dateIso: string): boolean => {
+    return dateIso > this.todayYmd();
+  };
 
   // ---- NAWIGACJA ----
   goSignup(dateIso: string) {
