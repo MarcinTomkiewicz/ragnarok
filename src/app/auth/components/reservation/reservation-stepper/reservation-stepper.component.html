@@ -3,23 +3,31 @@
     <h2 class="section-title">Rezerwacja sali</h2>
 
     <div class="stepper">
-      @if (store.isReceptionMode() && step() === 0) {
-      <app-user-info-form />
+      @if (store.isReceptionMode() && step() === 0 && !deferredInfo()) {
+        <app-user-info-form />
+        <div class="d-flex justify-content-center mt-3">
+          <button type="button" class="btn btn-outline btn-sm" (click)="deferUserInfoAndGo()">
+            Podaj dane w ostatnim kroku
+          </button>
+        </div>
       } @else if (step() === 1) {
-      <app-room-selection />
+        <app-room-selection />
       } @else if (step() === 2) {
-      <app-time-selection />
+        <app-time-selection />
       } @else if (step() === 3) {
-      <app-gm-selection />
-      } @else if (step() === 4) {
-      <app-reservation-summary />
+        <app-gm-selection />
+      } @else if (store.isReceptionMode() && deferredInfo() && step() === 4) {
+        <app-user-info-form />
+      } @else if (step() === maxStep()) {
+        <app-reservation-summary />
       }
     </div>
 
     <div class="d-flex justify-content-center gap-4 mt-4">
       <button
         class="btn btn-outline"
-        (click)="goBack()"
+        (click)="goBack()
+        "
         [disabled]="goBackDisabled()"
       >
         Wstecz

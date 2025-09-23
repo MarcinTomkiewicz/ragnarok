@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  signal,
   TemplateRef,
   viewChild,
 } from '@angular/core';
@@ -50,6 +51,29 @@ export class ReservationStepperComponent {
 
   readonly step = this.store.step;
 
+  readonly deferredInfo = signal(false);
+  readonly isReception = computed(() => this.store.isReceptionMode());
+
+  readonly summaryStep = computed(() =>
+    this.isReception() && this.deferredInfo() ? 5 : 4
+  );
+  readonly userInfoDeferredStep = 4;
+
+  readonly maxStep = computed(() => this.summaryStep());
+
+  // helper – klik z kroku 0
+  deferUserInfoAndGo() {
+    if (!this.isReception()) return; // tylko recepcja
+    this.deferredInfo.set(true);
+    // celowo omijamy walidację kroku 0
+    const current = this.step();
+    if (current === 0) {
+      this.step.set(1);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+    }
+  }
+
   constructor() {
     const initialStep = this.route.snapshot.data['initialStep'];
     const receptionMode = this.route.snapshot.data['receptionMode'];
@@ -70,14 +94,18 @@ export class ReservationStepperComponent {
     'reservationErrorToast'
   );
 
-  readonly maxStep = computed(() => 4);
+  // readonly maxStep = computed(() => 4);
 
   private scrollToStepperTop(): void {
     scrollToElementWithOffset('reservation-stepper', 60, this.platformService);
   }
 
   readonly canProceed = computed(() => {
-    if (this.store.isReceptionMode() && this.step() === 0) {
+    if (
+      this.store.isReceptionMode() &&
+      this.step() === 0 &&
+      !this.deferredInfo()
+    ) {
       return this.store.isExternalInfoValid();
     }
 
@@ -99,6 +127,11 @@ export class ReservationStepperComponent {
       case 3:
         return !!this.store.selectedSystemId() && !!this.store.selectedGm();
       case 4:
+        if (this.isReception() && this.deferredInfo()) {
+          return this.store.isExternalInfoValid();
+        }
+        return true;
+      case 5:
         return true;
       default:
         return false;
@@ -110,11 +143,18 @@ export class ReservationStepperComponent {
 
     const current = this.step();
     const needsGm = this.store.needsGm();
+    const summary = this.summaryStep();
 
     if (current === 2) {
       const pid = this.store.selectedPartyId();
+
       if (!needsGm) {
-        this.step.set(4);
+        // bez GM-a – idziemy prosto do "dane dzwoniącego" (jeśli deferred) lub do podsumowania
+        this.step.set(
+          this.isReception() && this.deferredInfo()
+            ? this.userInfoDeferredStep
+            : summary
+        );
         this.scrollToStepperTop();
         this.store.saveToStorage();
         return;
@@ -132,7 +172,11 @@ export class ReservationStepperComponent {
           }
 
           const ensureThenGo = () => {
-            this.step.set(4);
+            this.step.set(
+              this.isReception() && this.deferredInfo()
+                ? this.userInfoDeferredStep
+                : summary
+            );
             this.scrollToStepperTop();
             this.store.saveToStorage();
           };
@@ -161,7 +205,18 @@ export class ReservationStepperComponent {
       return;
     }
 
-    if (current < this.maxStep()) {
+    if (current === 3) {
+      this.step.set(
+        this.isReception() && this.deferredInfo()
+          ? this.userInfoDeferredStep
+          : summary
+      );
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+      return;
+    }
+
+    if (current < summary) {
       this.step.set(current + 1);
       this.scrollToStepperTop();
     } else {
@@ -172,48 +227,84 @@ export class ReservationStepperComponent {
   }
 
   goBack() {
-    const current = this.step();
+  const current = this.step();
+  const summary = this.summaryStep();
 
-    if (current === 4) {
-      const needsGm = this.store.needsGm();
-
-      if (!needsGm) {
-        this.step.set(2);
-        this.scrollToStepperTop();
-        this.store.saveToStorage();
-        return;
-      }
-
-      const pid = this.store.selectedPartyId();
-      if (!pid) {
-        this.step.set(3);
-        this.scrollToStepperTop();
-        this.store.saveToStorage();
-        return;
-      }
-
-      this.partyService.getPartyById(pid).subscribe((team) => {
-        const isJoin = !!team?.beginnersProgram && team?.programStage === 1;
-        this.step.set(isJoin ? 2 : 3);
-        this.scrollToStepperTop();
-        this.store.saveToStorage();
-      });
-
+  if (current === summary) {
+    if (this.isReception() && this.deferredInfo()) {
+      this.step.set(this.userInfoDeferredStep);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
       return;
     }
 
-    if (current === 1 && !this.store.isReceptionMode()) return;
+    const needsGm = this.store.needsGm();
 
-    const prev = current - 1;
-    if (prev >= 0) {
-      this.step.set(prev);
+    if (!needsGm) {
+      this.step.set(2);
       this.scrollToStepperTop();
+      this.store.saveToStorage();
+      return;
     }
-    this.store.saveToStorage();
+
+    const pid = this.store.selectedPartyId();
+    if (!pid) {
+      this.step.set(3);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+      return;
+    }
+
+    this.partyService.getPartyById(pid).subscribe((team) => {
+      const isJoin = !!team?.beginnersProgram && team?.programStage === 1;
+      this.step.set(isJoin ? 2 : 3);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+    });
+
+    return;
   }
 
+  if (this.isReception() && this.deferredInfo() && current === this.userInfoDeferredStep) {
+    const needsGm = this.store.needsGm();
+    if (!needsGm) {
+      this.step.set(2);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+      return;
+    }
+
+    const pid = this.store.selectedPartyId();
+    if (!pid) {
+      this.step.set(3);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+      return;
+    }
+
+    this.partyService.getPartyById(pid).subscribe((team) => {
+      const isJoin = !!team?.beginnersProgram && team?.programStage === 1;
+      this.step.set(isJoin ? 2 : 3);
+      this.scrollToStepperTop();
+      this.store.saveToStorage();
+    });
+
+    return;
+  }
+
+  if (current === 1 && !this.store.isReceptionMode()) return;
+
+  const prev = current - 1;
+  if (prev >= 0) {
+    this.step.set(prev);
+    this.scrollToStepperTop();
+  }
+  this.store.saveToStorage();
+}
+
+
   goBackDisabled() {
-    return this.step() === 1 && !this.store.isReceptionMode();
+    return this.step() === 1 && !this.store.isReceptionMode() || this.deferredInfo();
   }
 
   private finalizeReservation() {
