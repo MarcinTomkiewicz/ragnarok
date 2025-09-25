@@ -1,0 +1,197 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+@import "layouts/form-panel";
+
+.personnel-form-panel {
+  @include section-wrapper;
+
+  .section-title {
+    @include responsive-font-size($font-size-xl);
+    margin-bottom: 1rem;
+  }
+
+  .user-picker {
+    margin-bottom: 1rem;
+
+    .row-inline {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+
+      @media (max-width: $breakpoint-sm) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .preview {
+      margin-top: 0.4rem;
+      font-size: $font-size-sm;
+      color: $secondary-text-color;
+    }
+  }
+
+  .user-info-form,
+  .blocked-section {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .notice {
+    background: rgba($primary-color, 0.1);
+    border: 1px dashed $primary-color;
+    border-radius: $border-radius;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+
+    &.danger {
+      border-color: $danger-color;
+      color: $danger-text-color;
+    }
+
+    &.success {
+      border-color: $success-color;
+      color: $success-color;
+    }
+  }
+
+  .blocked-note {
+    color: $danger-text-color;
+    border: 1px dashed $border-color;
+    border-radius: $border-radius;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 1rem;
+    background: $bg-color-light;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: inline-block;
+      margin-bottom: 0.35rem;
+    }
+
+    .form-control {
+      @include form-control;
+      width: 100%;
+    }
+
+    .is-invalid {
+      border-color: $danger-color;
+    }
+  }
+
+  .row-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+    }
+
+    &.nested {
+      grid-template-columns: 1fr 1fr;
+
+      @media (max-width: $breakpoint-sm) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  .actions {
+    margin-top: 1.25rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .req {
+    color: $primary-color;
+  }
+}
+
+/* ===============================
+   DROPDOWN: siatka stabilna (rola = stała szerokość)
+   =============================== */
+
+/* Jedno źródło prawdy na kolumny:
+   name | phone | email | role(fixed)
+   – e-mail największa elastyczność, może się ścinać (ellipsis)
+   – rola ma stałą szerokość, więc nic nie „pływa”
+*/
+.dropdown-grid-scope {
+  --col-role-w: 132px; /* szerokość roli (daje luz na 'Reception', 'Coowner') */
+  --col-def: minmax(120px, 1fr) minmax(110px, 0.9fr) minmax(0, 2.2fr) var(--col-role-w);
+}
+
+.dropdown-grid,
+.dropdown-table {
+  display: grid;
+  grid-template-columns: var(--col-def);
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 100%;
+}
+
+/* Krytyczne dla ellipsis w gridzie */
+.dropdown-grid > .col,
+.dropdown-table > .col { min-width: 0; }
+
+/* Header */
+.dropdown-grid.header,
+.dropdown-table.header {
+  @include data-grid-row(var(--col-def), .4rem .75rem, transparent, 0, .5rem);
+  border-bottom: 1px solid $border-color;
+  font-size: $font-size-xs;
+  opacity: .85;
+}
+
+/* Wiersze */
+.dropdown-item.item { padding: 0; }
+.dropdown-grid.inner,
+.dropdown-table.inner {
+  @include data-grid-row(var(--col-def), .35rem .75rem, transparent, 6px, .5rem);
+}
+
+/* Kolumny */
+.col-name, .col-phone, .col-email { @include cell-ellipsis; min-width: 0; }
+.col-phone { font-variant-numeric: tabular-nums; }
+.col-role  {
+  justify-self: end;
+  width: var(--col-role-w);   /* trzyma szerokość kolumny */
+  text-align: right;
+  white-space: nowrap;        /* badge nie łamie się */
+}
+
+/* Toggle */
+.dropdown-toggle-wide .dropdown-grid,
+.dropdown-toggle-wide .dropdown-table { padding: .15rem 0; }
+.dropdown-toggle-wide .dropdown-grid > .col,
+.dropdown-toggle-wide .dropdown-table > .col { min-width: 0; }
+
+/* Hover */
+.dropdown-item.item:hover .dropdown-grid.inner,
+.dropdown-item.item:hover .dropdown-table.inner {
+  background: rgba($primary-color, 0.06);
+}
+
+/* Dropdown = szerokość przycisku */
+.dropdown-pane { min-width: 100%; max-width: 100%; }
+
+/* Responsywność – nie ruszamy proporcji, tylko odrobinę zwężamy kolumnę roli
+   jeśli trzeba (badge i tak jest krótkie) */
+@media (max-width: $breakpoint-md) {
+  .dropdown-grid-scope {
+    --col-role-w: 120px;
+    --col-def: minmax(120px, 1fr) minmax(100px, .8fr) minmax(0, 2fr) var(--col-role-w);
+  }
+}
+@media (max-width: $breakpoint-sm) {
+  .dropdown-grid-scope {
+    --col-role-w: 110px;
+    --col-def: minmax(100px, 1fr) minmax(90px, .7fr) minmax(0, 1.6fr) var(--col-role-w);
+  }
+}

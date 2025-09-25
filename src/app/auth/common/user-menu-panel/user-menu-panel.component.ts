@@ -47,12 +47,13 @@ export class UserMenuPanelComponent {
   readonly notifLabels = computed(() => {
     const counts = this.notifCounts();
     const out = {} as Record<NotificationBucket, string>;
-    (Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>)
-      .forEach((k) => {
-        const bucket = NotificationBucket[k] as NotificationBucket;
-        const n = counts[bucket] ?? 0;
-        out[bucket] = n > 99 ? '99+' : String(n);
-      });
+    (
+      Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>
+    ).forEach((k) => {
+      const bucket = NotificationBucket[k] as NotificationBucket;
+      const n = counts[bucket] ?? 0;
+      out[bucket] = n > 99 ? '99+' : String(n);
+    });
     return out;
   });
 
@@ -71,7 +72,7 @@ export class UserMenuPanelComponent {
     if (min(CoworkerRoles.Reception)) {
       reservations.push(
         { label: 'Nowa Rezerwacja', path: '/auth/guest-reservation' },
-        { label: 'Kalendarz Rezerwacji', path: '/auth/reservations-calendar' },
+        { label: 'Kalendarz Rezerwacji', path: '/auth/reservations-calendar' }
       );
     }
     sections.push({ title: 'Rezerwacje', items: reservations });
@@ -96,7 +97,7 @@ export class UserMenuPanelComponent {
     if (min(CoworkerRoles.Reception)) {
       events.push(
         { label: 'Zarządzaj wydarzeniami', path: '/auth/events' },
-        { label: 'Nowe wydarzenie', path: '/auth/events/new' },
+        { label: 'Nowe wydarzenie', path: '/auth/events/new' }
       );
     } else if (min(CoworkerRoles.User)) {
       events.push({ label: 'Poprowadź wydarzenie', path: '/auth/events' });
@@ -106,13 +107,22 @@ export class UserMenuPanelComponent {
     // Dyspozycyjność
     const availability: MenuItem[] = [];
     if (strict(CoworkerRoles.Gm)) {
-      availability.push({ label: 'Dostępność Mistrza Gry', path: '/auth/availability' });
+      availability.push({
+        label: 'Dostępność Mistrza Gry',
+        path: '/auth/availability',
+      });
     }
     if (min(CoworkerRoles.Gm)) {
-      availability.push({ label: 'Dostępność na recepcji', path: '/auth/reception-availability' });
+      availability.push({
+        label: 'Dostępność na recepcji',
+        path: '/auth/reception-availability',
+      });
     }
     if (min(CoworkerRoles.Reception)) {
-      availability.push({ label: 'Podgląd dostępności', path: '/auth/availability-overview' });
+      availability.push({
+        label: 'Podgląd dostępności',
+        path: '/auth/availability-overview',
+      });
     }
     if (availability.length) {
       sections.push({ title: 'Dyspozycyjność', items: availability });
@@ -120,16 +130,23 @@ export class UserMenuPanelComponent {
 
     const workAndTime: MenuItem[] = [];
     if (strict(CoworkerRoles.Gm)) {
-      workAndTime.push({ label: 'Nadchodzące sesje', path: '/auth/upcoming-sessions' });
+      workAndTime.push({
+        label: 'Nadchodzące sesje',
+        path: '/auth/upcoming-sessions',
+      });
     }
     if (min(CoworkerRoles.Gm)) {
       workAndTime.push(
         { label: 'Czas pracy', path: '/auth/work-log' },
         { label: 'Mój grafik', path: '/auth/my-roster' },
+        { label: 'Akta współpracowników', path: '/auth/coworker-files' }
       );
     }
     if (min(CoworkerRoles.Reception)) {
-      workAndTime.push({ label: 'Ewidencja godzin', path: '/auth/work-logs-overview' });
+      workAndTime.push({
+        label: 'Ewidencja godzin',
+        path: '/auth/work-logs-overview',
+      });
     }
     if (workAndTime.length) {
       sections.push({ title: 'Praca i czas', items: workAndTime });
@@ -142,7 +159,9 @@ export class UserMenuPanelComponent {
       });
     }
 
-    const account: MenuItem[] = [{ label: 'Edytuj dane', path: '/auth/edit-data' }];
+    const account: MenuItem[] = [
+      { label: 'Edytuj dane', path: '/auth/edit-data' },
+    ];
     if (min(CoworkerRoles.Gm)) {
       account.push({ label: 'Profil Mistrza Gry', path: '/auth/manage-gm' });
     }
@@ -151,7 +170,7 @@ export class UserMenuPanelComponent {
     }
     sections.push({ title: 'Konto i członkostwo', items: account });
 
-    return sections.filter(s => s.items.length);
+    return sections.filter((s) => s.items.length);
   });
 
   logout(): void {
