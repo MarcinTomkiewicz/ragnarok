@@ -304,7 +304,7 @@ export class ReservationStepperComponent {
 
 
   goBackDisabled() {
-    return this.step() === 1 && !this.store.isReceptionMode() || this.deferredInfo();
+    return this.step() === 1 && (!this.store.isReceptionMode() || this.deferredInfo());
   }
 
   private finalizeReservation() {
