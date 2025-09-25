@@ -106,6 +106,15 @@
         <div class="col col-total text-end">
           <span class="badge bg-success">{{ grandTotal() }}</span>
         </div>
+        <app-worklog-export
+          class="ms-auto"
+          [totals]="totalsByUser()"
+          [usersMap]="usersMap()"
+          [showAggregatedButton]="true"
+          [showEntriesButton]="false"
+          [fileMonthLabel]="fileMonthLabel()"
+          [fileYearLabel]="fileYearLabel()"
+        />
       </div>
     </div>
   </div>

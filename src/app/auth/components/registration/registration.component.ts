@@ -52,6 +52,7 @@ export class RegistrationComponent {
     email: email!,
     role: SystemRole.User,
     coworker: CoworkerRoles.User,
+    isTestUser: false,
     ...rest,
   };
 

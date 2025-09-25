@@ -12,11 +12,12 @@ import { BackendService } from '../../../core/services/backend/backend.service';
 import { Row } from '../../../core/types/row';
 import { CoworkersService } from '../../core/services/coworkers/coworkers.service';
 import { WorkLogService } from '../../core/services/work-log/work-log.service';
+import { WorklogExportComponent } from '../../common/worklog-export/worklog-export.component';
 
 @Component({
   selector: 'app-work-log-overview',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, WorklogExportComponent],
   templateUrl: './work-log-overview.component.html',
   styleUrl: './work-log-overview.component.scss',
 })
@@ -28,10 +29,10 @@ export class WorkLogOverviewComponent implements OnInit {
   readonly monthOffset = signal<0 | -1>(0);
 
   private readonly logsAll = signal<IWorkLog[]>([]);
-  private readonly usersMap = signal<Map<string, IUser>>(new Map());
+  readonly usersMap = signal<Map<string, IUser>>(new Map());
 
   private readonly rowsByUser = signal<Map<string, Row[]>>(new Map());
-  private readonly totalsByUser = signal<Map<string, number>>(new Map());
+  readonly totalsByUser = signal<Map<string, number>>(new Map());
 
   readonly expandedUserId = signal<string | null>(null);
 
@@ -57,6 +58,16 @@ export class WorkLogOverviewComponent implements OnInit {
     const { start } = this.worklog.computeMonthDays(this.monthOffset());
     const label = format(start, 'LLLL yyyy', { locale: pl });
     return label.charAt(0).toUpperCase() + label.slice(1);
+  });
+
+  readonly fileMonthLabel = computed(() => {
+    const { start } = this.worklog.computeMonthDays(this.monthOffset());
+    const label = format(start, 'LLLL', { locale: pl });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  });
+  readonly fileYearLabel = computed(() => {
+    const { start } = this.worklog.computeMonthDays(this.monthOffset());
+    return format(start, 'yyyy');
   });
 
   readonly overview = computed(() => {
