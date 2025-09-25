@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from '../../components/login/login.component';
 import { AuthGuard } from '../guards/auth.guard';
+import { CoworkerRoles } from '../../../core/enums/roles';
 
 export const BASE_ROUTES: Routes = [
   { path: 'login', component: LoginComponent },
@@ -17,5 +18,14 @@ export const BASE_ROUTES: Routes = [
         .then(m => m.EditDataComponent),
     canActivate: [AuthGuard],
     data: { authOnly: true },
+  },
+
+  {
+    path: 'coworker-files',
+    loadComponent: () =>
+      import('../../components/coworker-personal-files/coworker-personal-files.component')
+        .then(m => m.CoworkerPersonalFilesComponent),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Gm },
   },
 ];

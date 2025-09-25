@@ -1,0 +1,268 @@
+<div class="personnel-form-panel">
+  <div class="container">
+    <h2 class="section-title mb-3">Akta współpracownika</h2>
+
+    @if (!isAllowed()) {
+    <div class="notice danger">
+      Brak uprawnień. Dostęp wyłącznie dla ról <strong>GM</strong> i wyżej.
+    </div>
+    } @else { @if (canPickOthers()) {
+    <div class="create-party-panel user-info-form mb-3">
+      <label>Wybierz współpracownika (GM i wyżej)</label>
+
+      <div ngbDropdown class="d-inline-block w-100 dropdown-grid-scope">
+        <button
+          class="btn btn-outline dropdown-toggle-wide"
+          id="userDropdown"
+          ngbDropdownToggle
+        >
+          @if (selectedUser()) {
+          <span class="dropdown-grid">
+            <span class="col col-name">{{ displayNick(selectedUser()) }}</span>
+            <span class="col col-phone">{{
+              selectedUser()?.phoneNumber || "—"
+            }}</span>
+            <span class="col col-email">{{ selectedUser()?.email }}</span>
+            <span class="col col-role">
+              <span [class]="roleBadgeClass(selectedUser()?.coworker)">{{
+                selectedUser()?.coworker
+              }}</span>
+            </span>
+          </span>
+          } @else { Wybierz osobę… }
+        </button>
+
+        <div
+          ngbDropdownMenu
+          aria-labelledby="userDropdown"
+          class="dropdown-pane"
+        >
+          <!-- nagłówek -->
+          <div class="dropdown-grid header">
+            <span class="col col-name">Imię/Pseudonim</span>
+            <span class="col col-phone">Telefon</span>
+            <span class="col col-email">E-mail</span>
+            <span class="col col-role">Rola</span>
+          </div>
+
+          <div class="dropdown-list">
+            @for (u of gmPlusList(); track u.id) {
+            <button class="dropdown-item item" (click)="pickUser(u)">
+              <span class="dropdown-grid inner">
+                <span class="col col-name">{{ displayNick(u) }}</span>
+                <span class="col col-phone">{{ u.phoneNumber || "—" }}</span>
+                <span class="col col-email">{{ u.email }}</span>
+                <span class="col col-role">
+                  <span [class]="roleBadgeClass(u.coworker)">{{
+                    u.coworker
+                  }}</span>
+                </span>
+              </span>
+            </button>
+            } @empty {
+            <div class="dropdown-empty">Brak użytkowników do wyboru.</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <div class="notice">Edytujesz <strong>swoje</strong> oficjalne dane.</div>
+    } @if (selectedUser()) {
+
+    <div class="notice">
+      Uzupełnij oficjalne <strong>Imię</strong> i <strong>Nazwisko</strong>.
+      Pozostałe pola są tymczasowo <em>niedostępne</em> ze względów
+      bezpieczeństwa.
+    </div>
+
+    <form [formGroup]="form" novalidate class="user-info-form mt-3">
+      <!-- Imię / Nazwisko -->
+      <div class="row-inline">
+        <div class="form-group">
+          <label for="firstName">Imię <span class="req">*</span></label>
+          <input
+            id="firstName"
+            type="text"
+            class="form-control"
+            [class.is-invalid]="
+              form.get('firstName')?.touched && form.get('firstName')?.invalid
+            "
+            formControlName="firstName"
+            placeholder="Jan"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Nazwisko <span class="req">*</span></label>
+          <input
+            id="lastName"
+            type="text"
+            class="form-control"
+            [class.is-invalid]="
+              form.get('lastName')?.touched && form.get('lastName')?.invalid
+            "
+            formControlName="lastName"
+            placeholder="Kowalski"
+          />
+        </div>
+      </div>
+
+      <!-- Pseudonim -->
+      <div class="form-group">
+        <label for="nickname">Pseudonim (opcjonalnie)</label>
+        <input
+          id="nickname"
+          type="text"
+          class="form-control"
+          formControlName="nickname"
+          placeholder="np. Ragnar"
+        />
+      </div>
+
+      <!-- Sekcja zablokowanych pól -->
+      <div class="blocked-section">
+        <div class="blocked-note">
+          <strong>Uwaga:</strong> Dane wrażliwe (PESEL, konto bankowe, NFZ, US,
+          adres) są chwilowo wyłączone.
+        </div>
+
+        <div class="row-inline">
+          <div class="form-group">
+            <label for="city">Miasto</label>
+            <input
+              id="city"
+              type="text"
+              class="form-control"
+              formControlName="city"
+              placeholder="Warszawa"
+            />
+          </div>
+          <div class="form-group">
+            <label for="postalCode">Kod pocztowy</label>
+            <input
+              id="postalCode"
+              type="text"
+              class="form-control"
+              formControlName="postalCode"
+              placeholder="00-000"
+            />
+          </div>
+        </div>
+
+        <div class="row-inline">
+          <div class="form-group">
+            <label for="street">Ulica</label>
+            <input
+              id="street"
+              type="text"
+              class="form-control"
+              formControlName="street"
+              placeholder="ul. Fantazyjna"
+            />
+          </div>
+          <div class="row-inline nested">
+            <div class="form-group">
+              <label for="houseNumber">Nr domu</label>
+              <input
+                id="houseNumber"
+                type="text"
+                class="form-control"
+                formControlName="houseNumber"
+                placeholder="12A"
+              />
+            </div>
+            <div class="form-group">
+              <label for="apartmentNumber">Nr lokalu</label>
+              <input
+                id="apartmentNumber"
+                type="text"
+                class="form-control"
+                formControlName="apartmentNumber"
+                placeholder="5"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="row-inline">
+          <div class="form-group">
+            <label for="pesel">PESEL</label>
+            <input
+              id="pesel"
+              type="text"
+              class="form-control"
+              formControlName="pesel"
+              placeholder="XXXXXXXXXXX"
+            />
+          </div>
+          <div class="form-group">
+            <label for="nfzBranch">Oddział NFZ</label>
+            <input
+              id="nfzBranch"
+              type="text"
+              class="form-control"
+              formControlName="nfzBranch"
+              placeholder="np. 14 – Mazowiecki"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="iban">Konto bankowe (IBAN)</label>
+          <input
+            id="iban"
+            type="text"
+            class="form-control"
+            formControlName="iban"
+            placeholder="PL00 0000 0000 0000 0000 0000 0000"
+          />
+        </div>
+
+        <div class="row-inline">
+          <div class="form-group">
+            <label for="taxOfficeName">Urząd Skarbowy (nazwa)</label>
+            <input
+              id="taxOfficeName"
+              type="text"
+              class="form-control"
+              formControlName="taxOfficeName"
+              placeholder="US Warszawa-Śródmieście"
+            />
+          </div>
+          <div class="form-group">
+            <label for="taxOfficeCity">Miasto US</label>
+            <input
+              id="taxOfficeCity"
+              type="text"
+              class="form-control"
+              formControlName="taxOfficeCity"
+              placeholder="Warszawa"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          (click)="save()"
+          [disabled]="!canSaveSig() || saving()"
+        >
+          {{ saving() ? "Zapisuję…" : "Zapisz" }}
+        </button>
+      </div>
+
+      <!-- Toasty -->
+      <ng-template #saveSuccessToast>
+        <strong>Sukces!</strong> Zapisano oficjalne dane współpracownika.
+      </ng-template>
+
+      <ng-template #saveErrorToast>
+        <strong>Błąd!</strong> Nie udało się zapisać danych.
+      </ng-template>
+    </form>
+    } }
+  </div>
+</div>
