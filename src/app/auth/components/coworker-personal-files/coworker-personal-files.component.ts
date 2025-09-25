@@ -16,6 +16,8 @@ import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { CoworkerDirectoryService } from '../../core/services/coworker-directory/coworker-directory.service';
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { ToastService } from '../../../core/services/toast/toast.service';
+import { BackendService } from '../../../core/services/backend/backend.service';
 
 import { IUser } from '../../../core/interfaces/i-user';
 import { CoworkerRoles } from '../../../core/enums/roles';
@@ -25,10 +27,15 @@ import {
   hasMinimumSystemRole,
   hasStrictCoworkerRole,
 } from '../../../core/utils/required-roles';
-
 import { FilterOperator } from '../../../core/enums/filterOperator';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { BackendService } from '../../../core/services/backend/backend.service';
+
+// To, co mamy w coworkers_public
+export interface ICoworkerPublic {
+  userId: string;       // auth.users.id
+  firstName: string;
+  lastName: string;
+  displayName?: string | null;
+}
 
 @Component({
   selector: 'app-coworker-personal-files',
@@ -46,22 +53,25 @@ export class CoworkerPersonalFilesComponent implements OnInit {
 
   // --- uprawnienia ---
   readonly currentUser = computed(() => this.auth.user());
-  // dostęp do modułu – min. GM (jak ustaliłeś wcześniej)
+  // dostęp do modułu – min. GM
   readonly isAllowed = computed(() =>
     hasMinimumCoworkerRole(this.currentUser(), CoworkerRoles.Gm)
   );
-  // picker tylko dla Ownera lub Admina
+  // picker tylko dla Admina lub Ownera
   readonly canPickOthers = computed(
     () =>
       hasMinimumSystemRole(this.currentUser(), SystemRole.Admin) ||
       hasStrictCoworkerRole(this.currentUser(), CoworkerRoles.Owner)
   );
 
+  // mapka userId -> oficjalne dane (coworkers_public)
+  private readonly dirMapSig = toSignal(this.dir.map$, {
+    initialValue: new Map<string, ICoworkerPublic>(),
+  });
+
   displayNick(u: IUser | null | undefined): string {
     if (!u) return '—';
-    return u.nickname && u.useNickname
-      ? u.nickname
-      : u.firstName || u.email || '—';
+    return u.nickname && u.useNickname ? u.nickname : (u.firstName || u.email || '—');
   }
 
   roleBadgeClass(role?: CoworkerRoles): string {
@@ -78,6 +88,7 @@ export class CoworkerPersonalFilesComponent implements OnInit {
         return 'tag-badge muted';
     }
   }
+
   // --- stan i formularz ---
   readonly selectedUser = signal<IUser | null>(null);
   readonly loading = signal(false);
@@ -104,18 +115,17 @@ export class CoworkerPersonalFilesComponent implements OnInit {
   readonly canSaveSig = toSignal(
     this.form.statusChanges.pipe(
       startWith(this.form.status),
-      map(
-        () =>
-          !!this.selectedUser() &&
-          this.form.get('firstName')!.valid &&
-          this.form.get('lastName')!.valid
+      map(() =>
+        !!this.selectedUser() &&
+        this.form.get('firstName')!.valid &&
+        this.form.get('lastName')!.valid
       )
     ),
     { initialValue: false }
   );
 
-  // --- lista użytkowników do dropdowna (GM+) – tylko gdy canPickOthers() === true ---
-  // Filtrowanie: coworker IN [Gm, Reception, Coordinator, Coowner, Owner] i is_test_user=false
+  // --- lista użytkowników (GM+) do dropdowna – tylko gdy canPickOthers() === true ---
+  // coworker IN [Gm, Reception, Coordinator, Coowner, Owner] i is_test_user=false
   readonly gmPlusList = toSignal(
     this.backend
       .getAll<IUser>('users', 'firstName', 'asc', {
@@ -134,28 +144,24 @@ export class CoworkerPersonalFilesComponent implements OnInit {
         },
       })
       .pipe(
-        map((list) => {
-          // sort: nazwisko, imię, email – z fallbackami
-          return [...list].sort((a, b) => {
+        map((list) =>
+          [...list].sort((a, b) => {
             const aLast = (a as any).lastName ?? '';
             const bLast = (b as any).lastName ?? '';
             const c1 = String(aLast).localeCompare(String(bLast));
             if (c1) return c1;
-            const c2 = String(a.firstName ?? '').localeCompare(
-              String(b.firstName ?? '')
-            );
+            const c2 = String(a.firstName ?? '').localeCompare(String(b.firstName ?? ''));
             if (c2) return c2;
             return String(a.email ?? '').localeCompare(String(b.email ?? ''));
-          });
-        }),
+          })
+        ),
         catchError(() => of([] as IUser[]))
       ),
     { initialValue: [] as IUser[] }
   );
 
   // --- toasty ---
-  readonly saveSuccessToast =
-    viewChild<TemplateRef<unknown>>('saveSuccessToast');
+  readonly saveSuccessToast = viewChild<TemplateRef<unknown>>('saveSuccessToast');
   readonly saveErrorToast = viewChild<TemplateRef<unknown>>('saveErrorToast');
 
   ngOnInit(): void {
@@ -176,10 +182,24 @@ export class CoworkerPersonalFilesComponent implements OnInit {
 
   private applySelectedUser(u: IUser) {
     this.selectedUser.set(u);
+    // patch z coworkers_public (oficjalne) z fallbackiem do IUser
+    this.syncFormFromOfficial();
+  }
+
+  // Patch formularza z oficjalnych danych (coworkers_public)
+  private syncFormFromOfficial() {
+    const u = this.selectedUser();
+    if (!u) return;
+
+    const official = this.dirMapSig().get(u.id) ?? null;
+    const firstName = (official?.firstName ?? u.firstName ?? '').trim();
+    const lastName = (official?.lastName ?? (u as any)?.lastName ?? '').trim();
+    const nickname = (official?.displayName ?? u.nickname ?? '').trim();
+
     this.form.patchValue({
-      firstName: u.firstName ?? '',
-      lastName: (u as any).lastName ?? '',
-      nickname: u.nickname ?? '',
+      firstName,
+      lastName,
+      nickname,
     });
   }
 
@@ -193,7 +213,7 @@ export class CoworkerPersonalFilesComponent implements OnInit {
 
     this.saving.set(true);
 
-    const payload = {
+    const payload: ICoworkerPublic = {
       userId: u.id,
       firstName: (this.form.get('firstName')!.value ?? '').trim(),
       lastName: (this.form.get('lastName')!.value ?? '').trim(),
@@ -203,6 +223,8 @@ export class CoworkerPersonalFilesComponent implements OnInit {
     this.dir.upsert(payload).subscribe({
       next: () => {
         this.saving.set(false);
+        // natychmiast odśwież lokalny stan formularza z mapy (po shareReplay all$ -> map$ zaktualizuje się)
+        this.syncFormFromOfficial();
         const t = this.saveSuccessToast();
         if (t) {
           this.toast.show({
