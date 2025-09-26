@@ -21,10 +21,14 @@ import { IContentTrigger } from '../../core/interfaces/i-content-trigger';
 import { FilterOperator } from '../../core/enums/filterOperator';
 import { HostSignupScope } from '../../core/enums/events';
 
+import { SessionSignupButtonComponent } from '../session-signup-button/session-signup-button.component';
+import { IUser } from '../../core/interfaces/i-user';
+import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
+
 @Component({
   selector: 'app-event-hosts-list',
   standalone: true,
-  imports: [CommonModule, NgbModalModule],
+  imports: [CommonModule, NgbModalModule, SessionSignupButtonComponent, ParticipantsListComponent],
   templateUrl: './event-hosts-list.component.html',
   styleUrls: ['./event-hosts-list.component.scss'],
 })
@@ -32,6 +36,8 @@ export class EventHostsListComponent {
   // inputs
   eventId = input.required<string>();
   dateIso = input.required<string>();
+  currentUser = input<IUser | null>(null);
+  showSignup = input<boolean>(true); // <— NOWE: można wyłączyć UI zapisów dla sesji
 
   // DI
   private readonly hosts = inject(EventHostsService);
@@ -47,11 +53,25 @@ export class EventHostsListComponent {
   readonly itemsSig = signal<HostCardVM[]>([]);
   readonly hasItems = computed(() => (this.itemsSig()?.length ?? 0) > 0);
 
+  // do szablonu
   readonly HostRole = HostSignupScope;
-  GmStyleTagLabels = GmStyleTagLabels;
-  HostSignupScope = HostSignupScope;
+  readonly GmStyleTagLabels = GmStyleTagLabels;
 
-  // --- słownik triggerów: slug -> label (PL), buforowany
+  // refresh per host (po udanym zapisie do tej sesji)
+  private readonly refreshByHost = signal<Map<string, number>>(new Map());
+  getRefreshKey(hostId: string): number {
+    return this.refreshByHost().get(hostId) ?? 0;
+  }
+  private bumpRefresh(hostId: string) {
+    const next = new Map(this.refreshByHost());
+    next.set(hostId, (next.get(hostId) ?? 0) + 1);
+    this.refreshByHost.set(next);
+  }
+  onSessionSigned(hostId: string) {
+    this.bumpRefresh(hostId);
+  }
+
+  // słownik triggerów: slug -> label (PL)
   private readonly triggersMap$ = this.backend
     .getAll<IContentTrigger>(
       'content_triggers',
@@ -83,24 +103,20 @@ export class EventHostsListComponent {
           this.itemsSig.set([]);
         }),
         switchMap(([id, date]) =>
-          // pobierz jednocześnie hostów i słownik triggerów
           combineLatest([
             this.hosts.getHostsWithSystems(id, date).pipe(catchError(() => of([]))),
             this.triggersMap$,
           ]).pipe(
-            // zmapuj hostów -> VM + podmień triggery na labelki PL
+            // 1) bazowy VM (system, obrazek, triggery->label)
             map(([rows, tmap]) => {
-              const base = (rows ?? []).map((r: any) => {
-                const system: IRPGSystem | null = r.systems ?? null;
-                const imageUrl = r.imagePath
-                  ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512)
-                  : null;
-
+              const base: HostCardVM[] = (rows as (IEventHost & { systems?: IRPGSystem | null })[]).map((r) => {
+                const system: IRPGSystem | null = r.systemId ? (r as any).systems ?? null : null;
+                const imageUrl = r.imagePath ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512) : null;
                 const slugs: string[] = (r.triggers ?? []) as string[];
                 const topLabels = slugs.slice(0, 3).map((s) => tmap.get(s) ?? s);
 
                 return {
-                  ...(r as IEventHost),
+                  ...r,
                   system,
                   imageUrl,
                   displayName: null,
@@ -110,10 +126,10 @@ export class EventHostsListComponent {
                 } as HostCardVM;
               });
 
-              const uniqueUserIds = Array.from(new Set(base.map((h) => h.hostUserId)));
+              const uniqueUserIds = Array.from(new Set(base.map((h) => h.hostUserId).filter(Boolean)));
               return { base, uniqueUserIds };
             }),
-            // dociągnij GM/user dla każdego hostUserId
+            // 2) dociągnięcie GM + displayName
             switchMap(({ base, uniqueUserIds }) => {
               if (!uniqueUserIds.length) return of(base);
               return forkJoin(uniqueUserIds.map((id) => this.gmDirectory.getGmById(id))).pipe(
@@ -121,7 +137,7 @@ export class EventHostsListComponent {
                   const byId = new Map<string, IGmData | null>();
                   gms.forEach((gm) => gm && byId.set(gm.userId, gm));
                   return base.map((h) => {
-                    const gm = byId.get(h.hostUserId) ?? null;
+                    const gm = h.role === HostSignupScope.Staff ? (byId.get(h.hostUserId) ?? null) : null;
                     return {
                       ...h,
                       gm,

@@ -195,9 +195,7 @@ export class EventHostsService {
               largerFallbackFactor: 1.15,
             }
           )
-          // jeśli upload padnie – NIE zapisujemy rekordu z null
           .pipe(
-            // jak chcesz zdebugować: tap(p => console.log('uploaded path:', p)),
             switchMap((p) =>
               p ? of(p) : throwError(() => new Error('Upload failed'))
             )

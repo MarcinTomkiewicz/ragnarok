@@ -6,5 +6,6 @@ export enum FilterOperator {
     LT = 'lt',
     LIKE = 'like',
     IN = 'in',
+    IS = 'is',
   }
   

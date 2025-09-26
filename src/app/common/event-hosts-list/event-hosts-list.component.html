@@ -66,6 +66,29 @@
           <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
           }
         </div>
+
+        <!-- zapisy/uczestnicy sesji tylko jeśli włączone -->
+        @if (showSignup()) {
+          <div class="actions mt-3" (click)="$event.stopPropagation()">
+            <app-session-signup-button
+              [eventId]="eventId()"
+              [dateIso]="dateIso()"
+              [hostId]="h.id"
+              [currentUser]="currentUser()"
+              (signed)="onSessionSigned(h.id)"
+            />
+          </div>
+
+          <div class="participants mt-2" (click)="$event.stopPropagation()">
+            <app-participants-list
+              [eventId]="eventId()"
+              [dateIso]="dateIso()"
+              [scope]="{ hostId: h.id }"
+              [currentUser]="currentUser()"
+              [refreshKey]="getRefreshKey(h.id)"
+            />
+          </div>
+        }
       </div>
     </article>
     }

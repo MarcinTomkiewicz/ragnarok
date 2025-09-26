@@ -34,6 +34,9 @@ export function applyFilters<T>(
         case FilterOperator.IN:
           query = query.in(snakeKey, filter.value);
           break;
+        case FilterOperator.IS:
+          query = query.is(snakeKey, filter.value);
+          break;
         default:
           throw new Error(`Unsupported filter operator: ${operator}`);
       }

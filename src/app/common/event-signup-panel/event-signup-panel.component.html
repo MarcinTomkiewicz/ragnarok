@@ -1,0 +1,49 @@
+<div class="signup-panel">
+  @if (isLoggedIn()) {
+    <button class="btn btn-primary" [disabled]="isPending()" (click)="onSignup()">
+      @if (isPending()) { Zapisywanie… } @else { Zapisz się }
+    </button>
+  } @else {
+    <div class="form-group">
+      <label>Imię / pseudonim</label>
+      <input
+      class="form-control"
+        type="text"
+        [value]="guestName()"
+        (input)="onGuestNameInput($event)"
+        [disabled]="isPending()"
+      />
+
+      <label>Telefon</label>
+      <input
+      class="form-control"
+        type="tel"
+        [value]="guestPhone()"
+        (input)="onGuestPhoneInput($event)"
+        [disabled]="isPending()"
+      />
+
+      <label>Uwagi (opcjonalnie)</label>
+      <input
+      class="form-control"
+        type="text"
+        [value]="note()"
+        (input)="onNoteInput($event)"
+        [disabled]="isPending()"
+      />
+    </div>
+
+    <button class="btn btn-primary" [disabled]="!canSubmit() || isPending()" (click)="onSignup()">
+      @if (isPending()) { Zapisywanie… } @else { Zapisz się }
+    </button>
+  }
+</div>
+
+<!-- Toastery -->
+<ng-template #signupSuccessToast>
+  <strong>Sukces!</strong> Zapisano na wydarzenie.
+</ng-template>
+
+<ng-template #signupErrorToast>
+  <strong>Błąd!</strong> Nie udało się zapisać na wydarzenie.
+</ng-template>

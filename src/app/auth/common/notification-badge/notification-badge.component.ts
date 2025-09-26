@@ -22,7 +22,7 @@ import { th } from 'date-fns/locale';
     }
   `,
 })
-export class NotificationBadgeComponent implements OnInit {
+export class NotificationBadgeComponent {
   private notifications = inject(NotificationService);
 
   bucket = input.required<NotificationBucket>();
@@ -30,10 +30,6 @@ export class NotificationBadgeComponent implements OnInit {
   private counts = toSignal(this.notifications.counts$, {
     initialValue: {} as Record<NotificationBucket, number>,
   });
-
-  ngOnInit(): void {
-    console.log('NotificationBadge for bucket', this.bucket(), this.count());
-  }
 
   count = computed(() => this.counts()[this.bucket()] ?? 0);
   label = computed(() => (this.count() > 99 ? '99+' : String(this.count())));

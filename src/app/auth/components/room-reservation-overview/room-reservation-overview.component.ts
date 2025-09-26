@@ -54,7 +54,6 @@ export class RoomReservationsOverviewComponent {
   readonly filteredReservationsForSelectedDate = computed(() => {
     const date = this.selectedDate();
     const raw = date ? (this.calendar.reservationsMap().get(date) ?? []) : [];
-    console.log(raw);
     
     return raw;
   });
