@@ -33,13 +33,13 @@ import { ToastService } from '../../core/services/toast/toast.service';
       @if (v.items.length === 0) {
       <div class="muted">Brak zapisów.</div>
       } @else {
-      <ul class="list">
+      <ul class="list-group">
         @for (p of v.items; track p.id) {
-        <li class="row d-flex justify-content-between align-items-center">
-          <span class="name">{{ p.displayName }}</span>
+        <li class="list-group list-group-item d-flex flex-row align-items-center justify-content-between gap-2">
+          <span>{{ p.displayName }}</span>
           @if (p.isSelf || v.isAdmin) {
           <button
-            class="btn btn-link btn-sm text-danger"
+            class="btn btn-outline-danger btn-sm"
             [disabled]="isRemoving(p.id)"
             (click)="remove(p)"
             aria-label="Usuń uczestnika"
