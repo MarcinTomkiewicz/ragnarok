@@ -1,12 +1,17 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, of, switchMap, throwError, map } from 'rxjs';
+
 import { BackendService } from '../backend/backend.service';
 import { ImageStorageService } from '../backend/image-storage/image-storage.service';
 import { FilterOperator } from '../../enums/filterOperator';
 import { toSnakeCase } from '../../utils/type-mappers';
 import { EventFull, RecurrenceRule } from '../../interfaces/i-events';
 import { formatYmdLocal } from '../../utils/weekday-options';
-import { EventTag } from '../../enums/events';
+import {
+  EventTag,
+  RecurrenceKind,
+  ParticipantSignupScope,
+} from '../../enums/events';
 
 type EventForCreate = Omit<EventFull, 'id'>;
 
@@ -15,7 +20,7 @@ export class EventService {
   private readonly backend = inject(BackendService);
   private readonly images = inject(ImageStorageService);
 
-  /** LISTA AKTYWNYCH + joiny przez BackendService */
+  /** Active list with joins */
   getAllActive(): Observable<EventFull[]> {
     return this.backend
       .getAll<any>(
@@ -29,12 +34,12 @@ export class EventService {
         },
         undefined,
         'event_tags(*), event_rooms(*), event_recurrence(*)',
-        true // processImages
+        true
       )
       .pipe(map((rows) => rows.map((r) => this.mapDbCamelToEventFull(r))));
   }
 
-  /** POBIERZ PO SLUGU + joiny przez BackendService */
+  /** By slug with joins */
   getBySlug(slug: string): Observable<EventFull | null> {
     return this.backend
       .getAll<any>(
@@ -50,12 +55,10 @@ export class EventService {
         'event_tags(*), event_rooms(*), event_recurrence(*)',
         true
       )
-      .pipe(
-        map((rows) => (rows[0] ? this.mapDbCamelToEventFull(rows[0]) : null))
-      );
+      .pipe(map((rows) => (rows[0] ? this.mapDbCamelToEventFull(rows[0]) : null)));
   }
 
-  /** POBIERZ PO ID + joiny przez BackendService */
+  /** By id with joins */
   getById(id: string): Observable<EventFull | null> {
     return this.backend
       .getAll<any>(
@@ -71,12 +74,10 @@ export class EventService {
         'event_tags(*), event_rooms(*), event_recurrence(*)',
         true
       )
-      .pipe(
-        map((rows) => (rows[0] ? this.mapDbCamelToEventFull(rows[0]) : null))
-      );
+      .pipe(map((rows) => (rows[0] ? this.mapDbCamelToEventFull(rows[0]) : null)));
   }
 
-  /** CREATE przez BackendService, potem joinowe dopiski też BackendService */
+  /** Create + related rows + (optional) cover + (optional) reservations */
   createEvent(
     payload: EventForCreate,
     coverFile?: File,
@@ -90,11 +91,10 @@ export class EventService {
       switchMap((created: any) => {
         const eventId = created?.id as string | undefined;
         const slug = created?.slug as string | undefined;
-        if (!eventId) {
-          return throwError(() => new Error('Insert new_events failed'));
-        }
+        if (!eventId) return throwError(() => new Error('Insert new_events failed'));
 
         const writes: Observable<unknown>[] = [];
+
         if (tags.length) {
           writes.push(
             this.backend.createMany(
@@ -103,6 +103,7 @@ export class EventService {
             )
           );
         }
+
         if (rooms.length) {
           writes.push(
             this.backend.createMany(
@@ -111,6 +112,7 @@ export class EventService {
             )
           );
         }
+
         if (recurrence) {
           const recRow = toSnakeCase({
             eventId,
@@ -119,7 +121,7 @@ export class EventService {
             byweekday: recurrence.byweekday ?? null,
             monthlyNth: recurrence.monthlyNth ?? null,
             monthlyWeekday: recurrence.monthlyWeekday ?? null,
-            dayOfMonth: recurrence.dayOfMonth ?? null, // <<< KLUCZOWE
+            dayOfMonth: recurrence.dayOfMonth ?? null,
             startDate: recurrence.startDate,
             endDate: recurrence.endDate ?? null,
             exdates: recurrence.exdates ?? [],
@@ -127,9 +129,7 @@ export class EventService {
           writes.push(this.backend.create('event_recurrence', recRow));
         }
 
-        const writes$ = writes.length
-          ? forkJoin(writes).pipe(map(() => void 0))
-          : of(void 0);
+        const writes$ = writes.length ? forkJoin(writes).pipe(map(() => void 0)) : of(void 0);
 
         const fullEv: EventFull = {
           ...(payload as any),
@@ -140,13 +140,9 @@ export class EventService {
         };
 
         return writes$.pipe(
+          switchMap(() => (coverFile ? this.uploadCover(eventId, coverFile) : of(void 0))),
           switchMap(() =>
-            coverFile ? this.uploadCover(eventId, coverFile) : of(void 0)
-          ),
-          switchMap(() =>
-            opts?.blockSlots === false
-              ? of(void 0)
-              : this.ensureReservationsClient(fullEv, regenMode)
+            opts?.blockSlots === false ? of(void 0) : this.ensureReservationsClient(fullEv, regenMode)
           ),
           map(() => ({ id: eventId, slug: slug as string }))
         );
@@ -154,7 +150,7 @@ export class EventService {
     );
   }
 
-  /** UPDATE przez BackendService; relacje również BackendService */
+  /** Update core + related + (optional) cover + (optional) reservations */
   updateEvent(
     id: string,
     patch: Partial<EventFull> & { recurrence?: RecurrenceRule | null },
@@ -166,19 +162,13 @@ export class EventService {
     const ops: Observable<void>[] = [];
 
     if (Object.keys(core).length) {
-      ops.push(
-        this.backend
-          .update('new_events', id, toSnakeCase(core) as any)
-          .pipe(map(() => void 0))
-      );
+      ops.push(this.backend.update('new_events', id, toSnakeCase(core) as any).pipe(map(() => void 0)));
     }
 
     if (Array.isArray(tags)) {
       ops.push(
         this.backend
-          .delete('event_tags', {
-            eventId: { operator: FilterOperator.EQ, value: id },
-          } as any)
+          .delete('event_tags', { eventId: { operator: FilterOperator.EQ, value: id } } as any)
           .pipe(
             switchMap(() =>
               tags.length
@@ -196,9 +186,7 @@ export class EventService {
     if (Array.isArray(rooms)) {
       ops.push(
         this.backend
-          .delete('event_rooms', {
-            eventId: { operator: FilterOperator.EQ, value: id },
-          } as any)
+          .delete('event_rooms', { eventId: { operator: FilterOperator.EQ, value: id } } as any)
           .pipe(
             switchMap(() =>
               rooms.length
@@ -217,9 +205,7 @@ export class EventService {
       if (recurrence === null) {
         ops.push(
           this.backend
-            .delete('event_recurrence', {
-              eventId: { operator: FilterOperator.EQ, value: id },
-            } as any)
+            .delete('event_recurrence', { eventId: { operator: FilterOperator.EQ, value: id } } as any)
             .pipe(map(() => void 0))
         );
       } else {
@@ -235,33 +221,23 @@ export class EventService {
           endDate: recurrence.endDate ?? null,
           exdates: recurrence.exdates ?? [],
         });
-        ops.push(
-          this.backend
-            .upsert('event_recurrence', recRow, 'event_id')
-            .pipe(map(() => void 0))
-        );
+        ops.push(this.backend.upsert('event_recurrence', recRow, 'event_id').pipe(map(() => void 0)));
       }
     }
 
-    const ops$ = ops.length
-      ? forkJoin(ops).pipe(map(() => void 0))
-      : of(void 0);
+    const ops$ = ops.length ? forkJoin(ops).pipe(map(() => void 0)) : of(void 0);
 
     return ops$.pipe(
-      switchMap(() =>
-        coverFile ? this.uploadCover(id, coverFile) : of(void 0)
-      ),
+      switchMap(() => (coverFile ? this.uploadCover(id, coverFile) : of(void 0))),
       switchMap(() => this.getById(id)),
       switchMap((full) =>
-        full && opts?.blockSlots !== false
-          ? this.ensureReservationsClient(full, regenMode)
-          : of(void 0)
+        full && opts?.blockSlots !== false ? this.ensureReservationsClient(full, regenMode) : of(void 0)
       ),
       map(() => void 0)
     );
   }
 
-  /** COVER → storage + update przez BackendService */
+  /** Cover upload + DB update */
   private uploadCover(eventId: string, file: File): Observable<void> {
     const basePath = `events/${eventId}/cover`;
     return this.images
@@ -277,15 +253,13 @@ export class EventService {
       })
       .pipe(
         switchMap((fullPath) =>
-          this.backend.update('new_events', eventId, {
-            coverImagePath: fullPath,
-          } as any)
+          this.backend.update('new_events', eventId, { coverImagePath: fullPath } as any)
         ),
         map(() => void 0)
       );
   }
 
-  /** Rozwinięcie terminów po stronie FE */
+  /** Expand occurrences on FE */
   listOccurrencesFE(ev: EventFull, fromIso: string, toIso: string): string[] {
     const out: string[] = [];
     const fromD = new Date(fromIso + 'T00:00:00');
@@ -295,13 +269,12 @@ export class EventService {
       const d = new Date(ev.singleDate + 'T00:00:00');
       if (d >= fromD && d <= toD) out.push(ev.singleDate);
     }
-    if (ev.recurrence)
-      out.push(...this.expandRecurrence(ev.recurrence, fromD, toD));
+    if (ev.recurrence) out.push(...this.expandRecurrence(ev.recurrence, fromD, toD));
 
     return Array.from(new Set(out)).sort();
   }
 
-  /** Auto-rezerwacje — już było na BackendService (zostaje) */
+  /** Auto reservations based on rooms and dates */
   ensureReservationsClient(
     ev: EventFull,
     mode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE'
@@ -336,31 +309,21 @@ export class EventService {
     if (!rows.length) return clean$.pipe(map(() => void 0));
 
     return clean$.pipe(
-      switchMap(() =>
-        this.backend.upsertMany(
-          'reservations',
-          rows as any,
-          'event_id,room_name,date,start_time'
-        )
-      ),
+      switchMap(() => this.backend.upsertMany('reservations', rows as any, 'event_id,room_name,date,start_time')),
       map(() => void 0)
     );
   }
 
-  /** PEŁNOŚĆ prowadzących — przez BackendService */
+  /** Host fullness (single event) */
   getHostFullness(
     ev: EventFull,
     fromIso: string,
     toIso: string
-  ): Observable<
-    Record<string, { count: number; capacity: number; isFull: boolean }>
-  > {
+  ): Observable<Record<string, { count: number; capacity: number; isFull: boolean }>> {
     const rooms = new Set(ev.rooms ?? []);
     const hasRooms = rooms.size > 0;
     const capacity = hasRooms ? rooms.size : 1;
 
-    // backend.getAll nie wspiera dwóch operatorów na jednym polu,
-    // więc filtrujemy po GTE w zapytaniu i domykamy zakres po LTE na kliencie.
     return this.backend
       .getAll<any>('event_occurrence_hosts', undefined, 'asc', {
         filters: {
@@ -370,52 +333,37 @@ export class EventService {
       })
       .pipe(
         map((rows) => rows.filter((r) => r.occurrenceDate <= toIso)),
-        map(
-          (
-            rows: Array<{ occurrenceDate: string; roomName: string | null }>
-          ) => {
-            const out: Record<
-              string,
-              { count: number; capacity: number; isFull: boolean }
-            > = {};
-            if (hasRooms) {
-              const byDate = new Map<string, Set<string>>();
-              for (const r of rows) {
-                const rm = r.roomName ?? '';
-                if (!rooms.has(rm)) continue;
-                const set = byDate.get(r.occurrenceDate) ?? new Set<string>();
-                set.add(rm);
-                byDate.set(r.occurrenceDate, set);
-              }
-              for (const [date, set] of byDate) {
-                const count = set.size;
-                out[date] = { count, capacity, isFull: count >= capacity };
-              }
-            } else {
-              const dates = new Set(rows.map((r) => r.occurrenceDate));
-              for (const date of dates)
-                out[date] = { count: 1, capacity: 1, isFull: true };
+        map((rows: Array<{ occurrenceDate: string; roomName: string | null }>) => {
+          const out: Record<string, { count: number; capacity: number; isFull: boolean }> = {};
+          if (hasRooms) {
+            const byDate = new Map<string, Set<string>>();
+            for (const r of rows) {
+              const rm = r.roomName ?? '';
+              if (!rooms.has(rm)) continue;
+              const set = byDate.get(r.occurrenceDate) ?? new Set<string>();
+              set.add(rm);
+              byDate.set(r.occurrenceDate, set);
             }
-            return out;
+            for (const [date, set] of byDate) {
+              const count = set.size;
+              out[date] = { count, capacity, isFull: count >= capacity };
+            }
+          } else {
+            const dates = new Set(rows.map((r) => r.occurrenceDate));
+            for (const date of dates) out[date] = { count: 1, capacity: 1, isFull: true };
           }
-        )
+          return out;
+        })
       );
   }
 
-  // EventService: dopisz do klasy
-
-  /** Batch: pełność prowadzących dla wielu eventów w podanym zakresie dat.
-   * Zwraca: eventId -> (date -> {count, capacity, isFull})
-   */
+  /** Host fullness (batch) */
   getHostFullnessForMany(
     events: EventFull[],
     fromIso: string,
     toIso: string
   ): Observable<
-    Record<
-      string,
-      Record<string, { count: number; capacity: number; isFull: boolean }>
-    >
+    Record<string, Record<string, { count: number; capacity: number; isFull: boolean }>>
   > {
     if (!events.length) return of({});
 
@@ -432,31 +380,19 @@ export class EventService {
       .pipe(
         map((rows) => rows.filter((r) => r.occurrenceDate <= toIso)),
         map(
-          (
-            rows: Array<{
-              eventId: string;
-              occurrenceDate: string;
-              roomName: string | null;
-            }>
-          ) => {
+          (rows: Array<{ eventId: string; occurrenceDate: string; roomName: string | null }>) => {
             const out: Record<
               string,
-              Record<
-                string,
-                { count: number; capacity: number; isFull: boolean }
-              >
+              Record<string, { count: number; capacity: number; isFull: boolean }>
             > = {};
 
-            // pomocniczo: pojemność = liczba sal (albo 1 jeśli brak sal)
             const capacityOf = (evId: string) => {
               const ev = evById.get(evId);
               const rooms = ev?.rooms ?? [];
               return rooms.length > 0 ? rooms.length : 1;
             };
 
-            // DISTINCT rooms per (eventId, date)
             const seenRooms = new Map<string, Map<string, Set<string>>>();
-            // wariant bez sal: obecność wpisu = 1
             const seenDates = new Map<string, Set<string>>();
 
             for (const r of rows) {
@@ -468,8 +404,7 @@ export class EventService {
                 const rm = r.roomName ?? '';
                 if (!allowed.has(rm)) continue;
 
-                const byDate =
-                  seenRooms.get(r.eventId) ?? new Map<string, Set<string>>();
+                const byDate = seenRooms.get(r.eventId) ?? new Map<string, Set<string>>();
                 const set = byDate.get(r.occurrenceDate) ?? new Set<string>();
                 set.add(rm);
                 byDate.set(r.occurrenceDate, set);
@@ -483,13 +418,9 @@ export class EventService {
 
             for (const e of events) {
               const cap = capacityOf(e.id);
-              const inner: Record<
-                string,
-                { count: number; capacity: number; isFull: boolean }
-              > = {};
+              const inner: Record<string, { count: number; capacity: number; isFull: boolean }> = {};
               if ((e.rooms?.length ?? 0) > 0) {
-                const byDate =
-                  seenRooms.get(e.id) ?? new Map<string, Set<string>>();
+                const byDate = seenRooms.get(e.id) ?? new Map<string, Set<string>>();
                 for (const [date, set] of byDate) {
                   const count = set.size;
                   inner[date] = { count, capacity: cap, isFull: count >= cap };
@@ -509,7 +440,7 @@ export class EventService {
       );
   }
 
-  /** Batch: „moje zgłoszenia” dla usera — zwraca eventId -> (date -> true) */
+  /** Host data for user (batch) */
   getHostDataForMany(
     userId: string,
     eventIds: string[],
@@ -530,15 +461,13 @@ export class EventService {
         map((rows) => rows.filter((r) => r.occurrenceDate <= toIso)),
         map((rows: Array<{ eventId: string; occurrenceDate: string }>) => {
           const out: Record<string, Record<string, true>> = {};
-          for (const r of rows) {
-            (out[r.eventId] ??= {})[r.occurrenceDate] = true;
-          }
+          for (const r of rows) (out[r.eventId] ??= {})[r.occurrenceDate] = true;
           return out;
         })
       );
   }
 
-  // ---------------- priv helpers ----------------
+  // ---------------- mapping & helpers ----------------
 
   private mapDbCamelToEventFull(row: any): EventFull {
     const tags: EventTag[] = (row.eventTags ?? []).map((t: any) => t.tag);
@@ -547,7 +476,7 @@ export class EventService {
     const recRow = row.eventRecurrence;
     const rec: RecurrenceRule | undefined = recRow
       ? {
-          kind: recRow.kind,
+          kind: recRow.kind as RecurrenceKind,
           interval: recRow.interval,
           byweekday: recRow.byweekday ?? undefined,
           monthlyNth: recRow.monthlyNth ?? undefined,
@@ -581,13 +510,27 @@ export class EventService {
       entryFeePln: Number(row.entryFeePln ?? 0),
       recurrence: rec,
       autoReservation: !!row.autoReservation,
-    };
+
+      // new fields
+      participantSignup: (row.participantSignup ??
+        'WHOLE') as ParticipantSignupScope,
+      signupRequired: !!row.signupRequired,
+      wholeCapacity:
+        row.wholeCapacity === null || row.wholeCapacity === undefined
+          ? null
+          : Number(row.wholeCapacity),
+      sessionCapacity:
+        row.sessionCapacity === null || row.sessionCapacity === undefined
+          ? null
+          : Number(row.sessionCapacity),
+      signupOpensAt: row.signupOpensAt ?? undefined,
+      signupClosesAt: row.signupClosesAt ?? undefined,
+    } as EventFull;
   }
 
   private expandRecurrence(r: RecurrenceRule, from: Date, to: Date): string[] {
     const out: string[] = [];
-    const clip = (d: Date) =>
-      new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const clip = (d: Date) => new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 
     const start = r.startDate ? new Date(r.startDate + 'T00:00:00') : from;
     const end = r.endDate ? new Date(r.endDate + 'T00:00:00') : to;
@@ -596,17 +539,11 @@ export class EventService {
 
     const ex = new Set((r.exdates ?? []).map((x) => x));
 
-    if (r.kind === 'WEEKLY' && r.byweekday?.length) {
-      for (
-        let d = new Date(rangeFrom);
-        d <= rangeTo;
-        d.setDate(d.getDate() + 1)
-      ) {
+    if (r.kind === RecurrenceKind.Weekly && r.byweekday?.length) {
+      for (let d = new Date(rangeFrom); d <= rangeTo; d.setDate(d.getDate() + 1)) {
         const dow = d.getDay();
         if (!r.byweekday.includes(dow)) continue;
-        const weeksFromStart = Math.floor(
-          (clip(d).getTime() - clip(start).getTime()) / (7 * 24 * 3600 * 1000)
-        );
+        const weeksFromStart = Math.floor((clip(d).getTime() - clip(start).getTime()) / (7 * 24 * 3600 * 1000));
         if (weeksFromStart % Math.max(1, r.interval) !== 0) continue;
 
         const iso = formatYmdLocal(d);
@@ -614,50 +551,28 @@ export class EventService {
       }
     }
 
-    if (
-      r.kind === 'MONTHLY_NTH_WEEKDAY' &&
-      r.monthlyNth &&
-      (r.monthlyWeekday ?? -10) >= 0
-    ) {
+    if (r.kind === RecurrenceKind.MonthlyNthWeekday && r.monthlyNth && (r.monthlyWeekday ?? -10) >= 0) {
       const m = new Date(rangeFrom.getFullYear(), rangeFrom.getMonth(), 1);
       while (m <= rangeTo) {
-        const nth = this.nthWeekdayOfMonth(
-          m.getFullYear(),
-          m.getMonth(),
-          r.monthlyWeekday!,
-          r.monthlyNth
-        );
-        if (nth) {
-          if (nth >= rangeFrom && nth <= rangeTo) {
-            const iso = formatYmdLocal(nth);
-            if (!ex.has(iso)) out.push(iso);
-          }
+        const nth = this.nthWeekdayOfMonth(m.getFullYear(), m.getMonth(), r.monthlyWeekday!, r.monthlyNth);
+        if (nth && nth >= rangeFrom && nth <= rangeTo) {
+          const iso = formatYmdLocal(nth);
+          if (!ex.has(iso)) out.push(iso);
         }
         m.setMonth(m.getMonth() + Math.max(1, r.interval));
       }
     }
 
-    if (r.kind === 'MONTHLY_DAY_OF_MONTH' && r.dayOfMonth) {
+    if (r.kind === RecurrenceKind.MonthlyDayOfMonth && r.dayOfMonth) {
       const interval = Math.max(1, r.interval || 1);
-      // zaczynamy od pierwszego dnia miesiąca „start”
       const firstMonth = new Date(start.getFullYear(), start.getMonth(), 1);
 
-      for (
-        let m = new Date(firstMonth);
-        m <= rangeTo;
-        m.setMonth(m.getMonth() + 1)
-      ) {
-        // filtruj miesiące zgodnie z interwałem
+      for (let m = new Date(firstMonth); m <= rangeTo; m.setMonth(m.getMonth() + 1)) {
         const monthsFromStart =
-          (m.getFullYear() - firstMonth.getFullYear()) * 12 +
-          (m.getMonth() - firstMonth.getMonth());
+          (m.getFullYear() - firstMonth.getFullYear()) * 12 + (m.getMonth() - firstMonth.getMonth());
         if (monthsFromStart % interval !== 0) continue;
 
-        const lastDay = new Date(
-          m.getFullYear(),
-          m.getMonth() + 1,
-          0
-        ).getDate();
+        const lastDay = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
         if (r.dayOfMonth >= 1 && r.dayOfMonth <= lastDay) {
           const d = new Date(m.getFullYear(), m.getMonth(), r.dayOfMonth);
           if (d >= rangeFrom && d <= rangeTo) {
@@ -669,14 +584,9 @@ export class EventService {
     }
 
     return out;
-  }
+    }
 
-  private nthWeekdayOfMonth(
-    year: number,
-    month0: number,
-    weekday: number,
-    n: number
-  ): Date | null {
+  private nthWeekdayOfMonth(year: number, month0: number, weekday: number, n: number): Date | null {
     if (n > 0) {
       const first = new Date(year, month0, 1);
       const shift = (weekday - first.getDay() + 7) % 7;

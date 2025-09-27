@@ -84,3 +84,10 @@ export const ExcludeNthLabel: Record<ExcludeNth, string> = {
   [ExcludeNth.Fourth]: 'Wyklucz czwarty',
   [ExcludeNth.Last]: 'Wyklucz ostatni',
 };
+
+export enum ParticipantSignupScope {
+  None = 'NONE',
+  Whole = 'WHOLE',
+  Session = 'SESSION',
+  Both = 'BOTH',
+}

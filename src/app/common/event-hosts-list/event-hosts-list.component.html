@@ -6,7 +6,9 @@
   } @else if (errorSig()) {
   <div class="error">{{ errorSig() }}</div>
   } @else if (!hasItems()) {
-  <div class="empty muted">Brak zgłoszonych sesji na najbliższe wydarzenie.</div>
+  <div class="empty muted">
+    Brak zgłoszonych sesji na najbliższe wydarzenie.
+  </div>
   } @else {
   <div class="sessions-grid">
     @for (h of itemsSig(); track h.id) {
@@ -67,27 +69,28 @@
           }
         </div>
 
-        <!-- zapisy/uczestnicy sesji tylko jeśli włączone -->
         @if (showSignup()) {
-          <div class="actions mt-3" (click)="$event.stopPropagation()">
-            <app-session-signup-button
-              [eventId]="eventId()"
-              [dateIso]="dateIso()"
-              [hostId]="h.id"
-              [currentUser]="currentUser()"
-              (signed)="onSessionSigned(h.id)"
-            />
-          </div>
+        <div class="actions mt-3" (click)="$event.stopPropagation()">
+          <app-session-signup-button
+            [eventId]="eventId()"
+            [dateIso]="dateIso()"
+            [hostId]="h.id"
+            [currentUser]="currentUser()"
+            [capacity]="hostCapacity(h)"
+            (signed)="onSessionSigned(h.id)"
+          />
+        </div>
 
-          <div class="participants mt-2" (click)="$event.stopPropagation()">
-            <app-participants-list
-              [eventId]="eventId()"
-              [dateIso]="dateIso()"
-              [scope]="{ hostId: h.id }"
-              [currentUser]="currentUser()"
-              [refreshKey]="getRefreshKey(h.id)"
-            />
-          </div>
+        <div class="participants mt-2" (click)="$event.stopPropagation()">
+          <app-participants-list
+            [eventId]="eventId()"
+            [dateIso]="dateIso()"
+            [scope]="{ hostId: h.id }"
+            [currentUser]="currentUser()"
+            [refreshKey]="getRefreshKey(h.id)"
+            [capacity]="hostCapacity(h)"
+          />
+        </div>
         }
       </div>
     </article>

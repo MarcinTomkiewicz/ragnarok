@@ -1,4 +1,10 @@
-import { AttractionKind, EventTag, HostSignupScope, RecurrenceKind } from '../enums/events';
+import {
+  AttractionKind,
+  EventTag,
+  HostSignupScope,
+  RecurrenceKind,
+} from '../enums/events';
+import { ParticipantSignupScope } from '../enums/events';
 
 export interface EventCore {
   id: string;
@@ -13,6 +19,12 @@ export interface EventCore {
   requiresHosts: boolean;
   attractionType: AttractionKind;
   hostSignup: HostSignupScope;
+  participantSignup?: ParticipantSignupScope | null;
+  signupRequired: boolean;
+  wholeCapacity?: number | null;
+  sessionCapacity?: number | null;
+  signupOpensAt?: string | null;
+  signupClosesAt?: string | null;
   timezone: string;
   startTime: string;
   endTime: string;

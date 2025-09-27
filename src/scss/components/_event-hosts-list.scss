@@ -21,7 +21,7 @@
   .sessions-grid {
     @include mg-grid(4);
     gap: 1rem;
-    align-items: stretch; // upewnia się, że grid-items się rozciągają
+    align-items: stretch;
   }
 
   .session-card {

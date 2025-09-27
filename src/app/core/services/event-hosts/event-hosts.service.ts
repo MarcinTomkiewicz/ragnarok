@@ -20,6 +20,7 @@ import {
 import { toSnakeCase } from '../../utils/type-mappers';
 import { BackendService } from '../backend/backend.service';
 import { ImageStorageService } from '../backend/image-storage/image-storage.service';
+import { IReservation, ReservationStatus } from '../../interfaces/i-reservation';
 
 @Injectable({ providedIn: 'root' })
 export class EventHostsService {
@@ -111,53 +112,58 @@ export class EventHostsService {
     );
   }
 
-  listExternallyBlockedRooms(
-    eventId: string,
-    dateIso: string,
-    rooms: string[],
-    startTime: string,
-    endTime: string
-  ) {
-    if (!rooms?.length) return of(new Set<string>());
-    return this.backend
-      .getAll<any>(
-        'reservations',
-        undefined,
-        'asc',
-        {
-          filters: {
-            date: { operator: FilterOperator.EQ, value: dateIso },
-            room_name: { operator: FilterOperator.IN, value: rooms },
-          } as any,
-        },
-        undefined,
-        undefined,
-        false
-      )
-      .pipe(
-        map(
-          (rows) =>
-            (rows ?? []).filter(
-              (r) => !r.eventId || r.eventId !== eventId
-            ) as Array<{
-              roomName: string;
-              startTime: string;
-              durationHours: number;
-            }>
-        ),
-        map((rows) => {
-          const evStart = this.hhmmssToMin(startTime);
-          const evEnd = this.hhmmssToMin(endTime);
-          const blocked = new Set<string>();
-          for (const r of rows) {
-            const rs = this.hhmmssToMin(r.startTime);
-            const re = rs + Math.max(1, r.durationHours) * 60;
-            if (rs < evEnd && evStart < re) blocked.add(r.roomName);
+listExternallyBlockedRooms(
+  eventId: string,
+  dateIso: string,
+  rooms: string[],
+  startTime: string,
+  endTime: string,
+  statuses: ReservationStatus[] = [ReservationStatus.Confirmed, ReservationStatus.Pending],
+) {
+  if (!rooms?.length) return of(new Set<string>());
+
+  // (a) najlepiej odfiltrować status już w zapytaniu (IN)
+  return this.backend
+    .getAll<IReservation>(
+      'reservations',
+      undefined,
+      'asc',
+      {
+        filters: {
+          date: { operator: FilterOperator.EQ, value: dateIso },
+          room_name: { operator: FilterOperator.IN, value: rooms },
+          status: { operator: FilterOperator.IN, value: statuses },
+        } as any,
+      },
+      undefined,
+      undefined,
+      false
+    )
+    .pipe(
+      // (b) bezpieczeństwo: dodatkowy filtr po stronie klienta
+      map((rows: IReservation[] | null) => (rows ?? [])
+        // wytnij rezerwacje należące do tego samego eventu
+        .filter(r => !r.eventId || r.eventId !== eventId)
+        // i upewnij się, że żadne 'cancelled' nie przejdzie
+        .filter(r => r.status !== ReservationStatus.Cancelled)
+      ),
+      map((rows: IReservation[]) => {
+        const evStart = this.hhmmssToMin(startTime);
+        const evEnd   = this.hhmmssToMin(endTime);
+
+        const blocked = new Set<string>();
+        for (const r of rows) {
+          const resStart = this.hhmmssToMin(r.startTime);
+          const resEnd   = resStart + Math.max(1, r.durationHours) * 60;
+          // klasyczne sprawdzenie nachodzenia przedziałów
+          if (resStart < evEnd && evStart < resEnd) {
+            blocked.add(r.roomName);
           }
-          return blocked;
-        })
-      );
-  }
+        }
+        return blocked;
+      })
+    );
+}
 
   // --- create / update / delete signups -------------------------------------
 
@@ -183,7 +189,7 @@ export class EventHostsService {
       ? this.images
           .transcodeAndUpload(
             imageFile,
-            `events/${rest.eventId}/hosts/${rest.occurrenceDate}`, // spójna ścieżka
+            `events/${rest.eventId}/hosts/${rest.occurrenceDate}`,
             {
               keepBaseName: true,
               uniqueStrategy: 'date',

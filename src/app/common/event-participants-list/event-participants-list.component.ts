@@ -21,6 +21,7 @@ import { BackendService } from '../../core/services/backend/backend.service';
 import { hasMinimumCoworkerRole } from '../../core/utils/required-roles';
 import { CoworkerRoles } from '../../core/enums/roles';
 import { ToastService } from '../../core/services/toast/toast.service';
+import { ParticipantSignupScope } from '../../core/enums/events';
 
 @Component({
   selector: 'app-participants-list',
@@ -28,15 +29,26 @@ import { ToastService } from '../../core/services/toast/toast.service';
   template: `
     @if (vm(); as v) {
     <div class="participants">
-      <div class="summary">Uczestnicy ({{ v.items.length }})</div>
+      <div class="summary d-flex align-items-center justify-content-center gap-2">
+        <span>
+          Uczestnicy @if (v.capacity != null && v.capacity > 0) { ({{
+            v.items.length
+          }}
+          / {{ v.capacity }}) } @else { ({{ v.items.length }}) }
+        </span>
+        @if (v.isFull) { <span class="tag-badge danger">Pełne</span> }
+      </div>
 
       @if (v.items.length === 0) {
       <div class="muted">Brak zapisów.</div>
       } @else {
       <ul class="list-group">
         @for (p of v.items; track p.id) {
-        <li class="list-group list-group-item d-flex flex-row align-items-center justify-content-between gap-2">
+        <li
+          class="list-group list-group-item d-flex flex-row align-items-center justify-content-between gap-2"
+        >
           <span>{{ p.displayName }}</span>
+
           @if (p.isSelf || v.isAdmin) {
           <button
             class="btn btn-outline-danger btn-sm"
@@ -68,6 +80,7 @@ export class ParticipantsListComponent {
   private readonly backend = inject(BackendService);
   private readonly toastService = inject(ToastService);
 
+  // props
   eventId = input.required<string>();
   dateIso = input.required<string>();
   scope = input<
@@ -76,23 +89,29 @@ export class ParticipantsListComponent {
   currentUser = input<IUser | null>(null);
   refreshKey = input(0);
 
+  // NEW: parent-driven capacity + label trybu zapisów
+  capacity = input<number | null>(null);
+  signupScope = input<ParticipantSignupScope | null>(null);
+
+  // toasts
   readonly removeSuccessToast =
     viewChild<TemplateRef<unknown>>('removeSuccessToast');
   readonly removeErrorToast =
     viewChild<TemplateRef<unknown>>('removeErrorToast');
 
+  // local state
   private readonly refreshTick = signal(0);
 
   private readonly removingIds = signal<Set<string>>(new Set());
   isRemoving = (id: string) => this.removingIds().has(id);
-  private markRemoving(id: string, on: boolean) {
+  private markRemoving(id: string, on: boolean): void {
     const next = new Set(this.removingIds());
     if (on) next.add(id);
     else next.delete(id);
     this.removingIds.set(next);
   }
 
-  readonly isAdmin = computed(() =>
+  readonly isAdmin = computed<boolean>(() =>
     hasMinimumCoworkerRole(this.currentUser(), CoworkerRoles.Reception)
   );
 
@@ -114,12 +133,14 @@ export class ParticipantsListComponent {
         if (ids.length === 0) {
           return of({ rows, usersById: new Map<string, IUser>() });
         }
-        return this.backend.getByIds<IUser>('users', ids).pipe(
-          map((users) => ({
-            rows,
-            usersById: new Map(users.map((u) => [u.id, u])),
-          }))
-        );
+        return this.backend
+          .getByIds<IUser>('users', ids)
+          .pipe(
+            map((users) => ({
+              rows,
+              usersById: new Map(users.map((u) => [u.id, u])),
+            }))
+          );
       }),
       map(({ rows, usersById }) =>
         rows.map<IEventParticipantVM>((r) => {
@@ -149,16 +170,24 @@ export class ParticipantsListComponent {
     { initialValue: [] as IEventParticipantVM[] }
   );
 
+  private readonly occupiedSignal = computed<number>(() => this.items().length);
+  private readonly isFullSignal = computed<boolean>(() => {
+    const cap = this.capacity();
+    if (cap == null || cap <= 0) return false;
+    return this.occupiedSignal() >= cap;
+  });
+
   readonly vm = computed(() => ({
     items: this.items(),
     isAdmin: this.isAdmin(),
+    capacity: this.capacity(),
+    isFull: this.isFullSignal(),
   }));
 
-  remove(p: IEventParticipant) {
+  remove(p: IEventParticipant): void {
     if (!this.participantsService.canDelete(this.currentUser(), p)) return;
 
     this.markRemoving(p.id, true);
-
     this.participantsService.softDelete(p.id).subscribe({
       next: () => {
         this.refreshTick.set(this.refreshTick() + 1);

@@ -10,7 +10,7 @@ import { ImageStorageService } from '../../core/services/backend/image-storage/i
 import { PlatformService } from '../../core/services/platform/platform.service';
 
 import { EventFull } from '../../core/interfaces/i-events';
-import { EventTag, EventTagLabel, AttractionKind, HostSignupScope } from '../../core/enums/events';
+import { EventTag, EventTagLabel, AttractionKind, HostSignupScope, ParticipantSignupScope } from '../../core/enums/events';
 import { formatYmdLocal } from '../../core/utils/weekday-options';
 
 import { of, combineLatest, forkJoin } from 'rxjs';
@@ -26,18 +26,6 @@ import { AuthService } from '../../core/services/auth/auth.service';
 import { EventSignupPanelComponent } from '../event-signup-panel/event-signup-panel.component';
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
-
-// --- Tryb zapisów: AUTO (heurystyka) lub jawne tryby
-export type SignupScope = 'AUTO' | 'WHOLE' | 'SESSION' | 'BOTH' | 'NONE';
-
-// Tymczasowe override’y po slugach (możesz dopisywać)
-const SIGNUP_OVERRIDES_BY_SLUG: Record<string, SignupScope> = {
-  'chaotyczny-czwartek': 'WHOLE',
-  'dobranocka-w-jotunheimie': 'WHOLE',
-  'echa-chaosu': 'SESSION',
-  'chaotyczny-czwartek-nieznany-straznik': 'WHOLE',
-  'commander-w-ragnaroku': 'NONE',
-};
 
 @Component({
   selector: 'app-event-details',
@@ -69,7 +57,7 @@ export class EventDetailsComponent {
   // user (computed z AuthService)
   readonly currentUser = this.auth.user;
 
-  // --- Sygnały zamiast toSignal()
+  // --- Sygnały
   private readonly slugSig = signal<string | null>(null);
   private readonly queryDateSig = signal<string | null>(null);
   private readonly rawEventSig = signal<EventFull | null>(null);
@@ -96,7 +84,7 @@ export class EventDetailsComponent {
     return nexts.length ? nexts[0] : null;
   });
 
-  readonly hasOccurrence = computed(() => !!this.occurrenceDate());
+  readonly hasOccurrence = computed<boolean>(() => !!this.occurrenceDate());
 
   readonly event = computed<EventFull | null>(() => {
     const ev = this.rawEventSig();
@@ -106,6 +94,49 @@ export class EventDetailsComponent {
   });
 
   readonly eventId = computed(() => this.event()?.id ?? null);
+
+  // Pojemność przekazywana do dzieci (fallback dla całego eventu i sesji bez własnego limitu)
+  readonly wholeCapacity = computed<number | null>(() => {
+  const raw = this.event()?.wholeCapacity ?? null;
+  return raw === 0 ? null : raw;          // 0 => bez limitu (null)
+});
+
+// 0 lub null -> null (brak limitu)
+readonly wholeCapacityNormalized = computed<number | null>(() => {
+  const cap = this.event()?.wholeCapacity ?? null;
+  return cap != null && cap <= 0 ? null : cap;
+});
+
+
+// Domyślna pojemność sesji (fallback dla kart sesji):
+readonly sessionDefaultCapacity = computed<number | null>(() => {
+  const raw = this.event()?.sessionCapacity ?? null;
+  // tu 0 raczej nie wystąpi (masz check 1..5), ale gdyby kiedyś:
+  return raw && raw > 0 ? raw : null;
+});
+
+  // Tryb zapisów (z backendu) + bezpieczny fallback gdyby pole było puste
+  readonly participantSignup = computed<ParticipantSignupScope>(() => {
+    const ev = this.event();
+    if (!ev) return ParticipantSignupScope.Whole;
+    return (
+      ev.participantSignup ??
+      (ev.attractionType === AttractionKind.Session
+        ? ParticipantSignupScope.Session
+        : ParticipantSignupScope.Whole)
+    );
+  });
+
+  readonly showSessionSignup = computed<boolean>(() => {
+    const s = this.participantSignup();
+    return s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both;
+    }
+  );
+  readonly showWholeSignup = computed<boolean>(() => {
+    const s = this.participantSignup();
+    return s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both;
+    }
+  );
 
   private readonly coverSizes = [
     { w: 480, h: 320 },
@@ -167,27 +198,6 @@ export class EventDetailsComponent {
       host: h,
     }))
   );
-
-  // --- Rozstrzyganie zakresu zapisów
-  readonly signupScope = computed<Exclude<SignupScope, 'AUTO'>>(() => {
-    const ev = this.event();
-    const slug = this.slugSig();
-    return this.resolveSignupScope(ev, slug);
-  });
-
-  private resolveSignupScope(ev: EventFull | null, slug: string | null): Exclude<SignupScope, 'AUTO'> {
-    if (!ev) return 'WHOLE';
-    // 1) backend (jeśli kiedyś doda) — honorujemy, jeśli ≠ AUTO
-    const s = (ev as any).signupScope as SignupScope | undefined;
-    if (s && s !== 'AUTO') return s as Exclude<SignupScope, 'AUTO'>;
-
-    // 2) override po slug
-    const ov = slug ? SIGNUP_OVERRIDES_BY_SLUG[slug] : undefined;
-    if (ov && ov !== 'AUTO') return ov as Exclude<SignupScope, 'AUTO'>;
-
-    // 3) heurystyka
-    return ev.attractionType === AttractionKind.Session ? 'SESSION' : 'WHOLE';
-  }
 
   // refresh listy uczestników eventu (WHOLE) po zapisie
   readonly participantsRefresh = signal(0);
@@ -263,7 +273,7 @@ export class EventDetailsComponent {
       )
       .subscribe((ev) => this.rawEventSig.set(ev));
 
-    // --- dociąg „niesesyjnych” hostów dla najbliższej daty (prosto)
+    // --- dociąg „niesesyjnych” hostów dla najbliższej daty
     const eventId$ = toObservable(this.eventId);
     const date$ = toObservable(this.occurrenceDate);
     const kind$ = toObservable(this.event).pipe(map((ev) => ev?.attractionType));
@@ -300,7 +310,7 @@ export class EventDetailsComponent {
       )
       .subscribe((items) => this.nonSessionHostsSig.set(items));
 
-    // --- SEO (prosta subskrypcja)
+    // --- SEO
     toObservable(this.event)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
