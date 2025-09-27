@@ -16,6 +16,7 @@ export interface IReservation {
   status: ReservationStatus;
   teamId?: string | null;
   createdAt: string;
+  eventId: string;
 }
 
 export enum ReservationStatus {

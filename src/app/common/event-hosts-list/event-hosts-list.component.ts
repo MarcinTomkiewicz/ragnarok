@@ -37,7 +37,8 @@ export class EventHostsListComponent {
   eventId = input.required<string>();
   dateIso = input.required<string>();
   currentUser = input<IUser | null>(null);
-  showSignup = input<boolean>(true); // <— NOWE: można wyłączyć UI zapisów dla sesji
+  showSignup = input<boolean>(true);
+  eventCapacity = input<number | null>(null);
 
   // DI
   private readonly hosts = inject(EventHostsService);
@@ -157,6 +158,13 @@ export class EventHostsListComponent {
       )
       .subscribe((items) => this.itemsSig.set(items));
   }
+
+  hostCapacity(h: HostCardVM): number | null {
+  const own = h.sessionCapacity
+  if (own != null && own > 0) return own;
+  const fallback = this.eventCapacity();
+  return (fallback != null && fallback > 0) ? fallback : null;
+}
 
   openDetails(host: HostCardVM) {
     const ref = this.modal.open(EventSessionDetailsModalComponent, {

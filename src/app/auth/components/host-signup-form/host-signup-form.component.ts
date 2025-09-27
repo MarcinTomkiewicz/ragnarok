@@ -1,4 +1,3 @@
-// host-signup-form.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, computed, DestroyRef, inject, signal, TemplateRef, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,14 +5,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { format, isValid, parseISO } from 'date-fns';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { finalize, startWith } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { BackendService } from '../../../core/services/backend/backend.service';
 import { EventService } from '../../../core/services/event/event.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { AttractionKind, HostSignupScope } from '../../../core/enums/events';
+import { AttractionKind, HostSignupScope, ParticipantSignupScope } from '../../../core/enums/events';
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { GmStyleTag } from '../../../core/enums/gm-styles';
 import { CoworkerRoles } from '../../../core/enums/roles';
@@ -31,6 +30,17 @@ import { GmDirectoryService } from '../../core/services/gm/gm-directory/gm-direc
 import { IGmData } from '../../../core/interfaces/i-gm-profile';
 import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
 
+type StaffPreviewVM = {
+  gmName: string;
+  room: string;
+  title: string;
+  systemName: string;
+  styles: GmStyleTag[];
+  triggers: string[];
+  description: string;
+  imageUrl: string | null;
+};
+
 @Component({
   selector: 'app-host-signup-form',
   standalone: true,
@@ -39,66 +49,86 @@ import { ImageStorageService } from '../../../core/services/backend/image-storag
   styleUrls: ['./host-signup-form.component.scss'],
 })
 export class HostSignupFormComponent {
-  private readonly fb = inject(FormBuilder);
+  // services
+  private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly backend = inject(BackendService);
-  private readonly events = inject(EventService);
+  private readonly eventService = inject(EventService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly hosts = inject(EventHostsService);
+  private readonly eventHostsService = inject(EventHostsService);
   private readonly gmDirectory = inject(GmDirectoryService);
   private readonly images = inject(ImageStorageService);
 
-  readonly evSig = signal<EventFull | null>(null);
-  readonly isSessionSig = computed(() => this.evSig()?.attractionType === AttractionKind.Session);
+  // Event + occurrence
+  readonly eventSignal = signal<EventFull | null>(null);
+  readonly isSessionEventSignal = computed<boolean>(() => this.eventSignal()?.attractionType === AttractionKind.Session);
+  readonly occurrenceDateSignal = signal<string | null>(null);
 
-  readonly dateSig = signal<string | null>(null);
-  readonly signupsSig = signal<IEventHost[]>([]);
-  readonly mySignupSig = signal<IEventHost | null>(null);
+  // Data sets & selections
+  readonly signupsSignal = signal<IEventHost[]>([]);
+  readonly mySignupSignal = signal<IEventHost | null>(null);
+  readonly isStaffSignal = computed<boolean>(() => hasMinimumCoworkerRole(this.auth.user(), CoworkerRoles.Reception));
+  readonly selectedRoomForPreviewSignal = signal<string | null>(null);
+  readonly gmNameByIdSignal = signal<Map<string, string>>(new Map<string, string>());
 
-  readonly isStaffSig = computed(() => hasMinimumCoworkerRole(this.auth.user(), CoworkerRoles.Reception));
-  readonly selectedRoomViewSig = signal<string | null>(null);
-  readonly gmNameByIdSig = signal<Map<string, string>>(new Map());
+  // Systems & triggers
+  readonly systemsSignal = signal<IRPGSystem[]>([]);
+  readonly systemsLoadingSignal = signal<boolean>(false);
+  readonly systemNameByIdSignal = computed<Map<string, string>>(
+    () => new Map(this.systemsSignal().map((system: IRPGSystem) => [system.id, system.name]))
+  );
+  readonly triggersSignal = signal<IContentTrigger[]>([]);
+  readonly triggersLoadingSignal = signal<boolean>(false);
 
-  readonly systemsSig = signal<IRPGSystem[]>([]);
-  readonly systemsLoadingSig = signal(false);
-  readonly systemNameByIdSig = computed(() => new Map(this.systemsSig().map(s => [s.id, s.name])));
-  readonly triggersSig = signal<IContentTrigger[]>([]);
-  readonly triggersLoadingSig = signal(false);
+  // View mirrors for custom pickers
+  readonly selectedSystemIdSignal = signal<string>('');
+  readonly selectedSystemIdsViewSignal = computed<string[]>(
+    () => (this.selectedSystemIdSignal() ? [this.selectedSystemIdSignal()] : [])
+  );
+  readonly playstyleViewSignal = signal<GmStyleTag[]>([]);
+  readonly triggersViewSignal = signal<string[]>([]);
 
-  readonly systemIdViewSig = signal<string>('');
-  readonly selectedSystemIdsView = computed(() => (this.systemIdViewSig() ? [this.systemIdViewSig()] : []));
-  readonly playstyleViewSig = signal<GmStyleTag[]>([]);
-  readonly triggersViewSig = signal<string[]>([]);
+  // Rooms taken
+  readonly takenRoomsSignal = signal<Set<string>>(new Set<string>());
+  readonly takenLoadingSignal = signal<boolean>(false);
 
-  readonly takenRoomsSig = signal<Set<string>>(new Set());
-  readonly takenLoadingSig = signal(false);
-
-  readonly hostImageFileSig = signal<File | null>(null);
-  readonly hostImagePreviewUrlSig = signal<string | null>(null);
-  readonly removeExistingImageSig = signal(false);
-  readonly existingImageUrlSig = computed<string | null>(() => {
-    const mine = this.mySignupSig();
-    if (!mine?.imagePath || this.removeExistingImageSig()) return null;
+  // Image
+  readonly hostImageFileSignal = signal<File | null>(null);
+  readonly hostImagePreviewUrlSignal = signal<string | null>(null);
+  readonly removeExistingImageSignal = signal<boolean>(false);
+  readonly existingImageUrlSignal = computed<string | null>(() => {
+    const mine = this.mySignupSignal();
+    if (!mine?.imagePath || this.removeExistingImageSignal()) return null;
     return this.imageUrlFrom(mine.imagePath, 800, 450);
   });
 
-  readonly allowFullEditSig = signal(false);
-  readonly detailsDisabledSig = computed(() => !!this.mySignupSig() && !this.allowFullEditSig());
+  // UI state
+  readonly allowFullEditSignal = signal<boolean>(false);
+  readonly detailsDisabledSignal = computed<boolean>(() => !!this.mySignupSignal() && !this.allowFullEditSignal());
+  readonly formattedDateSignal = signal<string>('—');
+  readonly loadingSignal = signal<boolean>(true);
+  readonly loadErrorSignal = signal<string | null>(null);
 
-  readonly formattedDateSig = signal('—');
-  readonly loadingSig = signal(true);
-  readonly loadErrorSig = signal<string | null>(null);
+  // Editable session capacity?
+  readonly canEditSessionCapacitySignal = computed<boolean>(() => {
+    const ev = this.eventSignal();
+    if (!ev) return false;
+    if (ev.attractionType !== AttractionKind.Session) return false;
+    return ev.participantSignup === ParticipantSignupScope.Session || ev.participantSignup === ParticipantSignupScope.Both;
+  });
 
-  form = this.fb.nonNullable.group({
+  // Form
+  form = this.formBuilder.nonNullable.group({
     roomName: ['' as string],
     title: ['', [Validators.required]],
     systemId: ['' as string],
     description: [''],
     triggers: [[] as string[]],
     playstyleTags: [[] as GmStyleTag[]],
+    sessionCapacity: [5, [Validators.min(3), Validators.max(5)]], // 3–5 per session
   });
 
   readonly hostSuccessToast = viewChild<TemplateRef<unknown>>('hostSuccessToast');
@@ -106,394 +136,446 @@ export class HostSignupFormComponent {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
-      const prev = this.hostImagePreviewUrlSig();
+      const prev = this.hostImagePreviewUrlSignal();
       if (prev) URL.revokeObjectURL(prev);
     });
   }
 
-  ngOnInit() {
+  // ---------- lifecycle ----------
+
+  ngOnInit(): void {
     const dateParam = this.route.snapshot.paramMap.get('date');
-    this.dateSig.set(dateParam);
+    this.occurrenceDateSignal.set(dateParam);
     if (dateParam) {
-      const d = parseISO(dateParam);
-      this.formattedDateSig.set(isValid(d) ? format(d, 'dd.MM.yyyy') : dateParam);
+      const parsed = parseISO(dateParam);
+      this.formattedDateSignal.set(isValid(parsed) ? format(parsed, 'dd.MM.yyyy') : dateParam);
     }
 
-    this.form.controls.systemId.valueChanges.pipe(startWith(this.form.controls.systemId.value ?? '')).subscribe(v => this.systemIdViewSig.set(v || ''));
-    this.form.controls.playstyleTags.valueChanges.pipe(startWith(this.form.controls.playstyleTags.value ?? [])).subscribe(v => this.playstyleViewSig.set((v ?? []) as GmStyleTag[]));
-    this.form.controls.triggers.valueChanges.pipe(startWith(this.form.controls.triggers.value ?? [])).subscribe(v => this.triggersViewSig.set((v ?? []) as string[]));
+    this.form.controls.systemId.valueChanges
+      .pipe(startWith(this.form.controls.systemId.value))
+      .subscribe((value: string) => this.selectedSystemIdSignal.set(value || ''));
 
-    const resolved = this.route.snapshot.data['event'] as EventFull | null | undefined;
-    if (resolved) {
-      this.finishLoad(resolved);
+    this.form.controls.playstyleTags.valueChanges
+      .pipe(startWith(this.form.controls.playstyleTags.value))
+      .subscribe((tags: GmStyleTag[]) => this.playstyleViewSignal.set(tags ?? []));
+
+    this.form.controls.triggers.valueChanges
+      .pipe(startWith(this.form.controls.triggers.value))
+      .subscribe((triggerIds: string[]) => this.triggersViewSignal.set(triggerIds ?? []));
+
+    const resolvedEvent = this.route.snapshot.data['event'] as EventFull | null | undefined;
+    if (resolvedEvent) {
+      this.finishLoad(resolvedEvent);
     } else {
       const slug = this.route.snapshot.paramMap.get('slug');
       if (!slug) {
-        this.loadingSig.set(false);
-        this.loadErrorSig.set('Brak parametru slug w adresie.');
+        this.loadingSignal.set(false);
+        this.loadErrorSignal.set('Brak parametru slug w adresie.');
       } else {
-        this.events.getBySlug(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-          next: ev => {
-            if (!ev) {
-              this.loadErrorSig.set('Nie znaleziono wydarzenia.');
-              this.loadingSig.set(false);
+        this.eventService.getBySlug(slug).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: (event: EventFull | null) => {
+            if (!event) {
+              this.loadErrorSignal.set('Nie znaleziono wydarzenia.');
+              this.loadingSignal.set(false);
               return;
             }
-            this.finishLoad(ev);
+            this.finishLoad(event);
           },
           error: () => {
-            this.loadErrorSig.set('Błąd podczas pobierania wydarzenia.');
-            this.loadingSig.set(false);
+            this.loadErrorSignal.set('Błąd podczas pobierania wydarzenia.');
+            this.loadingSignal.set(false);
           },
         });
       }
     }
 
-    this.systemIdViewSig.set(this.form.controls.systemId.value || '');
-    this.playstyleViewSig.set(this.form.controls.playstyleTags.value ?? []);
-    this.triggersViewSig.set(this.form.controls.triggers.value ?? []);
+    this.selectedSystemIdSignal.set(this.form.controls.systemId.value || '');
+    this.playstyleViewSignal.set(this.form.controls.playstyleTags.value ?? []);
+    this.triggersViewSignal.set(this.form.controls.triggers.value ?? []);
 
     this.fetchSystems();
     this.fetchTriggers();
   }
 
-  private finishLoad(ev: EventFull) {
-    this.evSig.set(ev);
-    this.loadingSig.set(false);
+  // ---------- load helpers ----------
 
-    const roomCtrl = this.form.controls.roomName;
-    if (ev.rooms?.length) {
-      roomCtrl.addValidators([Validators.required]);
-      // wstępnie wyczyść – ustawimy zaraz właściwą wartość
-      roomCtrl.setValue('');
+  private finishLoad(event: EventFull): void {
+    this.eventSignal.set(event);
+    this.loadingSignal.set(false);
+
+    // toggle sessionCapacity control on event settings
+    const capacityControl = this.form.controls.sessionCapacity;
+    if (this.canEditSessionCapacitySignal()) capacityControl.enable({ emitEvent: false });
+    else capacityControl.disable({ emitEvent: false });
+
+    const roomControl = this.form.controls.roomName;
+    if (event.rooms?.length) {
+      roomControl.addValidators([Validators.required]);
+      roomControl.setValue('');
     } else {
-      roomCtrl.clearValidators();
-      roomCtrl.setValue('');
+      roomControl.clearValidators();
+      roomControl.setValue('');
     }
-    roomCtrl.updateValueAndValidity({ emitEvent: false });
+    roomControl.updateValueAndValidity({ emitEvent: false });
 
-    const date = this.dateSig();
-    if (!date) return;
+    const occurrenceDate = this.occurrenceDateSignal();
+    if (!occurrenceDate) return;
 
-    this.takenLoadingSig.set(true);
-    this.hosts.getHostsWithSystems(ev.id, date).pipe(finalize(() => this.takenLoadingSig.set(false))).subscribe({
-      next: (rows: any[]) => {
-        const signups = (rows ?? []) as IEventHost[];
-        this.signupsSig.set(signups);
-
-        const me = this.auth.user();
-        const mine = me ? signups.find(s => s.hostUserId === me.id) ?? null : null;
-        this.mySignupSig.set(mine);
-
-        const takenFromSignups = new Set<string>(
-          signups
-            .filter(s => !!s.roomName && (!mine || s.hostUserId !== mine.hostUserId))
-            .map(s => s.roomName as string)
-        );
-
-        const rooms = ev.rooms ?? [];
-        this.hosts
-          .listExternallyBlockedRooms(ev.id, date, rooms, ev.startTime, ev.endTime)
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: (ext) => {
-              ext.forEach((r) => takenFromSignups.add(r));
-              this.takenRoomsSig.set(takenFromSignups);
-
-              // auto-wybór jedynej salki (jeśli nie mam już zgłoszenia)
-              if (!mine && rooms.length === 1) {
-                this.form.controls.roomName.setValue(rooms[0], { emitEvent: false });
-              }
-            },
-            error: () => {
-              this.takenRoomsSig.set(takenFromSignups);
-              if (!mine && rooms.length === 1) {
-                this.form.controls.roomName.setValue(rooms[0], { emitEvent: false });
-              }
-            },
-          });
-
-        if (this.isStaffSig()) {
-          this.selectedRoomViewSig.set(signups[0]?.roomName ?? null);
-          const ids = Array.from(new Set(signups.map(s => s.hostUserId)));
-          if (ids.length) {
-            forkJoin(ids.map(id => this.gmDirectory.getGmById(id)))
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe({
-                next: (gms: (IGmData | null)[]) => {
-                  const map = new Map<string, string>();
-                  gms.forEach(gm => {
-                    if (!gm) return;
-                    map.set(gm.userId, this.gmDirectory.gmDisplayName(gm));
-                  });
-                  this.gmNameByIdSig.set(map);
-                },
-                error: () => this.gmNameByIdSig.set(new Map()),
-              });
-          }
-        }
-
-        if (mine) {
-          this.form.patchValue(
-            {
-              roomName: mine.roomName ?? (ev.rooms?.length === 1 ? ev.rooms[0] : ''),
-              title: mine.title ?? '',
-              systemId: mine.systemId ?? '',
-              description: mine.description ?? '',
-              triggers: mine.triggers ?? [],
-              playstyleTags: mine.playstyleTags ?? [],
-            },
-            { emitEvent: false }
-          );
-          this.syncViewFromForm();
-          this.setDetailsEnabled(false);
-        } else {
-          // nowy zapis – pola edytowalne, a single-room już ustawione wyżej
-          this.setDetailsEnabled(true);
-          this.syncViewFromForm();
-        }
-      },
-      error: () => {
-        this.signupsSig.set([]);
-        this.takenRoomsSig.set(new Set());
-      },
-    });
-  }
-
-  private fetchSystems() {
-    this.systemsLoadingSig.set(true);
-    this.backend
-      .getAll<IRPGSystem>('systems', 'name', 'asc', undefined, undefined, undefined, false)
-      .pipe(finalize(() => this.systemsLoadingSig.set(false)), takeUntilDestroyed(this.destroyRef))
+    this.takenLoadingSignal.set(true);
+    this.eventHostsService.getHostsWithSystems(event.id, occurrenceDate)
+      .pipe(finalize(() => this.takenLoadingSignal.set(false)))
       .subscribe({
-        next: rows => this.systemsSig.set(rows ?? []),
-        error: () => this.systemsSig.set([]),
+        next: (rows: IEventHost[]) => {
+          const signups = rows ?? [];
+          this.signupsSignal.set(signups);
+
+          const me = this.auth.user();
+          const mySignup = me ? (signups.find((s: IEventHost) => s.hostUserId === me.id) ?? null) : null;
+          this.mySignupSignal.set(mySignup);
+
+          const takenFromSignups = new Set<string>(
+            signups
+              .filter((s: IEventHost) => !!s.roomName && (!mySignup || s.hostUserId !== mySignup.hostUserId))
+              .map((s: IEventHost) => s.roomName as string)
+          );
+
+          const rooms = event.rooms ?? [];
+          this.eventHostsService
+            .listExternallyBlockedRooms(event.id, occurrenceDate, rooms, event.startTime, event.endTime)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (externallyBlocked: Set<string>) => {
+                externallyBlocked.forEach((room: string) => takenFromSignups.add(room));
+                this.takenRoomsSignal.set(takenFromSignups);
+                if (!mySignup && rooms.length === 1) {
+                  this.form.controls.roomName.setValue(rooms[0], { emitEvent: false });
+                }
+              },
+              error: () => {
+                this.takenRoomsSignal.set(takenFromSignups);
+                if (!mySignup && rooms.length === 1) {
+                  this.form.controls.roomName.setValue(rooms[0], { emitEvent: false });
+                }
+              },
+            });
+
+          if (this.isStaffSignal()) {
+            this.selectedRoomForPreviewSignal.set(signups[0]?.roomName ?? null);
+            const gmIds = Array.from(new Set(signups.map((s: IEventHost) => s.hostUserId)));
+            if (gmIds.length) {
+              forkJoin(gmIds.map((id: string) => this.gmDirectory.getGmById(id)))
+                .pipe(takeUntilDestroyed(this.destroyRef))
+                .subscribe({
+                  next: (gms: (IGmData | null)[]) => {
+                    const map = new Map<string, string>();
+                    gms.forEach((gm: IGmData | null) => {
+                      if (!gm) return;
+                      map.set(gm.userId, this.gmDirectory.gmDisplayName(gm));
+                    });
+                    this.gmNameByIdSignal.set(map);
+                  },
+                  error: () => this.gmNameByIdSignal.set(new Map<string, string>()),
+                });
+            }
+          }
+
+          // Pre-fill form for edit/new
+          if (mySignup) {
+            this.form.patchValue(
+              {
+                roomName: mySignup.roomName ?? (event.rooms?.length === 1 ? event.rooms[0] : ''),
+                title: mySignup.title ?? '',
+                systemId: mySignup.systemId ?? '',
+                description: mySignup.description ?? '',
+                triggers: mySignup.triggers ?? [],
+                playstyleTags: mySignup.playstyleTags ?? [],
+                sessionCapacity: this.clamp(Number(mySignup.sessionCapacity ?? event.sessionCapacity ?? 5), 3, 5),
+              },
+              { emitEvent: false }
+            );
+            this.syncViewFromForm();
+            this.setDetailsEnabled(false);
+          } else {
+            this.setDetailsEnabled(true);
+            this.form.controls.sessionCapacity.setValue(
+              this.clamp(Number(event.sessionCapacity ?? 5), 3, 5),
+              { emitEvent: false }
+            );
+            this.syncViewFromForm();
+          }
+        },
+        error: () => {
+          this.signupsSignal.set([]);
+          this.takenRoomsSignal.set(new Set<string>());
+        },
       });
   }
 
-  private fetchTriggers() {
-    this.triggersLoadingSig.set(true);
+  private fetchSystems(): void {
+    this.systemsLoadingSignal.set(true);
+    this.backend
+      .getAll<IRPGSystem>('systems', 'name', 'asc', undefined, undefined, undefined, false)
+      .pipe(finalize(() => this.systemsLoadingSignal.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (rows: IRPGSystem[] | null) => this.systemsSignal.set(rows ?? []),
+        error: () => this.systemsSignal.set([]),
+      });
+  }
+
+  private fetchTriggers(): void {
+    this.triggersLoadingSignal.set(true);
     this.backend
       .getAll<IContentTrigger>(
         'content_triggers',
         'label',
         'asc',
-        { filters: { is_active: { operator: FilterOperator.EQ, value: true } } } as any,
+        { filters: { is_active: { operator: FilterOperator.EQ, value: true } } } as unknown as any,
         undefined,
         undefined,
         false
       )
-      .pipe(finalize(() => this.triggersLoadingSig.set(false)))
+      .pipe(finalize(() => this.triggersLoadingSignal.set(false)))
       .subscribe({
-        next: rows => this.triggersSig.set(rows ?? []),
-        error: () => this.triggersSig.set([]),
+        next: (rows: IContentTrigger[] | null) => this.triggersSignal.set(rows ?? []),
+        error: () => this.triggersSignal.set([]),
       });
   }
 
+  // ---------- UI helpers ----------
+
+  private clamp(n: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, n));
+  }
+
   selectedRoomLabel(): string {
-    const ev = this.evSig();
-    const v = this.form.value.roomName;
-    if (!ev?.rooms?.length) return 'Brak salek';
-    if (ev.rooms.length === 1) return ev.rooms[0];
-    if (!v) {
-      const allTaken = ev.rooms.every(r => this.takenRoomsSig().has(r));
+    const event = this.eventSignal();
+    const selectedRoom = this.form.value.roomName;
+    if (!event?.rooms?.length) return 'Brak salek';
+    if (event.rooms.length === 1) return event.rooms[0];
+    if (!selectedRoom) {
+      const allTaken = event.rooms.every((room: string) => this.takenRoomsSignal().has(room));
       return allTaken ? 'Brak wolnych salek' : 'Wybierz salkę';
     }
-    return v;
+    return selectedRoom;
   }
-  isRoomTaken(r: string): boolean {
-    const mine = this.mySignupSig();
-    if (mine && mine.roomName === r) return false;
-    return this.takenRoomsSig().has(r);
+
+  isRoomTaken(room: string): boolean {
+    const mySignup = this.mySignupSignal();
+    if (mySignup && mySignup.roomName === room) return false;
+    return this.takenRoomsSignal().has(room);
   }
+
   allRoomsTaken(): boolean {
-    const ev = this.evSig();
-    if (!ev?.rooms?.length) return false;
-    return ev.rooms.every(r => this.takenRoomsSig().has(r));
+    const event = this.eventSignal();
+    if (!event?.rooms?.length) return false;
+    return event.rooms.every((room: string) => this.takenRoomsSignal().has(room));
   }
-  pickRoom(r: string) {
-    if (this.isRoomTaken(r)) return;
-    this.form.controls.roomName.setValue(r);
+
+  pickRoom(room: string): void {
+    if (this.isRoomTaken(room)) return;
+    this.form.controls.roomName.setValue(room);
   }
-  pickRoomView(r: string) {
-    this.selectedRoomViewSig.set(r);
+
+  pickRoomForPreview(room: string): void {
+    this.selectedRoomForPreviewSignal.set(room);
   }
 
   get canSignup(): boolean {
     const user = this.auth.user();
-    const ev = this.evSig();
-    if (!user || !ev) return false;
-    if (ev.hostSignup === HostSignupScope.Any) return true;
+    const event = this.eventSignal();
+    if (!user || !event) return false;
+    if (event.hostSignup === HostSignupScope.Any) return true;
     return hasMinimumCoworkerRole(user, CoworkerRoles.Gm);
   }
 
-  onSystemsChange(ids: string[]) {
+  onSystemsChange(ids: string[]): void {
     this.form.controls.systemId.setValue(ids[0] ?? '');
   }
+
   playstyleSelected(): GmStyleTag[] {
-    const v = this.form.value.playstyleTags ?? [];
-    const all = new Set(Object.values(GmStyleTag));
-    return v.filter((t): t is GmStyleTag => all.has(t as GmStyleTag));
+    const selected = this.form.value.playstyleTags ?? [];
+    const allowed = new Set<GmStyleTag>(Object.values(GmStyleTag));
+    return selected.filter((tag: GmStyleTag): tag is GmStyleTag => allowed.has(tag as GmStyleTag));
   }
-  onStyleTagsChange(tags: GmStyleTag[]) {
+
+  onStyleTagsChange(tags: GmStyleTag[]): void {
     this.form.controls.playstyleTags.setValue(tags);
   }
 
-  onImageChange(ev: Event) {
-    const input = ev.target as HTMLInputElement | null;
+  onImageChange(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
     const file = input?.files?.[0] ?? null;
-    this.hostImageFileSig.set(file);
-    const prev = this.hostImagePreviewUrlSig();
+    this.hostImageFileSignal.set(file);
+    const prev = this.hostImagePreviewUrlSignal();
     if (prev) URL.revokeObjectURL(prev);
-    this.hostImagePreviewUrlSig.set(file ? URL.createObjectURL(file) : null);
-    if (file) this.removeExistingImageSig.set(false);
+    this.hostImagePreviewUrlSignal.set(file ? URL.createObjectURL(file) : null);
+    if (file) this.removeExistingImageSignal.set(false);
   }
-  clearNewImage() {
-    const prev = this.hostImagePreviewUrlSig();
+
+  clearNewImage(): void {
+    const prev = this.hostImagePreviewUrlSignal();
     if (prev) URL.revokeObjectURL(prev);
-    this.hostImagePreviewUrlSig.set(null);
-    this.hostImageFileSig.set(null);
+    this.hostImagePreviewUrlSignal.set(null);
+    this.hostImageFileSignal.set(null);
   }
-  removeExistingImage() {
-    this.removeExistingImageSig.set(true);
+
+  removeExistingImage(): void {
+    this.removeExistingImageSignal.set(true);
     this.clearNewImage();
   }
 
-  enableDetailsEdit() {
-    this.allowFullEditSig.set(true);
+  enableDetailsEdit(): void {
+    this.allowFullEditSignal.set(true);
     this.setDetailsEnabled(true);
     this.syncViewFromForm();
   }
-  cancelDetailsEdit() {
-    const mine = this.mySignupSig();
-    const ev = this.evSig();
-    if (mine) {
+
+  cancelDetailsEdit(): void {
+    const mySignup = this.mySignupSignal();
+    const event = this.eventSignal();
+    if (mySignup) {
       this.form.patchValue(
         {
-          roomName: mine.roomName ?? (ev?.rooms?.length === 1 ? ev.rooms[0] : ''),
-          title: mine.title ?? '',
-          systemId: mine.systemId ?? '',
-          description: mine.description ?? '',
-          triggers: mine.triggers ?? [],
-          playstyleTags: mine.playstyleTags ?? [],
+          roomName: mySignup.roomName ?? (event?.rooms?.length === 1 ? event.rooms[0] : ''),
+          title: mySignup.title ?? '',
+          systemId: mySignup.systemId ?? '',
+          description: mySignup.description ?? '',
+          triggers: mySignup.triggers ?? [],
+          playstyleTags: mySignup.playstyleTags ?? [],
+          sessionCapacity: this.clamp(Number(mySignup.sessionCapacity ?? event?.sessionCapacity ?? 5), 3, 5),
         },
         { emitEvent: false }
       );
     }
     this.clearNewImage();
-    this.removeExistingImageSig.set(false);
-    this.allowFullEditSig.set(false);
+    this.removeExistingImageSignal.set(false);
+    this.allowFullEditSignal.set(false);
     this.setDetailsEnabled(false);
     this.syncViewFromForm();
   }
-  private setDetailsEnabled(enabled: boolean) {
+
+  private setDetailsEnabled(enabled: boolean): void {
     const c = this.form.controls;
-    const ops: 'enable' | 'disable' = enabled ? 'enable' : 'disable';
-    c.title[ops]({ emitEvent: false });
-    c.systemId[ops]({ emitEvent: false });
-    c.description[ops]({ emitEvent: false });
-    c.triggers[ops]({ emitEvent: false });
-    c.playstyleTags[ops]({ emitEvent: false });
-  }
-  private syncViewFromForm() {
-    this.systemIdViewSig.set(this.form.controls.systemId.value || '');
-    this.playstyleViewSig.set(this.form.controls.playstyleTags.value ?? []);
-    this.triggersViewSig.set(this.form.controls.triggers.value ?? []);
+    const op: 'enable' | 'disable' = enabled ? 'enable' : 'disable';
+    c.title[op]({ emitEvent: false });
+    c.systemId[op]({ emitEvent: false });
+    c.description[op]({ emitEvent: false });
+    c.triggers[op]({ emitEvent: false });
+    c.playstyleTags[op]({ emitEvent: false });
+    c.sessionCapacity[op]({ emitEvent: false });
   }
 
-  goBack() {
+  private syncViewFromForm(): void {
+    this.selectedSystemIdSignal.set(this.form.controls.systemId.value || '');
+    this.playstyleViewSignal.set(this.form.controls.playstyleTags.value ?? []);
+    this.triggersViewSignal.set(this.form.controls.triggers.value ?? []);
+  }
+
+  // ---------- actions ----------
+
+  goBack(): void {
     this.router.navigate(['/auth/events']);
   }
 
-  submit() {
-    const ev = this.evSig();
-    const date = this.dateSig();
-    if (!ev || !date) return;
+  submit(): void {
+    const event = this.eventSignal();
+    const occurrenceDate = this.occurrenceDateSignal();
+    if (!event || !occurrenceDate) return;
     if (!this.canSignup) return;
 
-    if (ev.rooms?.length) {
+    if (event.rooms?.length) {
       if (this.allRoomsTaken()) return;
-      if (ev.rooms.length > 1 && !this.form.value.roomName) return;
+      if (event.rooms.length > 1 && !this.form.value.roomName) return;
     }
 
-    const mine = this.mySignupSig();
+    const mySignup = this.mySignupSignal();
     const user = this.auth.user()!;
-    const v = this.form.getRawValue();
-    const isSession = this.isSessionSig();
+    const formValue = this.form.getRawValue();
+    const isSession = this.isSessionEventSignal();
 
     const resolvedRoom =
-      ev.rooms?.length ? (ev.rooms.length === 1 ? ev.rooms[0] : v.roomName) : null;
+      event.rooms?.length ? (event.rooms.length === 1 ? event.rooms[0] : formValue.roomName) : null;
 
-    if (mine) {
-      const allow = this.allowFullEditSig();
-      const patch: any = { roomName: resolvedRoom || null };
+    const canSetCapacity = this.canEditSessionCapacitySignal();
+    const capacity = canSetCapacity ? this.clamp(Number(formValue.sessionCapacity ?? event.sessionCapacity ?? 5), 3, 5) : undefined;
+
+    if (mySignup) {
+      const allow = this.allowFullEditSignal();
+      const patch: Partial<IEventHost> & { imageFile?: File | null; imagePath?: string | null } = {
+        roomName: resolvedRoom || null,
+      };
 
       if (allow) {
-        patch.title = v.title;
+        patch.title = formValue.title;
         if (isSession) {
-          patch.systemId = v.systemId || null;
-          patch.description = v.description || null;
-          patch.triggers = v.triggers ?? [];
-          patch.playstyleTags = v.playstyleTags ?? [];
+          patch.systemId = formValue.systemId || null;
+          patch.description = formValue.description || null;
+          patch.triggers = formValue.triggers ?? [];
+          patch.playstyleTags = formValue.playstyleTags ?? [];
+          if (canSetCapacity && capacity !== undefined) patch.sessionCapacity = capacity;
         } else {
           patch.systemId = null;
           patch.triggers = [];
           patch.playstyleTags = [];
-          patch.description = v.description || null;
+          patch.description = formValue.description || null;
         }
-        const file = this.hostImageFileSig();
+        const file = this.hostImageFileSignal();
         if (file) patch.imageFile = file;
-        else if (this.removeExistingImageSig()) patch.imagePath = null;
+        else if (this.removeExistingImageSignal()) patch.imagePath = null;
       }
 
-      this.hosts.updateHost(mine.id, patch).subscribe({
+      this.eventHostsService.updateHost(mySignup.id, patch).subscribe({
         next: () => this.afterSaveSuccess(),
-        error: err => this.afterSaveError(err),
+        error: (err: unknown) => this.afterSaveError(err),
       });
       return;
     }
 
-    const file = this.hostImageFileSig();
+    const file = this.hostImageFileSignal();
     const payload: IEventHostCreate = {
-      eventId: ev.id,
-      occurrenceDate: date,
-      roomName: ev.rooms?.length ? resolvedRoom : null,
+      eventId: event.id,
+      occurrenceDate,
+      roomName: event.rooms?.length ? resolvedRoom : null,
       hostUserId: user.id,
-      role: ev.hostSignup,
-      title: v.title,
-      systemId: isSession ? (v.systemId || null) : null,
-      description: v.description || null,
-      triggers: isSession ? (v.triggers ?? []) : [],
-      playstyleTags: isSession ? (v.playstyleTags ?? []) : [],
+      role: event.hostSignup,
+      title: formValue.title,
+      systemId: isSession ? (formValue.systemId || null) : null,
+      description: formValue.description || null,
+      triggers: isSession ? (formValue.triggers ?? []) : [],
+      playstyleTags: isSession ? (formValue.playstyleTags ?? []) : [],
       imageFile: file ?? null,
+      ...(canSetCapacity && capacity !== undefined ? { sessionCapacity: capacity } : {}),
     };
 
-    this.hosts.createSignup(payload).subscribe({
+    this.eventHostsService.createSignup(payload).subscribe({
       next: () => this.afterSaveSuccess(),
-      error: err => this.afterSaveError(err),
+      error: (err: unknown) => this.afterSaveError(err),
     });
   }
 
-  resign() {
-    const mine = this.mySignupSig();
-    if (!mine) return;
-    this.hosts.deleteHost(mine.id).subscribe({
+  resign(): void {
+    const mySignup = this.mySignupSignal();
+    if (!mySignup) return;
+    this.eventHostsService.deleteHost(mySignup.id).subscribe({
       next: () => this.afterSaveSuccess(),
-      error: err => this.afterSaveError(err),
+      error: (err: unknown) => this.afterSaveError(err),
     });
   }
 
-  private afterSaveSuccess() {
+  private afterSaveSuccess(): void {
     const tpl = this.hostSuccessToast();
     if (tpl) this.toast.show({ template: tpl, classname: 'bg-success text-white', header: 'Zapisano zgłoszenie' });
     this.router.navigate(['/auth/events']);
   }
-  private afterSaveError(err: unknown) {
+
+  private afterSaveError(err: unknown): void {
     const tpl = this.hostErrorToast();
     if (!tpl) return;
     const header = messageForError(normalizeErrorCode(err));
     this.toast.show({ template: tpl, classname: 'bg-danger text-white', header });
   }
+
+  // ---------- misc ----------
 
   private imageUrlFrom(path?: string | null, w = 800, h = 450): string | null {
     if (!path) return null;
@@ -501,18 +583,28 @@ export class HostSignupFormComponent {
     return this.images.getOptimizedPublicUrl(path, w, h);
   }
 
-  readonly staffVmSig = computed(() => {
-    const s = this.staffSelectedSignupSig();
-    if (!s) return null;
-    const sys = this.systemNameByIdSig().get(s.systemId ?? '') ?? '—';
-    const gm = this.gmNameByIdSig().get(s.hostUserId) ?? s.hostUserId;
-    const img = this.imageUrlFrom(s.imagePath, 640, 400);
-    return { gmName: gm, room: s.roomName ?? '—', title: s.title || '—', systemName: sys, styles: s.playstyleTags ?? [], triggers: s.triggers ?? [], description: s.description ?? '', imageUrl: img };
+  readonly staffPreviewViewModelSignal = computed<StaffPreviewVM | null>(() => {
+    const selected = this.staffSelectedSignupSignal();
+    if (!selected) return null;
+    const systemName = this.systemNameByIdSignal().get(selected.systemId ?? '') ?? '—';
+    const gmName = this.gmNameByIdSignal().get(selected.hostUserId) ?? selected.hostUserId;
+    const imageUrl = this.imageUrlFrom(selected.imagePath, 640, 400);
+    return {
+      gmName,
+      room: selected.roomName ?? '—',
+      title: selected.title || '—',
+      systemName,
+      styles: selected.playstyleTags ?? [],
+      triggers: selected.triggers ?? [],
+      description: selected.description ?? '',
+      imageUrl
+    };
   });
-  private readonly staffSelectedSignupSig = computed<IEventHost | null>(() => {
-    const room = this.selectedRoomViewSig();
+
+  private readonly staffSelectedSignupSignal = computed<IEventHost | null>(() => {
+    const room = this.selectedRoomForPreviewSignal();
     if (!room) return null;
-    const list = this.signupsSig();
+    const list = this.signupsSignal();
     for (let i = 0; i < list.length; i++) if (list[i]?.roomName === room) return list[i];
     return null;
   });

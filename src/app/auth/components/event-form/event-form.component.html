@@ -37,7 +37,8 @@
           <button
             type="button"
             class="btn btn-outline-danger w-auto"
-            (click)="removeCover()"
+            (click)="removeCover()
+            "
             [disabled]="!coverPreviewUrl() && !form.value.coverImagePath"
           >
             Usuń okładkę
@@ -47,19 +48,12 @@
 
       <div class="form-group">
         <label class="text-start">Opis krótki</label>
-        <input
-          type="text"
-          class="form-control"
-          formControlName="shortDescription"
-        />
+        <input type="text" class="form-control" formControlName="shortDescription" />
       </div>
+
       <div class="form-group">
         <label class="text-start">Opis długi</label>
-        <textarea
-          rows="6"
-          class="form-control"
-          formControlName="longDescription"
-        ></textarea>
+        <textarea rows="6" class="form-control" formControlName="longDescription"></textarea>
       </div>
 
       <div class="form-group">
@@ -80,174 +74,150 @@
 
       <div class="form-group flags-row">
         <div class="form-check">
-          <input
-            id="isActive"
-            class="form-check-input"
-            type="checkbox"
-            formControlName="isActive"
-          />
+          <input id="isActive" class="form-check-input" type="checkbox" formControlName="isActive" />
           <label class="form-check-label" for="isActive">Aktywny</label>
         </div>
 
         <div class="form-check">
-          <input
-            id="isBeg"
-            class="form-check-input"
-            type="checkbox"
-            formControlName="isForBeginners"
-          />
+          <input id="isBeg" class="form-check-input" type="checkbox" formControlName="isForBeginners" />
           <label class="form-check-label" for="isBeg">Dla początkujących</label>
         </div>
 
         <div class="form-check">
-          <input
-            id="reqHosts"
-            class="form-check-input"
-            type="checkbox"
-            formControlName="requiresHosts"
-          />
-          <label class="form-check-label" for="reqHosts"
-            >Wymaga prowadzących</label
-          >
+          <input id="reqHosts" class="form-check-input" type="checkbox" formControlName="requiresHosts" />
+          <label class="form-check-label" for="reqHosts">Wymaga prowadzących</label>
+        </div>
+
+        <div class="form-check">
+          <input id="signupRequired" class="form-check-input" type="checkbox" formControlName="signupRequired" />
+          <label class="form-check-label" for="signupRequired">Zapisy uczestników</label>
         </div>
 
         <div
           class="form-check"
-          [ngbTooltip]="
-            'Gdy odznaczone – salki blokujemy dopiero po zgłoszeniu prowadzącego.'
-          "
+          [ngbTooltip]="'Gdy odznaczone – salki blokujemy dopiero po zgłoszeniu prowadzącego.'"
           placement="top"
           container="body"
         >
-          <input
-            id="blockSlots"
-            class="form-check-input"
-            type="checkbox"
-            formControlName="blockSlots"
-          />
-          <label class="form-check-label" for="blockSlots"
-            >Zablokuj terminy od razu</label
-          >
+          <input id="blockSlots" class="form-check-input" type="checkbox" formControlName="blockSlots" />
+          <label class="form-check-label" for="blockSlots">Zablokuj terminy od razu</label>
         </div>
       </div>
 
       <div class="form-group">
         <label class="text-start">Koszt uczestnictwa (PLN)</label>
-        <input
-          type="number"
-          class="form-control"
-          formControlName="entryFeePln"
-          min="0"
-          step="1"
-        />
+        <input type="number" class="form-control" formControlName="entryFeePln" min="0" step="1" />
       </div>
 
       <div class="form-group">
         <label class="text-start me-3">Częstotliwość</label>
         <div class="btn-group">
-          <input
-            type="radio"
-            class="btn-check"
-            id="occSingle"
-            [checked]="form.value.occurrenceMode === 'SINGLE'"
-            (change)="form.controls.occurrenceMode.setValue('SINGLE')"
-          />
-          <label class="btn btn-outline-primary" for="occSingle"
-            >Jednorazowy</label
-          >
+          <input type="radio" class="btn-check" id="occSingle" [checked]="form.value.occurrenceMode==='SINGLE'"
+                 (change)="form.controls.occurrenceMode.setValue('SINGLE')" />
+          <label class="btn btn-outline-primary" for="occSingle">Jednorazowy</label>
 
-          <input
-            type="radio"
-            class="btn-check"
-            id="occRecur"
-            [checked]="form.value.occurrenceMode === 'RECURRENT'"
-            (change)="form.controls.occurrenceMode.setValue('RECURRENT')"
-          />
-          <label class="btn btn-outline-primary" for="occRecur"
-            >Cykliczny</label
-          >
+          <input type="radio" class="btn-check" id="occRecur" [checked]="form.value.occurrenceMode==='RECURRENT'"
+                 (change)="form.controls.occurrenceMode.setValue('RECURRENT')" />
+          <label class="btn btn-outline-primary" for="occRecur">Cykliczny</label>
         </div>
       </div>
 
-      <!-- TUTAJ: dwa dropdowny w jednej linii -->
+      <!-- Typ wydarzenia + prowadzący -->
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Typ wydarzenia</label>
           <div ngbDropdown class="d-block">
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
               {{ attractionLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
-              <button
-                type="button"
-                class="dropdown-item"
-                [class.active]="
-                  form.value.attractionType === AttractionKind.Session
-                "
-                (click)="pickAttractionType(AttractionKind.Session)"
-              >
+              <button type="button" class="dropdown-item"
+                [class.active]="form.value.attractionType === AttractionKind.Session"
+                (click)="pickAttractionType(AttractionKind.Session)">
                 {{ AttractionKindLabel[AttractionKind.Session] }}
               </button>
-              <button
-                type="button"
-                class="dropdown-item"
-                [class.active]="
-                  form.value.attractionType === AttractionKind.Discussion
-                "
-                (click)="pickAttractionType(AttractionKind.Discussion)"
-              >
+              <button type="button" class="dropdown-item"
+                [class.active]="form.value.attractionType === AttractionKind.Discussion"
+                (click)="pickAttractionType(AttractionKind.Discussion)">
                 {{ AttractionKindLabel[AttractionKind.Discussion] }}
               </button>
-              <button
-                type="button"
-                class="dropdown-item"
-                [class.active]="
-                  form.value.attractionType === AttractionKind.Entertainment
-                "
-                (click)="pickAttractionType(AttractionKind.Entertainment)"
-              >
+              <button type="button" class="dropdown-item"
+                [class.active]="form.value.attractionType === AttractionKind.Entertainment"
+                (click)="pickAttractionType(AttractionKind.Entertainment)">
                 {{ AttractionKindLabel[AttractionKind.Entertainment] }}
               </button>
             </div>
           </div>
         </div>
 
+        @if (form.value.requiresHosts) {
         <div>
           <label class="text-start">Kto może być prowadzącym</label>
           <div ngbDropdown class="d-block">
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
               {{ hostSignupLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
-              <button
-                type="button"
-                class="dropdown-item"
+              <button type="button" class="dropdown-item"
                 [class.active]="form.value.hostSignup === HostSignupScope.Staff"
-                (click)="pickHostSignup(HostSignupScope.Staff)"
-              >
+                (click)="pickHostSignup(HostSignupScope.Staff)">
                 {{ HostSignupScopeLabel[HostSignupScope.Staff] }}
               </button>
-              <button
-                type="button"
-                class="dropdown-item"
+              <button type="button" class="dropdown-item"
                 [class.active]="form.value.hostSignup === HostSignupScope.Any"
-                (click)="pickHostSignup(HostSignupScope.Any)"
-              >
+                (click)="pickHostSignup(HostSignupScope.Any)">
                 {{ HostSignupScopeLabel[HostSignupScope.Any] }}
               </button>
             </div>
           </div>
         </div>
+        }
       </div>
-      <!-- /dwa dropdowny -->
+
+      <!-- Zapisy uczestników: rodzaj + limity -->
+      @if (form.value.signupRequired) {
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Rodzaj zapisów</label>
+          <div ngbDropdown class="d-block">
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+              {{ participantSignupLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              <button type="button" class="dropdown-item"
+                [class.active]="form.value.participantSignup === ParticipantSignupScope.Whole"
+                (click)="pickParticipantSignup(ParticipantSignupScope.Whole)">
+                Na całe wydarzenie
+              </button>
+              <button type="button" class="dropdown-item"
+                [class.active]="form.value.participantSignup === ParticipantSignupScope.Session"
+                (click)="pickParticipantSignup(ParticipantSignupScope.Session)">
+                Na sesje
+              </button>
+              <button type="button" class="dropdown-item"
+                [class.active]="form.value.participantSignup === ParticipantSignupScope.Both"
+                (click)="pickParticipantSignup(ParticipantSignupScope.Both)">
+                Na sesje i wydarzenie
+              </button>
+            </div>
+          </div>
+        </div>
+
+        @if (form.value.participantSignup === 'WHOLE' || form.value.participantSignup === 'BOTH') {
+        <div>
+          <label class="text-start">Limit na wydarzenie (0 = bez limitu)</label>
+          <input type="number" class="form-control" formControlName="wholeCapacity" min="0" step="1" />
+        </div>
+        }
+
+        @if (form.value.participantSignup === 'SESSION' || form.value.participantSignup === 'BOTH') {
+        <div>
+          <label class="text-start">Limit na sesję (3–5)</label>
+          <input type="number" class="form-control" formControlName="sessionCapacity" min="3" max="5" step="1" />
+        </div>
+        }
+      </div>
+      }
 
       @if (form.value.occurrenceMode==='SINGLE') {
       <div class="form-group">
@@ -276,21 +246,14 @@
       <div class="form-group">
         <label class="text-start">Powtarzanie</label>
         <div ngbDropdown class="d-block">
-          <button
-            type="button"
-            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-            ngbDropdownToggle
-          >
+          <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
             {{ patternLabel() }}
           </button>
           <div ngbDropdownMenu class="dropdown-pane">
             @for (o of patternOptions; track o.value) {
-            <button
-              type="button"
-              class="dropdown-item"
+            <button type="button" class="dropdown-item"
               [class.active]="form.value.recPattern === o.value"
-              (click)="pickPattern(o.value)"
-            >
+              (click)="pickPattern(o.value)">
               {{ o.label }}
             </button>
             }
@@ -298,27 +261,19 @@
         </div>
       </div>
 
-      @if (form.value.recPattern==='WEEKLY_1' ||
-      form.value.recPattern==='WEEKLY_2') {
+      @if (form.value.recPattern==='WEEKLY_1' || form.value.recPattern==='WEEKLY_2') {
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Dzień tygodnia</label>
           <div ngbDropdown class="d-block">
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
               {{ weekdayLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (w of weekdays; track w.value) {
-              <button
-                type="button"
-                class="dropdown-item"
+              <button type="button" class="dropdown-item"
                 [class.active]="form.value.weekday === w.value"
-                (click)="pickWeekday(w.value)"
-              >
+                (click)="pickWeekday(w.value)">
                 {{ w.label }}
               </button>
               }
@@ -329,21 +284,14 @@
         <div>
           <label class="text-start">Wykluczenia w miesiącu</label>
           <div ngbDropdown class="d-block">
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
               {{ excludeNthLongLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (o of excludeNthOptions; track o.value) {
-              <button
-                type="button"
-                class="dropdown-item"
+              <button type="button" class="dropdown-item"
                 [class.active]="form.value.excludeNth === o.value"
-                (click)="pickExcludeNth(o.value)"
-              >
+                (click)="pickExcludeNth(o.value)">
                 {{ excludeNthLongLabelFor(o.value) }}
               </button>
               }
@@ -351,26 +299,21 @@
           </div>
         </div>
       </div>
-      } @if (form.value.recPattern==='MONTHLY_NTH') {
+      }
+
+      @if (form.value.recPattern==='MONTHLY_NTH') {
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Który</label>
           <div ngbDropdown class="d-block">
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
               {{ monthlyNthLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (o of monthlyNthOptions; track o.value) {
-              <button
-                type="button"
-                class="dropdown-item"
+              <button type="button" class="dropdown-item"
                 [class.active]="form.value.monthlyNth === o.value"
-                (click)="pickMonthlyNth(o.value)"
-              >
+                (click)="pickMonthlyNth(o.value)">
                 {{ o.label }}
               </button>
               }
@@ -380,20 +323,14 @@
         <div>
           <label class="text-start">Dzień tygodnia</label>
           <div ngbDropdown class="d-block">
-            <button
-              type="button"
-              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-              ngbDropdownToggle
-            >
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
               {{ monthlyWeekdayLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (w of weekdays; track w.value) {
-              <button
-                class="dropdown-item"
+              <button class="dropdown-item"
                 [class.active]="form.value.monthlyWeekday === w.value"
-                (click)="pickMonthlyWeekday(w.value)"
-              >
+                (click)="pickMonthlyWeekday(w.value)">
                 {{ w.label }}
               </button>
               }
@@ -401,16 +338,12 @@
           </div>
         </div>
       </div>
-      } @if (form.value.recPattern==='MONTHLY_DOM') {
+      }
+
+      @if (form.value.recPattern==='MONTHLY_DOM') {
       <div class="form-group">
         <label class="text-start">Dzień miesiąca</label>
-        <input
-          type="number"
-          min="1"
-          max="31"
-          class="form-control"
-          formControlName="dayOfMonth"
-        />
+        <input type="number" min="1" max="31" class="form-control" formControlName="dayOfMonth" />
       </div>
       }
 
@@ -436,16 +369,12 @@
 
       <div class="actions">
         <button type="submit" class="btn btn-primary">
-          {{ isEdit() ? "Zapisz zmiany" : "Utwórz wydarzenie" }}
+          {{ isEdit() ? 'Zapisz zmiany' : 'Utwórz wydarzenie' }}
         </button>
       </div>
     </form>
   </div>
 
-  <ng-template #eventSuccessToast
-    ><strong>Sukces!</strong> Wydarzenie zostało zapisane.</ng-template
-  >
-  <ng-template #eventErrorToast
-    ><strong>Błąd!</strong> Nie udało się zapisać wydarzenia.</ng-template
-  >
+  <ng-template #eventSuccessToast><strong>Sukces!</strong> Wydarzenie zostało zapisane.</ng-template>
+  <ng-template #eventErrorToast><strong>Błąd!</strong> Nie udało się zapisać wydarzenia.</ng-template>
 </div>
