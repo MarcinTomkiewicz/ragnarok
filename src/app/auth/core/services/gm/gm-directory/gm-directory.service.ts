@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { BackendService } from '../../../../../core/services/backend/backend.service';
 import { IGmData } from '../../../../../core/interfaces/i-gm-profile';
 import { FilterOperator } from '../../../../../core/enums/filterOperator';
@@ -16,22 +16,22 @@ export class GmDirectoryService {
     return this.backend.getAll<IGmData>('v_gm_basic_info');
   }
 
-  getGmById(gmId: string | null): Observable<IGmData | null> {
-    if (!gmId) return of(null);
-    return this.backend
-      .getAll<IGmData>('v_gm_basic_info', undefined, 'asc', {
-        filters: { userId: { value: gmId, operator: FilterOperator.EQ } },
+getGmById(userId: string | null): Observable<IGmData | null> {
+  if (!userId) return of(null);
+
+  return this.backend
+    .getOneByFields<IGmData>('v_gm_basic_info', { userId })
+    .pipe(
+      switchMap(row => {
+        if (row) return of(this.fillGmDefaults(row));
+        console.log(row);
+        
+        return this.backend
+          .getById<IUser>('users', userId)
+          .pipe(map(u => (u ? this.fromUserToMinimalGm(u) : null)));
       })
-      .pipe(
-        map((rows) => rows?.[0] ?? null),
-        switchMap((row) => {
-          if (row) return of(this.fillGmDefaults(row));
-          return this.backend
-            .getById<IUser>('users', gmId)
-            .pipe(map((u) => (u ? this.fromUserToMinimalGm(u) : null)));
-        })
-      );
-  }
+    );
+}
 
   getSystemsForGm(gmId: string): Observable<IRPGSystem[]> {
     return this.backend

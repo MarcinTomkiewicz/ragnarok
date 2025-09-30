@@ -43,7 +43,7 @@
 
         <div class="meta-row">
           <span class="muted">Prowadzący:</span>
-          @if (h.role === HostRole.Staff) {
+          @if (h.gm) {
           <button
             class="btn btn-primary btn-sm"
             (click)="openGmProfile(h, $event)"

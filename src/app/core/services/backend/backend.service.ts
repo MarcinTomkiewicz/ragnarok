@@ -75,7 +75,9 @@ export class BackendService {
     height?: number,
     processImages = true
   ): Observable<T | null> {
-    return from(this.supabase.from(table).select('*').eq('id', id).single()).pipe(
+    return from(
+      this.supabase.from(table).select('*').eq('id', id).single()
+    ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
         const camel = response.data ? toCamelCase<T>(response.data) : null;
@@ -95,8 +97,13 @@ export class BackendService {
     });
   }
 
-  getBySlug<T extends object>(table: string, slug: string): Observable<T | null> {
-    return from(this.supabase.from(table).select('*').eq('slug', slug).single()).pipe(
+  getBySlug<T extends object>(
+    table: string,
+    slug: string
+  ): Observable<T | null> {
+    return from(
+      this.supabase.from(table).select('*').eq('slug', slug).single()
+    ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error || !response.data) return null;
         return toCamelCase<T>(response.data);
@@ -108,7 +115,9 @@ export class BackendService {
     table: string,
     filters?: { [key: string]: any }
   ): Observable<number> {
-    let query = this.supabase.from(table).select('*', { count: 'exact', head: true });
+    let query = this.supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true });
     query = applyFilters(query, filters);
     return from(query).pipe(
       map((response: PostgrestResponse<T>) => {
@@ -120,16 +129,23 @@ export class BackendService {
 
   getOneByFields<T extends object>(
     table: string,
-    filters: Record<string, any>
+    filters: Record<string, any>,
+    width?: number,
+    height?: number,
+    processImages = true
   ): Observable<T | null> {
     let query = this.supabase.from(table).select('*');
     for (const [key, value] of Object.entries(filters)) {
       query = query.eq(toSnakeKey(key), value);
     }
+
     return from(query.maybeSingle()).pipe(
       map((response: PostgrestSingleResponse<any>) => {
         if (response.error || !response.data) return null;
-        return toCamelCase<T>(response.data);
+        const camel = toCamelCase<T>(response.data);
+        return processImages
+          ? this.imageService.processImage(camel, width, height)
+          : camel;
       })
     );
   }
@@ -138,7 +154,9 @@ export class BackendService {
 
   create<T>(table: string, data: T): Observable<T> {
     const snake = toSnakeCase(data);
-    return from(this.supabase.from(table).insert(snake).select('*').single()).pipe(
+    return from(
+      this.supabase.from(table).insert(snake).select('*').single()
+    ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
         return response.data;
@@ -157,7 +175,11 @@ export class BackendService {
     );
   }
 
-  update<T>(table: string, id: string | number, data: Partial<T>): Observable<T> {
+  update<T>(
+    table: string,
+    id: string | number,
+    data: Partial<T>
+  ): Observable<T> {
     const snake = toSnakeCase(data);
     return from(
       this.supabase.from(table).update(snake).eq('id', id).select('*').single()
@@ -169,10 +191,18 @@ export class BackendService {
     );
   }
 
-  upsert<T>(table: string, data: T, conflictTarget: string = 'id'): Observable<T> {
+  upsert<T>(
+    table: string,
+    data: T,
+    conflictTarget: string = 'id'
+  ): Observable<T> {
     const snake = toSnakeCase(data);
     return from(
-      this.supabase.from(table).upsert(snake, { onConflict: conflictTarget }).select('*').single()
+      this.supabase
+        .from(table)
+        .upsert(snake, { onConflict: conflictTarget })
+        .select('*')
+        .single()
     ).pipe(
       map((response: PostgrestSingleResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
@@ -181,11 +211,18 @@ export class BackendService {
     );
   }
 
-  upsertMany<T>(table: string, data: T[], conflictTarget: string = 'id'): Observable<T[]> {
+  upsertMany<T>(
+    table: string,
+    data: T[],
+    conflictTarget: string = 'id'
+  ): Observable<T[]> {
     if (!data.length) return of([]);
     const snake = toSnakeCase(data);
     return from(
-      this.supabase.from(table).upsert(snake, { onConflict: conflictTarget }).select()
+      this.supabase
+        .from(table)
+        .upsert(snake, { onConflict: conflictTarget })
+        .select()
     ).pipe(
       map((response: PostgrestResponse<T>) => {
         if (response.error) throw new Error(response.error.message);
