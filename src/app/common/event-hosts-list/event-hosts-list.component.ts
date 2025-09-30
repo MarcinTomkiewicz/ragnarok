@@ -1,9 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest, forkJoin, of } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import {
+  catchError,
+  distinctUntilChanged,
+  filter,
+  finalize,
+  map,
+  shareReplay,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 
 import { EventHostsService } from '../../core/services/event-hosts/event-hosts.service';
 import { HostCardVM, IEventHost } from '../../core/interfaces/i-event-host';
@@ -28,7 +44,12 @@ import { ParticipantsListComponent } from '../event-participants-list/event-part
 @Component({
   selector: 'app-event-hosts-list',
   standalone: true,
-  imports: [CommonModule, NgbModalModule, SessionSignupButtonComponent, ParticipantsListComponent],
+  imports: [
+    CommonModule,
+    NgbModalModule,
+    SessionSignupButtonComponent,
+    ParticipantsListComponent,
+  ],
   templateUrl: './event-hosts-list.component.html',
   styleUrls: ['./event-hosts-list.component.scss'],
 })
@@ -78,13 +99,18 @@ export class EventHostsListComponent {
       'content_triggers',
       'label',
       'asc',
-      { filters: { is_active: { operator: FilterOperator.EQ, value: true } } } as any,
+      {
+        filters: { is_active: { operator: FilterOperator.EQ, value: true } },
+      } as any,
       undefined,
       undefined,
       false
     )
     .pipe(
-      map((rows) => new Map<string, string>((rows ?? []).map((t) => [t.slug, t.label]))),
+      map(
+        (rows) =>
+          new Map<string, string>((rows ?? []).map((t) => [t.slug, t.label]))
+      ),
       catchError(() => of(new Map<string, string>())),
       shareReplay(1)
     );
@@ -97,7 +123,9 @@ export class EventHostsListComponent {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         filter(([id, date]) => !!id && !!date),
-        distinctUntilChanged(([aId, aDate], [bId, bDate]) => aId === bId && aDate === bDate),
+        distinctUntilChanged(
+          ([aId, aDate], [bId, bDate]) => aId === bId && aDate === bDate
+        ),
         tap(() => {
           this.loadingSig.set(true);
           this.errorSig.set(null);
@@ -105,16 +133,26 @@ export class EventHostsListComponent {
         }),
         switchMap(([id, date]) =>
           combineLatest([
-            this.hosts.getHostsWithSystems(id, date).pipe(catchError(() => of([]))),
+            this.hosts
+              .getHostsWithSystems(id, date)
+              .pipe(catchError(() => of([]))),
             this.triggersMap$,
           ]).pipe(
             // 1) bazowy VM (system, obrazek, triggery->label)
             map(([rows, tmap]) => {
-              const base: HostCardVM[] = (rows as (IEventHost & { systems?: IRPGSystem | null })[]).map((r) => {
-                const system: IRPGSystem | null = r.systemId ? (r as any).systems ?? null : null;
-                const imageUrl = r.imagePath ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512) : null;
+              const base: HostCardVM[] = (
+                rows as (IEventHost & { systems?: IRPGSystem | null })[]
+              ).map((r) => {
+                const system: IRPGSystem | null = r.systemId
+                  ? (r as any).systems ?? null
+                  : null;
+                const imageUrl = r.imagePath
+                  ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512)
+                  : null;
                 const slugs: string[] = (r.triggers ?? []) as string[];
-                const topLabels = slugs.slice(0, 3).map((s) => tmap.get(s) ?? s);
+                const topLabels = slugs
+                  .slice(0, 3)
+                  .map((s) => tmap.get(s) ?? s);
 
                 return {
                   ...r,
@@ -127,23 +165,51 @@ export class EventHostsListComponent {
                 } as HostCardVM;
               });
 
-              const uniqueUserIds = Array.from(new Set(base.map((h) => h.hostUserId).filter(Boolean)));
-              return { base, uniqueUserIds };
+              const allUserIds = Array.from(
+                new Set(base.map((h) => h.hostUserId).filter(Boolean))
+              );
+              return { base, allUserIds };
             }),
-            // 2) dociągnięcie GM + displayName
-            switchMap(({ base, uniqueUserIds }) => {
-              if (!uniqueUserIds.length) return of(base);
-              return forkJoin(uniqueUserIds.map((id) => this.gmDirectory.getGmById(id))).pipe(
-                map((gms) => {
-                  const byId = new Map<string, IGmData | null>();
-                  gms.forEach((gm) => gm && byId.set(gm.userId, gm));
+            switchMap(({ base, allUserIds }) => {
+              const gm$ = allUserIds.length
+                ? forkJoin(
+                    allUserIds.map((id) =>
+                      this.gmDirectory
+                        .getGmById(id)
+                        .pipe(tap((g) => console.log("Hello: " + g?.gmProfileId)), catchError(() => of(null)))
+                    )
+                  )
+                : of([]);
+
+              const users$ = allUserIds.length
+                ? this.backend.getByIds<IUser>('users', allUserIds)
+                : of([]);
+
+              return combineLatest([gm$, users$]).pipe(
+                map(([gms, users]) => {                 
+                  const gmById = new Map<string, IGmData>(
+                    gms
+                      .filter((gm): gm is IGmData => !!gm && !!gm.gmProfileId)
+                      .map((gm) => [gm.userId, gm])
+                  );
+                  const userById = new Map<string, IUser>(
+                    users.map((u) => [u.id, u])
+                  );
+
+                  const nameFromUser = (u?: IUser): string => {
+                    if (!u) return 'Użytkownik';
+                    if (u.useNickname && u.nickname?.trim())
+                      return u.nickname.trim();
+                    return u.firstName?.trim() || u.email || 'Użytkownik';
+                  };
+
                   return base.map((h) => {
-                    const gm = h.role === HostSignupScope.Staff ? (byId.get(h.hostUserId) ?? null) : null;
-                    return {
-                      ...h,
-                      gm,
-                      displayName: this.gmDirectory.gmDisplayName(gm),
-                    } as HostCardVM;
+                    const gm = gmById.get(h.hostUserId) ?? null;
+                    const u = userById.get(h.hostUserId);
+                    const displayName = gm
+                      ? this.gmDirectory.gmDisplayName(gm)
+                      : nameFromUser(u);
+                    return { ...h, gm, displayName } as HostCardVM;
                   });
                 })
               );
@@ -160,11 +226,11 @@ export class EventHostsListComponent {
   }
 
   hostCapacity(h: HostCardVM): number | null {
-  const own = h.sessionCapacity
-  if (own != null && own > 0) return own;
-  const fallback = this.eventCapacity();
-  return (fallback != null && fallback > 0) ? fallback : null;
-}
+    const own = h.sessionCapacity;
+    if (own != null && own > 0) return own;
+    const fallback = this.eventCapacity();
+    return fallback != null && fallback > 0 ? fallback : null;
+  }
 
   openDetails(host: HostCardVM) {
     const ref = this.modal.open(EventSessionDetailsModalComponent, {
@@ -184,7 +250,11 @@ export class EventHostsListComponent {
     event.stopPropagation();
     if (host.role !== HostSignupScope.Staff) return;
     if (host.gm) {
-      const ref = this.modal.open(GmDetailsModalComponent, { size: 'lg', centered: true, scrollable: true });
+      const ref = this.modal.open(GmDetailsModalComponent, {
+        size: 'lg',
+        centered: true,
+        scrollable: true,
+      });
       ref.componentInstance.gm = host.gm;
       return;
     }
@@ -193,12 +263,19 @@ export class EventHostsListComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((gm) => {
         if (!gm) return;
-        const ref = this.modal.open(GmDetailsModalComponent, { size: 'lg', centered: true, scrollable: true });
+        const ref = this.modal.open(GmDetailsModalComponent, {
+          size: 'lg',
+          centered: true,
+          scrollable: true,
+        });
         ref.componentInstance.gm = gm;
       });
   }
 
   listDisplayName(h: HostCardVM): string {
-    return h.displayName || (h.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący');
+    return (
+      h.displayName ||
+      (h.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący')
+    );
   }
 }
