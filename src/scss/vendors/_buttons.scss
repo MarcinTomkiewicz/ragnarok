@@ -103,6 +103,17 @@
       border-color: lighten($border-color, 20%);
       color: lighten($text-color, 15%);
     }
+
+    &.active,
+    &.active:hover,
+    &.active:focus,
+    &.active:focus-visible {
+      background-color: $text-color;
+      color: $bg-color;
+      border-color: $text-color;
+      transform: none;
+      box-shadow: none;
+    }
   }
 
   &.btn-outline-reverse {

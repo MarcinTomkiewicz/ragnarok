@@ -20,6 +20,10 @@
     }
   }
 
+  & .section-header {
+    cursor: pointer;
+  }
+
   & .menu-item {
     font-weight: 600;
     color: $primary-color;

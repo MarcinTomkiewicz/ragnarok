@@ -4,6 +4,17 @@ import { SystemRole } from "../enums/systemRole";
 // Admin zawsze ma dostęp niezależnie od reszty
 import { IUser } from '../interfaces/i-user';
 
+export const hierarchy: CoworkerRoles[] = [
+    CoworkerRoles.User,
+    CoworkerRoles.Member,
+    CoworkerRoles.Golden,
+    CoworkerRoles.Gm,
+    CoworkerRoles.Coordinator,
+    CoworkerRoles.Reception,
+    CoworkerRoles.Coowner,
+    CoworkerRoles.Owner,
+  ];
+
 export function hasMinimumCoworkerRole(
   user: IUser | null | undefined,
   required: CoworkerRoles
@@ -11,16 +22,6 @@ export function hasMinimumCoworkerRole(
   if (!user) return false;
   if (user.role === SystemRole.Admin) return true;
   if (!user.coworker) return false;
-
-  const hierarchy: CoworkerRoles[] = [
-    CoworkerRoles.User,
-    CoworkerRoles.Member,
-    CoworkerRoles.Golden,
-    CoworkerRoles.Gm,
-    CoworkerRoles.Reception,
-    CoworkerRoles.Coowner,
-    CoworkerRoles.Owner,
-  ];
 
   return hierarchy.indexOf(user.coworker) >= hierarchy.indexOf(required);
 }
