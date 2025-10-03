@@ -2,11 +2,11 @@
   <div class="container">
     <h2 class="section-title mb-3">Akta współpracownika</h2>
 
-    @if (!isAllowed()) {
+    @if (!isAccessAllowed()) {
     <div class="notice danger">
       Brak uprawnień. Dostęp wyłącznie dla ról <strong>GM</strong> i wyżej.
     </div>
-    } @else { @if (canPickOthers()) {
+    } @else { @if (canPickOtherUsers()) {
     <div class="create-party-panel user-info-form mb-3">
       <label>Wybierz współpracownika (GM i wyżej)</label>
 
@@ -46,7 +46,7 @@
           </div>
 
           <div class="dropdown-list">
-            @for (u of gmPlusList(); track u.id) {
+            @for (u of gmPlusUsersList(); track u.id) {
             <button class="dropdown-item item" (click)="pickUser(u)">
               <span class="dropdown-grid inner">
                 <span class="col col-name">{{ displayNick(u) }}</span>

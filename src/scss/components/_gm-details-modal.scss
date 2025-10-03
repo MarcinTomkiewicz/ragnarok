@@ -21,9 +21,7 @@
       min-width: 250px;
       max-width: 100%;
       padding: 0.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex-wrapper(row, center, center);
 
       @media (max-width: $breakpoint-md) {
         width: 100%;
@@ -34,23 +32,32 @@
         width: 250px;
         height: 250px;
       }
-    }
 
+    }
+    
     .info-card {
       flex: 2 1 0;
       padding: 1rem;
       height: auto;
+      max-height: 250px;
       @include flex-wrapper(column, flex-start, flex-start);
       border: 1px solid $primary-color;
-
+      
       .card-text-dark {
         margin-bottom: 0.5rem;
       }
-
+      
       .badge {
         font-size: 0.75rem;
         padding: 0.25rem 0.6rem;
         border-radius: 999px;
+      }
+    }
+    @media (max-width: $breakpoint-sm) {
+      @include flex-wrapper(column, start, center);
+
+      .info-card {
+        width: 100%;
       }
     }
   }
