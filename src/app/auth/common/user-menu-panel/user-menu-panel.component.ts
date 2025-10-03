@@ -1,29 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NotificationBucket } from '../../../core/enums/notification-bucket';
-import { CoworkerRoles } from '../../../core/enums/roles';
+
 import { AuthService } from '../../../core/services/auth/auth.service';
+import { CoworkerRoles } from '../../../core/enums/roles';
 import {
   hasMinimumCoworkerRole,
   hasStrictCoworkerRole,
 } from '../../../core/utils/required-roles';
-import { NotificationService } from '../../core/services/notifications/notifications.service';
+
 import { NotificationBadgeComponent } from '../notification-badge/notification-badge.component';
+import { NotificationService } from '../../core/services/notifications/notifications.service';
+import { NotificationBucket } from '../../../core/enums/notification-bucket';
 
-type MenuItem = {
-  label: string;
-  path: string;
-  badgeBucket?: NotificationBucket;
-};
-
-type MenuSection = {
-  title: string;
-  items: MenuItem[];
-  alwaysVisible?: boolean;
-};
-
-const ADMIN_ON_TOP = false;
+type MenuItem = { label: string; path: string; badgeBucket?: NotificationBucket };
+type MenuSection = { title: string; items: MenuItem[] };
 
 @Component({
   selector: 'app-user-menu-panel',
@@ -33,7 +24,7 @@ const ADMIN_ON_TOP = false;
   styleUrls: ['./user-menu-panel.component.scss'],
 })
 export class UserMenuPanelComponent {
-  readonly auth = inject(AuthService);
+  private readonly auth = inject(AuthService);
   private readonly notifications = inject(NotificationService);
 
   readonly NotificationBucket = NotificationBucket;
@@ -49,9 +40,7 @@ export class UserMenuPanelComponent {
   readonly notifLabels = computed(() => {
     const counts = this.notifCounts();
     const out = {} as Record<NotificationBucket, string>;
-    (
-      Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>
-    ).forEach((k) => {
+    (Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>).forEach((k) => {
       const bucket = NotificationBucket[k] as NotificationBucket;
       const n = counts[bucket] ?? 0;
       out[bucket] = n > 99 ? '99+' : String(n);
@@ -59,30 +48,20 @@ export class UserMenuPanelComponent {
     return out;
   });
 
-  readonly menuSections = computed<MenuSection[]>(() => {
-    const u = this.auth.user();
-    const strict = (r: CoworkerRoles) => hasStrictCoworkerRole(u, r);
-    const min = (r: CoworkerRoles) => hasMinimumCoworkerRole(u, r);
+  private readonly isMin = (r: CoworkerRoles) =>
+    hasMinimumCoworkerRole(this.auth.user(), r);
+  private readonly isStrict = (r: CoworkerRoles) =>
+    hasStrictCoworkerRole(this.auth.user(), r);
 
-    // 1) Rezerwacje
+  readonly menuSections = computed<MenuSection[]>(() => {
+    const sections: MenuSection[] = [];
+
     const reservations: MenuItem[] = [
       { label: 'Rezerwuj salkę', path: '/auth/reservation' },
       { label: 'Moje rezerwacje', path: '/auth/my-reservations' },
     ];
-    if (min(CoworkerRoles.Gm)) {
-      reservations.push({
-        label: 'Nadchodzące sesje',
-        path: '/auth/upcoming-sessions',
-      });
-    }
-    if (!ADMIN_ON_TOP && min(CoworkerRoles.Reception)) {
-      reservations.push(
-        { label: 'Nowa rezerwacja', path: '/auth/guest-reservation' },
-        { label: 'Kalendarz rezerwacji', path: '/auth/reservations-calendar' }
-      );
-    }
+    if (reservations.length) sections.push({ title: 'Rezerwacje', items: reservations });
 
-    // 2) Drużyny
     const parties: MenuItem[] = [
       { label: 'Znajdź drużynę', path: '/auth/find-party' },
       { label: 'Załóż drużynę', path: '/auth/create-party' },
@@ -92,125 +71,68 @@ export class UserMenuPanelComponent {
         badgeBucket: NotificationBucket.PartyMembershipRequests,
       },
     ];
-    if (!ADMIN_ON_TOP && min(CoworkerRoles.Reception)) {
-      parties.push({ label: 'Zarządzaj Drużynami', path: '/auth/party-list' });
-    }
+    if (parties.length) sections.push({ title: 'Drużyny', items: parties });
 
-    // 3) Wydarzenia
-    const events: MenuItem[] = [];
-    if (!ADMIN_ON_TOP && min(CoworkerRoles.Reception)) {
-      events.push(
-        { label: 'Zarządzaj wydarzeniami', path: '/auth/events' },
-        { label: 'Nowe wydarzenie', path: '/auth/events/new' }
-      );
-    } else if (min(CoworkerRoles.User)) {
-      events.push({ label: 'Poprowadź wydarzenie', path: '/auth/events' });
-    }
+    const events: MenuItem[] = [{ label: 'Poprowadź wydarzenie', path: '/auth/events' }];
+    if (events.length) sections.push({ title: 'Wydarzenia', items: events });
 
-    // 4) Konto
-    const account: MenuItem[] = [];
-    if (strict(CoworkerRoles.Member)) {
-      account.push({ label: 'Moje benefity', path: '/auth/benefits' });
+    const account: MenuItem[] = [{ label: 'Edytuj dane', path: '/auth/edit-data' }];
+    if (this.isMin(CoworkerRoles.Member)) {
+      account.unshift({ label: 'Moje benefity', path: '/auth/benefits' });
     }
-    account.push({ label: 'Edytuj dane', path: '/auth/edit-data' });
-    if (min(CoworkerRoles.Gm)) {
-      account.push(
+    if (account.length) sections.push({ title: 'Konto', items: account });
+
+    const gm: MenuItem[] = [];
+    if (this.isMin(CoworkerRoles.Gm)) {
+      gm.push(
         { label: 'Profil Mistrza Gry', path: '/auth/manage-gm' },
-        { label: 'Akta zleceniobiorcy', path: '/auth/coworker-files' }
-      );
-    }
-
-    // 5) Grafik i dostępność
-    const schedule: MenuItem[] = [];
-    if (strict(CoworkerRoles.Gm) || strict(CoworkerRoles.Coordinator)) {
-      schedule.push({
-        label: 'Dostępność Mistrza Gry',
-        path: '/auth/availability',
-      });
-    }
-    if (min(CoworkerRoles.Gm)) {
-      schedule.push(
+        { label: 'Nadchodzące sesje', path: '/auth/upcoming-sessions' },
+        { label: 'Dostępność Mistrza Gry', path: '/auth/availability' },
         { label: 'Dostępność na recepcji', path: '/auth/reception-availability' },
         { label: 'Mój grafik', path: '/auth/my-roster' },
-        { label: 'Czas pracy', path: '/auth/work-log' }
+        { label: 'Czas pracy', path: '/auth/work-log' },
+        { label: 'Akta zleceniobiorcy', path: '/auth/coworker-files' },
       );
     }
-    if (min(CoworkerRoles.Reception)) {
-      schedule.push(
+    if (gm.length) sections.push({ title: 'Mistrz Gry', items: gm });
+
+    const reception: MenuItem[] = [];
+    if (this.isMin(CoworkerRoles.Reception)) {
+      reception.push(
+        { label: 'Nowa rezerwacja', path: '/auth/guest-reservation' },
+        { label: 'Kalendarz rezerwacji', path: '/auth/reservations-calendar' },
+        { label: 'Zarządzaj Drużynami', path: '/auth/party-list' },
+        { label: 'Zarządzaj wydarzeniami', path: '/auth/events' },
+        { label: 'Nowe wydarzenie', path: '/auth/events/new' },
         { label: 'Podgląd dostępności', path: '/auth/availability-overview' },
-        { label: 'Ewidencja godzin', path: '/auth/work-logs-overview' }
+        { label: 'Ewidencja godzin', path: '/auth/work-logs-overview' },
+        { label: 'Zarządzaj użytkownikami', path: '/auth/users-admin' },
       );
     }
-    if (strict(CoworkerRoles.Owner)) {
-      schedule.push({ label: 'Grafik recepcji', path: '/auth/reception-roster' });
+    if (this.isStrict(CoworkerRoles.Owner)) {
+      reception.push({ label: 'Grafik recepcji', path: '/auth/reception-roster' });
     }
+    if (reception.length) sections.push({ title: 'Recepcja', items: reception });
 
-    // 6) Administracja: Użytkownicy (Recepcja+)
-    const adminUsers: MenuItem[] = [];
-    if (min(CoworkerRoles.Reception)) {
-      adminUsers.push({ label: 'Zarządzaj użytkownikami', path: '/auth/users-admin' });
-    }
+    const admin: MenuItem[] = [];
+    // Tu dodasz pozycje wyłącznie dla systemowego admina, jeśli zajdzie potrzeba.
+    if (admin.length) sections.push({ title: 'Administracja', items: admin });
 
-    // Alternatywa: Administracja na górze
-    const adminTop: MenuSection | null = ADMIN_ON_TOP
-      ? {
-          title: 'Administracja',
-          items: [
-            // Rezerwacje (stanowiskowe)
-            ...(min(CoworkerRoles.Reception)
-              ? [
-                  { label: 'Nowa rezerwacja', path: '/auth/guest-reservation' },
-                  { label: 'Kalendarz rezerwacji', path: '/auth/reservations-calendar' },
-                ]
-              : []),
-
-            // Drużyny (zarządzanie)
-            ...(min(CoworkerRoles.Reception)
-              ? [{ label: 'Zarządzaj Drużynami', path: '/auth/party-list' }]
-              : []),
-
-            // Wydarzenia (zarządzanie)
-            ...(min(CoworkerRoles.Reception)
-              ? [
-                  { label: 'Zarządzaj wydarzeniami', path: '/auth/events' },
-                  { label: 'Nowe wydarzenie', path: '/auth/events/new' },
-                ]
-              : []),
-
-            // Dostępności / ewidencja / grafik recepcji
-            ...(min(CoworkerRoles.Reception)
-              ? [
-                  { label: 'Podgląd dostępności', path: '/auth/availability-overview' },
-                  { label: 'Ewidencja godzin', path: '/auth/work-logs-overview' },
-                ]
-              : []),
-            ...(strict(CoworkerRoles.Owner)
-              ? [{ label: 'Grafik recepcji', path: '/auth/reception-roster' }]
-              : []),
-
-            // Użytkownicy (Recepcja+)
-            ...adminUsers,
-          ],
-        }
-      : null;
-
-    // Składamy finalną listę
-    const sections: MenuSection[] = [];
-    if (adminTop && adminTop.items.length) sections.push(adminTop);
-
-    if (reservations.length) sections.push({ title: 'Rezerwacje', items: reservations });
-    if (parties.length)      sections.push({ title: 'Drużyny',    items: parties });
-    if (events.length)       sections.push({ title: 'Wydarzenia', items: events });
-    if (account.length)      sections.push({ title: 'Konto',      items: account });
-    if (schedule.length)     sections.push({ title: 'Grafik i dostępność', items: schedule });
-
-    // Gdy administracja NIE jest na górze – osobna sekcja na dole
-    if (!ADMIN_ON_TOP && adminUsers.length) {
-      sections.push({ title: 'Administracja', items: adminUsers });
-    }
-
-    return sections.filter(s => s.items.length);
+    return sections;
   });
+
+  private readonly expanded = signal<Set<string>>(new Set(['Rezerwacje']));
+
+  isExpanded(title: string): boolean {
+    return this.expanded().has(title);
+  }
+
+  toggleSection(title: string) {
+    const next = new Set(this.expanded());
+    if (next.has(title)) next.delete(title);
+    else next.add(title);
+    this.expanded.set(next);
+  }
 
   logout(): void {
     this.auth.logout().subscribe();
