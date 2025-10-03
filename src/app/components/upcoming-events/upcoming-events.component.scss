@@ -25,7 +25,6 @@
     background-color: $bg-color;
     border: 1px solid $border-color;
     border-radius: 10px;
-    // padding: 1rem;
     text-align: center;
     transition: all $transition-fast;
     box-shadow: 0 0 10px rgba($secondary-color, 0.2);
@@ -107,16 +106,7 @@
     }
   }
 
-  .events-swiper {
-    // width: 100%;
-    width: 320px;
-    // // margin: 0 auto;
-    // // padding: 0.5rem 0 1rem;
-    // // overflow: hidden;
-    --swiper-pagination-color: $primary-color;
-    --swiper-navigation-color: $primary-color;
-    --swiper-navigation-size: 18px;
-  }
+  // .events-
 
   //   /* === Swiper web components: shadow DOM parts === */
   //   /* Sam wewnętrzny <div class="swiper"> */

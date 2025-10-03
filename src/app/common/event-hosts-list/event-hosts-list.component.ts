@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  CUSTOM_ELEMENTS_SCHEMA,
   Component,
   DestroyRef,
   computed,
@@ -9,7 +10,7 @@ import {
 } from '@angular/core';
 import { NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { combineLatest, forkJoin, of } from 'rxjs';
+import { combineLatest, forkJoin, fromEvent, of, Subject } from 'rxjs';
 import {
   catchError,
   distinctUntilChanged,
@@ -17,7 +18,9 @@ import {
   finalize,
   map,
   shareReplay,
+  startWith,
   switchMap,
+  takeUntil,
   tap,
 } from 'rxjs/operators';
 
@@ -40,6 +43,9 @@ import { HostSignupScope } from '../../core/enums/events';
 import { SessionSignupButtonComponent } from '../session-signup-button/session-signup-button.component';
 import { IUser } from '../../core/interfaces/i-user';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
+import { register } from 'swiper/element/bundle';
+
+const SMALL_BP = 767;
 
 @Component({
   selector: 'app-event-hosts-list',
@@ -52,6 +58,7 @@ import { ParticipantsListComponent } from '../event-participants-list/event-part
   ],
   templateUrl: './event-hosts-list.component.html',
   styleUrls: ['./event-hosts-list.component.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class EventHostsListComponent {
   // inputs
@@ -78,6 +85,16 @@ export class EventHostsListComponent {
   // do szablonu
   readonly HostRole = HostSignupScope;
   readonly GmStyleTagLabels = GmStyleTagLabels;
+
+  // swiper
+  private readonly destroy$ = new Subject<void>();
+  readonly isSmallScreen = signal<boolean>(false);
+  readonly swiperParams = computed(() => ({
+    slidesPerView: 1,
+    loop: this.itemsSig().length > 1,
+    speed: 500,
+    navigation: true,
+  }));
 
   // refresh per host (po udanym zapisie do tej sesji)
   private readonly refreshByHost = signal<Map<string, number>>(new Map());
@@ -116,6 +133,16 @@ export class EventHostsListComponent {
     );
 
   constructor() {
+    register();
+
+    fromEvent(window, 'resize')
+      .pipe(
+        startWith(null),
+        map(() => window.innerWidth <= SMALL_BP),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((isSm) => this.isSmallScreen.set(isSm));
+
     const id$ = toObservable(this.eventId);
     const date$ = toObservable(this.dateIso);
 
@@ -174,9 +201,10 @@ export class EventHostsListComponent {
               const gm$ = allUserIds.length
                 ? forkJoin(
                     allUserIds.map((id) =>
-                      this.gmDirectory
-                        .getGmById(id)
-                        .pipe(tap((g) => console.log("Hello: " + g?.gmProfileId)), catchError(() => of(null)))
+                      this.gmDirectory.getGmById(id).pipe(
+                        tap((g) => console.log('Hello: ' + g?.gmProfileId)),
+                        catchError(() => of(null))
+                      )
                     )
                   )
                 : of([]);
@@ -186,7 +214,7 @@ export class EventHostsListComponent {
                 : of([]);
 
               return combineLatest([gm$, users$]).pipe(
-                map(([gms, users]) => {                 
+                map(([gms, users]) => {
                   const gmById = new Map<string, IGmData>(
                     gms
                       .filter((gm): gm is IGmData => !!gm && !!gm.gmProfileId)
