@@ -10,7 +10,8 @@
         <div class="status-title">Status</div>
         <div class="status-value">
           @if (isGolden()) { <span class="badge golden">Złoty Bilet</span> }
-          @else if (isMember()) { <span class="badge member">Klub Gier Fabularnych</span> }
+          @else if (isMember()) {
+          <span class="badge member">Klub Gier Fabularnych</span> }
         </div>
         <div class="status-meta">
           <!-- Okres: {{ weekStartLabel() }} – {{ weekEndLabel() }} -->
@@ -22,7 +23,10 @@
         <div class="status-title">Darmowa sesja (4h)</div>
         @if (freeLeft() > 0) {
         <div class="status-value success">Pozostało: 1</div>
-        <a class="button-like button-like-outline mt-2" href="/auth/reservation">
+        <a
+          class="button-like button-like-outline mt-2"
+          href="/auth/reservation"
+        >
           Zarezerwuj salę klubową
         </a>
         } @else {
@@ -51,10 +55,12 @@
         <div class="benefit-note">rabat klubowy</div>
       </div>
 
-      <div class="benefit-card span-2">
-        <div class="benefit-name">Rezerwacje dodatkowe</div>
-        <div class="benefit-value">-10 zł / h</div>
-        <div class="benefit-note">zniżka klubowa</div>
+      <div class="grid-full">
+        <div class="benefit-card span-2">
+          <div class="benefit-name">Rezerwacje dodatkowe</div>
+          <div class="benefit-value">-10 zł / h</div>
+          <div class="benefit-note">zniżka klubowa</div>
+        </div>
       </div>
 
       <div class="benefit-card">
@@ -63,11 +69,13 @@
         <div class="benefit-note">do każdej sesji klubowej</div>
       </div>
 
-      <div class="benefit-card span-3">
-        <div class="benefit-name">Program poleceń</div>
-        <div class="benefit-value">79 zł / miesiąc</div>
-        <div class="benefit-note">
-          dla Ciebie i znajomego w kolejnym miesiącu
+      <div class="grid-full">
+        <div class="benefit-card span-3">
+          <div class="benefit-name">Program poleceń</div>
+          <div class="benefit-value">79 zł / miesiąc</div>
+          <div class="benefit-note">
+            dla Ciebie i znajomego w kolejnym miesiącu
+          </div>
         </div>
       </div>
     </div>

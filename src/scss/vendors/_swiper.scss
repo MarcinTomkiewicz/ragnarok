@@ -1,0 +1,8 @@
+@import 'abstracts/variables';
+
+.swiper {
+    width: 320px;
+    --swiper-pagination-color: $primary-color;
+    --swiper-navigation-color: $primary-color;
+    --swiper-navigation-size: 18px;
+  }

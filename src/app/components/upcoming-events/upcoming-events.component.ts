@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { addDays, isAfter, isEqual, parseISO } from 'date-fns';
+import { fromEvent, Subject } from 'rxjs';
+import { map, startWith, takeUntil } from 'rxjs/operators';
+import { register } from 'swiper/element/bundle';
 
 import { AttractionKind, AttractionKindLabel } from '../../core/enums/events';
 import { EventFull } from '../../core/interfaces/i-events';
@@ -21,20 +24,37 @@ type UpcomingCard = {
   coverUrl: string;
 };
 
+const SMALL_BP = 767;
+
 @Component({
   selector: 'app-upcoming-events',
   standalone: true,
   imports: [RouterLink, CommonModule],
   templateUrl: './upcoming-events.component.html',
   styleUrl: './upcoming-events.component.scss',
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class UpcomingEventsComponent {
+export class UpcomingEventsComponent implements OnInit, OnDestroy {
   private readonly events = inject(EventService);
   private readonly images = inject(ImageStorageService);
 
-  upcomingEvents: UpcomingCard[] = [];
+  private readonly destroy$ = new Subject<void>();
+
+  readonly upcomingEvents = signal<UpcomingCard[]>([]);
+  readonly isSmallScreen = signal<boolean>(false);
+  readonly swiperLoop = computed(() => this.upcomingEvents().length > 1);
 
   ngOnInit(): void {
+    register();
+
+    fromEvent(window, 'resize')
+      .pipe(
+        startWith(null),
+        map(() => window.innerWidth <= SMALL_BP),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((isSm) => this.isSmallScreen.set(isSm));
+
     const todayIso = this.toYmd(new Date());
     const horizonIso = this.toYmd(addDays(new Date(), 60));
 
@@ -50,11 +70,16 @@ export class UpcomingEventsComponent {
           const bDt = parseISO(`${b.occurrenceDate}T${b.startTime}`);
           return aDt.getTime() - bDt.getTime();
         });
-        this.upcomingEvents = occurrences.slice(0, 3);
+        this.upcomingEvents.set(occurrences.slice(0, 3));
       },
       error: (err) =>
         console.error('Nie udało się pobrać nadchodzących wydarzeń', err),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private nextOccurrencesFor(

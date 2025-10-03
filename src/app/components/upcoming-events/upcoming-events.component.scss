@@ -1,0 +1,128 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.upcoming-events-section {
+  @include section-wrapper;
+
+  /* grid dla ≥SM */
+  .events-grid {
+    @include mg-grid(3);
+    justify-items: center;
+    align-items: stretch;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    .events-grid > .event-card:nth-child(3) {
+      grid-column: 1 / -1;
+      justify-self: center;
+    }
+  }
+
+  /* karty wspólne dla grid i swiper */
+  .event-card {
+    position: relative;
+    background-color: $bg-color;
+    border: 1px solid $border-color;
+    border-radius: 10px;
+    text-align: center;
+    transition: all $transition-fast;
+    box-shadow: 0 0 10px rgba($secondary-color, 0.2);
+    display: flex;
+    justify-self: center;
+    width: 280px;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 20px rgba($secondary-color, 0.4);
+    }
+
+    .image-wrapper {
+      position: relative;
+      margin-bottom: 1rem;
+
+      img {
+        width: 100%;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .tag-badges {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 3;
+      }
+    }
+
+    .event-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      padding: 1rem;
+
+      h3 {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        min-height: 4.5rem;
+        @include truncate-lines(3);
+      }
+
+      .event-date {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+
+        img {
+          width: 16px;
+          height: 16px;
+        }
+        span {
+          font-size: $font-size-sm;
+        }
+      }
+
+      p {
+        flex-grow: 0;
+        margin-bottom: 1rem;
+        @include truncate-lines(3);
+      }
+
+      .event-actions {
+        margin-top: auto;
+        .btn {
+          margin-top: 1rem;
+          padding: 0.5rem 1.25rem;
+        }
+      }
+    }
+    @media (min-width: $breakpoint-sm) {
+      .event-card {
+        width: 350px;
+        padding: 1rem;
+      }
+    }
+  }
+
+  // .events-
+
+  //   /* === Swiper web components: shadow DOM parts === */
+  //   /* Sam wewnętrzny <div class="swiper"> */
+  //   .events-swiper::part(container) {
+  //     width: 100%;
+  //     margin: 0 auto;
+  //   }
+
+  //   /* Wrapper na slajdy */
+  //   .events-swiper::part(wrapper) {
+  //     box-sizing: border-box;
+  //   }
+
+  //   /* Każdy pojedynczy slajd */
+  //   .events-swiper::slotted(swiper-slide) {
+  // @include flex-wrapper(row, center, center)
+  //     /* nic z width tutaj nie nadpisujemy przy slidesPerView=1 */
+  //   }
+}

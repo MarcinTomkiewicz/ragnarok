@@ -1,54 +1,113 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
-@import "abstracts/components"; // jeżeli tu trzymacie wspólne utilsy/karty
+@import "abstracts/components";
 
 .benefits-section {
   @include section-wrapper;
 
+  .status-grid,
+  .benefits-grid {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* STATUS – jak wcześniej */
   .status-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    @include mg-grid(2);
     gap: 1rem;
     margin-top: 1.5rem;
 
-    @media (max-width: $breakpoint-sm) {
-      grid-template-columns: 1fr;
-    }
-
     .status-card {
       @extend .mg-card;
-      align-items: flex-start; // nadpisujemy .mg-card (tam jest center)
+      align-items: flex-start;
       text-align: left;
 
-      .status-title { font-weight: 700; margin-bottom: .25rem; }
-      .status-value { font-size: $font-size-xl; font-weight: 800; }
-      .status-value.success { color: $success-color; }
-      .status-value.muted { color: $secondary-text-color; }
-      .status-meta { font-size: $font-size-sm; color: $secondary-text-color; margin-top: .25rem; }
+      .status-title {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      .status-value {
+        font-size: $font-size-xl;
+        font-weight: 800;
+      }
+      .status-value.success {
+        color: $success-color;
+      }
+      .status-value.muted {
+        color: $secondary-text-color;
+      }
+      .status-meta {
+        font-size: $font-size-sm;
+        color: $secondary-text-color;
+        margin-top: 0.25rem;
+      }
     }
   }
 
+  /* BENEFITY */
   .benefits-grid {
-    margin-top: 1rem;
-    display: grid;
+    @include mg-grid(3);
     gap: 1rem;
-    grid-template-columns: repeat(3, 1fr);
-
-    @media (max-width: $breakpoint-mid) { grid-template-columns: repeat(2, 1fr); }
-    @media (max-width: $breakpoint-sm)  { grid-template-columns: 1fr; }
+    margin-top: 1rem;
+    grid-auto-flow: row dense;
 
     .benefit-card {
       @extend .mg-card;
       align-items: flex-start;
       text-align: left;
+      min-width: 0;
 
-      .benefit-name  { font-weight: 700; }
-      .benefit-value { font-size: $font-size-xl; font-weight: 800; margin-top: .25rem; }
-      .benefit-note  { font-size: $font-size-sm; color: $secondary-text-color; margin-top: .25rem; }
+      .benefit-name {
+        font-weight: 700;
+      }
+      .benefit-value {
+        font-size: $font-size-xl;
+        font-weight: 800;
+        margin-top: 0.25rem;
+      }
+      .benefit-note {
+        font-size: $font-size-sm;
+        color: $secondary-text-color;
+        margin-top: 0.25rem;
+      }
     }
 
-    .span-2 { grid-column: span 2; @media (max-width: $breakpoint-sm) { grid-column: auto; } }
-    .span-3 { grid-column: span 3; @media (max-width: $breakpoint-mid) { grid-column: span 2; } @media (max-width: $breakpoint-sm) { grid-column: auto; } }
+    .span-2 {
+      grid-column: span 2;
+    }
+    .span-3 {
+      grid-column: span 3;
+    }
+
+    .grid-full {
+      grid-column: 1 / -1; /* zajmij cały rząd */
+      display: flex;
+      justify-content: center;
+
+      > .benefit-card {
+        width: 100%;
+        max-width: clamp(520px, 90vw, 760px);
+      }
+    }
+
+    /* Gdy mamy już 3 kolumny – pozwól kaflom „wyjść” z wrappera do siatki */
+    @media (min-width: $breakpoint-sm) {
+      .grid-full {
+        display: contents;
+      }
+      .grid-full > .benefit-card {
+        max-width: none; 
+        width: auto;
+      }
+    }
+
+    @media (max-width: $breakpoint-xs) {
+      .span-2,
+      .span-3 {
+        grid-column: auto;
+      }
+    }
   }
 
   .empty-card {

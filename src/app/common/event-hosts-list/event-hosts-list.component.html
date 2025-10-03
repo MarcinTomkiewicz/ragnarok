@@ -10,6 +10,110 @@
     Brak zgłoszonych sesji na najbliższe wydarzenie.
   </div>
   } @else {
+
+  <!-- MOBILE (≤ sm): SWIPER -->
+  @if (isSmallScreen() && itemsSig().length) {
+  <swiper-container
+    class="swiper"
+    slides-per-view="1"
+    loop="true"
+    speed="500"
+    navigation="true"
+    centered-slides="true"
+  >
+    @for (h of itemsSig(); track h.id) {
+    <swiper-slide>
+      <article
+        class="session-card card-dark"
+        (click)="openDetails(h)"
+        role="button"
+        tabindex="0"
+      >
+        <div class="content">
+          <h4 class="title-dark session-title">{{ h.title || "Sesja" }}</h4>
+
+          @if (h.imageUrl) {
+          <div class="image-wrap">
+            <img
+              [src]="h.imageUrl"
+              [alt]="h.title || 'Ilustracja sesji'"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          }
+
+          <div class="meta-row">
+            <span class="muted">System:</span>
+            <span class="text-start">{{ h.system?.name || "—" }}</span>
+          </div>
+
+          <div class="meta-row">
+            <span class="muted">Salka:</span>
+            <span class="text-start">{{ h.roomName || "—" }}</span>
+          </div>
+
+          <div class="meta-row">
+            <span class="muted">Prowadzący:</span>
+            @if (h.gm) {
+            <button
+              class="btn btn-primary btn-sm"
+              (click)="openGmProfile(h, $event)"
+            >
+              {{ listDisplayName(h) }}
+            </button>
+            } @else {
+            <span>{{ listDisplayName(h) }}</span>
+            }
+          </div>
+
+          <div class="meta-row tags mt-3">
+            @if (h.playstyleTags.length) { @for (t of h.playstyleTags; track t)
+            {
+            <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
+            } }
+          </div>
+
+          <div class="triggers mt-2">
+            @if (h.triggersTop.length) { @for (tr of h.triggersTop; track tr) {
+            <span class="tag-badge violet">{{ tr }}</span>
+            } } @if (h.triggersExtraCount > 0) {
+            <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
+            }
+          </div>
+
+          @if (showSignup()) {
+          <div class="actions mt-3" (click)="$event.stopPropagation()">
+            <app-session-signup-button
+              [eventId]="eventId()"
+              [dateIso]="dateIso()"
+              [hostId]="h.id"
+              [currentUser]="currentUser()"
+              [capacity]="hostCapacity(h)"
+              (signed)="onSessionSigned(h.id)"
+            />
+          </div>
+
+          <div class="participants mt-2" (click)="$event.stopPropagation()">
+            <app-participants-list
+              [eventId]="eventId()"
+              [dateIso]="dateIso()"
+              [scope]="{ hostId: h.id }"
+              [currentUser]="currentUser()"
+              [refreshKey]="getRefreshKey(h.id)"
+              [capacity]="hostCapacity(h)"
+            />
+          </div>
+          }
+        </div>
+      </article>
+    </swiper-slide>
+    }
+  </swiper-container>
+
+  } @else {
+
+  <!-- DESKTOP/TABLET: GRID -->
   <div class="sessions-grid">
     @for (h of itemsSig(); track h.id) {
     <article
@@ -20,11 +124,12 @@
     >
       <div class="content">
         <h4 class="title-dark session-title">{{ h.title || "Sesja" }}</h4>
+
         @if (h.imageUrl) {
         <div class="image-wrap">
           <img
             [src]="h.imageUrl"
-            alt="{{ h.title || 'Ilustracja sesji' }}"
+            [alt]="h.title || 'Ilustracja sesji'"
             loading="lazy"
             decoding="async"
           />
@@ -96,5 +201,5 @@
     </article>
     }
   </div>
-  }
+  } }
 </div>
