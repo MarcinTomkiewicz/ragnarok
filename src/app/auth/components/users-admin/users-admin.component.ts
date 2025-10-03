@@ -1,17 +1,41 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, viewChild, TemplateRef } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+  TemplateRef,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, map, tap } from 'rxjs';
+import {
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  of,
+  map,
+  tap,
+} from 'rxjs';
 
-import { BackendService, IPagination } from '../../../core/services/backend/backend.service';
+import {
+  BackendService,
+  IPagination,
+} from '../../../core/services/backend/backend.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { AuthService } from '../../../core/services/auth/auth.service';
 
-import { hasMinimumCoworkerRole, hierarchy as CoworkerHierarchy } from '../../../core/utils/required-roles';
+import {
+  hasMinimumCoworkerRole,
+  hierarchy as CoworkerHierarchy,
+} from '../../../core/utils/required-roles';
 import { CoworkerRoles, RoleDisplay } from '../../../core/enums/roles';
 import { IUser } from '../../../core/interfaces/i-user';
 import { FilterOperator } from '../../../core/enums/filterOperator';
+
+type UserRoleUpsert = { id: string; coworker: CoworkerRoles | null };
 
 @Component({
   selector: 'app-users-admin',
@@ -38,7 +62,9 @@ export class UsersAdminComponent implements OnInit {
   // Role do wyboru: kolejność z hierarchy, przycięte do Reception (włącznie)
   readonly allowedRoleOptions = computed<CoworkerRoles[]>(() => {
     const idx = CoworkerHierarchy.indexOf(CoworkerRoles.Reception);
-    return idx >= 0 ? CoworkerHierarchy.slice(0, idx + 1) : [CoworkerRoles.User];
+    return idx >= 0
+      ? CoworkerHierarchy.slice(0, idx + 1)
+      : [CoworkerRoles.User];
   });
 
   roleLabelFromEnum(r: CoworkerRoles): string {
@@ -51,8 +77,12 @@ export class UsersAdminComponent implements OnInit {
   readonly currentPage = signal<number>(1);
 
   // ngb-pagination dwukierunkowo z property
-  get currentPageRef(): number { return this.currentPage(); }
-  set currentPageRef(v: number) { this.currentPage.set(v); }
+  get currentPageRef(): number {
+    return this.currentPage();
+  }
+  set currentPageRef(v: number) {
+    this.currentPage.set(v);
+  }
 
   readonly totalUsers = signal<number>(0);
   readonly pageUsers = signal<IUser[]>([]);
@@ -64,16 +94,19 @@ export class UsersAdminComponent implements OnInit {
   // --- wyszukiwarka (RxJS) ---
   private readonly searchInput$ = new Subject<string>();
   readonly searchQuery = signal<string>('');
-  readonly isSearchActive = computed(() => this.searchQuery().trim().length >= 3);
+  readonly isSearchActive = computed(
+    () => this.searchQuery().trim().length >= 3
+  );
 
   readonly filteredUsers = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
     if (q.length < 3) return [];
     const src = this.allUsers();
-    return src.filter(u =>
-      (u.email ?? '').toLowerCase().includes(q) ||
-      (u.firstName ?? '').toLowerCase().includes(q) ||
-      (u.nickname ?? '').toLowerCase().includes(q)
+    return src.filter(
+      (u) =>
+        (u.email ?? '').toLowerCase().includes(q) ||
+        (u.firstName ?? '').toLowerCase().includes(q) ||
+        (u.nickname ?? '').toLowerCase().includes(q)
     );
   });
 
@@ -87,7 +120,8 @@ export class UsersAdminComponent implements OnInit {
   });
 
   // --- toasty ---
-  readonly saveSuccessToast = viewChild<TemplateRef<unknown>>('saveSuccessToast');
+  readonly saveSuccessToast =
+    viewChild<TemplateRef<unknown>>('saveSuccessToast');
   readonly saveErrorToast = viewChild<TemplateRef<unknown>>('saveErrorToast');
 
   // --- lifecycle ---
@@ -110,7 +144,9 @@ export class UsersAdminComponent implements OnInit {
 
           return this.backend
             .getAll<IUser>('users', 'firstName', 'asc', {
-              filters: { isTestUser: { operator: FilterOperator.EQ, value: false } },
+              filters: {
+                isTestUser: { operator: FilterOperator.EQ, value: false },
+              },
             })
             .pipe(
               tap((list) => {
@@ -131,22 +167,22 @@ export class UsersAdminComponent implements OnInit {
   }
 
   // Przyciski do wyboru pageSize (data-size na buttonie)
-onPageSizeClick(ev: Event) {
-  const target = ev.target as HTMLElement | null;
-  const btn = target?.closest('button');
-  const raw = btn?.getAttribute('data-size') ?? '';
-  const size = Number(raw);
+  onPageSizeClick(ev: Event) {
+    const target = ev.target as HTMLElement | null;
+    const btn = target?.closest('button');
+    const raw = btn?.getAttribute('data-size') ?? '';
+    const size = Number(raw);
 
-  if (!Number.isFinite(size)) return;
-  if (this.pageSize() === size) return;
+    if (!Number.isFinite(size)) return;
+    if (this.pageSize() === size) return;
 
-  this.pageSize.set(size);
-  this.currentPage.set(1);
+    this.pageSize.set(size);
+    this.currentPage.set(1);
 
-  if (!this.isSearchActive()) {
-    this.loadPage(1);
+    if (!this.isSearchActive()) {
+      this.loadPage(1);
+    }
   }
-}
 
   onPageChange(page: number) {
     this.currentPage.set(page);
@@ -173,29 +209,45 @@ onPageSizeClick(ev: Event) {
   onRoleChange(ev: Event, user: IUser) {
     const candidate = this.readRoleFromEvent(ev);
     if (candidate === null) return;
+    if (user.coworker === candidate) return;
 
-    this.backend.update<IUser>('users', user.id, { coworker: candidate }).subscribe({
-      next: (updated) => {
-        this.pageUsers.update(list =>
-          list.map(u => (u.id === updated.id ? { ...u, coworker: updated.coworker } : u))
-        );
-        if (this.allUsersFetched()) {
-          this.allUsers.update(list =>
-            list.map(u => (u.id === updated.id ? { ...u, coworker: updated.coworker } : u))
+    this.backend
+      .update<IUser>('users', user.id, { coworker: candidate })
+      .subscribe({
+        next: (updated) => {
+          // lokalny stan
+          this.pageUsers.update((list) =>
+            list.map((u) =>
+              u.id === updated.id ? { ...u, coworker: updated.coworker } : u
+            )
           );
-        }
-        const t = this.saveSuccessToast();
-        if (t) {
-          this.toast.show({ template: t, classname: 'bg-success text-white', header: 'Zmieniono rolę' });
-        }
-      },
-      error: () => {
-        const t = this.saveErrorToast();
-        if (t) {
-          this.toast.show({ template: t, classname: 'bg-danger text-white', header: 'Nie udało się zapisać' });
-        }
-      },
-    });
+          if (this.allUsersFetched()) {
+            this.allUsers.update((list) =>
+              list.map((u) =>
+                u.id === updated.id ? { ...u, coworker: updated.coworker } : u
+              )
+            );
+          }
+          const t = this.saveSuccessToast();
+          if (t) {
+            this.toast.show({
+              template: t,
+              classname: 'bg-success text-white',
+              header: 'Zmieniono rolę',
+            });
+          }
+        },
+        error: () => {
+          const t = this.saveErrorToast();
+          if (t) {
+            this.toast.show({
+              template: t,
+              classname: 'bg-danger text-white',
+              header: 'Nie udało się zapisać',
+            });
+          }
+        },
+      });
   }
 
   // --- pobranie strony bez wyszukiwarki ---
@@ -206,18 +258,20 @@ onPageSizeClick(ev: Event) {
       filters: { isTestUser: { operator: FilterOperator.EQ, value: false } },
     };
 
-    this.backend.getAll<IUser>('users', 'firstName', 'asc', pagination).subscribe({
-      next: (users) => {
-        this.pageUsers.set(users);
-        this.backend.getCount<IUser>('users', pagination.filters).subscribe({
-          next: (count) => this.totalUsers.set(count),
-          error: () => this.totalUsers.set(users.length),
-        });
-      },
-      error: () => {
-        this.pageUsers.set([]);
-        this.totalUsers.set(0);
-      },
-    });
+    this.backend
+      .getAll<IUser>('users', 'firstName', 'asc', pagination)
+      .subscribe({
+        next: (users) => {
+          this.pageUsers.set(users);
+          this.backend.getCount<IUser>('users', pagination.filters).subscribe({
+            next: (count) => this.totalUsers.set(count),
+            error: () => this.totalUsers.set(users.length),
+          });
+        },
+        error: () => {
+          this.pageUsers.set([]);
+          this.totalUsers.set(0);
+        },
+      });
   }
 }
