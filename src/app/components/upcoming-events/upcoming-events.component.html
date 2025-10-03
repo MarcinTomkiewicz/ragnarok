@@ -5,30 +5,83 @@
       Dołącz do nas na specjalne wydarzenia, warsztaty i sesje one-shot.
     </p>
 
-    <div class="events-grid">
-      @for (event of upcomingEvents; track trackBySlugDate(event)) {
+    <!-- SMALL: swiper -->
+    @if (isSmallScreen() && upcomingEvents().length) {
+    <!-- space-between="16" -->
+    <swiper-container
+      class="events-swiper"
+      slides-per-view="1"
+      loop="true"
+      speed="500"
+      navigation="true"
+      centered-slides="true"
+    >
+      @for (event of upcomingEvents(); track trackBySlugDate(event)) {
+      <swiper-slide>
         <div class="event-card">
           <div class="image-wrapper">
             <img [src]="event.coverUrl" [alt]="event.name" />
-            <div class="chip-row">
-              <span class="chip chip-kind">{{ getAttractionLabel(event.attractionKind) }}</span>
-              @if (event.isForBeginners) { <span class="chip chip-beginners">Dla początkujących</span> }
+            <div class="tag-badges">
+              <span class="tag-badge amber">{{
+                getAttractionLabel(event.attractionKind)
+              }}</span>
+              @if (event.isForBeginners) {
+              <span class="tag-badge green">Dla początkujących</span>
+              }
             </div>
           </div>
           <div class="event-content">
             <h3>{{ event.name }}</h3>
             <div class="event-date">
               <img src="/icons/calendar.svg" alt="calendar" />
-              <span>{{ event.occurrenceDate | date : 'dd.MM.yyyy' }}</span>
+              <span>{{ event.occurrenceDate | date : "dd.MM.yyyy" }}</span>
             </div>
-            <p>{{ event.shortDescription }}</p>
+            <p class="event-description">{{ event.shortDescription }}</p>
             <div class="event-actions">
-              <a [routerLink]="detailsLink(event)" class="button-like button-like-outline">Szczegóły</a>
+              <a
+                [routerLink]="detailsLink(event)"
+                class="button-like button-like-outline"
+                >Szczegóły</a
+              >
             </div>
           </div>
         </div>
+      </swiper-slide>
+      }
+    </swiper-container>
+    } @else {
+    <div class="events-grid">
+      @for (event of upcomingEvents(); track trackBySlugDate(event)) {
+      <div class="event-card">
+        <div class="image-wrapper">
+          <img [src]="event.coverUrl" [alt]="event.name" />
+          <div class="tag-badges">
+            <span class="tag-badge amber">{{
+              getAttractionLabel(event.attractionKind)
+            }}</span>
+            @if (event.isForBeginners) {
+            <span class="tag-badge green">Dla początkujących</span>
+            }
+          </div>
+        </div>
+        <div class="event-content">
+          <h3>{{ event.name }}</h3>
+          <div class="event-date">
+            <img src="/icons/calendar.svg" alt="calendar" />
+            <span>{{ event.occurrenceDate | date : "dd.MM.yyyy" }}</span>
+          </div>
+          <p>{{ event.shortDescription }}</p>
+          <div class="event-actions">
+            <a
+              [routerLink]="detailsLink(event)"
+              class="button-like button-like-outline"
+              >Szczegóły</a
+            >
+          </div>
+        </div>
+      </div>
       }
     </div>
-
+    }
   </div>
 </section>

@@ -16,7 +16,7 @@
 @import "components/navbar";
 @import "components/audience-section";
 @import "components/how-it-works";
-@import "components/upcoming-events";
+// @import "components/upcoming-events";
 @import "components/meet-the-team";
 @import "components/testimonial";
 @import "components/about";
@@ -86,6 +86,8 @@
 @import "vendors/list";
 @import "vendors/forms";
 @import "vendors/texts";
+
+// @import 'swiper/element/css';
 
 @import "@fontsource/modern-antiqua/index.css";
 @import "@fontsource/cinzel/index.css";
