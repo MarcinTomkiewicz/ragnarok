@@ -59,16 +59,10 @@ export class UserMenuPanelComponent {
     return out;
   });
 
-  // Przełącznik alternatywnego układu:
-
   readonly menuSections = computed<MenuSection[]>(() => {
     const u = this.auth.user();
     const strict = (r: CoworkerRoles) => hasStrictCoworkerRole(u, r);
     const min = (r: CoworkerRoles) => hasMinimumCoworkerRole(u, r);
-
-    // =========================
-    // Sekcje user-facing
-    // =========================
 
     // 1) Rezerwacje
     const reservations: MenuItem[] = [
@@ -80,7 +74,8 @@ export class UserMenuPanelComponent {
         label: 'Nadchodzące sesje',
         path: '/auth/upcoming-sessions',
       });
-    } if (!ADMIN_ON_TOP && min(CoworkerRoles.Reception)) {
+    }
+    if (!ADMIN_ON_TOP && min(CoworkerRoles.Reception)) {
       reservations.push(
         { label: 'Nowa rezerwacja', path: '/auth/guest-reservation' },
         { label: 'Kalendarz rezerwacji', path: '/auth/reservations-calendar' }
@@ -112,7 +107,7 @@ export class UserMenuPanelComponent {
       events.push({ label: 'Poprowadź wydarzenie', path: '/auth/events' });
     }
 
-    // 4) Konto (benefity na górze + Akta współpracownika tutaj)
+    // 4) Konto
     const account: MenuItem[] = [];
     if (strict(CoworkerRoles.Member)) {
       account.push({ label: 'Moje benefity', path: '/auth/benefits' });
@@ -125,9 +120,9 @@ export class UserMenuPanelComponent {
       );
     }
 
-    // 5) Grafik i dostępność (na końcu menu, sprawy pracownicze)
+    // 5) Grafik i dostępność
     const schedule: MenuItem[] = [];
-    if (strict(CoworkerRoles.Gm)) {
+    if (strict(CoworkerRoles.Gm) || strict(CoworkerRoles.Coordinator)) {
       schedule.push({
         label: 'Dostępność Mistrza Gry',
         path: '/auth/availability',
@@ -135,10 +130,7 @@ export class UserMenuPanelComponent {
     }
     if (min(CoworkerRoles.Gm)) {
       schedule.push(
-        {
-          label: 'Dostępność na recepcji',
-          path: '/auth/reception-availability',
-        },
+        { label: 'Dostępność na recepcji', path: '/auth/reception-availability' },
         { label: 'Mój grafik', path: '/auth/my-roster' },
         { label: 'Czas pracy', path: '/auth/work-log' }
       );
@@ -150,15 +142,16 @@ export class UserMenuPanelComponent {
       );
     }
     if (strict(CoworkerRoles.Owner)) {
-      schedule.push({
-        label: 'Grafik recepcji',
-        path: '/auth/reception-roster',
-      });
+      schedule.push({ label: 'Grafik recepcji', path: '/auth/reception-roster' });
     }
 
-    // =========================
+    // 6) Administracja: Użytkownicy (Recepcja+)
+    const adminUsers: MenuItem[] = [];
+    if (min(CoworkerRoles.Reception)) {
+      adminUsers.push({ label: 'Zarządzaj użytkownikami', path: '/auth/users-admin' });
+    }
+
     // Alternatywa: Administracja na górze
-    // =========================
     const adminTop: MenuSection | null = ADMIN_ON_TOP
       ? {
           title: 'Administracja',
@@ -167,10 +160,7 @@ export class UserMenuPanelComponent {
             ...(min(CoworkerRoles.Reception)
               ? [
                   { label: 'Nowa rezerwacja', path: '/auth/guest-reservation' },
-                  {
-                    label: 'Kalendarz rezerwacji',
-                    path: '/auth/reservations-calendar',
-                  },
+                  { label: 'Kalendarz rezerwacji', path: '/auth/reservations-calendar' },
                 ]
               : []),
 
@@ -187,43 +177,39 @@ export class UserMenuPanelComponent {
                 ]
               : []),
 
-            // Dostępności / ewidencja / grafik recepcji (operacyjne)
+            // Dostępności / ewidencja / grafik recepcji
             ...(min(CoworkerRoles.Reception)
               ? [
-                  {
-                    label: 'Podgląd dostępności',
-                    path: '/auth/availability-overview',
-                  },
-                  {
-                    label: 'Ewidencja godzin',
-                    path: '/auth/work-logs-overview',
-                  },
+                  { label: 'Podgląd dostępności', path: '/auth/availability-overview' },
+                  { label: 'Ewidencja godzin', path: '/auth/work-logs-overview' },
                 ]
               : []),
             ...(strict(CoworkerRoles.Owner)
               ? [{ label: 'Grafik recepcji', path: '/auth/reception-roster' }]
               : []),
+
+            // Użytkownicy (Recepcja+)
+            ...adminUsers,
           ],
         }
       : null;
 
-    // =========================
     // Składamy finalną listę
-    // =========================
     const sections: MenuSection[] = [];
-
     if (adminTop && adminTop.items.length) sections.push(adminTop);
 
-    // Kolejność sekcji wg Twoich wytycznych
-    if (reservations.length)
-      sections.push({ title: 'Rezerwacje', items: reservations });
-    if (parties.length) sections.push({ title: 'Drużyny', items: parties });
-    if (events.length) sections.push({ title: 'Wydarzenia', items: events });
-    if (account.length) sections.push({ title: 'Konto', items: account });
-    if (schedule.length)
-      sections.push({ title: 'Grafik i dostępność', items: schedule });
+    if (reservations.length) sections.push({ title: 'Rezerwacje', items: reservations });
+    if (parties.length)      sections.push({ title: 'Drużyny',    items: parties });
+    if (events.length)       sections.push({ title: 'Wydarzenia', items: events });
+    if (account.length)      sections.push({ title: 'Konto',      items: account });
+    if (schedule.length)     sections.push({ title: 'Grafik i dostępność', items: schedule });
 
-    return sections.filter((s) => s.items.length);
+    // Gdy administracja NIE jest na górze – osobna sekcja na dole
+    if (!ADMIN_ON_TOP && adminUsers.length) {
+      sections.push({ title: 'Administracja', items: adminUsers });
+    }
+
+    return sections.filter(s => s.items.length);
   });
 
   logout(): void {
