@@ -9,6 +9,8 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 2rem;
+        width: $container-width-lg;
+    max-width: 100%;
 
     @media (max-width: $breakpoint-sm) {
       grid-template-columns: 1fr;
@@ -48,12 +50,10 @@
     }
   }
 
-  // .contact-section .contact-box p a {
-  //   @extend .link-gold-hover;
-  // }
-
   .map-wrapper {
     margin-top: 3rem;
+    width: $container-width-lg;
+    max-width: 100%;
 
     .contact-title {
       font-size: 1.1rem;

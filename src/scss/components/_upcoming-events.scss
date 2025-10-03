@@ -1,135 +1,135 @@
-@import "abstracts/variables";
-@import "abstracts/mixins";
-@import "abstracts/components";
+// @import "abstracts/variables";
+// @import "abstracts/mixins";
+// @import "abstracts/components";
 
-.upcoming-events-section {
-  @include section-wrapper;
+// .upcoming-events-section {
+//   @include section-wrapper;
 
-  /* grid dla ≥SM */
-  .events-grid {
-    @include mg-grid(3);
-    justify-items: center;
-    align-items: stretch;
-  }
+//   /* grid dla ≥SM */
+//   .events-grid {
+//     @include mg-grid(3);
+//     justify-items: center;
+//     align-items: stretch;
+//   }
 
-  @media (max-width: $breakpoint-md) {
-    .events-grid > .event-card:nth-child(3) {
-      grid-column: 1 / -1;
-      justify-self: center;
-    }
-  }
+//   @media (max-width: $breakpoint-md) {
+//     .events-grid > .event-card:nth-child(3) {
+//       grid-column: 1 / -1;
+//       justify-self: center;
+//     }
+//   }
 
-  /* karty wspólne dla grid i swiper */
-  .event-card {
-    position: relative;
-    background-color: $bg-color;
-    border: 1px solid $border-color;
-    border-radius: 10px;
-    padding: 1rem;
-    text-align: center;
-    transition: all $transition-fast;
-    box-shadow: 0 0 10px rgba($secondary-color, 0.2);
-    display: flex;
-    flex-direction: column;
-    max-width: 357px;
-    width: 100%;
+//   /* karty wspólne dla grid i swiper */
+//   .event-card {
+//     position: relative;
+//     background-color: $bg-color;
+//     border: 1px solid $border-color;
+//     border-radius: 10px;
+//     padding: 1rem;
+//     text-align: center;
+//     transition: all $transition-fast;
+//     box-shadow: 0 0 10px rgba($secondary-color, 0.2);
+//     display: flex;
+//     flex-direction: column;
+//     max-width: 357px;
+//     width: 100%;
 
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 0 20px rgba($secondary-color, 0.4);
-    }
+//     &:hover {
+//       transform: translateY(-5px);
+//       box-shadow: 0 0 20px rgba($secondary-color, 0.4);
+//     }
 
-    .image-wrapper {
-      position: relative;
-      margin-bottom: 1rem;
+//     .image-wrapper {
+//       position: relative;
+//       margin-bottom: 1rem;
 
-      img {
-        width: 100%;
-        border-radius: 8px;
-        object-fit: cover;
-      }
+//       img {
+//         width: 100%;
+//         border-radius: 8px;
+//         object-fit: cover;
+//       }
 
-      .tag-badges {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        z-index: 3;
-      }
-    }
+//       .tag-badges {
+//         position: absolute;
+//         top: 8px;
+//         left: 8px;
+//         z-index: 3;
+//       }
+//     }
 
-    .event-content {
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-      padding: 1rem;
+//     .event-content {
+//       display: flex;
+//       flex-direction: column;
+//       flex-grow: 1;
+//       padding: 1rem;
 
-      h3 {
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-        min-height: 4.5rem;
-        @include truncate-lines(3);
-      }
+//       h3 {
+//         margin-top: 0.5rem;
+//         margin-bottom: 0.5rem;
+//         min-height: 4.5rem;
+//         @include truncate-lines(3);
+//       }
 
-      .event-date {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
+//       .event-date {
+//         display: flex;
+//         align-items: center;
+//         justify-content: center;
+//         gap: 0.5rem;
+//         margin-bottom: 1rem;
 
-        img { width: 16px; height: 16px; }
-        span { font-size: $font-size-sm; }
-      }
+//         img { width: 16px; height: 16px; }
+//         span { font-size: $font-size-sm; }
+//       }
 
-      p {
-        flex-grow: 0;
-        margin-bottom: 1rem;
-        @include truncate-lines(3);
-      }
+//       p {
+//         flex-grow: 0;
+//         margin-bottom: 1rem;
+//         @include truncate-lines(3);
+//       }
 
 
-      .event-actions {
-        margin-top: auto;
-        .btn { margin-top: 1rem; padding: 0.5rem 1.25rem; }
-      }
-    }
-  }
+//       .event-actions {
+//         margin-top: auto;
+//         .btn { margin-top: 1rem; padding: 0.5rem 1.25rem; }
+//       }
+//     }
+//   }
 
-  .events-swiper {
-    width: 100%;
-    max-width: 380px;
-    margin: 0 auto;
-    padding: 0.5rem 0 1rem;
-    overflow: hidden;
-    --swiper-pagination-color: $primary-color;
-    --swiper-navigation-color: $primary-color;
-    --swiper-navigation-size: 18px;
-  }
+//   .events-swiper {
+//     width: 100%;
+//     max-width: 380px;
+//     margin: 0 auto;
+//     padding: 0.5rem 0 1rem;
+//     overflow: hidden;
+//     --swiper-pagination-color: $primary-color;
+//     --swiper-navigation-color: $primary-color;
+//     --swiper-navigation-size: 18px;
+//   }
 
-  /* === Swiper web components: shadow DOM parts === */
-  /* Sam wewnętrzny <div class="swiper"> */
-  .events-swiper::part(container) {
-    width: 100%;
-    margin: 0 auto;
-  }
+//   /* === Swiper web components: shadow DOM parts === */
+//   /* Sam wewnętrzny <div class="swiper"> */
+//   .events-swiper::part(container) {
+//     width: 100%;
+//     margin: 0 auto;
+//   }
 
-  /* Wrapper na slajdy */
-  .events-swiper::part(wrapper) {
-    box-sizing: border-box;
-  }
+//   /* Wrapper na slajdy */
+//   .events-swiper::part(wrapper) {
+//     box-sizing: border-box;
+//   }
 
-  /* Każdy pojedynczy slajd */
-  .events-swiper::part(slide) {
-    display: flex;            /* żeby wyśrodkować kartę */
-    justify-content: center;
-    /* nic z width tutaj nie nadpisujemy przy slidesPerView=1 */
-  }
+//   /* Każdy pojedynczy slajd */
+//   .events-swiper::part(slide) {
+//     display: flex;            /* żeby wyśrodkować kartę */
+//     justify-content: center;
+//     /* nic z width tutaj nie nadpisujemy przy slidesPerView=1 */
+//   }
 
-  /* W trybie swipera karta nie potrzebuje własnego max-width,
-     bo i tak siedzi w slajdzie o szerokości kontenera. */
-  .events-swiper .event-card {
-    width: 100%;
-    max-width: none;
-  }
+//   /* W trybie swipera karta nie potrzebuje własnego max-width,
+//      bo i tak siedzi w slajdzie o szerokości kontenera. */
+//   .events-swiper .event-card {
+//     width: 100%;
+//     max-width: none;
+//   }
 
-}
+// }

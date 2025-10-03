@@ -25,14 +25,13 @@
     background-color: $bg-color;
     border: 1px solid $border-color;
     border-radius: 10px;
-    padding: 1rem;
+    // padding: 1rem;
     text-align: center;
     transition: all $transition-fast;
     box-shadow: 0 0 10px rgba($secondary-color, 0.2);
     display: flex;
-    flex-direction: column;
-    max-width: 357px;
-    width: 100%;
+    justify-self: center;
+    width: 280px;
 
     &:hover {
       transform: translateY(-5px);
@@ -77,8 +76,13 @@
         gap: 0.5rem;
         margin-bottom: 1rem;
 
-        img { width: 16px; height: 16px; }
-        span { font-size: $font-size-sm; }
+        img {
+          width: 16px;
+          height: 16px;
+        }
+        span {
+          font-size: $font-size-sm;
+        }
       }
 
       p {
@@ -87,49 +91,48 @@
         @include truncate-lines(3);
       }
 
-
       .event-actions {
         margin-top: auto;
-        .btn { margin-top: 1rem; padding: 0.5rem 1.25rem; }
+        .btn {
+          margin-top: 1rem;
+          padding: 0.5rem 1.25rem;
+        }
+      }
+    }
+    @media (min-width: $breakpoint-sm) {
+      .event-card {
+        width: 350px;
+        padding: 1rem;
       }
     }
   }
 
   .events-swiper {
-    width: 100%;
-    max-width: 380px;
-    margin: 0 auto;
-    padding: 0.5rem 0 1rem;
-    overflow: hidden;
+    // width: 100%;
+    width: 320px;
+    // // margin: 0 auto;
+    // // padding: 0.5rem 0 1rem;
+    // // overflow: hidden;
     --swiper-pagination-color: $primary-color;
     --swiper-navigation-color: $primary-color;
     --swiper-navigation-size: 18px;
   }
 
-  /* === Swiper web components: shadow DOM parts === */
-  /* Sam wewnętrzny <div class="swiper"> */
-  .events-swiper::part(container) {
-    width: 100%;
-    margin: 0 auto;
-  }
+  //   /* === Swiper web components: shadow DOM parts === */
+  //   /* Sam wewnętrzny <div class="swiper"> */
+  //   .events-swiper::part(container) {
+  //     width: 100%;
+  //     margin: 0 auto;
+  //   }
 
-  /* Wrapper na slajdy */
-  .events-swiper::part(wrapper) {
-    box-sizing: border-box;
-  }
+  //   /* Wrapper na slajdy */
+  //   .events-swiper::part(wrapper) {
+  //     box-sizing: border-box;
+  //   }
 
-  /* Każdy pojedynczy slajd */
-  .events-swiper::part(slide) {
-    display: flex;            /* żeby wyśrodkować kartę */
-    justify-content: center;
-    /* nic z width tutaj nie nadpisujemy przy slidesPerView=1 */
-  }
-
-  /* W trybie swipera karta nie potrzebuje własnego max-width,
-     bo i tak siedzi w slajdzie o szerokości kontenera. */
-  .events-swiper .event-card {
-    width: 100%;
-    max-width: none;
-  }
-
+  //   /* Każdy pojedynczy slajd */
+  //   .events-swiper::slotted(swiper-slide) {
+  // @include flex-wrapper(row, center, center)
+  //     /* nic z width tutaj nie nadpisujemy przy slidesPerView=1 */
+  //   }
 }
