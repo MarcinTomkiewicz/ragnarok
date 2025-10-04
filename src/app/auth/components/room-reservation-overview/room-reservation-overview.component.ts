@@ -61,7 +61,7 @@ export class RoomReservationsOverviewComponent {
   onShowDetails(reservationId: string) {
     this.reservationService.getReservationWithDetails(reservationId)
       .subscribe(full => {
-        const ref = this.modal.open(ReservationDetailsModalComponent, { size: 'md', backdrop: 'static' });
+        const ref = this.modal.open(ReservationDetailsModalComponent, { size: 'lg', backdrop: 'static' });
         ref.componentInstance.reservation = full;
         ref.componentInstance.user = full.user;
         ref.componentInstance.system = full.system;

@@ -362,62 +362,70 @@ export class ReservationStepperComponent {
   }
 
   private finalizeReservation() {
-    const payload = {
-      userId: this.auth.user()?.id,
-      roomName: this.store.selectedRoom(),
-      date: this.store.selectedDate()!,
-      startTime: this.store.selectedStartTime()!,
-      durationHours: this.store.selectedDuration()!,
-      needsGm: this.store.needsGm(),
-      gmId: this.store.selectedGm(),
-      systemId: this.store.selectedSystemId(),
-      confirmedTeam: this.store.confirmedParty(),
-      external_name: this.store.isReceptionMode() ? this.store.externalName() : null,
-      external_phone: this.store.isReceptionMode() ? this.store.externalPhone() : null,
-      external_is_member: this.store.isReceptionMode() ? this.store.externalIsClubMember() : null,
-      status: ReservationStatus.Confirmed,
-      teamId: this.store.selectedPartyId(),
-    };
+  const payload = {
+    userId: this.auth.user()?.id,
+    roomName: this.store.selectedRoom(),
+    date: this.store.selectedDate()!,
+    startTime: this.store.selectedStartTime()!,
+    durationHours: this.store.selectedDuration()!,
+    needsGm: this.store.needsGm(),
+    gmId: this.store.selectedGm(),
+    systemId: this.store.selectedSystemId(),
+    confirmedTeam: this.store.confirmedParty(),
+    external_name: this.store.isReceptionMode() ? this.store.externalName() : null,
+    external_phone: this.store.isReceptionMode() ? this.store.externalPhone() : null,
+    external_is_member: this.store.isReceptionMode() ? this.store.externalIsClubMember() : null,
+    status: ReservationStatus.Confirmed,
+    teamId: this.store.selectedPartyId(),
+  };
 
-    this.reservationService.createReservation(payload).subscribe({
-      next: () => {
-        const template = this.reservationSuccessToast();
-        if (template) {
-          this.toastService.show({
-            template,
-            classname: 'bg-success text-white',
-            header: 'Utworzono rezerwację!',
-          });
-        }
+  const wantsExtra = this.store.wantsGmExtraInfo();
+  const extra = wantsExtra ? this.store.gmExtraInfo?.() ?? null : null;
 
-        if (this.platformService.isBrowser) {
-          sessionStorage.removeItem('selectedRoom');
-          sessionStorage.removeItem('selectedDate');
-          sessionStorage.removeItem('selectedStartTime');
-          sessionStorage.removeItem('selectedDuration');
-          sessionStorage.removeItem('selectedGm');
-          sessionStorage.removeItem('needsGm');
-          sessionStorage.removeItem('selectedPartyId');
-          sessionStorage.removeItem('externalName');
-          sessionStorage.removeItem('externalPhone');
-          sessionStorage.removeItem('externalIsClubMember');
-          sessionStorage.removeItem('wantsGmExtraInfo');
-        }
+  const onSuccess = () => {
+    const template = this.reservationSuccessToast();
+    if (template) {
+      this.toastService.show({
+        template,
+        classname: 'bg-success text-white',
+        header: 'Utworzono rezerwację!',
+      });
+    }
 
-        this.router.navigate(['/auth/my-reservations']);
-      },
-      error: () => {
-        const template = this.reservationErrorToast();
-        if (template) {
-          this.toastService.show({
-            template,
-            classname: 'bg-danger text-white',
-            header: 'Nie udało się utworzyć rezerwacji',
-          });
-        }
-      },
-    });
-  }
+    if (this.platformService.isBrowser) {
+      sessionStorage.removeItem('selectedRoom');
+      sessionStorage.removeItem('selectedDate');
+      sessionStorage.removeItem('selectedStartTime');
+      sessionStorage.removeItem('selectedDuration');
+      sessionStorage.removeItem('selectedGm');
+      sessionStorage.removeItem('needsGm');
+      sessionStorage.removeItem('selectedPartyId');
+      sessionStorage.removeItem('externalName');
+      sessionStorage.removeItem('externalPhone');
+      sessionStorage.removeItem('externalIsClubMember');
+      sessionStorage.removeItem('wantsGmExtraInfo');
+      sessionStorage.removeItem('gmExtraInfo');
+    }
+
+    this.router.navigate(['/auth/my-reservations']);
+  };
+
+  const onError = () => {
+    const template = this.reservationErrorToast();
+    if (template) {
+      this.toastService.show({
+        template,
+        classname: 'bg-danger text-white',
+        header: 'Nie udało się utworzyć rezerwacji',
+      });
+    }
+  };
+
+  this.reservationService
+    .createReservationWithOptionalExtra(payload as any, extra)
+    .subscribe({ next: onSuccess, error: onError });
+}
+
 
   confirmReservation() {
     const isReception = this.store.isReceptionMode();

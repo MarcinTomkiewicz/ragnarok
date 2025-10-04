@@ -3,20 +3,18 @@
 
   <div class="summary-details">
     @if (store.isReceptionMode()) {
-    <div class="summary-row">
-      <span class="label">Imię użytkownika:</span>
-      <span class="value">{{ store.externalName() }}</span>
-    </div>
-    <div class="summary-row">
-      <span class="label">Numer telefonu:</span>
-      <span class="value">{{ store.externalPhone() }}</span>
-    </div>
-    <div class="summary-row">
-      <span class="label">Członek Klubu:</span>
-      <span class="value">{{
-        store.externalIsClubMember() ? "Tak" : "Nie"
-      }}</span>
-    </div>
+      <div class="summary-row">
+        <span class="label">Imię użytkownika:</span>
+        <span class="value">{{ store.externalName() }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Numer telefonu:</span>
+        <span class="value">{{ store.externalPhone() }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">Członek Klubu:</span>
+        <span class="value">{{ store.externalIsClubMember() ? "Tak" : "Nie" }}</span>
+      </div>
     }
 
     <div class="summary-row">
@@ -35,21 +33,81 @@
       <span class="label">Czas trwania:</span>
       <span class="value">{{ store.selectedDuration() }}h</span>
     </div>
+
     @if (store.selectedPartyId()) {
-    <div class="summary-row">
-      <span class="label">Drużyna:</span>
-      <span class="value">{{ partyDisplayName }}</span>
-    </div>
-    } @if (store.needsGm() && store.selectedGm()) {
-    <div class="summary-row">
-      <span class="label">Wybrany MG:</span>
-      <span class="value">{{ gmDisplayName }}</span>
-    </div>
-    } @if (store.selectedSystemId()) {
-    <div class="summary-row">
-      <span class="label">System:</span>
-      <span class="value">{{ systemDisplayName }}</span>
-    </div>
+      <div class="summary-row">
+        <span class="label">Drużyna:</span>
+        <span class="value">{{ partyDisplayName }}</span>
+      </div>
+    }
+
+    @if (store.needsGm() && store.selectedGm()) {
+      <div class="summary-row">
+        <span class="label">Wybrany MG:</span>
+        <span class="value">{{ gmDisplayName }}</span>
+      </div>
+    }
+
+    @if (store.selectedSystemId()) {
+      <div class="summary-row">
+        <span class="label">System:</span>
+        <span class="value">{{ systemDisplayName }}</span>
+      </div>
+    }
+
+    <!-- ===== Dodatkowe informacje dla MG ===== -->
+    @if (showGmExtraInfo()) {
+      <div class="summary-divider"></div>
+      <h3 class="w-100">Dodatkowe informacje dla MG</h3>
+
+      <div class="summary-row">
+        <span class="label">Tworzenie postaci:</span>
+        <span class="value">{{ yesNo(gmExtraInfo()!.createCharactersAtTable) }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Wytyczne do postaci:</span>
+        <span class="value">{{ yesNo(gmExtraInfo()!.provideCharacterGuidelines) }}</span>
+      </div>
+
+      @if (gmExtraInfo()!.provideCharacterGuidelines) {
+        <div class="summary-row">
+          <span class="label">Szczegóły wytycznych:</span>
+          <span class="value summary-row--multiline">
+            @if (gmExtraInfo()!.characterGuidelines) {
+              @let paragraphs = gmExtraInfo()!.characterGuidelines!.split('\n');
+              @for (paragraph of paragraphs; let i = $index; track i) {
+                @if (paragraph.trim().length) {
+                  <p class="event-paragraph">{{ paragraph }}</p>
+                }
+              }
+            } @else {
+              —
+            }
+          </span>
+        </div>
+      }
+
+      <div class="summary-row">
+        <span class="label">Liczba graczy:</span>
+        <span class="value">{{ gmExtraInfo()!.playersCount ?? '—' }}</span>
+      </div>
+
+      <div class="summary-row">
+        <span class="label">Uwagi dla MG:</span>
+        <span class="value summary-row--multiline">
+          @if (gmExtraInfo()!.extraNotes) {
+            @let paragraphs2 = gmExtraInfo()!.extraNotes!.split('\n');
+            @for (paragraph of paragraphs2; let j = $index; track j) {
+              @if (paragraph.trim().length) {
+                <p class="event-paragraph">{{ paragraph }}</p>
+              }
+            }
+          } @else {
+            —
+          }
+        </span>
+      </div>
     }
   </div>
 </div>

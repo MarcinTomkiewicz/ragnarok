@@ -112,7 +112,7 @@ export class UpcomingSessionsComponent {
       .getReservationWithDetails(reservationId)
       .subscribe((full) => {
         const ref = this.modal.open(ReservationDetailsModalComponent, {
-          size: 'md',
+          size: 'lg',
           backdrop: 'static',
         });
 
