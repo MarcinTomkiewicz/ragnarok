@@ -9,12 +9,12 @@
     @if (isSmallScreen() && upcomingEvents().length) {
     <!-- space-between="16" -->
     <swiper-container
-      class="swiper"
-      slides-per-view="1"
-      loop="true"
-      speed="500"
+      class="mg-swiper"
+      slides-per-view="auto"
+      centered-slides="true"
       navigation="true"
-      centered-slides=true
+      speed="500"
+      [attr.loop]="swiperLoop() ? 'true' : null"
     >
       @for (event of upcomingEvents(); track trackBySlugDate(event)) {
       <swiper-slide>

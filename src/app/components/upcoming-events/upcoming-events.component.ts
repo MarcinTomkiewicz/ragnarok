@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { addDays, isAfter, isEqual, parseISO } from 'date-fns';
 import { fromEvent, Subject } from 'rxjs';
@@ -10,6 +18,7 @@ import { AttractionKind, AttractionKindLabel } from '../../core/enums/events';
 import { EventFull } from '../../core/interfaces/i-events';
 import { ImageStorageService } from '../../core/services/backend/image-storage/image-storage.service';
 import { EventService } from '../../core/services/event/event.service';
+import { PlatformService } from '../../core/services/platform/platform.service'; // ścieżkę dostosuj do projektu
 
 type UpcomingCard = {
   id: string;
@@ -31,12 +40,13 @@ const SMALL_BP = 767;
   standalone: true,
   imports: [RouterLink, CommonModule],
   templateUrl: './upcoming-events.component.html',
-  styleUrl: './upcoming-events.component.scss',
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  styleUrls: ['./upcoming-events.component.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class UpcomingEventsComponent implements OnInit, OnDestroy {
   private readonly events = inject(EventService);
   private readonly images = inject(ImageStorageService);
+  private readonly platform = inject(PlatformService);
 
   private readonly destroy$ = new Subject<void>();
 
@@ -44,16 +54,23 @@ export class UpcomingEventsComponent implements OnInit, OnDestroy {
   readonly isSmallScreen = signal<boolean>(false);
   readonly swiperLoop = computed(() => this.upcomingEvents().length > 1);
 
-  ngOnInit(): void {
-    register();
+  readonly isBrowser = this.platform.isBrowser;
 
-    fromEvent(window, 'resize')
-      .pipe(
-        startWith(null),
-        map(() => window.innerWidth <= SMALL_BP),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((isSm) => this.isSmallScreen.set(isSm));
+  ngOnInit(): void {
+    if (this.platform.isBrowser) {
+      register();
+      const win = this.platform.getWindow();
+      if (win) {
+        this.isSmallScreen.set(win.innerWidth <= SMALL_BP);
+        fromEvent(win, 'resize')
+          .pipe(
+            startWith(null),
+            map(() => win.innerWidth <= SMALL_BP),
+            takeUntil(this.destroy$)
+          )
+          .subscribe((isSm) => this.isSmallScreen.set(isSm));
+      }
+    }
 
     const todayIso = this.toYmd(new Date());
     const horizonIso = this.toYmd(addDays(new Date(), 60));

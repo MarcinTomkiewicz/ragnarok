@@ -13,29 +13,67 @@
         <app-loader />
       </div>
     } @else {
-      <div class="mg-grid">
-        @for (gm of visibleGms(); track gm.userId) {
-          <div class="mg-card" (click)="onCardClick(gm)">
-            <img
-              [src]="gm.image"
-              [alt]="gmDisplayName(gm)"
-              class="mg-avatar"
-            />
-            <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
-            <p class="mg-role">{{ roleDisplay }}</p>
-            <p class="mg-description truncate-three-lines">
-              {{ gm.shortDescription }}
-            </p>
+
+      <!-- MOBILE (≤ sm): SWIPER — pokazujemy wszystkich -->
+      @if (isSmallScreen() && gms().length) {
+        <swiper-container
+          class="mg-swiper"
+          slides-per-view="1"
+          loop="{{ swiperLoop() }}"
+          speed="500"
+          navigation="true"
+          centered-slides="true"
+          space-between="8"
+        >
+          @for (gm of gms(); track gm.userId) {
+            <swiper-slide>
+              <div class="mg-card gm-card is-swiper" (click)="onCardClick(gm)">
+                <img
+                  [src]="gm.image"
+                  [alt]="gmDisplayName(gm)"
+                  class="mg-avatar"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
+                <p class="mg-role">{{ roleDisplay }}</p>
+                <p class="mg-description truncate-three-lines">
+                  {{ gm.shortDescription }}
+                </p>
+              </div>
+            </swiper-slide>
+          }
+        </swiper-container>
+
+      } @else {
+
+        <!-- DESKTOP/TABLET: GRID — 4 na start + 'Pokaż więcej' -->
+        <div class="mg-grid">
+          @for (gm of visibleGms(); track gm.userId) {
+            <div class="mg-card gm-card" (click)="onCardClick(gm)">
+              <img
+                [src]="gm.image"
+                [alt]="gmDisplayName(gm)"
+                class="mg-avatar"
+                loading="lazy"
+                decoding="async"
+              />
+              <h3 class="mg-name">{{ gmDisplayName(gm) }}</h3>
+              <p class="mg-role">{{ roleDisplay }}</p>
+              <p class="mg-description truncate-three-lines">
+                {{ gm.shortDescription }}
+              </p>
+            </div>
+          }
+        </div>
+
+        @if (shouldShowMoreButton()) {
+          <div class="mt-4 text-center">
+            <button class="btn btn-outline" (click)="showAll.set(true)">
+              Pokaż więcej
+            </button>
           </div>
         }
-      </div>
-
-      @if (!showAll() && shouldShowMoreButton()) {
-        <div class="mt-4 text-center">
-          <button class="btn btn-outline" (click)="showAll.set(true)">
-            Pokaż więcej
-          </button>
-        </div>
       }
     }
   </div>

@@ -28,6 +28,7 @@
     }
   }
 
+  /* GRID (≥ sm) */
   .sessions-grid {
     @include mg-grid(4);
     gap: 1rem;
@@ -44,8 +45,10 @@
     transition: all $transition-fast;
     box-shadow: 0 0 10px rgba($secondary-color, 0.2);
     height: 100%;
-    max-width: 320px; /* desktop grid */
+    max-width: 320px;
     width: 100%;
+    justify-self: center;
+    height: auto;
 
     &:hover {
       transform: translateY(-2px);
@@ -87,7 +90,6 @@
         align-items: baseline;
         font-size: 0.95rem;
         flex-wrap: wrap;
-
         .muted {
           color: $secondary-text-color;
         }
@@ -106,7 +108,6 @@
         color: $link-color;
         text-decoration: underline;
         text-underline-offset: 2px;
-
         &:hover {
           color: $link-hover-color;
         }
@@ -114,17 +115,12 @@
     }
   }
 
-  .session-card {
-    justify-self: center;
-    max-width: 300px;
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: -100% 0;
+  @keyframes shimmer {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
   }
 }

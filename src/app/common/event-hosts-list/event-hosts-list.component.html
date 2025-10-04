@@ -14,17 +14,17 @@
   <!-- MOBILE (≤ sm): SWIPER -->
   @if (isSmallScreen() && itemsSig().length) {
   <swiper-container
-    class="swiper"
-    slides-per-view="1"
-    loop="true"
-    speed="500"
-    navigation="true"
+    class="mg-swiper"
+    slides-per-view="auto"
     centered-slides="true"
+    navigation="true"
+    speed="500"
+    [attr.loop]="itemsSig().length > 1 ? 'true' : null"
   >
     @for (h of itemsSig(); track h.id) {
     <swiper-slide>
       <article
-        class="session-card card-dark"
+        class="session-card card-dark is-swiper"
         (click)="openDetails(h)"
         role="button"
         tabindex="0"
@@ -110,7 +110,6 @@
     </swiper-slide>
     }
   </swiper-container>
-
   } @else {
 
   <!-- DESKTOP/TABLET: GRID -->

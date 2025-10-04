@@ -3,6 +3,7 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
   Component,
   DestroyRef,
+  OnDestroy,
   computed,
   inject,
   input,
@@ -43,7 +44,9 @@ import { HostSignupScope } from '../../core/enums/events';
 import { SessionSignupButtonComponent } from '../session-signup-button/session-signup-button.component';
 import { IUser } from '../../core/interfaces/i-user';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
+
 import { register } from 'swiper/element/bundle';
+import { PlatformService } from '../../core/services/platform/platform.service';
 
 const SMALL_BP = 767;
 
@@ -60,7 +63,7 @@ const SMALL_BP = 767;
   styleUrls: ['./event-hosts-list.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class EventHostsListComponent {
+export class EventHostsListComponent implements OnDestroy {
   // inputs
   eventId = input.required<string>();
   dateIso = input.required<string>();
@@ -75,6 +78,7 @@ export class EventHostsListComponent {
   private readonly backend = inject(BackendService);
   private readonly modal = inject(NgbModal);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly platform = inject(PlatformService);
 
   // state
   readonly loadingSig = signal(true);
@@ -86,15 +90,9 @@ export class EventHostsListComponent {
   readonly HostRole = HostSignupScope;
   readonly GmStyleTagLabels = GmStyleTagLabels;
 
-  // swiper
+  // responsive / swiper
   private readonly destroy$ = new Subject<void>();
   readonly isSmallScreen = signal<boolean>(false);
-  readonly swiperParams = computed(() => ({
-    slidesPerView: 1,
-    loop: this.itemsSig().length > 1,
-    speed: 500,
-    navigation: true,
-  }));
 
   // refresh per host (po udanym zapisie do tej sesji)
   private readonly refreshByHost = signal<Map<string, number>>(new Map());
@@ -108,6 +106,7 @@ export class EventHostsListComponent {
   }
   onSessionSigned(hostId: string) {
     this.bumpRefresh(hostId);
+    this.scheduleEqualize(); // po zmianie przycisku lista uczestników mogła zmienić wysokość
   }
 
   // słownik triggerów: slug -> label (PL)
@@ -133,15 +132,25 @@ export class EventHostsListComponent {
     );
 
   constructor() {
-    register();
-
-    fromEvent(window, 'resize')
-      .pipe(
-        startWith(null),
-        map(() => window.innerWidth <= SMALL_BP),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((isSm) => this.isSmallScreen.set(isSm));
+    // SSR-safe
+    if (this.platform.isBrowser) {
+      register();
+      const win = this.platform.getWindow();
+      if (win) {
+        fromEvent(win, 'resize')
+          .pipe(
+            startWith(null),
+            map(() => win.innerWidth <= SMALL_BP),
+            takeUntil(this.destroy$)
+          )
+          .subscribe((isSm) => {
+            this.isSmallScreen.set(isSm);
+            if (isSm) this.scheduleEqualize();
+          });
+      }
+    } else {
+      this.isSmallScreen.set(false);
+    }
 
     const id$ = toObservable(this.eventId);
     const date$ = toObservable(this.dateIso);
@@ -165,7 +174,6 @@ export class EventHostsListComponent {
               .pipe(catchError(() => of([]))),
             this.triggersMap$,
           ]).pipe(
-            // 1) bazowy VM (system, obrazek, triggery->label)
             map(([rows, tmap]) => {
               const base: HostCardVM[] = (
                 rows as (IEventHost & { systems?: IRPGSystem | null })[]
@@ -202,6 +210,7 @@ export class EventHostsListComponent {
                 ? forkJoin(
                     allUserIds.map((id) =>
                       this.gmDirectory.getGmById(id).pipe(
+                        // eslint-disable-next-line no-console
                         tap((g) => console.log('Hello: ' + g?.gmProfileId)),
                         catchError(() => of(null))
                       )
@@ -250,9 +259,52 @@ export class EventHostsListComponent {
           )
         )
       )
-      .subscribe((items) => this.itemsSig.set(items));
+      .subscribe((items) => {
+        this.itemsSig.set(items);
+        this.scheduleEqualize();
+      });
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // === Równa wysokość kart w swipie (mobile) ===
+  private scheduleEqualize() {
+    if (!this.platform.isBrowser || !this.isSmallScreen()) return;
+    // po renderze + po załadowaniu obrazków (drugi tick)
+    setTimeout(() => this.equalizeSwiperCardHeights(), 0);
+    setTimeout(() => this.equalizeSwiperCardHeights(), 250);
+  }
+
+  private equalizeSwiperCardHeights() {
+    if (!this.platform.isBrowser || !this.isSmallScreen()) return;
+    const container = document.querySelector<HTMLElement>('.mg-swiper');
+    if (!container) return;
+
+    const cards = Array.from(
+      container.querySelectorAll<HTMLElement>('.session-card.is-swiper')
+    );
+
+    if (!cards.length) return;
+
+    // Reset przed pomiarem
+    container.style.removeProperty('--session-card-height');
+    cards.forEach((c) => (c.style.height = ''));
+
+    // Pomiar naturalnej wysokości
+    let max = 0;
+    cards.forEach((c) => (max = Math.max(max, c.offsetHeight)));
+
+    if (max > 0) {
+      container.style.setProperty('--session-card-height', `${max}px`);
+      // jeśli CSS var nie zadziała z jakiegoś powodu, ustawiamy bezpośrednio
+      cards.forEach((c) => (c.style.height = `var(--session-card-height)`));
+    }
+  }
+
+  // === helpers ===
   hostCapacity(h: HostCardVM): number | null {
     const own = h.sessionCapacity;
     if (own != null && own > 0) return own;
