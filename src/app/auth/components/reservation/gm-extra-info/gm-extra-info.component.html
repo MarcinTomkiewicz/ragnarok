@@ -1,0 +1,133 @@
+<div class="gm-selection-wrapper">
+  <h2 class="section-title mb-2">Dodatkowe informacje dla Mistrza Gry</h2>
+  <p class="section-subtitle">
+    Te dane są opcjonalne, ale pomogą MG lepiej przygotować sesję.
+  </p>
+
+  <form [formGroup]="form" class="user-info-form">
+    <div class="fields-grid">
+      <div class="form-group">
+        <label class="text-start d-flex align-items-center gap-2">
+          Tworzenie postaci na początku sesji
+          <span
+            class="muted info-icon"
+            ngbTooltip='Tworzenie postaci odbywa się w ramach zarezerwowanego czasu i jest normalnie płatne. Jeśli wybierzesz "Nie", Mistrz Gry przygotuje gotowe postacie.'
+            container="body"
+            placement="end"
+            [autoClose]="'outside'"
+            tabindex="0"
+            aria-label="Więcej informacji"
+            ><img src="/icons/wooden-sign.svg" class="icon" alt="Ważne informacje"></span
+          >
+        </label>
+
+        <div
+          class="btn-group mt-1 w-100"
+          role="group"
+          aria-label="Tworzenie postaci"
+        >
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [class.active]="form.value.createCharactersAtTable === true"
+            [attr.aria-pressed]="form.value.createCharactersAtTable === true"
+            (click)="setCreateAtTable(true)"
+          >
+            Tak
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [class.active]="form.value.createCharactersAtTable === false"
+            [attr.aria-pressed]="form.value.createCharactersAtTable === false"
+            (click)="setCreateAtTable(false)"
+          >
+            Nie
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Wytyczne do postaci</label>
+
+        <div
+          class="btn-group mt-1 w-100"
+          role="group"
+          aria-label="Wytyczne do postaci"
+        >
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [class.active]="form.value.provideCharacterGuidelines === true"
+            [attr.aria-pressed]="form.value.provideCharacterGuidelines === true"
+            (click)="setProvideGuidelines(true)"
+          >
+            Chcemy podać
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [class.active]="form.value.provideCharacterGuidelines === false"
+            [attr.aria-pressed]="
+              form.value.provideCharacterGuidelines === false
+            "
+            (click)="setProvideGuidelines(false)"
+          >
+            Nie potrzebujemy
+          </button>
+        </div>
+
+        @if (provideGuidelines) {
+        <textarea
+          class="form-control mt-2"
+          rows="4"
+          placeholder='Np. "kleryk i łotrzyk", "low magic", wspólna przeszłość...'
+          formControlName="characterGuidelines"
+        ></textarea>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="text-start d-flex align-items-center gap-2">
+          Liczba graczy
+          <span
+            class="muted info-icon"
+            ngbTooltip="Rekomendujemy maks. 5 graczy. Powyżej tej liczby jakość doświadczenia może spadać (tempo sesji, rozproszone wątki, mniej czasu dla każdego gracza)."
+            container="body"
+            placement="end"
+            [autoClose]="'outside'"
+            tabindex="0"
+            aria-label="Więcej informacji"
+            ><img src="/icons/wooden-sign.svg" class="icon" alt="Ważne informacje"></span
+          >
+        </label>
+
+        <input
+          type="number"
+          class="form-control mt-1"
+          formControlName="playersCount"
+          min="1"
+          max="12"
+          step="1"
+          placeholder="Np. 4"
+        />
+
+        @if (playersCountTooHigh) {
+        <div class="form-text text-warning mt-1">
+          Sesje z więcej niż 5 graczami mogą być mniej komfortowe.
+        </div>
+        }
+      </div>
+
+      <div class="form-group form-group--full">
+        <label class="text-start">Dodatkowe uwagi dla MG</label>
+        <textarea
+          class="form-control mt-1"
+          rows="5"
+          formControlName="extraNotes"
+          placeholder="Np. okres historyczny w Zewie Cthulhu, kraina w Dungeons&amp;Dragons, klimat śledztwa, preferencje treści..."
+        ></textarea>
+      </div>
+    </div>
+  </form>
+</div>

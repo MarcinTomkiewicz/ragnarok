@@ -1,11 +1,33 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-.tooltip .tooltip-arrow::before {
-  transform: translate(-50%, 200%);
+/* Pudełko tooltipa – ciemne tło, złote litery, ograniczona szerokość */
+.tooltip .tooltip-inner {
+  max-width: min(520px, 90vw); // nie wyjeżdża poza viewport
+  width: auto;                  // naturalna szerokość
+  background-color: $bg-color;
+  color: $text-color;
+  border: 1px solid $border-color;
+  box-shadow: $card-shadow;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: $line-height-base;
+  font-size: $font-size-sm;
 }
 
-.tooltip .tooltip-inner {
-    max-width: unset;
-  width: 100%;
+.bs-tooltip-end .tooltip-arrow::before {
+  background-color: $bg-color;
+  border-right: 1px solid $border-color;
+  transform: translateY(-50%);
+}
+
+.bs-tooltip-start .tooltip-arrow::before,
+.bs-tooltip-top .tooltip-arrow::before,
+.bs-tooltip-bottom .tooltip-arrow::before {
+  background-color: $bg-color;
+}
+
+.bs-tooltip-end {
+  margin-left: .5rem;
 }
