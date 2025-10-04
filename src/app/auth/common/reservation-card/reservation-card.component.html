@@ -2,13 +2,13 @@
   <div class="card-body">
     <div class="tag-badges">
       @if (badgeBeginners) { <span class="tag-badge join">Dołącz do Drużyny</span> }
-      @if (badgeMyParty) { <span class="tag-badge mine">Moja drużyna</span> }
-      @if (badgeClub) { <span class="tag-badge club">Klubowa</span> }
+      @if (badgeMyParty)   { <span class="tag-badge mine">Moja drużyna</span> }
+      @if (badgeClub)      { <span class="tag-badge club">Klubowa</span> }
     </div>
 
     <div class="card-meta">
       <span class="reservation-date">
-        {{ reservation().date | date : "dd.MM.yyyy" }}
+        {{ reservation().date | date: 'dd.MM.yyyy' }}
         {{ reservation().startTime }}
       </span>
       <span
@@ -24,18 +24,22 @@
 
     <div class="card-details">
       <p>{{ reservation().roomName }} – {{ reservation().durationHours }}h</p>
+
+      @if (systemName) {
+        <p>System: {{ systemName }}</p>
+      }
+
+      @if (gm || reservation().needsGm) {
+        <p>Mistrz Gry: {{ gmDisplayName }}</p>
+      }
+
       @if (partyName) {
         <p>Drużyna: {{ partyName }}</p>
       }
-      @if (showUserDetails()) {
-        @if (user()) {
-          <p>{{ userDisplayName }}</p>
-          <p>{{ user()!.phoneNumber }}</p>
-        } @else {
-          <p>{{ reservation().externalName }}</p>
-          <p>{{ reservation().externalPhone }}</p>
-        }
-      }
+
+      <!-- ZAWSZE pokazujemy dane rezerwującego (jak w modalu) -->
+      <p>Rezerwujący: {{ displayName }}</p>
+      <p>Telefon: {{ displayPhone }}</p>
     </div>
 
     <div class="reservation-id">
@@ -44,21 +48,17 @@
 
     <div class="card-actions">
       @if (showManagePlaceholder()) {
-        <span
-          ngbTooltip="Funkcja dostępna wkrótce"
-          placement="top"
-          class="d-inline-block"
-        >
-          <button class="btn btn-outline" disabled style="pointer-events: none">
-            Zarządzaj rezerwacją
-          </button>
+        <span ngbTooltip="Funkcja dostępna wkrótce" placement="top" class="d-inline-block">
+          <button class="btn btn-outline" disabled style="pointer-events: none">Zarządzaj rezerwacją</button>
         </span>
       }
+
       @if (showDetailsButton()) {
         <button class="btn btn-warning" (click)="showDetails.emit()">
           Szczegóły rezerwacji
         </button>
       }
+
       @if (showCancelButton()) {
         <button
           class="btn"

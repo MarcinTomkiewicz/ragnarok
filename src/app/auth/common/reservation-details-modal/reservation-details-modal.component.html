@@ -1,12 +1,8 @@
-    <div class="modal-header">
-      <h5 class="modal-title m-0">Podsumowanie rezerwacji</h5>
-      <button
-        type="button"
-        class="btn-close"
-        aria-label="Close"
-        (click)="close()"
-      ></button>
-    </div>
+<div class="modal-header">
+  <h5 class="modal-title m-0">Podsumowanie rezerwacji</h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+</div>
+
 <div class="modal-body custom-modal-body">
   <div class="reservation-summary-wrapper">
     <div class="summary-details">
@@ -14,14 +10,17 @@
         <span class="label">Sala:</span>
         <span class="value">{{ reservation.roomName }}</span>
       </div>
+
       <div class="summary-row">
         <span class="label">Data:</span>
         <span class="value">{{ formattedDate }}</span>
       </div>
+
       <div class="summary-row">
         <span class="label">Godzina:</span>
         <span class="value">{{ reservation.startTime }}</span>
       </div>
+
       <div class="summary-row">
         <span class="label">Czas trwania:</span>
         <span class="value">{{ reservation.durationHours }}h</span>
@@ -34,17 +33,27 @@
         </div>
       }
 
+      <!-- Mistrz Gry: pokazujemy jeśli jest przypisany, albo gdy rezerwacja wymaga MG -->
+      @if (gm || reservation.needsGm) {
+        <div class="summary-row">
+          <span class="label">Mistrz Gry:</span>
+          <span class="value">
+            {{ gm ? gmDisplayName : (reservation.needsGm ? 'Do przydziału' : '—') }}
+          </span>
+        </div>
+      }
+
       @if (teamName) {
         <div class="summary-row">
           <span class="label">Drużyna:</span>
           <span class="value">{{ teamName }}</span>
         </div>
+
         <div class="summary-row">
           <span class="label">Dołącz do Drużyny:</span>
-          <span class="value">
-            {{ isBeginners === true ? 'Tak' : 'Nie' }}
-          </span>
+          <span class="value">{{ isBeginners === true ? 'Tak' : 'Nie' }}</span>
         </div>
+
         @if (isBeginners && programStage) {
           <div class="summary-row">
             <span class="label">Etap programu:</span>
@@ -58,6 +67,7 @@
           <span class="label">Rezerwujący:</span>
           <span class="value">{{ displayName }}</span>
         </div>
+
         <div class="summary-row">
           <span class="label">Telefon:</span>
           <span class="value">{{ displayPhone }}</span>
