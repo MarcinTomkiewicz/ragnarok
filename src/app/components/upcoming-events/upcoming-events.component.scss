@@ -105,24 +105,4 @@
       }
     }
   }
-
-  // .events-
-
-  //   /* === Swiper web components: shadow DOM parts === */
-  //   /* Sam wewnętrzny <div class="swiper"> */
-  //   .events-swiper::part(container) {
-  //     width: 100%;
-  //     margin: 0 auto;
-  //   }
-
-  //   /* Wrapper na slajdy */
-  //   .events-swiper::part(wrapper) {
-  //     box-sizing: border-box;
-  //   }
-
-  //   /* Każdy pojedynczy slajd */
-  //   .events-swiper::slotted(swiper-slide) {
-  // @include flex-wrapper(row, center, center)
-  //     /* nic z width tutaj nie nadpisujemy przy slidesPerView=1 */
-  //   }
 }
