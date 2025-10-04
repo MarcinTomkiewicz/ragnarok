@@ -6,6 +6,8 @@ import { combineLatest, of } from 'rxjs';
 import { map, startWith, switchMap } from 'rxjs/operators';
 
 import { IRPGSystem } from '../../../../core/interfaces/i-rpg-system';
+import { IGmExtraInfo } from '../../../../core/interfaces/i-gm-extra-info';
+
 import { GmDirectoryService } from '../../../core/services/gm/gm-directory/gm-directory.service';
 import { PartyService } from '../../../core/services/party/party.service';
 import { ReservationStoreService } from '../../../core/services/reservation-store/reservation-store.service';
@@ -83,7 +85,13 @@ export class ReservationSummaryComponent {
     return raw ? format(new Date(raw), 'dd.MM.yyyy') : '';
   });
 
-  handleBack() {
-    this.store.step.set(this.store.needsGm() ? 3 : 2);
+  // ---- GM extra info (sekcja w podsumowaniu) ----
+  readonly gmExtraInfo = computed<IGmExtraInfo | null>(() => this.store.gmExtraInfo?.() ?? null);
+  readonly showGmExtraInfo = computed(
+    () => this.store.needsGm() && !!this.store.wantsGmExtraInfo?.() && !!this.gmExtraInfo()
+  );
+
+  yesNo(v: boolean): string {
+    return v ? 'Tak' : 'Nie';
   }
 }

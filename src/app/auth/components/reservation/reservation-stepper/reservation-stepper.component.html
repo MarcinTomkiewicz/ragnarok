@@ -10,15 +10,25 @@
             Podaj dane w ostatnim kroku
           </button>
         </div>
+
       } @else if (step() === 1) {
         <app-room-selection />
+
       } @else if (step() === 2) {
         <app-time-selection />
+
       } @else if (step() === 3) {
         <app-gm-selection />
-      } @else if (store.isReceptionMode() && deferredInfo() && step() === 4) {
+
+      } @else if (step() === 4 && store.wantsGmExtraInfo()) {
+        <!-- NOWY KROK: Dodatkowe informacje dla MG -->
+        <app-gm-extra-info />
+
+      } @else if (store.isReceptionMode() && deferredInfo() && step() === userInfoDeferredStep()) {
+        <!-- Odroczone dane rezerwującego (recepcja) -->
         <app-user-info-form />
-      } @else if (step() === maxStep()) {
+
+      } @else if (step() === summaryStep()) {
         <app-reservation-summary />
       }
     </div>
@@ -26,18 +36,18 @@
     <div class="d-flex justify-content-center gap-4 mt-4">
       <button
         class="btn btn-outline"
-        (click)="goBack()
-        "
+        (click)="goBack()"
         [disabled]="goBackDisabled()"
       >
         Wstecz
       </button>
+
       <button
         class="btn btn-primary"
         (click)="goForward()"
         [disabled]="!canProceed()"
       >
-        {{ step() === maxStep() ? "Rezerwuj" : "Dalej" }}
+        {{ step() === summaryStep() ? "Rezerwuj" : "Dalej" }}
       </button>
     </div>
   </div>

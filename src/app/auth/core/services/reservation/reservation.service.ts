@@ -19,6 +19,10 @@ import { PartyService } from '../party/party.service';
 import { TimeSlots } from '../../../../core/enums/hours';
 import { CoworkerRoles } from '../../../../core/enums/roles';
 import { TeamRole } from '../../../../core/enums/party.enum';
+import {
+  IGmExtraInfo,
+  IGmExtraInfoRow,
+} from '../../../../core/interfaces/i-gm-extra-info';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationService {
@@ -222,6 +226,39 @@ export class ReservationService {
     );
   }
 
+  getGmExtraInfoByReservationId(reservationId: string) {
+    return this.backend.getOneByFields<IGmExtraInfoRow>(
+      'reservation_gm_extra_info',
+      { reservationId }
+    );
+  }
+
+  createGmExtraInfoForReservation(reservationId: string, extra: IGmExtraInfo) {
+    const payload = {
+      reservationId,
+      ...extra,
+    };
+    return this.backend
+      .create<IGmExtraInfoRow>('reservation_gm_extra_info', payload as any)
+      .pipe(map((row) => toCamelCase(row) as IGmExtraInfoRow));
+  }
+
+  createReservationWithOptionalExtra(
+    data: Partial<IReservation>,
+    extra: IGmExtraInfo | null
+  ) {
+    return this.createReservation(data).pipe(
+      switchMap((reservation) => {
+        if (!extra) {
+          return of({ reservation, extra: null as IGmExtraInfoRow | null });
+        }
+        return this.createGmExtraInfoForReservation(reservation.id, extra).pipe(
+          map((row) => ({ reservation, extra: row }))
+        );
+      })
+    );
+  }
+
   cancelReservation(id: string): Observable<IReservation> {
     return this.backend.update<IReservation>('reservations', id, {
       status: ReservationStatus.Cancelled,
@@ -296,82 +333,91 @@ export class ReservationService {
     );
   }
 
-checkIfAnyMemberOfPartyHasClubReservationThisWeek(partyId: string) {
-  const today = new Date();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-  monday.setHours(0, 0, 0, 0);
+  checkIfAnyMemberOfPartyHasClubReservationThisWeek(partyId: string) {
+    const today = new Date();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    monday.setHours(0, 0, 0, 0);
 
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
 
-  const mondayIso = monday.toISOString().split('T')[0];
+    const mondayIso = monday.toISOString().split('T')[0];
 
-  return forkJoin({
-    party: this.partyService.getPartyById(partyId),
-    members: this.partyService.getPartyMembers(partyId),
-  }).pipe(
-    map(({ party, members }) => {
-      const ids = new Set<string>();
-      members
-        .filter(m => !m.leftAt && m.role === TeamRole.Player)
-        .forEach(m => ids.add(m.userId));
-      if (party?.ownerId) ids.add(party.ownerId); // ⬅️ ważne: właściciel też liczony
-      return Array.from(ids);
-    }),
-    switchMap((userIds) => {
-      if (!userIds.length) return of(false);
+    return forkJoin({
+      party: this.partyService.getPartyById(partyId),
+      members: this.partyService.getPartyMembers(partyId),
+    }).pipe(
+      map(({ party, members }) => {
+        const ids = new Set<string>();
+        members
+          .filter((m) => !m.leftAt && m.role === TeamRole.Player)
+          .forEach((m) => ids.add(m.userId));
+        if (party?.ownerId) ids.add(party.ownerId); // ⬅️ ważne: właściciel też liczony
+        return Array.from(ids);
+      }),
+      switchMap((userIds) => {
+        if (!userIds.length) return of(false);
 
-      return this.partyService.getUsersByIds(userIds).pipe(
-        map(users =>
-          users
-            .filter(u => u.coworker === CoworkerRoles.Member) // tylko Klubowicze (Member)
-            .map(u => u.id)
-        ),
-        switchMap((memberUserIds) => {
-          if (!memberUserIds.length) return of(false);
+        return this.partyService.getUsersByIds(userIds).pipe(
+          map((users) =>
+            users
+              .filter((u) => u.coworker === CoworkerRoles.Member) // tylko Klubowicze (Member)
+              .map((u) => u.id)
+          ),
+          switchMap((memberUserIds) => {
+            if (!memberUserIds.length) return of(false);
 
-          return forkJoin(
-            memberUserIds.map(uid =>
-              forkJoin({
-                owned: this.partyService.getPartiesOwnedBy(uid),
-                member: this.partyService.getPartiesWhereMember(uid),
-              })
-            )
-          ).pipe(
-            map(rows => {
-              const teamIds = new Set<string>();
-              rows.forEach(({ owned, member }) => {
-                owned.forEach(p => teamIds.add(p.id));
-                member.forEach(p => teamIds.add(p.id));
-              });
-              return Array.from(teamIds);
-            }),
-            switchMap((teamIds) => {
-              if (!teamIds.length) return of(false);
+            return forkJoin(
+              memberUserIds.map((uid) =>
+                forkJoin({
+                  owned: this.partyService.getPartiesOwnedBy(uid),
+                  member: this.partyService.getPartiesWhereMember(uid),
+                })
+              )
+            ).pipe(
+              map((rows) => {
+                const teamIds = new Set<string>();
+                rows.forEach(({ owned, member }) => {
+                  owned.forEach((p) => teamIds.add(p.id));
+                  member.forEach((p) => teamIds.add(p.id));
+                });
+                return Array.from(teamIds);
+              }),
+              switchMap((teamIds) => {
+                if (!teamIds.length) return of(false);
 
-              return this.backend.getAll<IReservation>('reservations', 'date', 'asc', {
-                filters: {
-                  team_id:   { operator: FilterOperator.IN, value: teamIds },
-                  room_name: { operator: FilterOperator.IN, value: [Rooms.Asgard, Rooms.Alfheim] },
-                  date:      { operator: FilterOperator.GTE, value: mondayIso }, // górny limit sprawdzamy lokalnie
-                },
-              }).pipe(
-                map(list =>
-                  list.some(r => {
-                    const d = new Date(r.date);
-                    return this.isReservationActive(r) && d >= monday && d <= sunday;
+                return this.backend
+                  .getAll<IReservation>('reservations', 'date', 'asc', {
+                    filters: {
+                      team_id: { operator: FilterOperator.IN, value: teamIds },
+                      room_name: {
+                        operator: FilterOperator.IN,
+                        value: [Rooms.Asgard, Rooms.Alfheim],
+                      },
+                      date: { operator: FilterOperator.GTE, value: mondayIso }, // górny limit sprawdzamy lokalnie
+                    },
                   })
-                )
-              );
-            })
-          );
-        })
-      );
-    })
-  );
-}
+                  .pipe(
+                    map((list) =>
+                      list.some((r) => {
+                        const d = new Date(r.date);
+                        return (
+                          this.isReservationActive(r) &&
+                          d >= monday &&
+                          d <= sunday
+                        );
+                      })
+                    )
+                  );
+              })
+            );
+          })
+        );
+      })
+    );
+  }
 
   getReservationWithDetails(
     id: string

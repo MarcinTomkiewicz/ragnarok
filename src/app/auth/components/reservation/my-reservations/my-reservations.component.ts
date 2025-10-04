@@ -135,6 +135,14 @@ export class MyReservationsComponent {
     }
   }
 
+  /**
+   * Zasada:
+   * - bierzemy rezerwacje użytkownika (creator)
+   * - dokładamy rezerwacje drużyn, w których jest Owner/Member
+   * - deduplikujemy po id
+   * - odrzucamy rezerwacje, w których user jest MG (reservation.gmId == me.id lub party.gmId == me.id),
+   *   ALE robimy wyjątek: jeśli user JEST twórcą tej rezerwacji (reservation.userId == me.id), to ją zostawiamy
+   */
   private loadReservations(): void {
     const me = this.auth.user();
     if (!me) return;
@@ -146,27 +154,57 @@ export class MyReservationsComponent {
       member: this.partyService.getPartiesWhereMember(userId),
     }).pipe(
       map(({ owned, member }) => {
-        const map = new Map<string, IParty>();
-        [...owned, ...member].forEach((p) => map.set(p.id, p));
-        return Array.from(map.values());
+        const byId = new Map<string, IParty>();
+        [...owned, ...member].forEach((p) => byId.set(p.id, p));
+        return Array.from(byId.values());
       })
     );
 
     parties$
       .pipe(
         switchMap((parties) => {
+          const partiesById = new Map(parties.map((p) => [p.id, p]));
           const teamIds = parties.map((p) => p.id);
+
           const teamRes$ = teamIds.length
             ? this.reservationService.getReservationsForTeams(teamIds)
             : of<IReservation[]>([]);
+
           return forkJoin({
             team: teamRes$,
             user: this.reservationService.getMyReservations(),
-          }).pipe(map(({ team, user }) => [...team, ...user]));
-        })
+          }).pipe(
+            map(({ team, user }) => {
+              // deduplikacja
+              const uniq = new Map<string, IReservation>();
+              [...team, ...user].forEach((r) => uniq.set(r.id, r));
+              let out = Array.from(uniq.values());
+
+              // filtr MG z wyjątkiem twórcy rezerwacji
+              out = out.filter((r) => {
+                const isCreator = r.userId === userId;
+                const isGmSelected = r.gmId === userId;
+                const isPartyGm =
+                  r.teamId ? partiesById.get(r.teamId)?.gmId === userId : false;
+
+                // jeżeli jestem MG (wybrany lub GM drużyny), ale to MOJA rezerwacja – zostaw
+                if ((isGmSelected || isPartyGm) && isCreator) return true;
+
+                // jeżeli jestem MG i nie jestem twórcą – ukryj
+                if (isGmSelected || isPartyGm) return false;
+
+                // w pozostałych przypadkach – pokaż
+                return true;
+              });
+
+              return out;
+            })
+          );
+        }),
+        catchError(() => of([] as IReservation[]))
       )
-      .subscribe((allReservations) => {
-        this.reservationsSignal.set(allReservations ?? []);
+      .subscribe((result) => {
+        this.reservationsSignal.set(result ?? []);
       });
   }
 

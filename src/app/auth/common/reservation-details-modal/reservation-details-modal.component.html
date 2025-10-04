@@ -1,12 +1,8 @@
-    <div class="modal-header">
-      <h5 class="modal-title m-0">Podsumowanie rezerwacji</h5>
-      <button
-        type="button"
-        class="btn-close"
-        aria-label="Close"
-        (click)="close()"
-      ></button>
-    </div>
+<div class="modal-header">
+  <h5 class="modal-title m-0">Podsumowanie rezerwacji</h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+</div>
+
 <div class="modal-body custom-modal-body">
   <div class="reservation-summary-wrapper">
     <div class="summary-details">
@@ -14,14 +10,17 @@
         <span class="label">Sala:</span>
         <span class="value">{{ reservation.roomName }}</span>
       </div>
+
       <div class="summary-row">
         <span class="label">Data:</span>
         <span class="value">{{ formattedDate }}</span>
       </div>
+
       <div class="summary-row">
         <span class="label">Godzina:</span>
         <span class="value">{{ reservation.startTime }}</span>
       </div>
+
       <div class="summary-row">
         <span class="label">Czas trwania:</span>
         <span class="value">{{ reservation.durationHours }}h</span>
@@ -34,17 +33,26 @@
         </div>
       }
 
+      @if (gm || reservation.needsGm) {
+        <div class="summary-row">
+          <span class="label">Mistrz Gry:</span>
+          <span class="value">
+            {{ gm ? gmDisplayName : (reservation.needsGm ? 'Do przydziału' : '—') }}
+          </span>
+        </div>
+      }
+
       @if (teamName) {
         <div class="summary-row">
           <span class="label">Drużyna:</span>
           <span class="value">{{ teamName }}</span>
         </div>
+
         <div class="summary-row">
           <span class="label">Dołącz do Drużyny:</span>
-          <span class="value">
-            {{ isBeginners === true ? 'Tak' : 'Nie' }}
-          </span>
+          <span class="value">{{ isBeginners === true ? 'Tak' : 'Nie' }}</span>
         </div>
+
         @if (isBeginners && programStage) {
           <div class="summary-row">
             <span class="label">Etap programu:</span>
@@ -58,6 +66,7 @@
           <span class="label">Rezerwujący:</span>
           <span class="value">{{ displayName }}</span>
         </div>
+
         <div class="summary-row">
           <span class="label">Telefon:</span>
           <span class="value">{{ displayPhone }}</span>
@@ -69,9 +78,69 @@
         <span class="value">{{ displayStatus }}</span>
       </div>
     </div>
+
+    <!-- === Extra info toggle / content === -->
+    @if (hasExtraInfo) {
+      <div class="mt-3 w-100 d-flex justify-content-center">
+        <button type="button"
+                class="btn btn-outline btn-sm w-50"
+                (click)="toggleExtra()">
+          {{ showExtra ? 'Ukryj wytyczne dla MG' : 'Pokaż wytyczne dla MG' }}
+        </button>
+      </div>
+
+      @if (loadingExtra) {
+        <div class="muted mt-2">Ładowanie wytycznych…</div>
+      }
+
+      @if (showExtra && extraInfo) {
+        <div class="card card-dark mt-3 p-3">
+          <h6 class="mb-2 w-100 text-center">Wytyczne dla Mistrza Gry</h6>
+
+          <div class="summary-details">
+            <div class="summary-row">
+              <span class="label">Tworzenie postaci na początku sesji:</span>
+              <span class="value">{{ extraInfo.createCharactersAtTable ? 'Tak' : 'Nie' }}</span>
+            </div>
+
+            <div class="summary-row">
+              <span class="label">Wytyczne do postaci:</span>
+              <span class="value">{{ extraInfo.provideCharacterGuidelines ? 'Tak' : 'Nie' }}</span>
+            </div>
+
+            @if (extraInfo.provideCharacterGuidelines && guidelinesParas.length) {
+              <div class="summary-row">
+                <span class="label">Szczegóły wytycznych:</span>
+                <div class="value value--block">
+                  @for (paragraph of guidelinesParas; let i = $index; track i) {
+                    <p class="event-paragraph">{{ paragraph }}</p>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="summary-row">
+              <span class="label">Liczba graczy:</span>
+              <span class="value">{{ extraInfo.playersCount ?? '—' }}</span>
+            </div>
+
+            @if (extraNotesParas.length) {
+              <div class="summary-row">
+                <span class="label">Dodatkowe uwagi:</span>
+                <div class="value value--block">
+                  @for (paragraph of extraNotesParas; let i = $index; track i) {
+                    <p class="event-paragraph">{{ paragraph }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
   </div>
 
   <div class="modal-footer custom-modal-footer">
-    <button type="button" class="btn btn-primary w-100" (click)="close()">Zamknij</button>
+    <button type="button" class="btn btn-primary w-25" (click)="close()">Zamknij</button>
   </div>
 </div>

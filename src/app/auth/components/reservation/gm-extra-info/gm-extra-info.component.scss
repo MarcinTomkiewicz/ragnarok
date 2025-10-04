@@ -1,0 +1,42 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+
+.fields-grid {
+  @include flex-wrapper(column, flex-start, stretch);
+  row-gap: 1rem;
+}
+
+.form-group {
+  margin: 0;
+}
+
+.form-group--full {
+  width: 100%;
+}
+
+.user-info-form .form-control {
+  @include form-control;
+}
+
+.info-icon {
+  @include flex-center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  font-size: $font-size-xs;
+  line-height: 1;
+  cursor: help;
+
+  background: lighten($bg-color, 4%);
+  border: 1px solid $border-color;
+  color: $primary-color;
+
+  transition: filter $transition-fast, transform $transition-fast;
+
+  &:hover,
+  &:focus {
+    filter: drop-shadow(0 0 4px rgba($secondary-color, .4));
+    transform: translateZ(0);
+    outline: none;
+  }
+}

@@ -53,7 +53,20 @@ export class GmSelectionComponent {
 
   readonly form: FormGroup = this.fb.group({
     systemId: [this.store.selectedSystemId()],
+    wantsGmExtraInfo: [this.store.wantsGmExtraInfo()],
   });
+
+  // sygnał z bieżącą wartością systemId (dla warunków w widoku)
+  private readonly systemIdSig = toSignal(
+    this.form.get('systemId')!.valueChanges.pipe(
+      startWith(this.form.get('systemId')!.value as string | null),
+      distinctUntilChanged()
+    ),
+    { initialValue: this.form.get('systemId')!.value as string | null }
+  );
+
+  // checkbox pokazujemy dopiero, gdy jest wybrany system + MG
+  readonly showExtraInfoToggle = computed(() => !!this.systemIdSig() && !!this.store.selectedGm());
 
   readonly isPartyGmLocked = computed(
     () => !!this.store.selectedPartyId() && !!this.store.selectedGm() && this.store.needsGm()
@@ -107,15 +120,25 @@ export class GmSelectionComponent {
         else this.updateLockedGmAvailability();
       });
 
-    const locked$ = toObservable(this.isPartyGmLocked).pipe(distinctUntilChanged());
-    const systemId$ = this.form
-      .get('systemId')!
-      .valueChanges.pipe(startWith(this.form.get('systemId')!.value as string | null), distinctUntilChanged());
+    this.form
+      .get('wantsGmExtraInfo')!
+      .valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v: boolean) => {
+        this.store.wantsGmExtraInfo.set(!!v);
+        this.store.saveToStorage();
+      });
 
     const manualMode$ = toObservable(this.isPartyGmLocked).pipe(
       map((locked) => !locked),
       distinctUntilChanged()
     );
+
+    const systemId$ = this.form
+      .get('systemId')!
+      .valueChanges.pipe(
+        startWith(this.form.get('systemId')!.value as string | null),
+        distinctUntilChanged()
+      );
 
     const date$ = toObservable(this.store.selectedDate).pipe(filter(Boolean));
     const time$ = toObservable(this.store.selectedStartTime).pipe(filter(Boolean));

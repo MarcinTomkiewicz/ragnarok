@@ -1,6 +1,10 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Rooms } from '../../../../core/enums/rooms';
 import { PlatformService } from '../../../../core/services/platform/platform.service';
+import {
+  defaultGmExtraInfo,
+  IGmExtraInfo,
+} from '../../../../core/interfaces/i-gm-extra-info';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationStoreService {
@@ -19,6 +23,9 @@ export class ReservationStoreService {
   readonly externalName = signal<string | null>(null);
   readonly externalPhone = signal<string | null>(null);
   readonly externalIsClubMember = signal<boolean | null>(null);
+
+  readonly gmExtraInfo = signal<IGmExtraInfo>(defaultGmExtraInfo);
+  readonly wantsGmExtraInfo = signal<boolean>(false);
 
   constructor(private platformService: PlatformService) {
     if (this.platformService.isBrowser) {
@@ -54,6 +61,15 @@ export class ReservationStoreService {
 
       const selectedPartyId = sessionStorage.getItem('selectedPartyId');
       if (selectedPartyId) this.selectedPartyId.set(selectedPartyId);
+
+      const gmExtraRaw = sessionStorage.getItem('gmExtraInfo');
+      if (gmExtraRaw) {
+        try {
+          this.gmExtraInfo.set(JSON.parse(gmExtraRaw) as IGmExtraInfo);
+        } catch {}
+      }
+      const wants = sessionStorage.getItem('wantsGmExtraInfo');
+      if (wants != null) this.wantsGmExtraInfo.set(JSON.parse(wants));
     }
   }
 
@@ -78,6 +94,12 @@ export class ReservationStoreService {
         JSON.stringify(this.externalIsClubMember())
       );
       sessionStorage.setItem('selectedPartyId', this.selectedPartyId() ?? '');
+
+      sessionStorage.setItem('gmExtraInfo', JSON.stringify(this.gmExtraInfo()));
+      sessionStorage.setItem(
+        'wantsGmExtraInfo',
+        JSON.stringify(this.wantsGmExtraInfo())
+      );
     }
   };
 

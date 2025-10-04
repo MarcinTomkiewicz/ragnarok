@@ -7,19 +7,44 @@
   padding: 1rem;
 
   .summary-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    @include flex-wrapper(column, flex-start, stretch);
+    gap: .75rem;
     margin-top: 1rem;
+    width: 100%;
 
     .summary-row {
-      display: flex;
-      justify-content: space-between;
+      @include flex-wrapper(row, space-between, center);
       border-bottom: 1px dashed $primary-color;
-      padding: 0.5rem 0;
+      padding: .5rem 0;
+      gap: 5px;
 
       .label {
+        max-width: 40%;
         font-weight: 600;
+      }
+
+      .value {
+        margin-left: auto;
+        text-align: right;
+        display: block;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+    }
+
+    .summary-row--multiline {
+      @include flex-wrapper(row, space-between, flex-start);
+
+      .value {
+        text-align: right;
+
+        p {
+          margin: 0 0 .25rem 0;
+          text-align: right;
+        }
+        p:last-child {
+          margin-bottom: 0;
+        }
       }
     }
   }
