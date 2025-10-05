@@ -18,6 +18,7 @@ import { GmDetailsModalComponent } from '../../../../common/gm-details-modal/gm-
 import { GmPickSlotModalComponent } from '../../../common/gm-pick-slot-modal/gm-pick-slot-modal.component';
 import { GmDirectoryService } from '../../../core/services/gm/gm-directory/gm-directory.service';
 import { GmSchedulingService } from '../../../core/services/gm/gm-scheduling/gm-scheduling.service';
+import { ReceptionScheduleService } from '../../../core/services/reception-schedule/reception-schedule.service'; // <- dopasuj ścieżkę
 
 @Component({
   selector: 'app-gm-selection',
@@ -35,6 +36,7 @@ export class GmSelectionComponent {
   private readonly partyService = inject(PartyService);
   private readonly modal = inject(NgbModal);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly roster = inject(ReceptionScheduleService);
 
   readonly allSystems = signal<IRPGSystem[]>([]);
   readonly systems = signal<IRPGSystem[]>([]);
@@ -56,7 +58,6 @@ export class GmSelectionComponent {
     wantsGmExtraInfo: [this.store.wantsGmExtraInfo()],
   });
 
-  // sygnał z bieżącą wartością systemId (dla warunków w widoku)
   private readonly systemIdSig = toSignal(
     this.form.get('systemId')!.valueChanges.pipe(
       startWith(this.form.get('systemId')!.value as string | null),
@@ -65,13 +66,10 @@ export class GmSelectionComponent {
     { initialValue: this.form.get('systemId')!.value as string | null }
   );
 
-  // checkbox pokazujemy dopiero, gdy jest wybrany system + MG
   readonly showExtraInfoToggle = computed(() => !!this.systemIdSig() && !!this.store.selectedGm());
-
   readonly isPartyGmLocked = computed(
     () => !!this.store.selectedPartyId() && !!this.store.selectedGm() && this.store.needsGm()
   );
-
   readonly canProceed = computed(() => !!this.store.selectedGm() && !!this.form.value.systemId);
 
   private get startHour(): number | null {
@@ -151,12 +149,9 @@ export class GmSelectionComponent {
         }),
         filter(([manual, systemId]) => manual && !!systemId),
         switchMap(([_, systemId, date, startTime, duration]) =>
-          this.gmScheduling.getAvailableGmsForSystem(
-            systemId as string,
-            date as string,
-            parseInt(startTime as string, 10),
-            duration as number
-          )
+          this.gmScheduling
+            .getAvailableGmsForSystem(systemId as string, date as string, parseInt(startTime as string, 10), duration as number)
+            .pipe(switchMap((list) => this.filterOutAssigned(list, date as string)))
         ),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -239,7 +234,10 @@ export class GmSelectionComponent {
 
     this.gmScheduling
       .getAvailableGmsForSystem(systemId, date, startHour, duration)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        switchMap((list) => this.filterOutAssigned(list, date)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((list) => {
         const ok = list.some((g) => g.userId === gmId);
         this.lockedGmWarn.set(!ok);
@@ -264,7 +262,10 @@ export class GmSelectionComponent {
 
     this.gmScheduling
       .getAvailableGmsForSystem(systemId, date, startHour, duration)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        switchMap((list) => this.filterOutAssigned(list, date)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((gms) => {
         this.gms.set(gms);
         if (gms.length === 0) this.showAllGmsButton.set(true);
@@ -340,7 +341,10 @@ export class GmSelectionComponent {
 
     this.gmScheduling
       .getAllGmsForTimeRange(date, startHour, duration)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        switchMap((list) => this.filterOutAssigned(list, date)),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((gms) => this.allAvailableGms.set(gms));
   }
 
@@ -373,4 +377,20 @@ export class GmSelectionComponent {
   readonly shouldShowMoreButton = computed(() => !this.showAll() && this.gms().length > 4);
 
   readonly shouldShowMoreGmsButton = computed(() => !this.showAll() && this.allAvailableGms().length > 4);
+
+  /** Filters out GMs assigned to reception/external on given date. */
+  private filterOutAssigned(list: IGmData[], date: string) {
+    if (!list.length) return of([] as IGmData[]);
+    const lookups = list.map((g) =>
+      this.roster.getUserAssignments(g.userId, [date]).pipe(
+        map((m) => ({ id: g.userId, assignment: (m.get(date) ?? 'none') as 'none' | 'reception' | 'external' }))
+      )
+    );
+    return forkJoin(lookups).pipe(
+      map((rows) => {
+        const busy = new Set(rows.filter((r) => r.assignment !== 'none').map((r) => r.id));
+        return list.filter((g) => !busy.has(g.userId));
+      })
+    );
+  }
 }
