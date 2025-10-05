@@ -45,7 +45,6 @@ type ExternalOnly = IAvailabilitySlot & {
   externalEventOnly: true;
 };
 
-/** Lokalny enum; jak będzie potrzebny gdzie indziej – przenieś do core/enums */
 export enum ReceptionChangeIntent {
   SetHours = 'SetHours',
   ClearHours = 'ClearHours',

@@ -18,6 +18,8 @@ import {
   isSameMonth,
   endOfMonth,
 } from 'date-fns';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+
 import { UniversalCalendarComponent } from '../../common/universal-calendar/universal-calendar.component';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { TimeSlots } from '../../../core/enums/hours';
@@ -27,6 +29,10 @@ import { forkJoin, of } from 'rxjs';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { IAvailabilitySlot } from '../../../core/interfaces/i-availability-slot';
 import { GmSchedulingService } from '../../core/services/gm/gm-scheduling/gm-scheduling.service';
+import { ReservationService } from '../../core/services/reservation/reservation.service';
+import { InfoModalComponent } from '../../../common/info-modal/info-modal.component';
+
+type TimedGm = IAvailabilitySlot & { workType: 'gm'; fromHour: number; toHour: number };
 
 @Component({
   selector: 'app-gm-availability',
@@ -37,7 +43,9 @@ import { GmSchedulingService } from '../../core/services/gm/gm-scheduling/gm-sch
 export class GmAvailabilityComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly gmScheduling = inject(GmSchedulingService);
+  private readonly reservations = inject(ReservationService);
   private readonly toastService = inject(ToastService);
+  private readonly modal = inject(NgbModal);
   readonly availabilityStore = inject(GmAvailabilityStoreService);
 
   private readonly calendar = viewChild(UniversalCalendarComponent);
@@ -46,15 +54,10 @@ export class GmAvailabilityComponent implements OnInit {
   readonly selectedDate = signal<string | null>(null);
   readonly dayDirection = DayDirection;
   private originalDates = signal<Set<string>>(new Set());
-
-  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>(
-    'availabilitySuccessToast'
-  );
-  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>(
-    'availabilityErrorToast'
-  );
-
   readonly lastError = signal<any | null>(null);
+
+  readonly availabilitySuccessToast = viewChild<TemplateRef<unknown>>('availabilitySuccessToast');
+  readonly availabilityErrorToast = viewChild<TemplateRef<unknown>>('availabilityErrorToast');
 
   readonly startHours = Array.from(
     { length: TimeSlots.end - TimeSlots.noonStart },
@@ -63,18 +66,15 @@ export class GmAvailabilityComponent implements OnInit {
 
   private readonly calendarBlockCount = TimeSlots.end - TimeSlots.noonStart;
 
-  private isTimed = (
-    slot: IAvailabilitySlot
-  ): slot is IAvailabilitySlot & { fromHour: number; toHour: number } =>
+  private isTimed = (slot: IAvailabilitySlot): slot is TimedGm =>
+    slot.workType === 'gm' &&
     typeof (slot as any).fromHour === 'number' &&
     typeof (slot as any).toHour === 'number';
 
   readonly visibleDates = computed(() => {
     const start = startOfMonth(new Date());
     const end = endOfMonth(addMonths(new Date(), 1));
-    return eachDayOfInterval({ start, end }).map((d) =>
-      format(d, 'yyyy-MM-dd')
-    );
+    return eachDayOfInterval({ start, end }).map(d => format(d, 'yyyy-MM-dd'));
   });
 
   readonly availabilityMapRaw = computed(() => {
@@ -105,16 +105,50 @@ export class GmAvailabilityComponent implements OnInit {
   }
 
   fetchAvailability() {
-    this.gmScheduling
-      .getAvailability(this.userId, this.visibleDates())
-      .subscribe({
-        next: (slots) => {
-          this.availabilityStore.setBulk(slots);
-          this.originalDates.set(new Set(slots.map((s) => s.date)));
-        },
-        error: (err) => console.error('❌ Błąd ładowania dostępności:', err),
-      });
+    this.gmScheduling.getAvailability(this.userId, this.visibleDates()).subscribe({
+      next: (slots) => {
+        this.availabilityStore.setBulk(slots);
+        this.originalDates.set(new Set(slots.map(s => s.date)));
+      },
+      error: (err) => console.error('❌ Błąd ładowania dostępności:', err),
+    });
   }
+
+  // Helpers
+
+  private fmt = (h: number) => `${String(h).padStart(2, '0')}:00`;
+
+  /** Returns booked session window for the date: [minStart, maxEnd] or null if none. */
+  private getBookedWindow(date: string): Promise<{ minStart: number; maxEnd: number } | null> {
+    return new Promise((resolve) => {
+      this.reservations.getReservationsForGm(this.userId, date).subscribe({
+        next: (list) => {
+          if (!list?.length) { resolve(null); return; }
+          let minStart = Number.POSITIVE_INFINITY;
+          let maxEnd = Number.NEGATIVE_INFINITY;
+          for (const r of list) {
+            const start = parseInt(r.startTime.split(':')[0], 10);
+            const end = start + r.durationHours;
+            if (start < minStart) minStart = start;
+            if (end > maxEnd)     maxEnd   = end;
+          }
+          resolve({ minStart, maxEnd });
+        },
+        error: () => resolve(null),
+      });
+    });
+  }
+
+  private showBlockedForWindow(win: { minStart: number; maxEnd: number } | null) {
+    const ref = this.modal.open(InfoModalComponent, { backdrop: 'static' });
+    ref.componentInstance.header = 'Zmiana zablokowana';
+    ref.componentInstance.message = win
+      ? `Nie możesz zmienić swojej dyspozycyjności na ten dzień, ponieważ gracze zarezerwowali sesję u Ciebie. Twoja dyspozycyjność musi obejmować godziny co najmniej od ${this.fmt(win.minStart)} do ${this.fmt(win.maxEnd)}.`
+      : 'Nie możesz zmienić swojej dyspozycyjności na ten dzień.';
+    ref.componentInstance.showCancel = false;
+  }
+
+  // Calendar bindings
 
   mapToAvailabilityBlocks = () => (slots: IAvailabilitySlot[]) => {
     const blocks = Array(this.calendarBlockCount).fill(false);
@@ -132,27 +166,60 @@ export class GmAvailabilityComponent implements OnInit {
     this.selectedDate.set(date);
   }
 
-  onHourClicked(event: { date: string; hour: number }) {
+  // Guards vs. reservations
+
+  /** Grid click proposing a 1h window.
+   *  With an existing reservation:
+   *  - start must be ≤ minStart,
+   *  - end is auto-extended to maxEnd.
+   */
+  async onHourClicked(event: { date: string; hour: number }) {
     this.selectedDate.set(event.date);
+    const win = await this.getBookedWindow(event.date);
+
+    if (win) {
+      if (event.hour > win.minStart) {
+        this.showBlockedForWindow(win);
+        return;
+      }
+      this.availabilityStore.setDay(event.date, {
+        userId: this.userId,
+        workType: 'gm',
+        date: event.date,
+        fromHour: event.hour,
+        toHour: Math.max(event.hour + 1, win.maxEnd),
+      } as TimedGm);
+      return;
+    }
+
     this.availabilityStore.setDay(event.date, {
       userId: this.userId,
       workType: 'gm',
       date: event.date,
       fromHour: event.hour,
       toHour: event.hour + 1,
-    } as IAvailabilitySlot);
+    } as TimedGm);
   }
 
-  selectStartHour(hour: number | null) {
+  /** Start time change. With reservations present, start must be ≤ minStart. */
+  async selectStartHour(hour: number | null) {
     const date = this.selectedDate();
     if (!date) return;
 
+    const win = await this.getBookedWindow(date);
+
     if (hour === null) {
+      if (win) { this.showBlockedForWindow(win); return; }
       this.resetDayAvailability();
       return;
     }
 
-    const current = this.availabilityStore.getDay(date) ?? {
+    if (win && hour > win.minStart) {
+      this.showBlockedForWindow(win);
+      return;
+    }
+
+    const current = (this.availabilityStore.getDay(date) as TimedGm | undefined) ?? {
       userId: this.userId,
       workType: 'gm' as const,
       date,
@@ -160,20 +227,28 @@ export class GmAvailabilityComponent implements OnInit {
       toHour: hour + 1,
     };
 
-    this.availabilityStore.setDay(date, {
+    const next: TimedGm = {
       ...current,
-      userId: this.userId,
-      workType: 'gm',
       fromHour: hour,
-      toHour: Math.max(hour + 1, (current as any).toHour ?? hour + 1),
-    } as IAvailabilitySlot);
+      toHour: Math.max(hour + 1, current.toHour ?? hour + 1, win ? win.maxEnd : hour + 1),
+    };
+
+    this.availabilityStore.setDay(date, next);
   }
 
-  selectEndHour(hour: number) {
+  /** End time change. With reservations present, end must be ≥ maxEnd. */
+  async selectEndHour(hour: number) {
     const date = this.selectedDate();
     if (!date) return;
 
-    const current = this.availabilityStore.getDay(date) ?? {
+    const win = await this.getBookedWindow(date);
+
+    if (win && hour < win.maxEnd) {
+      this.showBlockedForWindow(win);
+      return;
+    }
+
+    const current = (this.availabilityStore.getDay(date) as TimedGm | undefined) ?? {
       userId: this.userId,
       workType: 'gm' as const,
       date,
@@ -181,13 +256,18 @@ export class GmAvailabilityComponent implements OnInit {
       toHour: hour,
     };
 
-    this.availabilityStore.setDay(date, {
+    if (win && current.fromHour > win.minStart) {
+      this.showBlockedForWindow(win);
+      return;
+    }
+
+    const next: TimedGm = {
       ...current,
-      userId: this.userId,
-      workType: 'gm',
-      fromHour: Math.min((current as any).fromHour ?? hour - 1, hour - 1),
       toHour: hour ?? TimeSlots.end,
-    } as IAvailabilitySlot);
+      fromHour: Math.min(current.fromHour, hour - 1),
+    };
+
+    this.availabilityStore.setDay(date, next);
   }
 
   selectWholeDay() {
@@ -199,14 +279,20 @@ export class GmAvailabilityComponent implements OnInit {
       date,
       fromHour: TimeSlots.noonStart,
       toHour: TimeSlots.end,
-    } as IAvailabilitySlot);
+    } as TimedGm);
   }
 
-  resetDayAvailability() {
+  async resetDayAvailability() {
     const date = this.selectedDate();
     if (!date) return;
+
+    const win = await this.getBookedWindow(date);
+    if (win) { this.showBlockedForWindow(win); return; }
+
     this.availabilityStore.removeDay(date);
   }
+
+  // UI helpers
 
   getStartHour(): number | null {
     const date = this.selectedDate();
@@ -252,19 +338,13 @@ export class GmAvailabilityComponent implements OnInit {
     }
   }
 
-  // ...
+  // Persistence
+
   saveAvailability() {
-    // bierzemy tylko timed GM – nic z external_event tu nie powinno wejść
     const currentTimedGm = this.availabilityStore
       .getAll()
       .filter(
-        (
-          s
-        ): s is IAvailabilitySlot & {
-          workType: 'gm';
-          fromHour: number;
-          toHour: number;
-        } =>
+        (s): s is TimedGm =>
           s.workType === 'gm' &&
           typeof (s as any).fromHour === 'number' &&
           typeof (s as any).toHour === 'number'
@@ -273,9 +353,7 @@ export class GmAvailabilityComponent implements OnInit {
     const currentDates = new Set(currentTimedGm.map((s) => s.date));
     const original = this.originalDates();
 
-    const datesToDelete = Array.from(original).filter(
-      (d) => !currentDates.has(d)
-    );
+    const datesToDelete = Array.from(original).filter((d) => !currentDates.has(d));
 
     const delete$ = datesToDelete.length
       ? this.gmScheduling.deleteAvailability(this.userId, datesToDelete)
