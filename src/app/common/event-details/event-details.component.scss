@@ -14,6 +14,17 @@
     }
   }
 
+  .event-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: $secondary-text-color;
+    @include responsive-font-size($font-size-xs);
+    .separator {
+      opacity: 0.6;
+    }
+  }
+
   /* Okładka */
   .event-image-wrapper {
     width: 100%;

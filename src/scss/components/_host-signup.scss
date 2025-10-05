@@ -23,7 +23,7 @@
       align-items: center;
       gap: 0.5rem;
       color: $secondary-text-color;
-      font-size: 0.95rem;
+      @include responsive-font-size($font-size-xs);
       .separator {
         opacity: 0.6;
       }
