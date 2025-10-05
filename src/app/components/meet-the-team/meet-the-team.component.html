@@ -5,21 +5,48 @@
       Nasi Mistrzowie Gry i pracownicy z pasją tworzą niezapomniane przygody.
     </p>
 
-    <div class="team-grid">
-      @for (member of team; track member.id) {
-        <div class="team-card">
-          <div class="avatar">
-            <img [src]="member.image" [alt]="member.name" />
+    @if (isSmallScreen() && team.length) {
+      <swiper-container
+        class="mg-swiper"
+        slides-per-view="auto"
+        navigation="true"
+        centered-slides="true"
+        speed="500"
+        space-between="8"
+        [attr.loop]="team.length > 1"
+      >
+        @for (member of team; track member.id) {
+          <swiper-slide>
+            <div class="team-card">
+              <div class="avatar">
+                <img [src]="member.image" [alt]="member.name" />
+              </div>
+              <h3>{{ member.name }}</h3>
+              <p class="role">{{ member.roleDisplay }}</p>
+              <p class="bio">{{ member.description }}</p>
+            </div>
+          </swiper-slide>
+        }
+      </swiper-container>
+    } @else {
+      <div class="team-grid">
+        @for (member of team; track member.id) {
+          <div class="team-card">
+            <div class="avatar">
+              <img [src]="member.image" [alt]="member.name" />
+            </div>
+            <h3>{{ member.name }}</h3>
+            <p class="role">{{ member.roleDisplay }}</p>
+            <p class="bio">{{ member.description }}</p>
           </div>
-          <h3>{{ member.name }}</h3>
-          <p class="role">{{ member.roleDisplay }}</p>
-          <p class="bio">{{ member.description }}</p>
-        </div>
-      }
-    </div>
+        }
+      </div>
+    }
 
     <div class="team-button">
-      <a routerLink="/tech-stack" class="button-like button-like-outline">Poznaj Mistrzów Gry</a>
+      <a routerLink="/tech-stack" class="button-like button-like-outline">
+        Poznaj Mistrzów Gry
+      </a>
     </div>
   </div>
 </section>
