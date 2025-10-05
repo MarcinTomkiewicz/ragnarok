@@ -39,42 +39,41 @@
         </label>
       </div>
 
-      @if (!selectedExternalOnly()) {
-        <div class="hour-picker-row">
+      <!-- Godzinówki ZAWSZE widoczne -->
+      <div class="hour-picker-row">
+        <div class="picker">
+          <div class="picker-label">Od:</div>
+          <div class="hour-grid">
+            @for (hour of startHours; track hour) {
+              <button
+                class="btn btn-outline btn-sm"
+                [class.active]="getStartHour() === hour"
+                (click)="selectStartHour(hour)"
+              >{{ hour }}:00</button>
+            }
+          </div>
+        </div>
+
+        @if (getStartHour() !== null) {
           <div class="picker">
-            <div class="picker-label">Od:</div>
+            <div class="picker-label">Do:</div>
             <div class="hour-grid">
-              @for (hour of startHours; track hour) {
+              @for (hour of getEndHourOptions(); track hour) {
                 <button
                   class="btn btn-outline btn-sm"
-                  [class.active]="getStartHour() === hour"
-                  (click)="selectStartHour(hour)"
+                  [class.active]="getEndHour() === hour"
+                  (click)="selectEndHour(hour)"
                 >{{ hour }}:00</button>
               }
             </div>
           </div>
+        }
+      </div>
 
-          @if (getStartHour() !== null) {
-            <div class="picker">
-              <div class="picker-label">Do:</div>
-              <div class="hour-grid">
-                @for (hour of getEndHourOptions(); track hour) {
-                  <button
-                    class="btn btn-outline btn-sm"
-                    [class.active]="getEndHour() === hour"
-                    (click)="selectEndHour(hour)"
-                  >{{ hour }}:00</button>
-                }
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="whole-day-row">
-          <button class="btn btn-outline" (click)="selectWholeDay()">Cały dzień (12:00–23:00)</button>
-          <button class="btn btn-outline btn-error" (click)="resetDayAvailability()">Resetuj dostępność (niedostępny)</button>
-        </div>
-      }
+      <div class="whole-day-row">
+        <button class="btn btn-outline" (click)="selectWholeDay()">Cały dzień (12:00–23:00)</button>
+        <button class="btn btn-outline btn-error" (click)="resetDayAvailability()">Resetuj dostępność (niedostępny)</button>
+      </div>
 
       <div class="day-controls">
         <button class="btn btn-secondary" (click)="changeDay(dayDirection.Prev)">Poprzedni dzień</button>

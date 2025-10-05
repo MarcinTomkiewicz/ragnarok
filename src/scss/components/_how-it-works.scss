@@ -2,11 +2,10 @@
 @import "abstracts/mixins";
 
 .how-it-works-section {
-    @include section-wrapper;
+  @include section-wrapper;
 
   .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    @include mg-grid(4);
     gap: 2.5rem;
     position: relative;
   }

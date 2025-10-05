@@ -33,7 +33,7 @@ type UpcomingCard = {
   coverUrl: string;
 };
 
-const SMALL_BP = 767;
+const SMALL_BP = 1024;
 
 @Component({
   selector: 'app-upcoming-events',
