@@ -22,6 +22,18 @@
   <div class="container">
     <h2 class="section-title text-center">{{ v.event.name }}</h2>
 
+    <div class="event-meta">
+      <span class="meta-item">{{
+        v.event.singleDate | date : "dd.MM.yyyy"
+      }}</span>
+      <span class="separator">•</span>
+      <span class="meta-item">{{ v.timeRangeLabel }}</span>
+      <span class="separator">•</span>
+      <span class="meta-item">{{
+        (v.event!.rooms || []).join(", ") || "-"
+      }}</span>
+    </div>
+
     @if (v.chips.length) {
     <div class="tag-badges chip-row">
       @for (c of v.chips; track c.key) {
