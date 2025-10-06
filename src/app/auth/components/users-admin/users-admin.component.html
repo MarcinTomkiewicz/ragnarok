@@ -3,126 +3,148 @@
     <h2 class="section-title mb-3">Zarządzanie użytkownikami</h2>
 
     @if (!isAllowed()) {
-    <div class="notice danger">
-      Brak uprawnień. Dostęp wyłącznie dla ról <strong>Recepcja</strong> i
-      wyżej.
-    </div>
+      <div class="notice danger">
+        Brak uprawnień. Dostęp wyłącznie dla ról <strong>Recepcja</strong> i wyżej.
+      </div>
     } @else {
 
-    <div class="toolbar">
-      <div class="search-box">
-        <input
-          type="search"
-          class="form-control"
-          placeholder="Szukaj po e-mail, imieniu lub pseudonimie…"
-          (input)="onSearchInput($event)"
-        />
-      </div>
-
-      <!-- page-size: przyciski zamiast selecta -->
-      <div>
-        Użytkowników na stronę
-        <div class="page-size btn-group">
-          @for (opt of pageSizeOptions; track opt) {
-          <button
-            type="button"
-            class="btn btn-outline btn-sm"
-            [class.active]="pageSize() === opt"
-            (click)="onPageSizeClick($event)"
-            [attr.data-size]="opt"
-          >
-            {{ opt }}
-          </button>
-          }
-        </div>
-      </div>
-    </div>
-
-    <div class="users-table">
-      <div class="users-header">
-        <div class="col col-check"><input type="checkbox" disabled /></div>
-        <div class="col col-name">Imię / Pseudonim</div>
-        <div class="col col-email">E-mail</div>
-        <div class="col col-phone">Telefon</div>
-        <div class="col col-role">Rola</div>
-      </div>
-
-      @if (!pagedUsers().length) {
-      <div class="empty muted">Brak wyników do wyświetlenia.</div>
-      } @else { @for (u of pagedUsers(); track u.id) {
-      <div class="users-row" (click)="onRowClick(u)">
-        <div class="col col-check" (click)="$event.stopPropagation()">
-          <input type="checkbox" disabled />
+      <div class="toolbar w-100">
+        <div class="search-box">
+          <input
+            type="search"
+            class="form-control"
+            placeholder="Szukaj po e-mail, imieniu lub pseudonimie…"
+            (input)="onSearchInput($event)"
+          />
         </div>
 
-        <div class="col col-name">
-          <div class="main">{{ u.firstName || u.email || "Użytkownik" }}</div>
-          <div class="sub muted">
-            @if (u.nickname) { {{ u.nickname }} } @else { Brak pseudonimu }
+        <!-- SORTOWANIE: jak w sklepie -->
+        <div class="sort-section d-flex align-items-center gap-2 flex-wrap ms-3">
+          <span class="muted">Sortuj</span>
+          <div class="d-flex flex-row gap-2 flex-wrap">
+            @for (field of sortFields; track field) {
+              <button type="button" class="btn btn-plain-light sort-button" (click)="sortBy(field)">
+                {{ userSortLabels[field] }}
+                <i [ngClass]="getSortIcon(field)" *ngIf="getSortIcon(field)"></i>
+              </button>
+            }
           </div>
         </div>
 
-        <div class="col col-email">
-          <a [href]="'mailto:' + u.email">{{ u.email }}</a>
-        </div>
-
-        <div class="col col-phone">
-          {{ u.phoneNumber || "—" }}
-        </div>
-
-        <div class="col col-role w-100" (click)="$event.stopPropagation()">
-          <select
-            class="form-select form-select-sm role-select w-100"
-            [disabled]="!canEditRole(u)"
-            (change)="onRoleChange($event, u)"
-            title="Zmień rolę (max: Reception)"
-          >
-            @for (r of allowedRoleOptions(); track r) {
-            <option
-              [value]="r"
-              [selected]="(u.coworker ?? minAssignableRole) === r"
-            >
-              {{ roleLabelFromEnum(r) }}
-            </option>
+        <div>
+          Użytkowników na stronę
+          <div class="page-size btn-group">
+            @for (opt of pageSizeOptions; track opt) {
+              <button
+                type="button"
+                class="btn btn-outline btn-sm"
+                [class.active]="pageSize() === opt"
+                (click)="onPageSizeClick($event)"
+                [attr.data-size]="opt"
+              >
+                {{ opt }}
+              </button>
             }
-          </select>
+          </div>
         </div>
       </div>
-      } } @if (!isSearchActive() && totalUsers() > pageSize()) {
-      <div class="pagination-bar">
-        <ngb-pagination
-          [collectionSize]="totalUsers()"
-          [(page)]="currentPageRef"
-          [pageSize]="pageSize()"
-          (pageChange)="onPageChange($event)"
-          [boundaryLinks]="true"
-          [maxSize]="3"
-          size="sm"
-        ></ngb-pagination>
-        <div class="muted">Łącznie: {{ totalUsers() }} użytkowników</div>
-      </div>
-      } @if (isSearchActive() && filteredUsers().length > pageSize()) {
-      <div class="pagination-bar">
-        <ngb-pagination
-          [collectionSize]="filteredUsers().length"
-          [(page)]="currentPageRef"
-          [pageSize]="pageSize()"
-          (pageChange)="onPageChange($event)"
-          [boundaryLinks]="true"
-          [maxSize]="3"
-          size="sm"
-        ></ngb-pagination>
-        <div class="muted">Dopasowań: {{ filteredUsers().length }}</div>
-      </div>
-      }
-    </div>
 
-    <ng-template #saveSuccessToast>
-      <strong>Sukces!</strong> Zmieniono rolę użytkownika.
-    </ng-template>
-    <ng-template #saveErrorToast>
-      <strong>Błąd!</strong> Nie udało się zapisać zmiany roli.
-    </ng-template>
+      <div class="users-table mt-4">
+        <div class="users-header">
+          <div class="col col-check"><input type="checkbox" disabled /></div>
+          <div class="col col-name">Imię / Pseudonim</div>
+          <div class="col col-email">E-mail</div>
+          <div class="col col-phone">Telefon</div>
+          <div class="col col-created">Data rejestracji</div>
+          <div class="col col-role">Rola</div>
+        </div>
+
+        @if (!pagedUsers().length) {
+          <div class="empty muted">Brak wyników do wyświetlenia.</div>
+        } @else {
+          @for (u of pagedUsers(); track u.id) {
+            <div class="users-row" (click)="onRowClick(u)">
+              <div class="col col-check" (click)="$event.stopPropagation()">
+                <input type="checkbox" disabled />
+              </div>
+
+              <div class="col col-name">
+                <div class="main">{{ u.firstName || u.email || "Użytkownik" }}</div>
+                <div class="sub muted">
+                  @if (u.nickname) { {{ u.nickname }} } @else { Brak pseudonimu }
+                </div>
+              </div>
+
+              <div class="col col-email">
+                <a [href]="'mailto:' + u.email">{{ u.email }}</a>
+              </div>
+
+              <div class="col col-phone">
+                {{ u.phoneNumber || "—" }}
+              </div>
+
+              <div class="col col-created">
+                {{ u.createdAt | date: 'dd.MM.yyyy'}}
+              </div>
+
+              <div class="col col-role w-100" (click)="$event.stopPropagation()">
+                <select
+                  class="form-select form-select-sm role-select w-100"
+                  [disabled]="!canEditRole(u)"
+                  (change)="onRoleChange($event, u)"
+                  title="Zmień rolę (max: Reception)"
+                >
+                  @for (r of allowedRoleOptions(); track r) {
+                    <option
+                      [value]="r"
+                      [selected]="(u.coworker ?? minAssignableRole) === r"
+                    >
+                      {{ roleLabelFromEnum(r) }}
+                    </option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+        }
+
+        @if (!isSearchActive() && totalUsers() > pageSize()) {
+          <div class="pagination-bar">
+            <ngb-pagination
+              [collectionSize]="totalUsers()"
+              [(page)]="currentPageRef"
+              [pageSize]="pageSize()"
+              (pageChange)="onPageChange($event)"
+              [boundaryLinks]="true"
+              [maxSize]="3"
+              size="sm"
+            ></ngb-pagination>
+            <div class="muted">Łącznie: {{ totalUsers() }} użytkowników</div>
+          </div>
+        }
+
+        @if (isSearchActive() && filteredUsers().length > pageSize()) {
+          <div class="pagination-bar">
+            <ngb-pagination
+              [collectionSize]="filteredUsers().length"
+              [(page)]="currentPageRef"
+              [pageSize]="pageSize()"
+              (pageChange)="onPageChange($event)"
+              [boundaryLinks]="true"
+              [maxSize]="3"
+              size="sm"
+            ></ngb-pagination>
+            <div class="muted">Dopasowań: {{ filteredUsers().length }}</div>
+          </div>
+        }
+      </div>
+
+      <ng-template #saveSuccessToast>
+        <strong>Sukces!</strong> Zmieniono rolę użytkownika.
+      </ng-template>
+      <ng-template #saveErrorToast>
+        <strong>Błąd!</strong> Nie udało się zapisać zmiany roli.
+      </ng-template>
     }
   </div>
 </div>

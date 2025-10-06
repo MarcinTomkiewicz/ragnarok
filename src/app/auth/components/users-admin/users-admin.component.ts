@@ -34,8 +34,24 @@ import {
 import { CoworkerRoles, RoleDisplay } from '../../../core/enums/roles';
 import { IUser } from '../../../core/interfaces/i-user';
 import { FilterOperator } from '../../../core/enums/filterOperator';
+import { IconClass } from '../../../core/enums/icons';
 
 type UserRoleUpsert = { id: string; coworker: CoworkerRoles | null };
+
+/** Sort fields available in the Users table. */
+type UserSortField = 'name' | 'email' | 'phone' | 'createdAt' | 'role';
+
+/** DB columns mapping for server-side sort. */
+const SERVER_COLUMN: Record<UserSortField, keyof IUser> = {
+  name: 'firstName',
+  email: 'email',
+  phone: 'phoneNumber',
+  createdAt: 'createdAt',
+  role: 'coworker',
+};
+
+/** Role ranking for client-side sorting (no string arithmetic). */
+const ROLE_RANK = new Map(CoworkerHierarchy.map((r, i) => [r, i]));
 
 @Component({
   selector: 'app-users-admin',
@@ -45,71 +61,116 @@ type UserRoleUpsert = { id: string; coworker: CoworkerRoles | null };
   styleUrls: ['./users-admin.component.scss'],
 })
 export class UsersAdminComponent implements OnInit {
-  // --- serwisy ---
+  // --- services ---
   private readonly backend = inject(BackendService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
 
-  // --- uprawnienia Recepcja+ ---
+  // --- permissions (Reception+) ---
   readonly currentUser = computed(() => this.auth.user());
   readonly isAllowed = computed(() =>
     hasMinimumCoworkerRole(this.currentUser(), CoworkerRoles.Reception)
   );
 
-  // minimalna rola (fallback dla selecta)
+  // minimal assignable role (fallback for select)
   readonly minAssignableRole = CoworkerRoles.User;
 
-  // Role do wyboru: kolejność z hierarchy, przycięte do Reception (włącznie)
+  // role select options
   readonly allowedRoleOptions = computed<CoworkerRoles[]>(() => {
     const idx = CoworkerHierarchy.indexOf(CoworkerRoles.Reception);
-    return idx >= 0
-      ? CoworkerHierarchy.slice(0, idx + 1)
-      : [CoworkerRoles.User];
+    return idx >= 0 ? CoworkerHierarchy.slice(0, idx + 1) : [CoworkerRoles.User];
   });
 
   roleLabelFromEnum(r: CoworkerRoles): string {
     return RoleDisplay[r] ?? String(r);
   }
 
-  // --- stan listy i paginacji ---
+  // --- sorting state ---
+  readonly userSortLabels: Record<UserSortField, string> = {
+    name: 'Imię',
+    email: 'E-mail',
+    phone: 'Telefon',
+    createdAt: 'Data rejestracji',
+    role: 'Rola',
+  };
+  readonly sortFields: UserSortField[] = ['name', 'email', 'phone', 'createdAt', 'role'];
+  readonly sortField = signal<UserSortField>('createdAt');
+  readonly sortDir = signal<'asc' | 'desc'>('desc');
+
+  sortBy(field: UserSortField): void {
+    if (this.sortField() === field) {
+      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortField.set(field);
+      // sensible defaults
+      this.sortDir.set(field === 'createdAt' ? 'desc' : 'asc');
+    }
+    this.currentPage.set(1);
+    if (!this.isSearchActive()) this.loadPage(1);
+  }
+
+  getSortIcon(field: UserSortField): string {
+    if (this.sortField() !== field) return '';
+    const dir = this.sortDir();
+    const isNumeric = field === 'phone' || field === 'createdAt' || field === 'role';
+    return isNumeric
+      ? dir === 'asc' ? IconClass.NumericAsc : IconClass.NumericDesc
+      : dir === 'asc' ? IconClass.AlphaAsc   : IconClass.AlphaDesc;
+  }
+
+  // --- paging ---
   readonly pageSizeOptions = [10, 50, 100];
   readonly pageSize = signal<number>(10);
   readonly currentPage = signal<number>(1);
 
-  // ngb-pagination dwukierunkowo z property
-  get currentPageRef(): number {
-    return this.currentPage();
-  }
-  set currentPageRef(v: number) {
-    this.currentPage.set(v);
-  }
+  get currentPageRef(): number { return this.currentPage(); }
+  set currentPageRef(v: number) { this.currentPage.set(v); }
 
   readonly totalUsers = signal<number>(0);
   readonly pageUsers = signal<IUser[]>([]);
 
-  // cache dla wyszukiwarki
+  // cache for search
   private allUsersFetched = signal<boolean>(false);
   private allUsers = signal<IUser[]>([]);
 
-  // --- wyszukiwarka (RxJS) ---
+  // --- search ---
   private readonly searchInput$ = new Subject<string>();
   readonly searchQuery = signal<string>('');
-  readonly isSearchActive = computed(
-    () => this.searchQuery().trim().length >= 3
-  );
+  readonly isSearchActive = computed(() => this.searchQuery().trim().length >= 3);
 
+  /** Client-side filtered (and sorted) list for search mode. */
   readonly filteredUsers = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
     if (q.length < 3) return [];
-    const src = this.allUsers();
-    return src.filter(
+
+    const filtered = this.allUsers().filter(
       (u) =>
         (u.email ?? '').toLowerCase().includes(q) ||
         (u.firstName ?? '').toLowerCase().includes(q) ||
         (u.nickname ?? '').toLowerCase().includes(q)
     );
+
+    const field = this.sortField();
+    const dir = this.sortDir();
+    const mul = dir === 'asc' ? 1 : -1;
+
+    const valName   = (u: IUser) => (u.firstName || u.email || '').toLowerCase();
+    const valEmail  = (u: IUser) => (u.email || '').toLowerCase();
+    const valPhone  = (u: IUser) => parseInt((u.phoneNumber || '').replace(/\D/g, ''), 10) || 0;
+    const valCreated= (u: IUser) => new Date(u.createdAt ?? 0).getTime() || 0;
+    const valRole   = (u: IUser) => ROLE_RANK.get(u.coworker ?? CoworkerRoles.User) ?? -1;
+
+    return [...filtered].sort((a, b) => {
+      if (field === 'name')      return mul * valName(a).localeCompare(valName(b), 'pl', { numeric: true, sensitivity: 'base' });
+      if (field === 'email')     return mul * valEmail(a).localeCompare(valEmail(b), 'pl', { numeric: true, sensitivity: 'base' });
+      if (field === 'phone')     return mul * (valPhone(a) - valPhone(b));
+      if (field === 'createdAt') return mul * (valCreated(a) - valCreated(b));
+      if (field === 'role')      return mul * (valRole(a) - valRole(b));
+      return 0;
+    });
   });
 
+  /** Final list for the table (paged). */
   readonly pagedUsers = computed(() => {
     if (!this.isAllowed()) return [] as IUser[];
     if (this.isSearchActive()) {
@@ -119,10 +180,9 @@ export class UsersAdminComponent implements OnInit {
     return this.pageUsers();
   });
 
-  // --- toasty ---
-  readonly saveSuccessToast =
-    viewChild<TemplateRef<unknown>>('saveSuccessToast');
-  readonly saveErrorToast = viewChild<TemplateRef<unknown>>('saveErrorToast');
+  // --- toasts ---
+  readonly saveSuccessToast = viewChild<TemplateRef<unknown>>('saveSuccessToast');
+  readonly saveErrorToast   = viewChild<TemplateRef<unknown>>('saveErrorToast');
 
   // --- lifecycle ---
   ngOnInit(): void {
@@ -144,9 +204,7 @@ export class UsersAdminComponent implements OnInit {
 
           return this.backend
             .getAll<IUser>('users', 'firstName', 'asc', {
-              filters: {
-                isTestUser: { operator: FilterOperator.EQ, value: false },
-              },
+              filters: { isTestUser: { operator: FilterOperator.EQ, value: false } },
             })
             .pipe(
               tap((list) => {
@@ -166,7 +224,6 @@ export class UsersAdminComponent implements OnInit {
     this.searchInput$.next(val);
   }
 
-  // Przyciski do wyboru pageSize (data-size na buttonie)
   onPageSizeClick(ev: Event) {
     const target = ev.target as HTMLElement | null;
     const btn = target?.closest('button');
@@ -190,14 +247,13 @@ export class UsersAdminComponent implements OnInit {
   }
 
   onRowClick(_user: IUser) {
-    // miejsce na rozwijane szczegóły — celowo puste
+    // placeholder for expandable row details
   }
 
   canEditRole(_target: IUser): boolean {
     return this.isAllowed();
   }
 
-  // Zwraca konkretną wartość CoworkerRoles z selecta (bez rzutowań i liczb pośrednich)
   private readRoleFromEvent(ev: Event): CoworkerRoles | null {
     const raw = (ev.target as HTMLSelectElement | null)?.value ?? '';
     for (const role of this.allowedRoleOptions()) {
@@ -211,46 +267,39 @@ export class UsersAdminComponent implements OnInit {
     if (candidate === null) return;
     if (user.coworker === candidate) return;
 
-    this.backend
-      .update<IUser>('users', user.id, { coworker: candidate })
-      .subscribe({
-        next: (updated) => {
-          // lokalny stan
-          this.pageUsers.update((list) =>
-            list.map((u) =>
-              u.id === updated.id ? { ...u, coworker: updated.coworker } : u
-            )
+    this.backend.update<IUser>('users', user.id, { coworker: candidate }).subscribe({
+      next: (updated) => {
+        this.pageUsers.update((list) =>
+          list.map((u) => (u.id === updated.id ? { ...u, coworker: updated.coworker } : u))
+        );
+        if (this.allUsersFetched()) {
+          this.allUsers.update((list) =>
+            list.map((u) => (u.id === updated.id ? { ...u, coworker: updated.coworker } : u))
           );
-          if (this.allUsersFetched()) {
-            this.allUsers.update((list) =>
-              list.map((u) =>
-                u.id === updated.id ? { ...u, coworker: updated.coworker } : u
-              )
-            );
-          }
-          const t = this.saveSuccessToast();
-          if (t) {
-            this.toast.show({
-              template: t,
-              classname: 'bg-success text-white',
-              header: 'Zmieniono rolę',
-            });
-          }
-        },
-        error: () => {
-          const t = this.saveErrorToast();
-          if (t) {
-            this.toast.show({
-              template: t,
-              classname: 'bg-danger text-white',
-              header: 'Nie udało się zapisać',
-            });
-          }
-        },
-      });
+        }
+        const t = this.saveSuccessToast();
+        if (t) {
+          this.toast.show({
+            template: t,
+            classname: 'bg-success text-white',
+            header: 'Zmieniono rolę',
+          });
+        }
+      },
+      error: () => {
+        const t = this.saveErrorToast();
+        if (t) {
+          this.toast.show({
+            template: t,
+            classname: 'bg-danger text-white',
+            header: 'Nie udało się zapisać',
+          });
+        }
+      },
+    });
   }
 
-  // --- pobranie strony bez wyszukiwarki ---
+  // --- server fetch (respects current sort) ---
   private loadPage(page: number) {
     const pagination: IPagination = {
       page,
@@ -258,8 +307,11 @@ export class UsersAdminComponent implements OnInit {
       filters: { isTestUser: { operator: FilterOperator.EQ, value: false } },
     };
 
+    const sortCol = SERVER_COLUMN[this.sortField()] as keyof IUser;
+    const sortDir = this.sortDir();
+
     this.backend
-      .getAll<IUser>('users', 'firstName', 'asc', pagination)
+      .getAll<IUser>('users', sortCol, sortDir, pagination)
       .subscribe({
         next: (users) => {
           this.pageUsers.set(users);
