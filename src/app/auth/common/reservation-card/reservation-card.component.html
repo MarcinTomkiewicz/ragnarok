@@ -37,9 +37,12 @@
         <p>Drużyna: {{ partyName }}</p>
       }
 
-      <!-- ZAWSZE pokazujemy dane rezerwującego (jak w modalu) -->
-      <p>Rezerwujący: {{ displayName }}</p>
-      <p>Telefon: {{ displayPhone }}</p>
+      @if (eventName) {
+        <p>Wydarzenie: {{ eventName }}</p>
+      } @else {
+        <p>Rezerwujący: {{ displayName }}</p>
+        <p>Telefon: {{ displayPhone }}</p>
+      }
     </div>
 
     <div class="reservation-id">

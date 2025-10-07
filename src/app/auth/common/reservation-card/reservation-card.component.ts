@@ -11,7 +11,7 @@ import {
   output,
 } from '@angular/core';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { Subscription, of, switchMap, map } from 'rxjs';
+import { Subscription, of, switchMap, map, forkJoin } from 'rxjs';
 
 import { IReservation, ReservationStatusDisplay } from '../../../core/interfaces/i-reservation';
 import { IUser } from '../../../core/interfaces/i-user';
@@ -27,6 +27,7 @@ import { CoworkerRoles } from '../../../core/enums/roles';
 import { TeamRole } from '../../../core/enums/party.enum';
 import { IParty } from '../../../core/interfaces/parties/i-party';
 import { UserCacheService } from '../../core/services/user-cache/user-cache.service';
+import { EventService } from '../../../core/services/event/event.service';
 
 @Component({
   selector: 'app-reservation-card',
@@ -41,28 +42,26 @@ export class ReservationCardComponent implements OnInit, OnChanges, OnDestroy {
   private readonly backend = inject(BackendService);
   private readonly users = inject(UserCacheService);
   private readonly gmDirectory = inject(GmDirectoryService);
+  private readonly events = inject(EventService);
 
-  // Inputs (API jak wcześniej)
   reservation = input.required<IReservation>();
-  user = input<IUser | null>(null);         // jeśli parent poda – użyjemy
-  showUserDetails = input<boolean>(false);  // legacy/no-op: zostawiamy dla kompatybilności
+  user = input<IUser | null>(null);
+  showUserDetails = input<boolean>(false);
   showManagePlaceholder = input(false);
   showDetailsButton = input(false);
   showCancelButton = input(false);
 
-  // Outputs (bez zmian)
   manage = output<void>();
   showDetails = output<void>();
   cancel = output<void>();
 
-  // UI state
   partyName = '';
   badgeBeginners = false;
   badgeMyParty = false;
   badgeClub = false;
 
-  // Lookups
   systemName: string | null = null;
+  eventName: string | null = null;
   gm: IGmData | null = null;
   private localUser: IUser | null = null;
 
@@ -83,7 +82,6 @@ export class ReservationCardComponent implements OnInit, OnChanges, OnDestroy {
       this.refreshUser();
     }
     if (changes['user']) {
-      // parent podał usera – nadpisujemy lokalnego
       this.localUser = this.user() ?? null;
     }
   }
@@ -94,7 +92,6 @@ export class ReservationCardComponent implements OnInit, OnChanges, OnDestroy {
     this.subUser?.unsubscribe();
   }
 
-  // ── user (z Input albo z cache/backend)
   private refreshUser(): void {
     this.subUser?.unsubscribe();
     const fromInput = this.user();
@@ -110,7 +107,7 @@ export class ReservationCardComponent implements OnInit, OnChanges, OnDestroy {
     this.subUser = this.users.getById(uid).subscribe(u => (this.localUser = u));
   }
 
-  // ── party / badge’y
+  /** Loads party metadata and badges. */
   private refreshPartyData(): void {
     this.subParty?.unsubscribe();
 
@@ -154,28 +151,23 @@ export class ReservationCardComponent implements OnInit, OnChanges, OnDestroy {
       });
   }
 
-  // ── GM + System
+  /** Loads system, GM and event name (if reservation has eventId). */
   private refreshLookups(): void {
     this.subLookups?.unsubscribe();
     const r = this.reservation();
 
-    const sys$ = r.systemId
-      ? this.backend.getById<IRPGSystem>('systems', r.systemId)
-      : of<IRPGSystem | null>(null);
+    const sys$ = r.systemId ? this.backend.getById<IRPGSystem>('systems', r.systemId) : of<IRPGSystem | null>(null);
+    const gm$  = r.gmId ? this.gmDirectory.getGmById(r.gmId) : of<IGmData | null>(null);
+    const ev$  = r.eventId ? this.events.getById(r.eventId) : of(null);
 
-    const gm$ = r.gmId ? this.gmDirectory.getGmById(r.gmId) : of<IGmData | null>(null);
-
-    this.subLookups = sys$
-      .pipe(
-        switchMap((sys) => {
-          this.systemName = sys?.name ?? null;
-          return gm$;
-        })
-      )
-      .subscribe((gm) => (this.gm = gm ?? null));
+    this.subLookups = forkJoin({ sys: sys$, gm: gm$, ev: ev$ }).subscribe(({ sys, gm, ev }) => {
+      this.systemName = sys?.name ?? null;
+      this.gm = gm ?? null;
+      this.eventName = ev?.name ?? null;
+    });
   }
 
-  // ── wyświetlanie
+  /** Display helpers. */
   get userDisplayName(): string {
     return this.auth.userDisplayName(this.localUser) || 'Brak danych';
   }
