@@ -1,8 +1,16 @@
-<!-- admin/offers-admin/offers-admin.component.html -->
-
 <div class="offers-admin-wrapper">
   <div class="container">
-    <h2 class="section-title mb-3">Zarządzanie produktami</h2>
+    <div
+      class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"
+    >
+      <h2 class="section-title m-0">Zarządzanie produktami</h2>
+    </div>
+
+    <div class="mb-4">
+      <a class="button-like button-like-primary" [routerLink]="['/auth', 'offers', 'new']"
+        >Nowy przedmiot</a
+      >
+    </div>
 
     <div class="toolbar w-100">
       <div class="search-box">
@@ -24,7 +32,7 @@
             (click)="sortBy(field)"
           >
             {{ sortLabels[field] }}
-            <i [ngClass]="getSortIcon(field)" *ngIf="getSortIcon(field)"></i>
+            <i [ngClass]="getSortIcon(field)"></i>
           </button>
           }
         </div>
@@ -48,8 +56,7 @@
         <div class="col col-title">
           <div class="main">{{ o.title }}</div>
           <div class="sub muted">
-            <span *ngIf="o.slug">slug: {{ o.slug }}</span>
-            <span *ngIf="!o.slug">slug: —</span>
+            <span>slug: {{ o.slug || "—" }}</span>
             &nbsp;|&nbsp; ID: {{ o.id }}
           </div>
         </div>
@@ -78,7 +85,8 @@
           [boundaryLinks]="true"
           [maxSize]="3"
           size="sm"
-        ></ngb-pagination>
+        >
+        </ngb-pagination>
         <div class="muted">Łącznie: {{ totalOffers() }} produktów</div>
       </div>
       } @if (isSearchActive() && pagedOffers().length > pageSize()) {
@@ -91,11 +99,13 @@
           [boundaryLinks]="true"
           [maxSize]="3"
           size="sm"
-        ></ngb-pagination>
+        >
+        </ngb-pagination>
         <div class="muted">Dopasowań na liście: {{ pagedOffers().length }}</div>
       </div>
       }
-      <div>
+
+      <div class="mt-2">
         Produktów na stronę
         <div class="page-size btn-group">
           @for (opt of pageSizeOptions; track opt) {

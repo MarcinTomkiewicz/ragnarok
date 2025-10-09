@@ -96,7 +96,7 @@ export class BrandOffersComponent implements OnInit {
   private offersPrefetched = false;
 
   ngOnInit(): void {
-    this.seo.setTitleAndMeta('Ragnarok – Marka własna');
+    this.seo.setTitleAndMeta('Sklep RPG | Ragnarok – Marka własna');
 
     // 1) Pobierz kategorię po nazwie
     this.backend

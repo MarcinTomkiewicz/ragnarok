@@ -1,264 +1,408 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal, TemplateRef, viewChild } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  DestroyRef,
+  OnInit,
+  TemplateRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { startWith } from 'rxjs';
+import { startWith } from 'rxjs/operators';
+import { register } from 'swiper/element/bundle';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { CategoryService } from '../../../core/services/category/category.service';
+import {
+  Category,
+  Offer,
+  OfferImage,
+  Subcategory,
+} from '../../../core/interfaces/i-offers';
 import { OffersService } from '../../../core/services/offers/offers.service';
+import { CategoryService } from '../../../core/services/category/category.service';
+import { SeoService } from '../../../core/services/seo/seo.service';
+import { PlatformService } from '../../../core/services/platform/platform.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
-import { Category, Subcategory, Offer } from '../../../core/interfaces/i-offers';
 import { toSlug } from '../../../core/utils/slug-creator';
 
-type OfferForCreate = Omit<
-  Offer,
-  'id' | 'createdAt'
->;
+type OfferForCreate = Omit<Offer, 'id' | 'createdAt'>;
+
+type PrimaryRef =
+  | '' // brak
+  | 'legacy' // główny z pola legacy offer.image
+  | `img:${string}` // istniejący obrazek z DB (id)
+  | `new:${number}`; // indeks nowo dodanego pliku
 
 @Component({
   selector: 'app-offer-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NgbDropdownModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, NgbDropdownModule],
   templateUrl: './offer-form.component.html',
   styleUrls: ['./offer-form.component.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class OfferFormComponent implements OnInit, OnDestroy {
+export class OfferFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly categoriesSvc = inject(CategoryService);
-  private readonly offersSvc = inject(OffersService);
+  private readonly offers = inject(OffersService);
+  private readonly cats = inject(CategoryService);
+  private readonly seo = inject(SeoService);
+  private readonly platform = inject(PlatformService);
   private readonly toast = inject(ToastService);
-  private readonly images = inject(ImageStorageService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // dane referencyjne
-  categories: Category[] = [];
-  subcategories: Subcategory[] = [];
+  categories = signal<Category[]>([]);
+  subcategories = signal<Subcategory[]>([]);
 
-  // tryb
-  readonly isEdit = signal<boolean>(false);
-  private currentId: number | null = null;
+  // stan edycji
+  offer = signal<Offer | null>(null);
 
-  // obrazek
-  private file = signal<File | null>(null);
-  previewUrl = signal<string | null>(null);
-  private imageMode = signal<'keep' | 'file' | 'remove'>('keep');
+  // galeria – istniejące
+  existing = signal<OfferImage[]>([]);
+  toRemove = signal<Set<string>>(new Set());
 
-  // UI
-  readonly titleText = computed(() => (this.isEdit() ? 'Edytuj produkt' : 'Nowy produkt'));
+  // nowe pliki (do uploadu) + ich obiekty URL
+  newFiles = signal<File[]>([]);
+  newPreviews = signal<string[]>([]);
+
+  // wskaźnik głównego
+  primaryRef = signal<PrimaryRef>('legacy');
 
   // toasty
-  readonly saveSuccessTpl = viewChild<TemplateRef<unknown>>('saveSuccessToast');
-  readonly saveErrorTpl = viewChild<TemplateRef<unknown>>('saveErrorToast');
+  readonly offerSuccessTpl =
+    viewChild<TemplateRef<unknown>>('offerSuccessToast');
+  readonly offerErrorTpl = viewChild<TemplateRef<unknown>>('offerErrorToast');
 
+  // form
   form = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
-    slug: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(80)]],
-    description: [''],
+    title: ['', [Validators.required]],
+    slug: [{ value: '', disabled: true }, [Validators.required]],
+    description: ['', [Validators.required]],
     price: [0, [Validators.required, Validators.min(0)]],
     stock: [0, [Validators.required, Validators.min(0)]],
     categoryId: [null as number | null, [Validators.required]],
     subcategoryId: [null as number | null, [Validators.required]],
     buyNowLink: [''],
-    ean: ['' as string | null],
-    isbn: ['' as string | null],
+    ean: [''],
+    isbn: [''],
     isActive: [true],
-    image: [''], // zgodnie z interfejsem: string (pusta wartość = brak)
+    image: [''], // legacy pole – utrzymujemy
   });
 
-  get f() { return this.form.controls; }
+  get f() {
+    return this.form.controls;
+  }
 
   ngOnInit(): void {
-    // 1) kategorie/subkategorie, potem załaduj dane (jeśli edycja)
-    this.categoriesSvc.loadCategories().subscribe({
+    this.seo.setTitleAndMeta('Edycja produktu');
+
+    if (this.platform.isBrowser) register();
+
+    this.cats.loadCategories().subscribe({
       next: ({ categories, subcategories }) => {
-        this.categories = categories;
-        this.subcategories = subcategories;
-        this.initFromRoute();
+        this.categories.set(categories);
+        this.subcategories.set(subcategories);
       },
-      error: () => {
-        this.categories = [];
-        this.subcategories = [];
-        this.initFromRoute();
-      },
+      error: (e) => console.error('Błąd pobierania kategorii:', e),
     });
 
-    // 2) auto-slug dla trybu "create"
-    this.f.title.valueChanges
-      .pipe(startWith(this.f.title.value), takeUntilDestroyed())
-      .subscribe((name) => {
-        if (!this.isEdit()) {
-          this.f.slug.setValue(toSlug(name ?? ''));
-        }
-      });
-
-    // 3) zależność subkategorii
-    this.f.categoryId.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => {
-        const curr = this.f.subcategoryId.value;
-        if (curr != null) {
-          const ok = this.subcategories.some((s) => s.id === curr && s.categoryId === (this.f.categoryId.value ?? -1));
-          if (!ok) this.f.subcategoryId.setValue(null);
-        }
-      });
-  }
-
-  ngOnDestroy(): void {
-    const prev = this.previewUrl();
-    if (prev) URL.revokeObjectURL(prev);
-  }
-
-  private initFromRoute(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
     const idStr = this.route.snapshot.paramMap.get('id');
-
     if (slug) {
-      this.isEdit.set(true);
-      this.offersSvc.getBySlug(slug, true).subscribe({
-        next: (offer) => this.patchFormForEdit(offer),
-        error: () => this.patchFormForEdit(null),
+      this.offers.getBySlug(slug).subscribe({
+        next: (o) => this.afterLoad(o),
+        error: (e) => console.error('Błąd pobierania oferty:', e),
       });
-      return;
-    }
-    if (idStr) {
+    } else if (idStr) {
       const id = Number(idStr);
-      this.isEdit.set(true);
-      this.offersSvc.getById(id, true).subscribe({
-        next: (offer) => this.patchFormForEdit(offer),
-        error: () => this.patchFormForEdit(null),
+      this.offers.getById(id).subscribe({
+        next: (o) => this.afterLoad(o),
+        error: (e) => console.error('Błąd pobierania oferty:', e),
       });
-      return;
+    } else {
+      // nowa – slug z tytułu
+      this.f.title.valueChanges
+        .pipe(
+          startWith(this.f.title.value),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe((v) => this.f.slug.setValue(toSlug(v || '')));
     }
-    this.isEdit.set(false);
   }
 
-  private patchFormForEdit(offer: Offer | null): void {
-    if (!offer) {
-      this.isEdit.set(false);
-      return;
-    }
-    this.isEdit.set(true);
-    this.currentId = offer.id;
+  private afterLoad(o: Offer | null) {
+    if (!o) return;
+    this.offer.set(o);
 
-    this.f.slug.setValue(offer.slug);
     this.form.patchValue({
-      title: offer.title,
-      description: offer.description ?? '',
-      price: offer.price ?? 0,
-      stock: offer.stock ?? 0,
-      categoryId: offer.categoryId ?? null,
-      subcategoryId: offer.subcategoryId ?? null,
-      buyNowLink: offer.buyNowLink ?? '',
-      ean: offer.ean ?? null,
-      isbn: offer.isbn ?? null,
-      isActive: (offer.isActive ?? true),
-      image: offer.image ?? '',
-    }, { emitEvent: false });
+      title: o.title,
+      slug: o.slug,
+      description: o.description,
+      price: o.price,
+      stock: o.stock,
+      categoryId: o.categoryId ?? null,
+      subcategoryId: o.subcategoryId ?? null,
+      buyNowLink: o.buyNowLink ?? '',
+      ean: o.ean ?? '',
+      isbn: o.isbn ?? '',
+      isActive: o.isActive ?? true,
+      image: o.image ?? '',
+    });
 
-    // podgląd istniejącego (jeśli już CDN/URL) lub optymalizowany
-    const existing = offer.image ?? '';
-    if (existing) {
-      if (/^https?:\/\//i.test(existing)) this.previewUrl.set(existing);
-      else this.previewUrl.set(this.images.getOptimizedPublicUrl(existing, 800, 600));
+    const imgs = (o as any).images as OfferImage[] | undefined;
+    this.existing.set(imgs ?? []);
+
+    // domyślny „główny”
+    const primary = imgs?.find((x) => x.isPrimary);
+    if (primary) this.primaryRef.set(`img:${primary.id}`);
+    else
+      this.primaryRef.set(
+        o.image ? 'legacy' : imgs?.[0] ? `img:${imgs[0].id}` : ''
+      );
+  }
+
+  // --------- helpers ----------
+  publicUrl(path?: string | null, w = 800, h = 600): string {
+    return this.offers.publicUrl(path ?? '', w, h) ?? '';
+  }
+
+  // --------- dropdown helpers ----------
+  categoryLabel(): string {
+    const id = this.form.value.categoryId ?? null;
+    if (id === null) return '— wybierz —';
+    return this.categories().find((c) => c.id === id)?.name ?? '— wybierz —';
+  }
+
+  subcategoryLabel(): string {
+    const id = this.form.value.subcategoryId ?? null;
+    if (id === null) return '— wybierz —';
+    return this.subcategories().find((s) => s.id === id)?.name ?? '— wybierz —';
+  }
+
+  filteredSubcategories(): Subcategory[] {
+    const catId = this.form.value.categoryId ?? null;
+    if (catId === null) return [];
+    return this.subcategories().filter((s) => s.categoryId === catId);
+  }
+
+  pickCategory(id: number) {
+    this.f.categoryId.setValue(id);
+    // reset subkategorii jeśli nie pasuje
+    const currentSub = this.form.value.subcategoryId ?? null;
+    if (
+      !currentSub ||
+      !this.filteredSubcategories().some((s) => s.id === currentSub)
+    ) {
+      this.f.subcategoryId.setValue(null);
     }
   }
 
-  // -------- obrazek --------
+  pickSubcategory(id: number) {
+    this.f.subcategoryId.setValue(id);
+  }
 
-  onImageChange(ev: Event): void {
+  // --------- galeria ----------
+  onAddImages(ev: Event) {
     const input = ev.target as HTMLInputElement | null;
-    const file = input?.files?.[0] ?? null;
-    this.file.set(file);
-    const prev = this.previewUrl();
-    if (prev) URL.revokeObjectURL(prev);
-    this.previewUrl.set(file ? URL.createObjectURL(file) : null);
-    this.imageMode.set(file ? 'file' : 'keep');
+    const files = Array.from(input?.files ?? []);
+    if (!files.length) return;
+
+    const list = [...this.newFiles(), ...files];
+
+    // czyść stare blob URL
+    this.newPreviews().forEach((u) => URL.revokeObjectURL(u));
+    const previews = list.map((f) => URL.createObjectURL(f));
+
+    this.newFiles.set(list);
+    this.newPreviews.set(previews);
+
+    // jeśli nic nie jest główne – ustaw pierwszy nowy
+    if (!this.primaryRef()) this.primaryRef.set('new:0');
   }
 
-  removeImage(): void {
-    const prev = this.previewUrl();
-    if (prev) URL.revokeObjectURL(prev);
-    this.previewUrl.set(null);
-    this.file.set(null);
-    this.f.image.setValue(''); // zgodnie z interfejsem: pusty string
-    this.imageMode.set('remove');
+  removeNewAt(index: number) {
+    const files = [...this.newFiles()];
+    const prevs = [...this.newPreviews()];
+    const url = prevs[index];
+    if (url) URL.revokeObjectURL(url);
+    files.splice(index, 1);
+    prevs.splice(index, 1);
+    this.newFiles.set(files);
+    this.newPreviews.set(prevs);
+
+    if (this.primaryRef() === `new:${index}`) {
+      // przesuń na pierwszy sensowny
+      const remainingNew = this.newPreviews();
+      if (remainingNew.length) this.primaryRef.set('new:0');
+      else if (this.existing().length)
+        this.primaryRef.set(`img:${this.existing()[0].id}`);
+      else if (this.offer()?.image) this.primaryRef.set('legacy');
+      else this.primaryRef.set('');
+    }
   }
 
-  // -------- dropdown helpers (naprawa TS2345) --------
+  toggleRemoveExisting(img: OfferImage) {
+    const set = new Set(this.toRemove());
+    if (set.has(img.id)) set.delete(img.id);
+    else set.add(img.id);
+    this.toRemove.set(set);
 
-  categoryName(id: number | null | undefined): string {
-    if (id == null) return '—';
-    return this.categories.find((c) => c.id === id)?.name ?? '—';
-  }
-  subcategoryName(id: number | null | undefined): string {
-    if (id == null) return '—';
-    return this.subcategories.find((s) => s.id === id)?.name ?? '—';
-  }
-  subcatsForSelectedCategory(): Subcategory[] {
-    const cat = this.f.categoryId.value ?? null;
-    return this.subcategories.filter((s) => s.categoryId === cat);
+    // jeśli kasujemy aktualnego primary – przepnij
+    if (this.primaryRef() === `img:${img.id}` && set.has(img.id)) {
+      const stillThere = this.existing().filter((x) => !set.has(x.id));
+      if (stillThere.length) this.primaryRef.set(`img:${stillThere[0].id}`);
+      else if (this.newPreviews().length) this.primaryRef.set('new:0');
+      else if (this.offer()?.image) this.primaryRef.set('legacy');
+      else this.primaryRef.set('');
+    }
   }
 
-  // -------- akcje --------
+  pickPrimaryExisting(img: OfferImage) {
+    if (this.toRemove().has(img.id)) return;
+    this.primaryRef.set(`img:${img.id}`);
+  }
+  pickPrimaryNew(index: number) {
+    this.primaryRef.set(`new:${index}`);
+  }
 
-  submit(): void {
+  // --------- zapisz ----------
+  save() {
     if (this.form.invalid) return;
-    const raw = this.form.getRawValue();
 
-    const payload: OfferForCreate = {
-      // pola główne
-      uid: undefined,
-      slug: raw.slug || toSlug(raw.title),
-      ean: raw.ean ?? null,
-      isbn: raw.isbn ?? null,
-      title: raw.title,
-      description: raw.description || '',
-      price: Number(raw.price ?? 0),
-      stock: Number(raw.stock ?? 0),
-      image: raw.image || '', // string
-      buyNowLink: raw.buyNowLink || '',
-      categoryId: raw.categoryId as number,
-      subcategoryId: (raw.subcategoryId as number),
-      isActive: !!raw.isActive,
-    };
+    const v = this.form.getRawValue();
+    const base: OfferForCreate = {
+      uid: this.offer()?.uid,
+      slug: v.slug,
+      ean: v.ean || null,
+      isbn: v.isbn || null,
+      title: v.title,
+      description: v.description,
+      price: Number(v.price ?? 0),
+      stock: Number(v.stock ?? 0),
+      image: v.image || '',
+      buyNowLink: v.buyNowLink || '',
+      categoryId: v.categoryId as number,
+      subcategoryId: v.subcategoryId as number,
+      createdAt: this.offer()?.createdAt ?? new Date().toISOString(),
+      isActive: !!v.isActive,
+    } as unknown as OfferForCreate;
 
-    const file = this.file();
+    const isEdit = !!this.offer();
+    const newFiles = this.newFiles();
+    const removeIds = Array.from(this.toRemove());
+    const ref = this.primaryRef();
 
-    const ok = (redirectSlug: string) => {
-      const t = this.saveSuccessTpl();
-      if (t) this.toast.show({ template: t, classname: 'bg-success text-white', header: 'Zapisano produkt' });
-      this.router.navigate(['/admin/offers']);
-    };
-    const err = () => {
-      const t = this.saveErrorTpl();
-      if (t) this.toast.show({ template: t, classname: 'bg-danger text-white', header: 'Nie udało się zapisać' });
-    };
+    if (!isEdit) {
+      let primaryIndex: number | null = null;
+      if (ref.startsWith('new:')) primaryIndex = Number(ref.slice(4));
+      const idx = primaryIndex ?? (newFiles.length ? 0 : null);
 
-    if (this.isEdit() && this.currentId != null) {
-      const patch: Partial<OfferForCreate> = { ...payload };
-      // usuń pseudo-pola, które i tak nie idą w UPDATE
-      delete (patch as any).id;
-      delete (patch as any).createdAt;
-      delete (patch as any).uid;
-
-      // jeśli usuwamy istniejący obrazek a nie uploadujemy nowego — ustaw pusty string
-      if (this.imageMode() === 'remove' && !file) patch.image = '';
-
-      this.offersSvc.updateOffer(this.currentId, patch, file ?? undefined).subscribe({
-        next: () => ok(payload.slug),
-        error: () => err(),
+      this.offers.createOffer(base, newFiles, idx).subscribe({
+        next: () => {
+          this.cleanupBlobs();
+          this.showSuccessToast();
+          this.router.navigate(['/auth/offers']);
+        },
+        error: () => {
+          this.showErrorToast();
+        },
       });
       return;
     }
 
-    // CREATE
-    this.offersSvc.createOffer(payload, file ?? undefined).subscribe({
-      next: ({ slug }) => ok(slug),
-      error: () => err(),
-    });
+    const currentPrimaryId =
+      this.existing().find((x) => x.isPrimary)?.id ?? null;
+    const requestedPrimaryId = ref.startsWith('img:')
+      ? ref.slice(4)
+      : ref === 'legacy'
+      ? null
+      : null;
+
+    const setPrimaryImageId =
+      requestedPrimaryId && requestedPrimaryId !== currentPrimaryId
+        ? requestedPrimaryId
+        : null;
+
+    this.offers
+      .updateOffer(
+        this.offer()!.id,
+        base,
+        newFiles,
+        removeIds,
+        setPrimaryImageId
+      )
+      .subscribe({
+        next: () => {
+          if (ref.startsWith('new:')) {
+            // po uploadzie ustawiamy primary po nazwie pliku (keepBaseName: true)
+            const idx = Number(ref.slice(4));
+            const file = newFiles[idx];
+            if (!file) return this.finishSaveOk();
+
+            const needle = this.stripExt(file.name).toLowerCase();
+
+            this.offers.listImages(this.offer()!.id).subscribe({
+              next: (rows) => {
+                const match = rows.find((r) =>
+                  (r.path || '').toLowerCase().includes(needle)
+                );
+                if (!match) return this.finishSaveOk();
+                this.offers
+                  .setPrimaryImage(this.offer()!.id, match.id)
+                  .subscribe({
+                    next: () => this.finishSaveOk(),
+                    error: () => this.finishSaveOk(),
+                  });
+              },
+              error: () => this.finishSaveOk(),
+            });
+          } else {
+            this.finishSaveOk();
+          }
+        },
+        error: () => this.showErrorToast(),
+      });
+  }
+
+  private finishSaveOk() {
+    this.cleanupBlobs();
+    this.showSuccessToast();
+    this.router.navigate(['/auth/offers']);
+  }
+
+  private showSuccessToast() {
+    const tpl = this.offerSuccessTpl();
+    if (tpl)
+      this.toast.show({
+        template: tpl,
+        classname: 'bg-success text-white',
+        header: 'Zapisano produkt',
+      });
+  }
+  private showErrorToast() {
+    const tpl = this.offerErrorTpl();
+    if (tpl)
+      this.toast.show({
+        template: tpl,
+        classname: 'bg-danger text-white',
+        header: 'Nie udało się zapisać produktu',
+      });
+  }
+
+  private stripExt(name: string): string {
+    const i = name.lastIndexOf('.');
+    return i >= 0 ? name.slice(0, i) : name;
+  }
+
+  private cleanupBlobs() {
+    this.newPreviews().forEach((u) => URL.revokeObjectURL(u));
+    this.newPreviews.set([]);
+    this.newFiles.set([]);
   }
 }

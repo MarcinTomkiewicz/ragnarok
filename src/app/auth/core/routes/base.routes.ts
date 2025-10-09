@@ -8,14 +8,16 @@ export const BASE_ROUTES: Routes = [
   {
     path: 'register',
     loadComponent: () =>
-      import('../../components/registration/registration.component')
-        .then(m => m.RegistrationComponent),
+      import('../../components/registration/registration.component').then(
+        (m) => m.RegistrationComponent
+      ),
   },
   {
     path: 'edit-data',
     loadComponent: () =>
-      import('../../components/edit-data/edit-data.component')
-        .then(m => m.EditDataComponent),
+      import('../../components/edit-data/edit-data.component').then(
+        (m) => m.EditDataComponent
+      ),
     canActivate: [AuthGuard],
     data: { authOnly: true },
   },
@@ -23,8 +25,9 @@ export const BASE_ROUTES: Routes = [
   {
     path: 'coworker-files',
     loadComponent: () =>
-      import('../../components/coworker-personal-files/coworker-personal-files.component')
-        .then(m => m.CoworkerPersonalFilesComponent),
+      import(
+        '../../components/coworker-personal-files/coworker-personal-files.component'
+      ).then((m) => m.CoworkerPersonalFilesComponent),
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Gm },
   },
@@ -32,8 +35,9 @@ export const BASE_ROUTES: Routes = [
   {
     path: 'users-admin',
     loadComponent: () =>
-      import('../../components/users-admin/users-admin.component')
-        .then(m => m.UsersAdminComponent),
+      import('../../components/users-admin/users-admin.component').then(
+        (m) => m.UsersAdminComponent
+      ),
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
@@ -48,12 +52,19 @@ export const BASE_ROUTES: Routes = [
           ),
       },
       {
+        path: 'new',
+        loadComponent: () =>
+          import('../../common/offer-form/offer-form.component').then(
+            (m) => m.OfferFormComponent
+          ),
+      },
+      {
         path: ':slug',
         loadComponent: () =>
           import('../../common/offer-form/offer-form.component').then(
             (m) => m.OfferFormComponent
           ),
       },
-    ]
-  }
+    ],
+  },
 ];

@@ -1,48 +1,111 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, forkJoin, map, of, switchMap, throwError } from 'rxjs';
 import { BackendService } from '../backend/backend.service';
-import { ImageStorageService } from '../backend/image-storage/image-storage.service';
 import { FilterOperator } from '../../enums/filterOperator';
 import { toSnakeCase } from '../../utils/type-mappers';
-import { Offer } from '../../interfaces/i-offers';
+import { Offer, OfferImage } from '../../interfaces/i-offers';
+import { ImageStorageService } from '../backend/image-storage/image-storage.service';
 
-type OfferForCreate = Omit<
-  Offer,
-  'id' | 'createdAt'
->;
+type OfferForCreate = Omit<Offer, 'id' | 'createdAt' | 'images'>;
 
 @Injectable({ providedIn: 'root' })
 export class OffersService {
   private readonly backend = inject(BackendService);
   private readonly images = inject(ImageStorageService);
 
-  /** Pobierz po slug (1 rekord) */
+  /** ------- READ ------- */
+
   getBySlug(slug: string, processImages = true): Observable<Offer | null> {
-    return this.backend.getOneByFields<Offer>(
-      'offers',
-      { slug },
-      undefined,
-      undefined,
-      processImages
-    );
+    // dociągnijmy też obrazy:
+    return this.backend
+      .getAll<any>(
+        'offers',
+        undefined,
+        'asc',
+        {
+          filters: { slug: { operator: FilterOperator.EQ, value: slug } },
+        },
+        undefined,
+        'offers_images(*)', // join
+        processImages
+      )
+      .pipe(
+        map((rows) => {
+          const row = rows?.[0] ?? null;
+          if (!row) return null;
+          const images: OfferImage[] =
+            (row.offersImages ?? []).map((r: any) => ({
+              id: r.id,
+              offerId: r.offerId,
+              path: r.path,
+              isPrimary: !!r.isPrimary,
+              sortIndex: r.sortIndex ?? null,
+              createdAt: r.createdAt,
+            })) ?? [];
+          const offer: Offer = {
+            ...row,
+            images,
+          };
+          return offer;
+        })
+      );
   }
 
-  /** Pobierz po id (1 rekord) */
   getById(id: number, processImages = true): Observable<Offer | null> {
-    return this.backend.getById<Offer>('offers', id, undefined, undefined, processImages);
+    return this.backend
+      .getAll<any>(
+        'offers',
+        undefined,
+        'asc',
+        {
+          filters: { id: { operator: FilterOperator.EQ, value: id } },
+        },
+        undefined,
+        'offers_images(*)',
+        processImages
+      )
+      .pipe(
+        map((rows) => {
+          const row = rows?.[0] ?? null;
+          if (!row) return null;
+          const images: OfferImage[] =
+            (row.offersImages ?? []).map((r: any) => ({
+              id: r.id,
+              offerId: r.offerId,
+              path: r.path,
+              isPrimary: !!r.isPrimary,
+              sortIndex: r.sortIndex ?? null,
+              createdAt: r.createdAt,
+            })) ?? [];
+          const offer: Offer = {
+            ...row,
+            images,
+          };
+          return offer;
+        })
+      );
   }
 
-  /** Lista aktywnych (przykład użycia) */
   getAllActive(): Observable<Offer[]> {
     return this.backend.getAll<Offer>('offers', 'title', 'asc', {
       filters: { isActive: { operator: FilterOperator.EQ, value: true } },
     });
   }
 
-  /** Utwórz ofertę i (opcjonalnie) wyślij główne zdjęcie do offers/{uid|id}/main */
+  listImages(offerId: number): Observable<OfferImage[]> {
+    return this.backend
+      .getAll<OfferImage>('offers_images', 'sortIndex' as any, 'asc', {
+        filters: { offerId: { operator: FilterOperator.EQ, value: offerId } },
+      })
+      .pipe(map((rows) => rows ?? []));
+  }
+
+  /** ------- WRITE ------- */
+
   createOffer(
     data: OfferForCreate,
-    imageFile?: File | null
+    imageFiles?: File[] | null,
+    primaryIndex?: number | null // który z dodawanych nowych plików ma być główny; domyślnie 0
   ): Observable<{ id: number; slug: string }> {
     const core = { ...data };
 
@@ -53,23 +116,23 @@ export class OffersService {
         const uid = (created?.uid as string | undefined) ?? undefined;
         if (!Number.isFinite(id)) return throwError(() => new Error('Insert offers failed'));
 
-        if (!imageFile) return of({ id, slug });
+        const files = imageFiles ?? [];
+        if (!files.length) return of({ id, slug });
 
-        return this.uploadMainImage(uid ?? String(id), imageFile).pipe(
-          switchMap((fullPath) =>
-            this.backend.update('offers', id, { image: fullPath } as any)
-          ),
+        return this.uploadGallery(id, uid ?? String(id), files, primaryIndex ?? 0).pipe(
+          switchMap((primaryPath) => this.syncMainImageFromPrimary(id, primaryPath)),
           map(() => ({ id, slug }))
         );
       })
     );
   }
 
-  /** Zaktualizuj ofertę, a gdy podasz imageFile – podmień główne zdjęcie */
   updateOffer(
     id: number,
     patch: Partial<OfferForCreate>,
-    imageFile?: File | null
+    newFiles?: File[] | null,
+    toRemoveIds?: string[] | null,
+    setPrimaryImageId?: string | null
   ): Observable<void> {
     const ops: Observable<unknown>[] = [];
 
@@ -77,43 +140,135 @@ export class OffersService {
       ops.push(this.backend.update('offers', id, toSnakeCase(patch) as any));
     }
 
-    if (imageFile) {
-      // najpierw pobierz uid/id do ścieżki
+    if (Array.isArray(toRemoveIds) && toRemoveIds.length) {
+      ops.push(
+        this.backend.delete('offers_images', {
+          id: { operator: FilterOperator.IN, value: toRemoveIds },
+          offer_id: { operator: FilterOperator.EQ, value: id },
+        } as any)
+      );
+    }
+
+    if (newFiles?.length) {
       ops.push(
         this.backend.getById<Offer>('offers', id, undefined, undefined, false).pipe(
           switchMap((row) => {
             const uid = (row as any)?.uid as string | undefined;
-            const folderKey = uid ?? String(id);
-            return this.uploadMainImage(folderKey, imageFile).pipe(
-              switchMap((fullPath) =>
-                this.backend.update('offers', id, { image: fullPath } as any)
-              )
-            );
+            return this.uploadGallery(id, uid ?? String(id), newFiles, null).pipe(map(() => void 0));
           })
         )
       );
     }
 
-    if (!ops.length) return of(void 0) as Observable<void>;
-    return forkJoin(ops).pipe(map(() => void 0));
+    if (setPrimaryImageId) {
+      ops.push(this.setPrimaryImage(id, setPrimaryImageId));
+    }
+
+    const exec$ = ops.length ? forkJoin(ops).pipe(map(() => void 0)) : of(void 0);
+
+    return exec$.pipe(
+      // po zmianach zsynchronizuj legacy pole Offer.image
+      switchMap(() =>
+        this.backend
+          .getAll<OfferImage>('offers_images', undefined, 'asc', {
+            filters: {
+              offerId: { operator: FilterOperator.EQ, value: id },
+              isPrimary: { operator: FilterOperator.EQ, value: true },
+            },
+          })
+          .pipe(
+            map((rows) => rows?.[0] ?? null),
+            switchMap((primary) => this.syncMainImageFromPrimary(id, primary?.path ?? ''))
+          )
+      ),
+      map(() => void 0)
+    );
   }
 
-  /** Upload + transkodowanie głównego obrazka */
-  private uploadMainImage(folderKey: string, file: File): Observable<string> {
-    const basePath = `offers/${folderKey}/main`;
-    return this.images
-      .transcodeAndUpload(file, basePath, {
-        keepBaseName: true,
-        uniqueStrategy: 'date',
-        dateFormat: 'dd-MM-yyyy-HHmmss',
-        prefer: 'avif',
-        quality: 0.82,
-        maxW: 1600,
-        maxH: 1200,
-        largerFallbackFactor: 1.15,
+  deleteImage(imageId: string): Observable<void> {
+    return this.backend.delete('offers_images', imageId);
+  }
+
+setPrimaryImage(offerId: number, imageId: string): Observable<void> {
+  // pobierz wszystkie obrazki oferty
+  return this.backend
+    .getAll<OfferImage>('offers_images', 'sortIndex' as any, 'asc', {
+      filters: { offerId: { operator: FilterOperator.EQ, value: offerId } },
+    })
+    .pipe(
+      switchMap((rows) => {
+        const imgs = rows ?? [];
+        if (!imgs.length) return of(void 0);
+
+        // ustaw dokładnie jednego jako primary, resztę na false
+        const ops = imgs.map((r) =>
+          this.backend.update('offers_images', (r as any).id, {
+            isPrimary: (r as any).id === imageId,
+          } as any)
+        );
+        return forkJoin(ops).pipe(map(() => void 0));
       })
-      .pipe(
-        switchMap((fullPath) => (fullPath ? of(fullPath) : throwError(() => new Error('Upload failed'))))
-      );
+    );
+}
+
+
+  /** ------- helpers ------- */
+
+  private uploadGallery(
+    offerId: number,
+    folderKey: string,
+    files: File[],
+    primaryIdx: number | null
+  ): Observable<string | null> {
+    // upload + insert rows w offers_images
+    const base = `offers/${folderKey}/gallery`;
+
+    return forkJoin(
+      files.map((file) =>
+        this.images
+          .transcodeAndUpload(file, base, {
+            keepBaseName: true,
+            uniqueStrategy: 'date',
+            dateFormat: 'dd-MM-yyyy-HHmmss',
+            prefer: 'avif',
+            quality: 0.82,
+            maxW: 1600,
+            maxH: 1200,
+            largerFallbackFactor: 1.15,
+          })
+          .pipe(map((path) => ({ path })))
+      )
+    ).pipe(
+      switchMap((uploaded) => {
+        const items = uploaded.map((u, idx) => ({
+          offerId,
+          path: u.path,
+          isPrimary: primaryIdx !== null ? idx === primaryIdx : false,
+          sortIndex: idx,
+        }));
+        return this.backend.createMany('offers_images', toSnakeCase(items) as any).pipe(
+          map((rows: any[]) => {
+            const primaryRow =
+              (rows ?? []).find((r: any) => !!r.is_primary) ??
+              (rows ?? [])[0] ??
+              null;
+            return (primaryRow?.path as string | undefined) ?? null;
+          })
+        );
+      })
+    );
+  }
+
+  /** zsynchronizuj Offer.image z aktualnym primary */
+  private syncMainImageFromPrimary(offerId: number, primaryPath: string | null): Observable<void> {
+    const path = primaryPath ?? '';
+    return this.backend.update('offers', offerId, { image: path } as any).pipe(map(() => void 0));
+  }
+
+  /** helpers do URL-i */
+  public publicUrl(path?: string | null, w = 800, h = 600): string | null {
+    if (!path) return null;
+    if (/^https?:\/\//i.test(path)) return path;
+    return this.images.getOptimizedPublicUrl(path, w, h);
   }
 }

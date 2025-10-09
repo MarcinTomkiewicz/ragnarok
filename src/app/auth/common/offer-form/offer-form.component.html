@@ -1,95 +1,144 @@
 <div class="offer-form-panel full-height">
   <div class="container">
-    <h2 class="section-title">{{ titleText() }}</h2>
+    <h2 class="section-title">
+      {{ offer() ? "Edytuj produkt" : "Nowy produkt" }}
+    </h2>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
-      @if (previewUrl()) {
-        <div class="form-group">
-          <img class="cover-preview" [src]="previewUrl()!" alt="Obraz produktu" />
-        </div>
-      }
-
+    <form [formGroup]="form" (ngSubmit)="save()" class="user-info-form">
+      <!-- Galeria -->
       <div class="form-group">
-        <label class="text-start">Nazwa</label>
+        <label class="text-start">Galeria zdjęć</label>
+
+        <swiper-container
+          class="mg-swiper gallery-swiper"
+          slides-per-view="auto"
+          space-between="12"
+          navigation="true"
+          centered-slides="false"
+          [attr.loop]="
+            existing().length +
+              newPreviews().length +
+              (offer()?.image ? 1 : 0) >
+            1
+          "
+        >
+          <!-- legacy miniatura -->
+          @if (offer()?.image) {
+          <swiper-slide>
+            <div class="image-tile legacy">
+              <img
+                class="gallery-img"
+                [src]="publicUrl(offer()?.image, 1200, 900)!"
+                [alt]="form.value.title || 'Zdjęcie produktu'"
+              />
+              <div class="tile-actions">
+                <label class="form-check m-0">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="primary"
+                    [checked]="primaryRef() === 'legacy'"
+                    (change)="primaryRef.set('legacy')"
+                  />
+                  <span class="form-check-label">Główne (legacy)</span>
+                </label>
+              </div>
+            </div>
+          </swiper-slide>
+          }
+
+          <!-- istniejące -->
+          @for (img of existing(); track img.id) {
+          <swiper-slide>
+            <div class="image-tile" [class.removed]="toRemove().has(img.id)">
+              <img
+                class="gallery-img"
+                [src]="publicUrl(img.path, 1200, 900)!"
+                [alt]="form.value.title || 'Zdjęcie produktu'"
+              />
+              <div class="tile-actions">
+                <label class="form-check m-0">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="primary"
+                    [checked]="primaryRef() === 'img:' + img.id"
+                    [disabled]="toRemove().has(img.id)"
+                    (change)="pickPrimaryExisting(img)"
+                  />
+                  <span class="form-check-label">Główne</span>
+                </label>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  (click)="toggleRemoveExisting(img)"
+                >
+                  {{ toRemove().has(img.id) ? "Cofnij usunięcie" : "Usuń" }}
+                </button>
+              </div>
+            </div>
+          </swiper-slide>
+          }
+
+          <!-- nowe -->
+          @for (url of newPreviews(); let i = $index; track url) {
+          <swiper-slide>
+            <div class="image-tile new">
+              <img class="gallery-img" [src]="url" alt="Nowe zdjęcie" />
+              <div class="tile-actions">
+                <label class="form-check m-0">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="primary"
+                    [checked]="primaryRef() === 'new:' + i"
+                    (change)="pickPrimaryNew(i)"
+                  />
+                  <span class="form-check-label">Główne</span>
+                </label>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  (click)="removeNewAt(i)"
+                >
+                  Usuń
+                </button>
+              </div>
+            </div>
+          </swiper-slide>
+          }
+        </swiper-container>
+
+        <div class="row-inline cover-row mt-2">
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            class="form-control"
+            (change)="onAddImages($event)"
+          />
+        </div>
+        <div class="form-text">
+          Dodaj wiele obrazów, wybierz który ma być <em>główny</em>. Podglądy są
+          dopasowane wysokością do toru i widać je od razu.
+        </div>
+      </div>
+
+      <!-- Tytuł / Slug -->
+      <div class="form-group">
+        <label class="text-start">Tytuł</label>
         <input type="text" class="form-control" formControlName="title" />
       </div>
 
       <div class="form-group">
         <label class="text-start">Slug</label>
         <input type="text" class="form-control" formControlName="slug" />
-        <div class="form-text">Slug generowany automatycznie na podstawie nazwy.</div>
-      </div>
-
-      <div class="form-group">
-        <label class="text-start">Obrazek</label>
-        <div class="row-inline cover-row">
-          <input type="file" accept="image/*" class="form-control" (change)="onImageChange($event)" />
-          <button type="button" class="btn btn-outline-danger w-auto"
-                  (click)="removeImage()"
-                  [disabled]="!previewUrl() && !form.value.image">
-            Usuń obrazek
-          </button>
+        <div class="form-text">
+          Slug generowany automatycznie na podstawie tytułu.
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="text-start">Opis</label>
-        <textarea rows="6" class="form-control" formControlName="description"></textarea>
-      </div>
-
-      <div class="form-group row-inline">
-        <div>
-          <label class="text-start">Cena (PLN)</label>
-          <input type="number" class="form-control" formControlName="price" min="0" step="0.01" />
-        </div>
-        <div>
-          <label class="text-start">Stan (szt.)</label>
-          <input type="number" class="form-control" formControlName="stock" min="0" step="1" />
-        </div>
-      </div>
-
-      <div class="form-group row-inline">
-        <div>
-          <label class="text-start">Kategoria</label>
-          <div class="d-block" ngbDropdown>
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
-              {{ categoryName(form.value.categoryId) }}
-            </button>
-            <div ngbDropdownMenu class="dropdown-pane">
-              @for (c of categories; track c.id) {
-                <button type="button" class="dropdown-item"
-                        [class.active]="form.value.categoryId === c.id"
-                        (click)="f.categoryId.setValue(c.id)">
-                  {{ c.name }}
-                </button>
-              }
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label class="text-start">Subkategoria</label>
-          <div class="d-block" ngbDropdown>
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle
-                    [disabled]="!form.value.categoryId">
-              {{ subcategoryName(form.value.subcategoryId) }}
-            </button>
-            <div ngbDropdownMenu class="dropdown-pane">
-              @for (s of subcatsForSelectedCategory(); track s.id) {
-                <button type="button" class="dropdown-item"
-                        [class.active]="form.value.subcategoryId === s.id"
-                        (click)="f.subcategoryId.setValue(s.id)">
-                  {{ s.name }}
-                </button>
-              }
-              @if (!subcatsForSelectedCategory().length) {
-                <div class="dropdown-empty">Brak subkategorii</div>
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <!-- EAN / ISBN -->
       <div class="form-group row-inline">
         <div>
           <label class="text-start">EAN</label>
@@ -101,31 +150,126 @@
         </div>
       </div>
 
+      <!-- Kategoria / Subkategoria (ngbDropdown) -->
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Kategoria</label>
+          <div ngbDropdown class="w-100">
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide w-100"
+              ngbDropdownToggle
+            >
+              {{ categoryLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (c of categories(); track c.id) {
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="form.value.categoryId === c.id"
+                (click)="pickCategory(c.id)"
+              >
+                {{ c.name }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-start">Subkategoria</label>
+          <div ngbDropdown class="w-100">
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide w-100"
+              ngbDropdownToggle
+              [disabled]="!form.value.categoryId"
+            >
+              {{ subcategoryLabel() }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (s of filteredSubcategories(); track s.id) {
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="form.value.subcategoryId === s.id"
+                (click)="pickSubcategory(s.id)"
+              >
+                {{ s.name }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cena / Stan -->
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Cena (PLN)</label>
+          <input
+            type="number"
+            class="form-control"
+            formControlName="price"
+            min="0"
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label class="text-start">Stan magazynowy</label>
+          <input
+            type="number"
+            class="form-control"
+            formControlName="stock"
+            min="0"
+            step="1"
+          />
+        </div>
+      </div>
+
+      <!-- Link i flaga -->
       <div class="form-group">
-        <label class="text-start">Link „Kup Teraz”</label>
+        <label class="text-start">Link „Kup teraz”</label>
         <input type="url" class="form-control" formControlName="buyNowLink" />
       </div>
 
       <div class="form-group flags-row">
         <div class="form-check">
-          <input id="isActive" class="form-check-input" type="checkbox" formControlName="isActive" />
-          <label class="form-check-label" for="isActive">Aktywny</label>
+          <input
+            id="isActive"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="isActive"
+          />
+          <label class="form-check-label" for="isActive">Aktywna</label>
         </div>
       </div>
 
+      <!-- Opis -->
+      <div class="form-group">
+        <label class="text-start">Opis</label>
+        <textarea
+          rows="8"
+          class="form-control"
+          formControlName="description"
+        ></textarea>
+      </div>
+
       <div class="actions">
-        <button type="button" class="btn btn-outline btn-sm" [routerLink]="['/auth/offers']">Wstecz</button>
-        <button type="submit" class="btn btn-success btn-sm">
-          {{ isEdit() ? 'Zapisz zmiany' : 'Utwórz produkt' }}
+        <button type="submit" class="btn btn-primary btn-sm">
+          {{ offer() ? "Zapisz zmiany" : "Utwórz produkt" }}
         </button>
+        <a routerLink="/auth/offers" class="btn btn-outline btn-sm">Anuluj</a>
       </div>
     </form>
   </div>
 
-  <ng-template #saveSuccessToast>
+  <!-- Toastery -->
+  <ng-template #offerSuccessToast>
     <strong>Sukces!</strong> Produkt został zapisany.
   </ng-template>
-  <ng-template #saveErrorToast>
+  <ng-template #offerErrorToast>
     <strong>Błąd!</strong> Nie udało się zapisać produktu.
   </ng-template>
 </div>

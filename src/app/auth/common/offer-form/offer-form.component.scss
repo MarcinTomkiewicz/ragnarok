@@ -6,8 +6,6 @@
 .offer-form-panel {
   @include section-wrapper;
 
-  .section-title { text-align: center; }
-
   .user-info-form {
     width: 100%;
     max-width: 720px;
@@ -20,30 +18,13 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
-
-    @media (max-width: $breakpoint-sm) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .row-inline.cover-row {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-  }
-
-  .dropdown-toggle-wide { width: 100%; max-width: 100%; }
-  .dropdown-pane {
-    min-width: 100%;
-    padding: 0.5rem 0;
-  }
-  .dropdown-pane .dropdown-item.active {
-    background: rgba($primary-color, 0.12);
-    border-left: 2px solid $primary-color;
+    @media (max-width: $breakpoint-sm) { grid-template-columns: 1fr; }
   }
 
   .flags-row {
     @include data-grid(null, .75rem 1.25rem);
     grid-template-columns: 1fr;
+    align-items: center;
 
     @media (min-width: $breakpoint-md) {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -51,39 +32,95 @@
 
     .form-check {
       @include flex-wrapper(row, flex-start, center);
-      gap: .5rem;
-      width: 100%;
-      min-width: 0;
-      margin: 0;
-      padding: 0;
+      gap: .5rem; width: 100%; min-width: 0; margin: 0; padding: 0;
     }
-
-    .form-check-input {
-      flex: 0 0 auto;
-      float: none;
-      margin: .15rem 0 0;
-      position: static;
-    }
-
-    .form-check-label {
-      display: block;
-      margin: 0;
-    }
+    .form-check-input { flex: 0 0 auto; margin: .15rem 0 0; position: static; }
+    .form-check-label { margin: 0; }
   }
 
-  .cover-preview {
-    display: block;
-    max-width: 100%;
-    height: auto;
+  /* ------------------------------------------------------------------
+     Galeria (Swiper web component) — pełna szerokość, stała wysokość
+     ------------------------------------------------------------------ */
+  .gallery-swiper {
+    --gallery-h: 280px; /* wysokość toru; zmień w razie potrzeby na 240/300 itd. */
+    width: 100%;
+    height: var(--gallery-h);
+    margin: 0;
+    max-width: none;
+  }
+
+  /* rozciągamy slajdy na pełną wysokość kontenera */
+  .gallery-swiper::part(wrapper) {
+    align-items: stretch;
+  }
+
+  /* ile slajdów naraz — responsywnie */
+  .gallery-swiper swiper-slide {
+    width: 200px;   /* desktop: 3 kolumny */
+    max-width: none;
+    height: 100%;
+  }
+  @media (max-width: 992px) {
+    .gallery-swiper swiper-slide { width: 50%; }   /* tablet: 2 kolumny */
+  }
+  @media (max-width: 576px) {
+    .gallery-swiper swiper-slide { width: 100%; }  /* mobile: 1 kolumna */
+  }
+
+  /* kafelek obrazu: obraz + pasek akcji pod spodem */
+  .image-tile {
+    display: grid;
+    grid-template-rows: 1fr auto; /* obraz wypełnia, actions ma auto wysokość */
+    width: 100%;
+    height: 100%;
+
     border: 1px solid $border-color;
     border-radius: $border-radius;
-    width: 100%;
-    max-height: 240px;
-    object-fit: cover;
+    background: $bg-color-light;
+    box-shadow: $card-shadow;
+    overflow: hidden;
+
+    &.legacy { opacity: 0.95; }
+    &.new { outline: 1px dashed rgba($primary-color, .35); }
+    &.removed { opacity: .5; filter: grayscale(.25); }
+
+    /* obraz dopasowany WYSOKOŚCIĄ do toru; boki mogą być puste */
+    .gallery-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-height: 230px;
+      object-fit: contain;
+      background: rgba(0, 0, 0, 0.06); /* widać marginesy przy pionowych */
+    }
+
+    /* pasek akcji na dole */
+    .tile-actions {
+      @include flex-wrapper(row, space-between, center);
+      gap: .5rem;
+      padding: .5rem .6rem;
+      border-top: 1px solid $border-color;
+      background: rgba($bg-color, .35);
+      backdrop-filter: blur(2px);
+
+      .form-check {
+        @include flex-wrapper(row, flex-start, center);
+        gap: .4rem; margin: 0;
+      }
+    }
   }
 
-  .actions { margin-top: 1.25rem; 
-    @include flex-wrapper(row, flex-end, center);
-    gap: 10px;
-}
+  /* strzałki Swipera */
+  swiper-container::part(button-prev),
+  swiper-container::part(button-next) {
+    color: $primary-color;
+    filter: drop-shadow(0 0 6px rgba(0,0,0,.6));
+  }
+
+  .actions {
+    margin-top: 1.25rem;
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
 }

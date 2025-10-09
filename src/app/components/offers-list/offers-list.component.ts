@@ -34,6 +34,19 @@ import {
 import { CategoryService } from '../../core/services/category/category.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
+import { OffersService } from '../../core/services/offers/offers.service';
+
+type OfferRow = Offer & {
+  // join z Supabase (snake_case trafia do camelCase przez Twój backend)
+  offersImages?: Array<{
+    id: string;
+    offerId: number;
+    path: string;
+    isPrimary: boolean;
+    sortIndex: number | null;
+    createdAt: string;
+  }>;
+};
 
 @Component({
   selector: 'app-offers-list',
@@ -58,14 +71,15 @@ export class OffersListComponent implements OnInit {
   private readonly router = inject(Router);
   readonly categoryService = inject(CategoryService);
   private readonly seo = inject(SeoService);
+  private readonly offersSvc = inject(OffersService);
   readonly CategoryType = CategoryType;
 
   categories: Category[] = [];
   subcategories: Subcategory[] = [];
-  offersList: Offer[] = [];
-  filteredOffers: Offer[] = [];
+  offersList: OfferRow[] = [];
+  filteredOffers: OfferRow[] = [];
   private offersFetched = false;
-  allOffers: Offer[] = [];
+  allOffers: OfferRow[] = [];
 
   currentSubcategoryId = signal<number | null>(null);
   currentPage = signal<number>(1);
@@ -99,27 +113,18 @@ export class OffersListComponent implements OnInit {
   ngOnInit(): void {
     this.categoryService.loadCategories().subscribe({
       next: ({ categories, subcategories }) => {
-        // znajdź id marki
-        const brand =
-          categories.find((c) => c.name === this.BRAND_NAME) ?? null;
+        const brand = categories.find((c) => c.name === this.BRAND_NAME) ?? null;
         this.brandCategoryId.set(brand?.id ?? null);
 
-        // odfiltruj kategorie i subkategorie z UI
         const brandId = this.brandCategoryId();
-        this.categories =
-          brandId == null
-            ? categories
-            : categories.filter((c) => c.id !== brandId);
-        this.subcategories =
-          brandId == null
-            ? subcategories
-            : subcategories.filter((sc) => sc.categoryId !== brandId);
+        this.categories = brandId == null ? categories : categories.filter((c) => c.id !== brandId);
+        this.subcategories = brandId == null ? subcategories : subcategories.filter((sc) => sc.categoryId !== brandId);
 
         this.loadOffers();
       },
       error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
     });
-    this.seo.setTitleAndMeta('Produkty');
+    this.seo.setTitleAndMeta('Sklep RPG');
   }
 
   openModal(): void {
@@ -144,10 +149,7 @@ export class OffersListComponent implements OnInit {
 
     const filters: IFilters = {};
     if (subcategoryId != null) {
-      filters['subcategoryId'] = {
-        operator: FilterOperator.EQ,
-        value: subcategoryId,
-      };
+      filters['subcategoryId'] = { operator: FilterOperator.EQ, value: subcategoryId };
     }
     if (brandId != null) {
       filters['categoryId'] = { operator: FilterOperator.NE, value: brandId };
@@ -162,8 +164,9 @@ export class OffersListComponent implements OnInit {
     const sortingField: OfferSortField = this.currentSorting();
     const sortingOrder = this.sortOrders().get(sortingField) ?? SortOrder.Asc;
 
+    // ← KLUCZOWE: dołączamy join na offers_images + przetwarzanie obrazów
     this.backendService
-      .getAll<Offer>('offers', sortingField, sortingOrder, pagination)
+      .getAll<OfferRow>('offers', sortingField, sortingOrder, pagination, undefined, 'offers_images(*)', true)
       .subscribe({
         next: (offers) => {
           this.offersList = offers;
@@ -176,9 +179,7 @@ export class OffersListComponent implements OnInit {
 
   updateTotalOffers(filters?: IFilters): void {
     this.backendService.getCount<Offer>('offers', filters).subscribe({
-      next: (count) => {
-        this.totalOffers.set(count);
-      },
+      next: (count) => this.totalOffers.set(count),
       error: (err) => console.error('Błąd podczas liczenia ofert:', err),
     });
   }
@@ -206,16 +207,14 @@ export class OffersListComponent implements OnInit {
     return this.platformService.isBrowser && window.innerWidth < 550;
   }
 
-  buyNow(link: string) {
-    if (link) {
-      window.open(link, '_blank', 'noopener,noreferrer');
-    }
+  buyNow(link: string | null | undefined, ev?: MouseEvent) {
+    ev?.stopPropagation(); // żeby klik nie otwierał karty
+    if (link) window.open(link, '_blank', 'noopener,noreferrer');
   }
 
   sortBy(field: OfferSortField): void {
     const currentOrder = this.sortOrders().get(field);
-    const newOrder =
-      currentOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc;
+    const newOrder = currentOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc;
 
     this.sortOrders.update((orders) => {
       orders.set(field, newOrder);
@@ -228,21 +227,19 @@ export class OffersListComponent implements OnInit {
 
   getSortIcon(field: OfferSortField): string {
     const order = this.sortOrders().get(field) ?? SortOrder.Asc;
-
     const isNumeric =
       field === OfferSortField.Price ||
       field === OfferSortField.Stock ||
       field === OfferSortField.ID;
 
     if (isNumeric) {
-      return order === SortOrder.Asc
-        ? IconClass.NumericAsc
-        : IconClass.NumericDesc;
+      return order === SortOrder.Asc ? IconClass.NumericAsc : IconClass.NumericDesc;
     }
     return order === SortOrder.Asc ? IconClass.AlphaAsc : IconClass.AlphaDesc;
   }
 
-  search: OperatorFunction<string, Offer[]> = (text$: Observable<string>) =>
+  // Typeahead
+  search: OperatorFunction<string, OfferRow[]> = (text$: Observable<string>) =>
     text$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -251,18 +248,15 @@ export class OffersListComponent implements OnInit {
 
         const brandId = this.brandCategoryId();
         const baseFilters: IFilters | undefined =
-          brandId != null
-            ? { categoryId: { operator: FilterOperator.NE, value: brandId } }
-            : undefined;
+          brandId != null ? { categoryId: { operator: FilterOperator.NE, value: brandId } } : undefined;
 
         if (this.offersFetched) {
           return of(this.filterOffers(term));
         }
 
         return this.backendService
-          .getAll<Offer>('offers', OfferSortField.Title, SortOrder.Asc, {
-            filters: baseFilters,
-          })
+          // też z joinem, żeby później mieć obrazki w cache
+          .getAll<OfferRow>('offers', OfferSortField.Title, SortOrder.Asc, { filters: baseFilters }, undefined, 'offers_images(*)', true)
           .pipe(
             tap((offers) => {
               this.allOffers = offers;
@@ -273,20 +267,42 @@ export class OffersListComponent implements OnInit {
       })
     );
 
-  private filterOffers(term: string): Offer[] {
-    return this.allOffers.filter((offer) =>
-      offer.title.toLowerCase().includes(term.toLowerCase())
-    );
+  private filterOffers(term: string): OfferRow[] {
+    return this.allOffers.filter((offer) => offer.title.toLowerCase().includes(term.toLowerCase()));
   }
 
   // formatowanie w dropdownie
-  resultFormatter = (offer: Offer) => offer.title;
-  inputFormatter = (offer: Offer) =>
-    typeof offer === 'string' ? offer : offer.title;
+  resultFormatter = (offer: OfferRow) => offer.title;
+  inputFormatter = (offer: OfferRow) => (typeof offer === 'string' ? offer : offer.title);
 
-  // akcja po kliknięciu – NAWIGACJA PO SLUG
-  onSelectOffer(event: any): void {
-    const selectedOffer: Offer = event.item;
-    this.router.navigate(['/offers', 'store', selectedOffer.slug]);
+  // Klik w całą kartę → szczegóły
+  openDetails(offer: OfferRow) {
+    this.router.navigate(['/offers', 'store', offer.slug]);
   }
+
+  // Rozwiązywanie miniatury: primary → first → legacy
+  resolveOfferImage(offer: OfferRow): string {
+    const imgs = (offer.offersImages ?? []);
+    let path: string | null = null;
+
+    if (imgs.length) {
+      const primary = imgs.find((x) => x.isPrimary) ?? null;
+      path = (primary?.path ?? imgs[0]?.path) || null;
+    }
+    if (!path) path = offer.image || null;
+
+    const url = this.offersSvc.publicUrl(path ?? '', 600, 450);
+    return url ?? '';
+  }
+
+  // klik w "Szczegóły" w karcie (zapobiega otwieraniu po zewn. kliknięciach)
+  goToDetails(ev: MouseEvent, offer: OfferRow) {
+    ev.stopPropagation();
+    this.openDetails(offer);
+  }
+
+  onSelectOffer(event: any) {
+  const selected: OfferRow = event.item;
+  this.router.navigate(['/offers', 'store', selected.slug]);
+}
 }
