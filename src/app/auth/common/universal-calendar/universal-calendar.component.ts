@@ -60,7 +60,7 @@ export class UniversalCalendarComponent {
     effect(() => {
       const visibleDates = this.visibleDays().map(d => format(d, 'yyyy-MM-dd'));
       this.monthChanged.emit(visibleDates);
-    });
+    }); 
   }
 
   readonly dayNames = Array.from({ length: 7 }, (_, i) =>

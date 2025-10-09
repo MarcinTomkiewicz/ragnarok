@@ -1,0 +1,126 @@
+<div class="offers-admin-wrapper">
+  <div class="container">
+    <div
+      class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap"
+    >
+      <h2 class="section-title m-0">Zarządzanie produktami</h2>
+    </div>
+
+    <div class="mb-4">
+      <a class="button-like button-like-primary" [routerLink]="['/auth', 'offers', 'new']"
+        >Nowy przedmiot</a
+      >
+    </div>
+
+    <div class="toolbar w-100">
+      <div class="search-box">
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Szukaj po nazwie, kategorii, subkategorii, EAN, ISBN, slug…"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+
+      <div class="sort-section d-flex align-items-center gap-2 flex-wrap ms-3">
+        <span class="muted">Sortuj</span>
+        <div class="d-flex flex-row gap-2 flex-wrap">
+          @for (field of sortFields; track field) {
+          <button
+            type="button"
+            class="btn btn-plain-light sort-button"
+            (click)="sortBy(field)"
+          >
+            {{ sortLabels[field] }}
+            <i [ngClass]="getSortIcon(field)"></i>
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="offers-table mt-4">
+      <div class="offers-header">
+        <div class="col col-title">Nazwa</div>
+        <div class="col col-category">Kategoria</div>
+        <div class="col col-subcategory">Subkategoria</div>
+        <div class="col col-price">Cena</div>
+        <div class="col col-stock">Stan</div>
+        <div class="col col-actions">Akcje</div>
+      </div>
+
+      @if (!pagedOffers().length) {
+      <div class="empty muted">Brak wyników do wyświetlenia.</div>
+      } @else { @for (o of pagedOffers(); track o.id) {
+      <div class="offers-row">
+        <div class="col col-title">
+          <div class="main">{{ o.title }}</div>
+          <div class="sub muted">
+            <span>slug: {{ o.slug || "—" }}</span>
+            &nbsp;|&nbsp; ID: {{ o.id }}
+          </div>
+        </div>
+        <div class="col col-category">{{ categoryName(o.categoryId) }}</div>
+        <div class="col col-subcategory">
+          {{ subcategoryName(o.subcategoryId) }}
+        </div>
+        <div class="col col-price">{{ o.price | number : "1.2-2" }} PLN</div>
+        <div class="col col-stock">{{ o.stock }}</div>
+        <div class="col col-actions">
+          <a
+            class="button-like button-like-outline button-like-sm"
+            [routerLink]="['/auth', 'offers', o.slug]"
+          >
+            Edytuj
+          </a>
+        </div>
+      </div>
+      } } @if (!isSearchActive() && totalOffers() > pageSize()) {
+      <div class="pagination-bar">
+        <ngb-pagination
+          [collectionSize]="totalOffers()"
+          [(page)]="currentPageRef"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+          [boundaryLinks]="true"
+          [maxSize]="3"
+          size="sm"
+        >
+        </ngb-pagination>
+        <div class="muted">Łącznie: {{ totalOffers() }} produktów</div>
+      </div>
+      } @if (isSearchActive() && pagedOffers().length > pageSize()) {
+      <div class="pagination-bar">
+        <ngb-pagination
+          [collectionSize]="pagedOffers().length"
+          [(page)]="currentPageRef"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+          [boundaryLinks]="true"
+          [maxSize]="3"
+          size="sm"
+        >
+        </ngb-pagination>
+        <div class="muted">Dopasowań na liście: {{ pagedOffers().length }}</div>
+      </div>
+      }
+
+      <div class="mt-2">
+        Produktów na stronę
+        <div class="page-size btn-group">
+          @for (opt of pageSizeOptions; track opt) {
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            [class.active]="pageSize() === opt"
+            (click)="onPageSizeClick($event)"
+            [attr.data-size]="opt"
+          >
+            {{ opt }}
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

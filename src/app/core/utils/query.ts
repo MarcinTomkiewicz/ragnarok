@@ -37,6 +37,9 @@ export function applyFilters<T>(
         case FilterOperator.IS:
           query = query.is(snakeKey, filter.value);
           break;
+        case FilterOperator.NE:
+          query = query.neq(snakeKey, filter.value);
+          break;
         default:
           throw new Error(`Unsupported filter operator: ${operator}`);
       }

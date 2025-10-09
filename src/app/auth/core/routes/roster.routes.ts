@@ -20,4 +20,9 @@ export const ROSTER_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Gm },
   },
+  {path: 'roster-overview',
+    loadComponent: () => import('../../components/reception-schedule/reception-schedule.component').then(m => m.ReceptionScheduleComponent),
+    canActivate: [AuthGuard],
+    data: { minCoworkerRole: CoworkerRoles.Gm},
+  }
 ];

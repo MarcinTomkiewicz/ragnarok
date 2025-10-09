@@ -43,7 +43,8 @@ readonly menuLinks = computed<IMenu[]>(() => {
         { label: 'Wynajem Pomieszczeń', path: '/offers/rooms' },
         { label: 'Vouchery', path: '/offers/vouchers' },
         { label: 'Kursy', path: '/offers/courses' },
-        { label: 'Sklep', path: '/offers-list' },
+        { label: 'Sklep', path: '/offers/store' },      
+        { label: 'Marka własna', path: '/offers/brand' }
       ],
     },
     { label: 'Klub Gier Fabularnych', path: '/memberships' },

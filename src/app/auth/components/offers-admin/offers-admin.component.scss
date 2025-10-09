@@ -1,0 +1,223 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+.offers-admin-wrapper {
+  @include section-wrapper;
+
+  .section-title {
+    text-align: center;
+  }
+
+  /* Toolbar: search + sort + page-size */
+  .toolbar {
+    @include flex-wrapper(row, space-between, center);
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+
+    .search-box {
+      flex: 2 1 360px;
+
+      .hint {
+        font-size: $font-size-xs;
+        color: $secondary-text-color;
+      }
+    }
+
+    .sort-section {
+      @include flex-wrapper(row, flex-start, center);
+      gap: 0.5rem;
+
+      .muted {
+        color: $secondary-text-color;
+      }
+
+      /* Nie stylizujemy .btn – tylko odstępy/układ */
+      .sort-button {
+        padding: 0.3rem 0.6rem; /* spacing, bez kolorów */
+        i {
+          margin-left: 0.25rem;
+        }
+      }
+    }
+
+    .page-size {
+      @include flex-wrapper(row, space-between, center);
+      gap: 0.25rem;
+
+      /* Tylko layout; brak zmian kolorów .btn */
+      .btn {
+        min-width: 2.5rem;
+      }
+    }
+  }
+
+  /* Tabela produktów */
+  .offers-table {
+    display: grid;
+    gap: 0.5rem;
+
+    .offers-header,
+    .offers-row {
+      display: grid;
+      grid-template-columns:
+        2fr /* title */
+        1.2fr /* category */
+        1.2fr /* subcategory */
+        120px /* price */
+        100px /* stock */
+        140px; /* actions */
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .offers-header {
+      font-weight: 700;
+      color: $secondary-text-color;
+      padding-bottom: 0.25rem;
+      border-bottom: 1px solid $border-color;
+
+      .col-actions {
+        text-align: right;
+      }
+      .col-price,
+      .col-stock {
+        text-align: right;
+      }
+    }
+
+    .offers-row {
+      padding: 0.5rem 0.25rem;
+      border-bottom: 1px dashed $border-color;
+
+      &:hover {
+        background: $bg-color-light; /* tło sekcji z Twoich zmiennych */
+      }
+
+      .main {
+        font-weight: 600;
+      }
+      .sub {
+        font-size: $font-size-xs;
+        color: $secondary-text-color;
+      }
+
+      .col-price,
+      .col-stock {
+        text-align: right;
+      }
+
+      .col-actions {
+        @include flex-wrapper(row, flex-end, center);
+        gap: 0.5rem;
+
+        /* Link/przycisk edycji – tylko spacing */
+        .btn {
+          padding: 0.25rem 0.5rem;
+        }
+      }
+    }
+
+    .empty {
+      padding: 0.75rem 0.25rem;
+      color: $secondary-text-color;
+    }
+  }
+
+  /* Paginacja */
+  .pagination-bar {
+    @include flex-wrapper(column, center, center);
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+
+    .muted {
+      color: $secondary-text-color;
+    }
+  }
+
+  /* Utilsy */
+  .muted {
+    color: $secondary-text-color;
+  }
+  .text-end {
+    text-align: right;
+  }
+}
+
+/* Responsywność (Twoje breakpointy) */
+@media (max-width: $breakpoint-lg) {
+  .offers-admin-wrapper {
+    .toolbar {
+      gap: 0.75rem;
+
+      .search-box {
+        flex: 1 1 100%;
+      }
+      .page-size {
+        order: 2;
+      }
+      .sort-section {
+        order: 3;
+        width: 100%;
+      }
+    }
+
+    .offers-table {
+      .offers-header,
+      .offers-row {
+        grid-template-columns:
+          2fr /* title */
+          1fr /* category */
+          1fr /* subcategory */
+          100px /* price */
+          90px /* stock */
+          120px; /* actions */
+      }
+    }
+  }
+}
+
+@media (max-width: 680px) {
+  .offers-admin-wrapper {
+    .offers-table {
+      .offers-header,
+      .offers-row {
+        grid-template-columns:
+          1.8fr /* title */
+          1fr /* category */
+          100px /* price */
+          90px /* stock */
+          110px; /* actions */
+      }
+      .col-subcategory {
+        display: none;
+      } /* ukryj subkategorię na wąsko */
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .offers-admin-wrapper {
+    .offers-table {
+      .offers-header,
+      .offers-row {
+        grid-template-columns:
+          2fr /* title */
+          1fr /* category */
+          90px /* price */
+          100px; /* actions */
+      }
+      .col-stock {
+        display: none;
+      }
+    }
+
+    .toolbar {
+      .page-size {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  }
+}

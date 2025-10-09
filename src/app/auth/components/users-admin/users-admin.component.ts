@@ -35,8 +35,7 @@ import { CoworkerRoles, RoleDisplay } from '../../../core/enums/roles';
 import { IUser } from '../../../core/interfaces/i-user';
 import { FilterOperator } from '../../../core/enums/filterOperator';
 import { IconClass } from '../../../core/enums/icons';
-
-type UserRoleUpsert = { id: string; coworker: CoworkerRoles | null };
+import { RouterLink } from '@angular/router';
 
 /** Sort fields available in the Users table. */
 type UserSortField = 'name' | 'email' | 'phone' | 'createdAt' | 'role';

@@ -1,0 +1,22 @@
+<div class="roster-wrapper">
+  <div class="container">
+    <h2 class="section-title mb-3">Podgląd grafiku</h2>
+
+    <app-universal-calendar
+      class="mb-3"
+      [dailyDataMap]="dailyMap()"
+      [mapDailyToHourlyAvailability]="mapToEmptyBlocks()"
+      [mapDailyToDayFlags]="mapDailyToDayFlags()"
+      [editMode]="true"
+      [room]="null"
+      [alwaysClickable]="true"
+      (monthChanged)="onMonthChanged($event)"
+    >
+    </app-universal-calendar>
+
+    <div class="legend muted">
+      <strong>Podgląd:</strong> pierwsza linia – recepcja,&nbsp;druga – event
+      (nazwa: prowadzący).
+    </div>
+  </div>
+</div>
