@@ -60,10 +60,9 @@
         <div class="col col-price">{{ o.price | number : "1.2-2" }} PLN</div>
         <div class="col col-stock">{{ o.stock }}</div>
         <div class="col col-actions">
-          <!-- LINK PO SLUGU -->
           <a
-            class="btn btn-outline btn-sm"
-            [routerLink]="['/admin', 'offers', o.slug]"
+            class="button-like button-like-outline button-like-sm"
+            [routerLink]="['/auth', 'offers', o.slug]"
           >
             Edytuj
           </a>

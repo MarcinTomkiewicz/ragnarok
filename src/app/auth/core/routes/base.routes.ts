@@ -47,13 +47,13 @@ export const BASE_ROUTES: Routes = [
             (m) => m.OffersAdminComponent
           ),
       },
-      // {
-      //   path: ':slug', // ← edycja po slugu
-      //   loadComponent: () =>
-      //     import('../../components/offer-edit/offer-edit.component').then(
-      //       (m) => m.OfferEditComponent
-      //     ),
-      // },
+      {
+        path: ':slug',
+        loadComponent: () =>
+          import('../../common/offer-form/offer-form.component').then(
+            (m) => m.OfferFormComponent
+          ),
+      },
     ]
   }
 ];

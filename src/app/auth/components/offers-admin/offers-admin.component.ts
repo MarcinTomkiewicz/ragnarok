@@ -274,7 +274,6 @@ export class OffersAdminComponent implements OnInit {
     return sorted.map(({ _category, _subcategory, ...rest }) => rest);
   }
 
-  // --- fetch serwerowy (sort dla kolumn bezpośrednio z offers) ---
   private loadPage(page: number) {
     const field = this.sortField();
     const dir = this.sortDir();
@@ -282,7 +281,6 @@ export class OffersAdminComponent implements OnInit {
     const pagination: IPagination = {
       page,
       pageSize: this.pageSize(),
-      // BEZ filtrów – chcemy wszystkie rekordy
     };
 
     const canServerSort = field !== 'category' && field !== 'subcategory';

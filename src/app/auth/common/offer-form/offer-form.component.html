@@ -1,0 +1,131 @@
+<div class="offer-form-panel full-height">
+  <div class="container">
+    <h2 class="section-title">{{ titleText() }}</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
+      @if (previewUrl()) {
+        <div class="form-group">
+          <img class="cover-preview" [src]="previewUrl()!" alt="Obraz produktu" />
+        </div>
+      }
+
+      <div class="form-group">
+        <label class="text-start">Nazwa</label>
+        <input type="text" class="form-control" formControlName="title" />
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Slug</label>
+        <input type="text" class="form-control" formControlName="slug" />
+        <div class="form-text">Slug generowany automatycznie na podstawie nazwy.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Obrazek</label>
+        <div class="row-inline cover-row">
+          <input type="file" accept="image/*" class="form-control" (change)="onImageChange($event)" />
+          <button type="button" class="btn btn-outline-danger w-auto"
+                  (click)="removeImage()"
+                  [disabled]="!previewUrl() && !form.value.image">
+            Usuń obrazek
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Opis</label>
+        <textarea rows="6" class="form-control" formControlName="description"></textarea>
+      </div>
+
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Cena (PLN)</label>
+          <input type="number" class="form-control" formControlName="price" min="0" step="0.01" />
+        </div>
+        <div>
+          <label class="text-start">Stan (szt.)</label>
+          <input type="number" class="form-control" formControlName="stock" min="0" step="1" />
+        </div>
+      </div>
+
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">Kategoria</label>
+          <div class="d-block" ngbDropdown>
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+              {{ categoryName(form.value.categoryId) }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (c of categories; track c.id) {
+                <button type="button" class="dropdown-item"
+                        [class.active]="form.value.categoryId === c.id"
+                        (click)="f.categoryId.setValue(c.id)">
+                  {{ c.name }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-start">Subkategoria</label>
+          <div class="d-block" ngbDropdown>
+            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle
+                    [disabled]="!form.value.categoryId">
+              {{ subcategoryName(form.value.subcategoryId) }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane">
+              @for (s of subcatsForSelectedCategory(); track s.id) {
+                <button type="button" class="dropdown-item"
+                        [class.active]="form.value.subcategoryId === s.id"
+                        (click)="f.subcategoryId.setValue(s.id)">
+                  {{ s.name }}
+                </button>
+              }
+              @if (!subcatsForSelectedCategory().length) {
+                <div class="dropdown-empty">Brak subkategorii</div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group row-inline">
+        <div>
+          <label class="text-start">EAN</label>
+          <input type="text" class="form-control" formControlName="ean" />
+        </div>
+        <div>
+          <label class="text-start">ISBN</label>
+          <input type="text" class="form-control" formControlName="isbn" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Link „Kup Teraz”</label>
+        <input type="url" class="form-control" formControlName="buyNowLink" />
+      </div>
+
+      <div class="form-group flags-row">
+        <div class="form-check">
+          <input id="isActive" class="form-check-input" type="checkbox" formControlName="isActive" />
+          <label class="form-check-label" for="isActive">Aktywny</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-outline btn-sm" [routerLink]="['/auth/offers']">Wstecz</button>
+        <button type="submit" class="btn btn-success btn-sm">
+          {{ isEdit() ? 'Zapisz zmiany' : 'Utwórz produkt' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <ng-template #saveSuccessToast>
+    <strong>Sukces!</strong> Produkt został zapisany.
+  </ng-template>
+  <ng-template #saveErrorToast>
+    <strong>Błąd!</strong> Nie udało się zapisać produktu.
+  </ng-template>
+</div>
