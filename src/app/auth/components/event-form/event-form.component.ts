@@ -39,6 +39,7 @@ import {
 } from '../../../core/enums/events';
 import { formatYmdLocal, weekdayOptionsPl } from '../../../core/utils/weekday-options';
 import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
+import { toSlug } from '../../../core/utils/slug-creator';
 
 type OccurrenceMode = 'SINGLE' | 'RECURRENT';
 type RecPattern = 'WEEKLY_1' | 'WEEKLY_2' | 'MONTHLY_NTH' | 'MONTHLY_DOM';
@@ -205,7 +206,7 @@ export class EventFormComponent implements OnDestroy {
     if (!this.isEdit()) {
       this.f.name.valueChanges
         .pipe(startWith(this.f.name.value), takeUntilDestroyed(this.destroyRef))
-        .subscribe((val) => this.f.slug.setValue(this.toSlug(val ?? '')));
+        .subscribe((val) => this.f.slug.setValue(toSlug(val ?? '')));
     }
 
     // Required dates depending on mode
@@ -502,16 +503,6 @@ hostSignupLabel(): string {
           this.toast.show({ template: tpl, classname: 'bg-danger text-white', header: 'Nie udało się zapisać wydarzenia' });
       },
     });
-  }
-
-  private toSlug(s: string): string {
-    return (s || '')
-      .toLowerCase()
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 80);
   }
 
   private rebuildExdates() {

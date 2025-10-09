@@ -88,6 +88,9 @@ export class OffersListComponent implements OnInit {
     ])
   );
 
+  readonly BRAND_NAME = 'Marka własna';
+  brandCategoryId = signal<number | null>(null);
+
   currentSorting = signal<OfferSortField>(OfferSortField.ID);
   order = signal<SortOrder>(SortOrder.Asc);
 
@@ -96,8 +99,22 @@ export class OffersListComponent implements OnInit {
   ngOnInit(): void {
     this.categoryService.loadCategories().subscribe({
       next: ({ categories, subcategories }) => {
-        this.categories = categories;
-        this.subcategories = subcategories;
+        // znajdź id marki
+        const brand =
+          categories.find((c) => c.name === this.BRAND_NAME) ?? null;
+        this.brandCategoryId.set(brand?.id ?? null);
+
+        // odfiltruj kategorie i subkategorie z UI
+        const brandId = this.brandCategoryId();
+        this.categories =
+          brandId == null
+            ? categories
+            : categories.filter((c) => c.id !== brandId);
+        this.subcategories =
+          brandId == null
+            ? subcategories
+            : subcategories.filter((sc) => sc.categoryId !== brandId);
+
         this.loadOffers();
       },
       error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
@@ -123,17 +140,23 @@ export class OffersListComponent implements OnInit {
 
   loadOffers(page: number = this.currentPage()): void {
     const subcategoryId = this.currentSubcategoryId();
+    const brandId = this.brandCategoryId();
+
+    const filters: IFilters = {};
+    if (subcategoryId != null) {
+      filters['subcategoryId'] = {
+        operator: FilterOperator.EQ,
+        value: subcategoryId,
+      };
+    }
+    if (brandId != null) {
+      filters['categoryId'] = { operator: FilterOperator.NE, value: brandId };
+    }
+
     const pagination: IPagination = {
-      page: page,
+      page,
       pageSize: this.pageSize(),
-      filters: subcategoryId
-        ? {
-            subcategoryId: {
-              operator: FilterOperator.EQ,
-              value: subcategoryId,
-            },
-          }
-        : undefined,
+      filters: Object.keys(filters).length ? filters : undefined,
     };
 
     const sortingField: OfferSortField = this.currentSorting();
@@ -226,12 +249,20 @@ export class OffersListComponent implements OnInit {
       switchMap((term: string) => {
         if (term.length < 3) return of([]);
 
+        const brandId = this.brandCategoryId();
+        const baseFilters: IFilters | undefined =
+          brandId != null
+            ? { categoryId: { operator: FilterOperator.NE, value: brandId } }
+            : undefined;
+
         if (this.offersFetched) {
           return of(this.filterOffers(term));
         }
 
         return this.backendService
-          .getAll<Offer>('offers', OfferSortField.Title, SortOrder.Asc)
+          .getAll<Offer>('offers', OfferSortField.Title, SortOrder.Asc, {
+            filters: baseFilters,
+          })
           .pipe(
             tap((offers) => {
               this.allOffers = offers;
@@ -253,9 +284,9 @@ export class OffersListComponent implements OnInit {
   inputFormatter = (offer: Offer) =>
     typeof offer === 'string' ? offer : offer.title;
 
-  // akcja po kliknięciu
+  // akcja po kliknięciu – NAWIGACJA PO SLUG
   onSelectOffer(event: any): void {
     const selectedOffer: Offer = event.item;
-    this.router.navigate(['/offer', selectedOffer.id]);
+    this.router.navigate(['/offers', 'store', selectedOffer.slug]);
   }
 }

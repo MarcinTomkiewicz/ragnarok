@@ -37,4 +37,23 @@ export const BASE_ROUTES: Routes = [
     canActivate: [AuthGuard],
     data: { minCoworkerRole: CoworkerRoles.Reception },
   },
+  {
+    path: 'offers',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('../../components/offers-admin/offers-admin.component').then(
+            (m) => m.OffersAdminComponent
+          ),
+      },
+      // {
+      //   path: ':slug', // ← edycja po slugu
+      //   loadComponent: () =>
+      //     import('../../components/offer-edit/offer-edit.component').then(
+      //       (m) => m.OfferEditComponent
+      //     ),
+      // },
+    ]
+  }
 ];

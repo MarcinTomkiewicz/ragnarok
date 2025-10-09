@@ -148,6 +148,11 @@ export function buildUserMenu(ctx: BuildMenuCtx): MenuSection[] {
         label: 'Zarządzaj Drużynami',
         path: '/auth/party-list',
       },
+            {
+        id: MenuItemKey.OffersAdmin,
+        label: 'Zarządzaj Produktami',
+        path: '/auth/offers',
+      },
       {
         id: MenuItemKey.ManageEvents,
         label: 'Zarządzaj wydarzeniami',

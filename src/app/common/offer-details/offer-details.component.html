@@ -1,71 +1,85 @@
-@if (offer) {
-  @let paragraphs = offer.description.split('\n');
-  @let firstParagraphs = paragraphs.slice(0, 2);
-  @let remainingParagraphs = paragraphs.slice(2);
-
+@if (loading) {
   <section class="offer-details-section">
     <div class="container">
-      <h2 class="section-title text-center">{{ offer.title }}</h2>
-
-      <div class="offer-details-layout">
-        <!-- Obrazek -->
-        <div class="offer-image-wrapper">
-          <img [src]="offer.image" [alt]="offer.title" class="offer-image" />
-        </div>
-
-        <!-- Szczegóły i opis -->
-        <div class="offer-meta">
-          <div class="meta-table">
-            <div class="meta-row">
-              <span class="meta-label">Kategorie:</span>
-              <span class="meta-value">
-                {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
-                {{ getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY) }}
-              </span>
-            </div>
-
-            <div class="meta-row">
-              <span class="meta-label">Cena:</span>
-              <span class="meta-value">{{ offer.price }} PLN</span>
-            </div>
-
-            <div class="meta-row">
-              <span class="meta-label">Stan:</span>
-              <span class="meta-value">
-                @if (offer.stock > 0) {
-                  {{ offer.stock }} szt.
-                } @else {
-                  <span class="text-danger">Produkt niedostępny</span>
-                }
-              </span>
-            </div>
-
-            <div class="meta-row">
-              <span class="meta-label">Kup teraz:</span>
-              <span class="meta-value">
-                <button
-                  class="btn btn-warning"
-                  [disabled]="!offer.buyNowLink || !offer.stock"
-                  (click)="buyNow(offer.buyNowLink)">
-                  Kup Teraz
-                </button>
-              </span>
-            </div>
-          </div>
-
-          <div class="short-description">
-            @for (paragraph of firstParagraphs; let idx = $index; track idx) {
-              <p>{{ paragraph }}</p>
-            }
-          </div>
-        </div>
-      </div>
-
-      <div class="offer-description">
-        @for (paragraph of remainingParagraphs; let idx = $index; track idx) {
-          <p>{{ paragraph }}</p>
-        }
-      </div>
+      <div>Wczytywanie…</div>
     </div>
   </section>
+} @else {
+  @if (offer) {
+    @let paragraphs = (offer.description || '').split('\n');
+    @let firstParagraphs = paragraphs.slice(0, 2);
+    @let remainingParagraphs = paragraphs.slice(2);
+
+    <section class="offer-details-section">
+      <div class="container">
+        <h2 class="section-title text-center">{{ offer.title }}</h2>
+
+        <div class="offer-details-layout">
+          <!-- Obrazek (przetworzony przez ImageStorageService) -->
+          <div class="offer-image-wrapper">
+            <img [src]="offer.image" [alt]="offer.title" class="offer-image" />
+          </div>
+
+          <!-- Szczegóły i opis -->
+          <div class="offer-meta">
+            <div class="meta-table">
+              <div class="meta-row">
+                <span class="meta-label">Kategorie:</span>
+                <span class="meta-value">
+                  {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
+                  {{ getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY) }}
+                </span>
+              </div>
+
+              <div class="meta-row">
+                <span class="meta-label">Cena:</span>
+                <span class="meta-value">{{ offer.price }} PLN</span>
+              </div>
+
+              <div class="meta-row">
+                <span class="meta-label">Stan:</span>
+                <span class="meta-value">
+                  @if (offer.stock > 0) {
+                    {{ offer.stock }} szt.
+                  } @else {
+                    <span class="text-danger">Produkt niedostępny</span>
+                  }
+                </span>
+              </div>
+
+              <div class="meta-row">
+                <span class="meta-label">Kup teraz:</span>
+                <span class="meta-value">
+                  <button
+                    class="btn btn-warning"
+                    [disabled]="!offer.buyNowLink || !offer.stock"
+                    (click)="buyNow(offer.buyNowLink)">
+                    Kup Teraz
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="short-description">
+              @for (paragraph of firstParagraphs; let idx = $index; track idx) {
+                <p>{{ paragraph }}</p>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="offer-description">
+          @for (paragraph of remainingParagraphs; let idx = $index; track idx) {
+            <p>{{ paragraph }}</p>
+          }
+        </div>
+      </div>
+    </section>
+  } @else {
+    <section class="offer-details-section">
+      <div class="container">
+        <div class="not-found">Nie znaleziono produktu.</div>
+      </div>
+    </section>
+  }
 }

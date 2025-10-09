@@ -7,6 +7,7 @@ import { AUTH_ROUTES } from './auth/core/routes';
 export const routes: Routes = [
   { path: 'admin', children: ADMIN_ROUTES },
   { path: 'auth', children: AUTH_ROUTES },
+
   {
     path: '',
     loadComponent: () =>
@@ -48,6 +49,8 @@ export const routes: Routes = [
         (m) => m.ForBeginnersComponent
       ),
   },
+
+  // Wydarzenia
   {
     path: 'events',
     loadComponent: () =>
@@ -62,6 +65,8 @@ export const routes: Routes = [
         (m) => m.EventDetailsComponent
       ),
   },
+
+  // News (tu nadal po id, jeśli tak masz w bazie)
   {
     path: 'news/:id',
     loadComponent: () =>
@@ -69,20 +74,35 @@ export const routes: Routes = [
         (m) => m.NewsDetailsComponent
       ),
   },
+
+  // Sklep (lista)
   {
-    path: 'offers-list',
+    path: 'offers/store',
     loadComponent: () =>
       import('./components/offers-list/offers-list.component').then(
         (m) => m.OffersListComponent
       ),
   },
+
+  // Szczegóły produktu w sklepie — TERAZ po SLUGU
   {
-    path: 'offer/:id',
+    path: 'offers/store/:slug',
     loadComponent: () =>
       import('./common/offer-details/offer-details.component').then(
         (m) => m.OfferDetailsComponent
       ),
   },
+
+  // Marka własna (lista)
+  {
+    path: 'offers/brand',
+    loadComponent: () =>
+      import('./components/brand-offers/brand-offers.component').then(
+        (m) => m.BrandOffersComponent
+      ),
+  },
+
+  // Inne podstrony oferty (rooms/vouchers/courses) – te zostają po :slug
   {
     path: 'offers/:slug',
     loadComponent: () =>
@@ -90,6 +110,7 @@ export const routes: Routes = [
         (m) => m.OffersPageComponent
       ),
   },
+
   {
     path: 'memberships',
     loadComponent: () =>
@@ -97,6 +118,7 @@ export const routes: Routes = [
         (m) => m.ClubMembershipComponent
       ),
   },
+
   {
     path: 'special/:id',
     loadComponent: () =>

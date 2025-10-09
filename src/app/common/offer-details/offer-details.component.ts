@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BackendService } from '../../core/services/backend/backend.service';
 import { CommonModule } from '@angular/common';
 import { Offer } from '../../core/interfaces/i-offers';
@@ -17,6 +17,7 @@ import { SeoService } from '../../core/services/seo/seo.service';
 })
 export class OfferDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly backendService = inject(BackendService);
   readonly categoryService = inject(CategoryService);
   private readonly platformService = inject(PlatformService);
@@ -24,25 +25,36 @@ export class OfferDetailsComponent implements OnInit {
 
   readonly CategoryType = CategoryType;
   offer: Offer | null = null;
+  loading = true;
 
   ngOnInit(): void {
-    const offerId = Number(this.route.snapshot.paramMap.get('id'));
-    if (offerId) {
-      this.backendService.getById<Offer>('offers', offerId).subscribe({
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (!slug) {
+      this.router.navigate(['/not-found']);
+      return;
+    }
+
+    // Pobieramy po SLUG i włączamy przetwarzanie obrazka (ImageStorageService)
+    this.backendService
+      .getOneByFields<Offer>('offers', { slug }, /*width*/ undefined, /*height*/ undefined, /*processImages*/ true)
+      .subscribe({
         next: (offer) => {
           this.offer = offer;
-          this.seo.setTitleAndMeta(`${this.offer?.title}`);
+          this.loading = false;
+          if (offer) this.seo.setTitleAndMeta(offer.title);
         },
-        error: (err) => console.error('Błąd podczas pobierania oferty:', err),
+        error: () => {
+          this.offer = null;
+          this.loading = false;
+        },
       });
-    }
   }
 
   getCategoryName(id: number, categoryType: CategoryType): string {
     return this.categoryService.getCategoryName(id, categoryType);
   }
 
-  buyNow(link: string) {
+  buyNow(link: string | null | undefined) {
     if (link) {
       window.open(link, '_blank', 'noopener,noreferrer');
     }

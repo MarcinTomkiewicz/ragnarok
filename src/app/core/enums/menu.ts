@@ -32,6 +32,7 @@ export enum MenuItemKey {
   ReservationsCalendar = 'ReservationsCalendar',
   UsersAdmin = 'UsersAdmin',
   PartyList = 'PartyList',
+  OffersAdmin = 'OffersAdmin',
   ManageEvents = 'ManageEvents',
   NewEvent = 'NewEvent',
   AvailabilityOverview = 'AvailabilityOverview',

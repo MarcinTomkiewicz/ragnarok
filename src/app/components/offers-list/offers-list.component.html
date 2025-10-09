@@ -36,129 +36,131 @@
       <!-- Główna część z listą ofert -->
       <div class="offers-list">
         @if (!filteredOffers.length) {
-        <div class="no-offers">Nie znaleziono pasujących produktów!</div>
+          <div class="no-offers">Nie znaleziono pasujących produktów!</div>
         } @else {
-        <!-- Sortowanie -->
-        <div class="sort-section">
-          <span class="sort-label">Sortuj</span>
-          <div class="flex-row-regular gap-2 flex-wrap">
-            @for (field of sortFields; track field) {
-            <button
-              class="btn btn-plain-light sort-button"
-              (click)="sortBy(field)"
-            >
-              {{ offerLabels[field] }}
-              <i [ngClass]="getSortIcon(field)"></i>
-            </button>
+          <!-- Sortowanie -->
+          <div class="sort-section">
+            <span class="sort-label">Sortuj</span>
+            <div class="flex-row-regular gap-2 flex-wrap">
+              @for (field of sortFields; track field) {
+                <button
+                  class="btn btn-plain-light sort-button"
+                  (click)="sortBy(field)"
+                >
+                  {{ offerLabels[field] }}
+                  <i [ngClass]="getSortIcon(field)"></i>
+                </button>
+              }
+            </div>
+            <div class="search-box flex-grow-1">
+              <input
+                type="search"
+                class="form-control"
+                placeholder="Wyszukaj produkt..."
+                [ngbTypeahead]="search"
+                [resultFormatter]="resultFormatter"
+                [inputFormatter]="inputFormatter"
+                (selectItem)="onSelectOffer($event)"
+              />
+            </div>
+          </div>
+
+          <!-- Lista kart -->
+          <div class="offers-grid">
+            @for (offer of filteredOffers; track offer.slug) {
+              @if (!isMobile()) {
+                <article class="offer-card">
+                  <div class="card-img">
+                    <img [src]="offer.image" [alt]="offer.title" />
+                  </div>
+
+                  <div class="offer-content">
+                    <h3>{{ offer.title }}</h3>
+                    <p>
+                      Kategorie:
+                      {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
+                      {{
+                        getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY)
+                      }}
+                    </p>
+                    <p><strong>Cena:</strong> {{ offer.price }} PLN</p>
+                    <p>
+                      @if (offer.stock > 0) {
+                        <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                      } @else {
+                        <strong class="text-danger">Produkt niedostępny</strong>
+                      }
+                    </p>
+                    <div class="buttons">
+                      <button
+                        class="btn btn-primary"
+                        [routerLink]="['/offers', 'store', offer.slug]"
+                      >
+                        Szczegóły
+                      </button>
+                      <button
+                        class="btn btn-warning"
+                        [disabled]="!offer.buyNowLink || !offer.stock"
+                        (click)="buyNow(offer.buyNowLink)"
+                      >
+                        Kup Teraz
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              } @else {
+                <article class="product-card-mobile card card-dark">
+                  <img
+                    class="product-image"
+                    [src]="offer.image"
+                    [alt]="offer.title"
+                  />
+                  <div class="card-body">
+                    <h3 class="card-title">{{ offer.title }}</h3>
+                    <p class="card-text">Cena: {{ offer.price }} PLN</p>
+                    <p class="card-text">
+                      @if (offer.stock > 0) {
+                        <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                      } @else {
+                        <strong class="text-danger">Produkt niedostępny</strong>
+                      }
+                    </p>
+                    <div class="btn-group w-100 flex-column gap-2 mt-2">
+                      <button
+                        class="btn btn-primary"
+                        [routerLink]="['/offers','store', offer.slug]"
+                      >
+                        Szczegóły
+                      </button>
+                      <button
+                        class="btn btn-warning"
+                        [disabled]="!offer.buyNowLink || !offer.stock"
+                        (click)="buyNow(offer.buyNowLink)"
+                      >
+                        Kup Teraz
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              }
             }
           </div>
-          <div class="search-box flex-grow-1">
-            <input
-              type="search"
-              class="form-control"
-              placeholder="Wyszukaj produkt..."
-              [ngbTypeahead]="search"
-              [resultFormatter]="resultFormatter"
-              [inputFormatter]="inputFormatter"
-              (selectItem)="onSelectOffer($event)"
-            />
-          </div>
-        </div>
 
-        <!-- Lista kart -->
-        <div class="offers-grid">
-          @for (offer of filteredOffers; track offer.title) { @if (!isMobile())
-          {
-          <article class="offer-card">
-            <div class="card-img">
-              <img [src]="offer.image" [alt]="offer.title" />
-            </div>
-
-            <div class="offer-content">
-              <h3>{{ offer.title }}</h3>
-              <p>
-                Kategorie:
-                {{ getCategoryName(offer.categoryId, CategoryType.CATEGORY) }},
-                {{
-                  getCategoryName(offer.subcategoryId, CategoryType.SUBCATEGORY)
-                }}
-              </p>
-              <p><strong>Cena:</strong> {{ offer.price }} PLN</p>
-              <p>
-                @if (offer.stock > 0) {
-                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
-                } @else {
-                <strong class="text-danger">Produkt niedostępny</strong>
-                }
-              </p>
-              <div class="buttons">
-                <button
-                  class="btn btn-primary"
-                  [routerLink]="['/offer', offer.id]"
-                >
-                  Szczegóły
-                </button>
-                <button
-                  class="btn btn-warning"
-                  [disabled]="!offer.buyNowLink || !offer.stock"
-                  (click)="buyNow(offer.buyNowLink)"
-                >
-                  Kup Teraz
-                </button>
-              </div>
-            </div>
-          </article>
-          } @else {
-          <article class="product-card-mobile card card-dark">
-            <img
-              class="product-image"
-              [src]="offer.image"
-              [alt]="offer.title"
-            />
-            <div class="card-body">
-              <h3 class="card-title">{{ offer.title }}</h3>
-              <p class="card-text">Cena: {{ offer.price }} PLN</p>
-              <p class="card-text">
-                @if (offer.stock > 0) {
-                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
-                } @else {
-                <strong class="text-danger">Produkt niedostępny</strong>
-                }
-              </p>
-              <div class="btn-group w-100 flex-column gap-2 mt-2">
-                <button
-                  class="btn btn-primary"
-                  [routerLink]="['/offer', offer.id]"
-                >
-                  Szczegóły
-                </button>
-                <button
-                  class="btn btn-warning"
-                  [disabled]="!offer.buyNowLink || !offer.stock"
-                  (click)="buyNow(offer.buyNowLink)"
-                >
-                  Kup Teraz
-                </button>
-              </div>
-            </div>
-          </article>
-          } }
-        </div>
-
-        <!-- Paginacja -->
-        @if (totalOffers() > pageSize()) {
-        <ngb-pagination
-          [collectionSize]="totalOffers()"
-          [(page)]="currentPage"
-          [pageSize]="pageSize()"
-          (pageChange)="onPageChange($event)"
-          [boundaryLinks]="true"
-          [maxSize]="3"
-          size="sm"
-          class="pagination-wrapper"
-        >
-        </ngb-pagination>
-        } }
+          <!-- Paginacja -->
+          @if (totalOffers() > pageSize()) {
+            <ngb-pagination
+              [collectionSize]="totalOffers()"
+              [(page)]="currentPage"
+              [pageSize]="pageSize()"
+              (pageChange)="onPageChange($event)"
+              [boundaryLinks]="true"
+              [maxSize]="3"
+              size="sm"
+              class="pagination-wrapper"
+            >
+            </ngb-pagination>
+          }
+        }
       </div>
     </div>
   </div>
