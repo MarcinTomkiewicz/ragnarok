@@ -123,12 +123,12 @@
 
       &.selected {
         background-color: $primary-color;
-        color: $bg-color; /* tekst na $bg-color jak proszono */
+        color: $bg-color; 
       }
 
       &:hover:not(.reserved):not(.disabled) {
         background-color: $hover-color;
-        color: $bg-color; /* tekst na $bg-color jak proszono */
+        color: $bg-color; 
       }
 
       &.disabled {
