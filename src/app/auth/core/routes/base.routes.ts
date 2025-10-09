@@ -20,17 +20,15 @@ export const BASE_ROUTES: Routes = [
     data: { authOnly: true },
   },
 
-  // (opcjonalnie możesz też tu podnieść próg dla coworker-files na Reception)
   {
     path: 'coworker-files',
     loadComponent: () =>
       import('../../components/coworker-personal-files/coworker-personal-files.component')
         .then(m => m.CoworkerPersonalFilesComponent),
     canActivate: [AuthGuard],
-    data: { minCoworkerRole: CoworkerRoles.Gm }, // lub CoworkerRoles.Reception jeśli chcesz uszczelnić
+    data: { minCoworkerRole: CoworkerRoles.Gm },
   },
 
-  // >>> NOWE: panel zarządzania użytkownikami (Recepcja+)
   {
     path: 'users-admin',
     loadComponent: () =>

@@ -1,0 +1,39 @@
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/components";
+
+/* wrapper + drobne kosmetyki */
+.roster-wrapper {
+  @include section-wrapper;
+
+  .section-title { text-align: center; }
+
+  .legend {
+    text-align: center;
+    font-size: $font-size-sm;
+    color: $secondary-text-color;
+  }
+}
+
+/* Upewnij się, że label w kafelku dziedziczy kolor na hover/active oraz akceptuje \n */
+.calendar .calendar-body .calendar-day {
+  &:hover:not(.reserved):not(.disabled) {
+    background-color: $hover-color;
+    color: $bg-color;
+  }
+  &.selected {
+    background-color: $primary-color;
+    color: $bg-color;
+  }
+
+  .hour-grid .external-event {
+    color: inherit !important;
+    white-space: pre-line;      /* pozwól na dwie linie */
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 1.05;
+    letter-spacing: .2px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+}

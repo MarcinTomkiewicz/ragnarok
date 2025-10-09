@@ -13,7 +13,11 @@ import { NotificationBadgeComponent } from '../notification-badge/notification-b
 import { NotificationService } from '../../core/services/notifications/notifications.service';
 import { NotificationBucket } from '../../../core/enums/notification-bucket';
 
-type MenuItem = { label: string; path: string; badgeBucket?: NotificationBucket };
+type MenuItem = {
+  label: string;
+  path: string;
+  badgeBucket?: NotificationBucket;
+};
 type MenuSection = { title: string; items: MenuItem[] };
 
 @Component({
@@ -40,7 +44,9 @@ export class UserMenuPanelComponent {
   readonly notifLabels = computed(() => {
     const counts = this.notifCounts();
     const out = {} as Record<NotificationBucket, string>;
-    (Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>).forEach((k) => {
+    (
+      Object.keys(NotificationBucket) as Array<keyof typeof NotificationBucket>
+    ).forEach((k) => {
       const bucket = NotificationBucket[k] as NotificationBucket;
       const n = counts[bucket] ?? 0;
       out[bucket] = n > 99 ? '99+' : String(n);
@@ -60,7 +66,8 @@ export class UserMenuPanelComponent {
       { label: 'Rezerwuj salkę', path: '/auth/reservation' },
       { label: 'Moje rezerwacje', path: '/auth/my-reservations' },
     ];
-    if (reservations.length) sections.push({ title: 'Rezerwacje', items: reservations });
+    if (reservations.length)
+      sections.push({ title: 'Rezerwacje', items: reservations });
 
     const parties: MenuItem[] = [
       { label: 'Znajdź drużynę', path: '/auth/find-party' },
@@ -73,10 +80,14 @@ export class UserMenuPanelComponent {
     ];
     if (parties.length) sections.push({ title: 'Drużyny', items: parties });
 
-    const events: MenuItem[] = [{ label: 'Poprowadź wydarzenie', path: '/auth/events' }];
+    const events: MenuItem[] = [
+      { label: 'Poprowadź wydarzenie', path: '/auth/events' },
+    ];
     if (events.length) sections.push({ title: 'Wydarzenia', items: events });
 
-    const account: MenuItem[] = [{ label: 'Edytuj dane', path: '/auth/edit-data' }];
+    const account: MenuItem[] = [
+      { label: 'Edytuj dane', path: '/auth/edit-data' },
+    ];
     if (this.isMin(CoworkerRoles.Member)) {
       account.unshift({ label: 'Moje benefity', path: '/auth/benefits' });
     }
@@ -88,11 +99,19 @@ export class UserMenuPanelComponent {
         { label: 'Profil Mistrza Gry', path: '/auth/manage-gm' },
         { label: 'Nadchodzące sesje', path: '/auth/upcoming-sessions' },
         { label: 'Dostępność Mistrza Gry', path: '/auth/availability' },
-        { label: 'Dostępność na recepcji', path: '/auth/reception-availability' },
-        { label: 'Mój grafik', path: '/auth/my-roster' },
-        { label: 'Czas pracy', path: '/auth/work-log' },
-        { label: 'Akta zleceniobiorcy', path: '/auth/coworker-files' },
+        {
+          label: 'Dostępność na recepcji',
+          path: '/auth/reception-availability',
+        }
       );
+      if (this.isStrict(CoworkerRoles.Gm)) {
+        gm.push(
+          { label: 'Mój grafik', path: '/auth/my-roster' },
+          { label: 'Podgląd grafiku', path: '/auth/roster-overview' },
+          { label: 'Czas pracy', path: '/auth/work-log' },
+          { label: 'Akta zleceniobiorcy', path: '/auth/coworker-files' }
+        );
+      }
     }
     if (gm.length) sections.push({ title: 'Mistrz Gry', items: gm });
 
@@ -101,18 +120,26 @@ export class UserMenuPanelComponent {
       reception.push(
         { label: 'Nowa rezerwacja', path: '/auth/guest-reservation' },
         { label: 'Kalendarz rezerwacji', path: '/auth/reservations-calendar' },
+        { label: 'Zarządzaj użytkownikami', path: '/auth/users-admin' },
         { label: 'Zarządzaj Drużynami', path: '/auth/party-list' },
         { label: 'Zarządzaj wydarzeniami', path: '/auth/events' },
         { label: 'Nowe wydarzenie', path: '/auth/events/new' },
+        { label: 'Mój grafik', path: '/auth/my-roster' },
+        { label: 'Czas pracy', path: '/auth/work-log' },
+        { label: 'Akta zleceniobiorcy', path: '/auth/coworker-files' },
+        { label: 'Podgląd grafiku', path: '/auth/roster-overview' },
         { label: 'Podgląd dostępności', path: '/auth/availability-overview' },
-        { label: 'Ewidencja godzin', path: '/auth/work-logs-overview' },
-        { label: 'Zarządzaj użytkownikami', path: '/auth/users-admin' },
+        { label: 'Ewidencja godzin', path: '/auth/work-logs-overview' }
       );
     }
     if (this.isStrict(CoworkerRoles.Owner)) {
-      reception.push({ label: 'Grafik recepcji', path: '/auth/reception-roster' });
+      reception.push({
+        label: 'Grafik recepcji',
+        path: '/auth/reception-roster',
+      });
     }
-    if (reception.length) sections.push({ title: 'Recepcja', items: reception });
+    if (reception.length)
+      sections.push({ title: 'Recepcja', items: reception });
 
     const admin: MenuItem[] = [];
     // Tu dodasz pozycje wyłącznie dla systemowego admina, jeśli zajdzie potrzeba.

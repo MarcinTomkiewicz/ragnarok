@@ -7,6 +7,7 @@
   padding: 0.5rem 0;
   min-width: 180px;
   z-index: 10;
+  font-family: "Cinzel";
 
   max-height: clamp(240px, min(70svh, calc(100svh - 2rem)), 640px);
   overflow-y: auto;
@@ -14,14 +15,9 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
 
-  @supports not (height: 1svh) {
-    .menu-panel {
-      max-height: clamp(240px, 70vh, 640px);
-    }
-  }
-
   & .section-header {
     cursor: pointer;
+    font-size: 13px;
   }
 
   & .menu-item {
@@ -32,13 +28,15 @@
     border-radius: 0;
     text-decoration: none;
     transition: background $transition-fast, color $transition-fast;
+    font-size: 11px;
 
-    /* neutralizacja globalnego a.scss */
     background: none !important;
     -webkit-background-clip: initial !important;
     background-clip: initial !important;
     -webkit-text-fill-color: currentColor !important;
-    &::after { content: none !important; }
+    &::after {
+      content: none !important;
+    }
   }
 
   /* desktop: zachowaj highlight tła na hover/focus */
@@ -69,6 +67,11 @@
   .menu-divider {
     border-color: $border-color;
     margin: 0.5rem 0;
+  }
+}
+@supports not (height: 1svh) {
+  .menu-panel {
+    max-height: clamp(240px, 70vh, 640px);
   }
 }
 
