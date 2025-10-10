@@ -1,7 +1,7 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-// Mixin do hovera na buttonach
+// Hover mixin for buttons
 @mixin btn-hover($bg, $text: null) {
   background-color: darken($bg, 10%);
   transform: translateY(-2px);
@@ -10,7 +10,7 @@
   }
 }
 
-// Bazowe style dla przycisków
+// Base button styles
 .btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
@@ -30,6 +30,7 @@
     transform: none;
   }
 
+  // Primary
   &.btn-primary {
     background-color: $primary-color;
     color: $bg-color;
@@ -44,6 +45,7 @@
     }
   }
 
+  // Secondary
   &.btn-secondary {
     background-color: $secondary-color;
     color: $text-color;
@@ -58,9 +60,10 @@
     }
   }
 
+  // Info (Tzeentch Blue)
   &.btn-info {
     background-color: $info-color;
-    color: $bg-color;
+    color: #fff;
 
     &:hover:not(:disabled) {
       @include btn-hover($info-color);
@@ -72,6 +75,52 @@
     }
   }
 
+  // Success (Nurgle Green)
+  &.btn-success {
+    background-color: $success-color;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      @include btn-hover($success-color);
+    }
+
+    &:disabled {
+      background-color: lighten($success-color, 15%);
+      color: lighten($bg-color, 10%);
+    }
+  }
+
+  // Danger (Khorne Red)
+  &.btn-danger {
+    background-color: $danger-color;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      @include btn-hover($danger-color);
+    }
+
+    &:disabled {
+      background-color: lighten($danger-color, 15%);
+      color: lighten($bg-color, 10%);
+    }
+  }
+
+  // Arcane (Slaanesh Violet)
+  &.btn-arcane {
+    background-color: $arcane-color;
+    color: $arcane-text-color;
+
+    &:hover:not(:disabled) {
+      @include btn-hover($arcane-color, $arcane-text-color);
+    }
+
+    &:disabled {
+      background-color: lighten($arcane-color, 15%);
+      color: lighten($arcane-text-color, 10%);
+    }
+  }
+
+  // Outline: Primary
   &.btn-outline-primary {
     background-color: transparent;
     border: 1px solid $primary-color;
@@ -89,6 +138,79 @@
     }
   }
 
+  // Outline: Info
+  &.btn-outline-info {
+    background-color: transparent;
+    border: 1px solid $info-color;
+    color: $info-color;
+
+    &:hover:not(:disabled) {
+      background-color: $info-color;
+      color: $bg-color;
+    }
+
+    &:disabled {
+      border-color: lighten($info-color, 25%);
+      color: lighten($info-color, 25%);
+      background-color: transparent;
+    }
+  }
+
+  // Outline: Success
+  &.btn-outline-success {
+    background-color: transparent;
+    border: 1px solid $success-color;
+    color: $success-color;
+
+    &:hover:not(:disabled) {
+      background-color: $success-color;
+      color: $bg-color;
+    }
+
+    &:disabled {
+      border-color: lighten($success-color, 25%);
+      color: lighten($success-color, 25%);
+      background-color: transparent;
+    }
+  }
+
+  // Outline: Danger
+  &.btn-outline-danger {
+    background-color: transparent;
+    border: 1px solid $danger-color;
+    color: $danger-color;
+
+    &:hover:not(:disabled) {
+      background-color: $danger-color;
+      color: #fff;
+    }
+
+    &:disabled {
+      border-color: lighten($danger-color, 25%);
+      color: lighten($danger-color, 25%);
+      background-color: transparent;
+    }
+  }
+
+  // Outline: Arcane
+  &.btn-outline-arcane {
+    background-color: transparent;
+    border: 1px solid $arcane-color;
+    color: $arcane-color;
+
+    &:hover:not(:disabled) {
+      background-color: $arcane-color;
+      color: $arcane-text-color;
+    }
+
+    &:disabled {
+      border-color: lighten($arcane-color, 25%);
+      color: lighten($arcane-color, 25%);
+      background-color: transparent;
+    }
+  }
+
+  // Neutral outline
   &.btn-outline {
     background-color: transparent;
     border: 1px solid $text-color;
@@ -116,6 +238,7 @@
     }
   }
 
+  // Reverse outline on small screens
   &.btn-outline-reverse {
     @media (max-width: $breakpoint-mid) {
       background-color: $bg-color;
@@ -134,7 +257,7 @@
     }
   }
 
-  // Styl przycisku typu "link-like"
+  // Link-like button
   &.btn-plain,
   &.btn-plain-light {
     padding: 0.5rem;
@@ -148,7 +271,6 @@
     cursor: pointer;
 
     &:hover {
-      // color: $bg-color;
       border: 1px solid $secondary-text-color;
     }
   }
@@ -157,37 +279,7 @@
     color: $secondary-text-color;
   }
 
-  &.btn-danger {
-    background-color: $danger-color;
-    color: $button-text-color;
-
-    &:hover:not(:disabled) {
-      @include btn-hover($danger-color);
-    }
-
-    &:disabled {
-      background-color: lighten($danger-color, 15%);
-      color: lighten($bg-color, 10%);
-    }
-  }
-
-  &.btn-outline-danger {
-    background-color: transparent;
-    border: 1px solid $danger-color;
-    color: $danger-color;
-
-    &:hover:not(:disabled) {
-      background-color: $danger-color;
-      color: $bg-color;
-    }
-
-    &:disabled {
-      border-color: lighten($danger-color, 25%);
-      color: lighten($danger-color, 25%);
-      background-color: transparent;
-    }
-  }
-
+  // Small close button
   &.btn-close-x {
     padding: 0.1rem 0.35rem;
     font-size: $font-size-xs;
@@ -195,12 +287,14 @@
   }
 }
 
+// Button check (toggle) helpers
 .btn-check {
   position: absolute;
   clip: rect(0, 0, 0, 0);
   pointer-events: none;
 }
 
+// Active state for outline variants via .btn-check or .active
 .btn-check:checked + .btn-outline-primary,
 .btn-outline-primary.active {
   background-color: $primary-color;
@@ -208,15 +302,67 @@
   border-color: $primary-color;
 }
 
+.btn-check:checked + .btn-outline-info,
+.btn-outline-info.active {
+  background-color: $info-color;
+  color: $bg-color;
+  border-color: $info-color;
+}
+
+.btn-check:checked + .btn-outline-success,
+.btn-outline-success.active {
+  background-color: $success-color;
+  color: $bg-color;
+  border-color: $success-color;
+}
+
+.btn-check:checked + .btn-outline-danger,
+.btn-outline-danger.active {
+  background-color: $danger-color;
+  color: $bg-color;
+  border-color: $danger-color;
+}
+
+.btn-check:checked + .btn-outline-arcane,
+.btn-outline-arcane.active {
+  background-color: $arcane-color;
+  color: $arcane-text-color;
+  border-color: $arcane-color;
+}
+
+// Focus rings for outline variants
 .btn-check:focus + .btn-outline-primary,
 .btn-outline-primary:focus-visible {
   box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
   outline: 0;
 }
 
+.btn-check:focus + .btn-outline-info,
+.btn-outline-info:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba($info-color, 0.25);
+  outline: 0;
+}
+
+.btn-check:focus + .btn-outline-success,
+.btn-outline-success:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba($success-color, 0.25);
+  outline: 0;
+}
+
+.btn-check:focus + .btn-outline-danger,
+.btn-outline-danger:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba($danger-color, 0.25);
+  outline: 0;
+}
+
+.btn-check:focus + .btn-outline-arcane,
+.btn-outline-arcane:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba($arcane-color, 0.25);
+  outline: 0;
+}
+
 .btn-group {
   display: inline-flex;
   gap: 0.5rem;
-
   flex-wrap: wrap;
 }

@@ -4,7 +4,7 @@
   <div class="room-buttons">
     @for (room of rooms(); track room) {
     <button
-      class="btn btn-outline-light"
+      class="btn btn-outline"
       [class.active]="store.selectedRoom() === room"
       (click)="selectRoom(room)"
     >

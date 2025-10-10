@@ -178,7 +178,7 @@ a.button-like-info,
 button.button-like-info {
   @extend .button-like;
   background-color: $info-color;
-  color: $bg-color;
+  color: #fff;
   border-color: $info-color;
 
   &:hover:not(:disabled),
