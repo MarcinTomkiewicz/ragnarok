@@ -96,7 +96,7 @@
                         Szczegóły
                       </button>
                       <button
-                        class="btn btn-warning"
+                        class="btn btn-success"
                         [disabled]="!offer.buyNowLink || !offer.stock"
                         (click)="buyNow(offer.buyNowLink, $event)">
                         Kup Teraz
@@ -122,12 +122,12 @@
                         <strong class="text-danger">Produkt niedostępny</strong>
                       }
                     </p>
-                    <div class="btn-group w-100 flex-column gap-2 mt-2">
+                    <div class="btn-group w-100 flex-row justify-between gap-2 mt-2">
                       <button class="btn btn-primary" (click)="goToDetails($event, offer)">
                         Szczegóły
                       </button>
                       <button
-                        class="btn btn-warning"
+                        class="btn btn-success"
                         [disabled]="!offer.buyNowLink || !offer.stock"
                         (click)="buyNow(offer.buyNowLink, $event)">
                         Kup Teraz

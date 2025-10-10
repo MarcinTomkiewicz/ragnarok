@@ -95,6 +95,7 @@
     gap: 1rem;
     box-shadow: $card-shadow;
     transition: transform $transition-fast;
+    max-height: 724px;
 
     .card-img {
       width: 100%;
@@ -114,14 +115,15 @@
     }
 
     .offer-content {
-      display: flex;
-      flex-direction: column;
+      @include flex-wrapper(column, space-between, center);
       gap: 0.5rem;
 
       h3 {
         font-size: $font-size-lg;
         color: $primary-color;
         margin-bottom: 0.25rem;
+        min-height: 3rem;
+        justify-self: center;
       }
 
       p {
@@ -134,13 +136,12 @@
       }
 
       .buttons {
-        display: flex;
-        flex-direction: column;
+        @include flex-wrapper(row, space-between, center);
         gap: 0.5rem;
         margin-top: 0.5rem;
 
         button {
-          width: 100%;
+          width: 50%;
         }
       }
     }

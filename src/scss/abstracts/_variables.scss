@@ -1,46 +1,46 @@
-// Kolory podstawowe
-$primary-color: #e8bc58; // Główne złoto z logo (tekst, border, linki)
-$secondary-color: #684220; // Jasne złoto – tło przycisków, dodatkowe elementy
-$hover-color: #d4b373; // Hover na CTA/linkach
+// Core colors
+$primary-color: #e8bc58;
+$secondary-color: #684220;
+$hover-color: #d4b373;
 
-// Tła
-$bg-color: #16140f; // Tło główne (ciemny brąz)
-$bg-color-light: #1f1c17; // Jaśniejszy brąz (sekcje, przyciski)
-$border-color: #3a372e; // Ramki, separator
-$bg-hero-overlay: rgba(0, 0, 0, 0.6); // Do hero-section z tłem video
+// Backgrounds
+$bg-color: #16140f;
+$bg-color-light: #1f1c17;
+$border-color: #3a372e;
+$bg-hero-overlay: rgba(0, 0, 0, 0.6);
 
-// Tekst
+// Text
 $text-color: $primary-color;
 $secondary-text-color: lighten($primary-color, 10%);
 $link-color: $secondary-color;
 $link-hover-color: lighten($secondary-color, 10%);
 
-// Przyciski
-$button-color: #d4b373; // Ciepłe złoto z projektu
-$button-hover-color: #b59554; // Hover CTA
-$secondary-button-color: #3a372e; // Przyciski neutralne
+// Buttons
+$button-color: #d4b373;
+$button-hover-color: #b59554;
+$secondary-button-color: #3a372e;
 $secondary-button-hover-color: lighten(#3a372e, 5%);
 $button-text-color: #16140f;
 
-// Ikony
+// Icons
 $icon-filter: brightness(0) saturate(100%) invert(88%) sepia(76%)
   saturate(5302%) hue-rotate(315deg) brightness(98%) contrast(86%);
 $icon-filter-dark: brightness(0) invert(20%) sepia(30%) saturate(800%)
   hue-rotate(20deg) brightness(90%) contrast(85%);
 
-// Informacje (opcjonalne kolory semantyczne)
-$info-color: #0dcaf0;
-$danger-color: #dc3545;
-$success-color: #198754;
+// Special semantic colors (Warhammer Chaos theme)
+$info-color: #2b7db3;        // Tzeentch Blue
+$danger-color: #8d0e06;      // Khorne Red
+$success-color: #6e8f2a;     // Nurgle Green
+$arcane-color: #8e3ac2;      // Slaanesh Violet (extra accent)
+$arcane-text-color: $bg-color;
 $danger-text-color: lighten($border-color, 35%);
 
-$border-radius: 10px; // Zaokrąglenie rogów
+// Radii / shadows
+$border-radius: 10px;
 $box-shadow: 0 0 20px rgba($secondary-color, 0.4);
 
-// ---------------------------------------------
-// TYPOGRAFIA
-// ---------------------------------------------
-
+// Typography
 $font-family-base: "Cinzel", serif;
 $font-size-base: 1rem;
 $line-height-base: 1.2;
@@ -53,10 +53,7 @@ $font-size-xl: 1.5rem;
 $font-size-xxl: 2rem;
 $font-size-hero: 3rem;
 
-// ---------------------------------------------
-// UI ELEMENTS / CIEŃ / PRZEJŚCIA
-// ---------------------------------------------
-
+// UI elements / transitions
 $navbar-height: 60px;
 $container-padding: 1.5rem;
 
@@ -64,10 +61,7 @@ $card-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 $transition-fast: 0.2s ease-in-out;
 $transition-slow: 0.5s ease;
 
-// ---------------------------------------------
-// BREAKPOINTY (zachowane)
-// ---------------------------------------------
-
+// Breakpoints
 $breakpoint-xs: 479px;
 $breakpoint-sm: 767px;
 $breakpoint-mid: 1103px;
@@ -76,10 +70,7 @@ $breakpoint-lg: 1270px;
 $breakpoint-xl: 1440px;
 $height-breakpoint-md: 768px;
 
-// ---------------------------------------------
-// SZEROKOŚCI KONTENERÓW (zachowane)
-// ---------------------------------------------
-
+// Container widths
 $container-width-sm: 100%;
 $container-width-md: 770px;
 $container-width-lg: 1140px;
