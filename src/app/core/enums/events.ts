@@ -16,12 +16,15 @@ export enum AttractionKind {
   Discussion = 'DISCUSSION',
   Entertainment = 'ENTERTAINMENT',
   None = 'NONE',
+  Composite = 'COMPOSITE',
 }
+
 export const AttractionKindLabel: Record<AttractionKind, string> = {
   [AttractionKind.Session]: 'Sesja RPG',
   [AttractionKind.Discussion]: 'Dyskusja',
   [AttractionKind.Entertainment]: 'Rozrywka',
   [AttractionKind.None]: 'Rozrywka',
+  [AttractionKind.Composite]: 'Wydarzenie złożone',
 };
 
 export enum HostSignupScope {
@@ -41,7 +44,8 @@ export enum RecurrenceKind {
 export const RecurrenceKindLabel: Record<RecurrenceKind, string> = {
   [RecurrenceKind.Weekly]: 'Tygodniowo',
   [RecurrenceKind.MonthlyNthWeekday]: 'Raz w miesiącu (N-ty dzień tygodnia)',
-  [RecurrenceKind.MonthlyDayOfMonth]: 'Raz w miesiącu (zawsze tego samego dnia)',
+  [RecurrenceKind.MonthlyDayOfMonth]:
+    'Raz w miesiącu (zawsze tego samego dnia)',
 };
 
 export enum WeeklyInterval {

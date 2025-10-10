@@ -7,7 +7,7 @@
       <div class="form-group">
         <img
           class="cover-preview"
-          [src]="coverPreviewUrl() || coverCdnUrl()!"
+          [src]="coverPreviewUrl() || coverCdnUrl() || ''"
           alt="Okładka"
         />
       </div>
@@ -37,8 +37,7 @@
           <button
             type="button"
             class="btn btn-outline-danger w-auto"
-            (click)="removeCover()
-            "
+            (click)="removeCover()"
             [disabled]="!coverPreviewUrl() && !form.value.coverImagePath"
           >
             Usuń okładkę
@@ -48,12 +47,20 @@
 
       <div class="form-group">
         <label class="text-start">Opis krótki</label>
-        <input type="text" class="form-control" formControlName="shortDescription" />
+        <input
+          type="text"
+          class="form-control"
+          formControlName="shortDescription"
+        />
       </div>
 
       <div class="form-group">
         <label class="text-start">Opis długi</label>
-        <textarea rows="6" class="form-control" formControlName="longDescription"></textarea>
+        <textarea
+          rows="6"
+          class="form-control"
+          formControlName="longDescription"
+        ></textarea>
       </div>
 
       <div class="form-group">
@@ -74,51 +81,104 @@
 
       <div class="form-group flags-row">
         <div class="form-check">
-          <input id="isActive" class="form-check-input" type="checkbox" formControlName="isActive" />
+          <input
+            id="isActive"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="isActive"
+          />
           <label class="form-check-label" for="isActive">Aktywny</label>
         </div>
 
         <div class="form-check">
-          <input id="isBeg" class="form-check-input" type="checkbox" formControlName="isForBeginners" />
+          <input
+            id="isBeg"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="isForBeginners"
+          />
           <label class="form-check-label" for="isBeg">Dla początkujących</label>
         </div>
 
         <div class="form-check">
-          <input id="reqHosts" class="form-check-input" type="checkbox" formControlName="requiresHosts" />
-          <label class="form-check-label" for="reqHosts">Wymaga prowadzących</label>
+          <input
+            id="reqHosts"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="requiresHosts"
+          />
+          <label class="form-check-label" for="reqHosts"
+            >Wymaga prowadzących</label
+          >
         </div>
 
         <div class="form-check">
-          <input id="signupRequired" class="form-check-input" type="checkbox" formControlName="signupRequired" />
-          <label class="form-check-label" for="signupRequired">Zapisy uczestników</label>
+          <input
+            id="signupRequired"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="signupRequired"
+          />
+          <label class="form-check-label" for="signupRequired"
+            >Zapisy uczestników</label
+          >
         </div>
 
         <div
           class="form-check"
-          [ngbTooltip]="'Gdy odznaczone – salki blokujemy dopiero po zgłoszeniu prowadzącego.'"
+          [ngbTooltip]="
+            'Gdy odznaczone – salki blokujemy dopiero po zgłoszeniu prowadzącego.'
+          "
           placement="top"
           container="body"
         >
-          <input id="blockSlots" class="form-check-input" type="checkbox" formControlName="blockSlots" />
-          <label class="form-check-label" for="blockSlots">Zablokuj terminy od razu</label>
+          <input
+            id="blockSlots"
+            class="form-check-input"
+            type="checkbox"
+            formControlName="blockSlots"
+          />
+          <label class="form-check-label" for="blockSlots"
+            >Zablokuj terminy od razu</label
+          >
         </div>
       </div>
 
       <div class="form-group">
         <label class="text-start">Koszt uczestnictwa (PLN)</label>
-        <input type="number" class="form-control" formControlName="entryFeePln" min="0" step="1" />
+        <input
+          type="number"
+          class="form-control"
+          formControlName="entryFeePln"
+          min="0"
+          step="1"
+        />
       </div>
 
       <div class="form-group">
         <label class="text-start me-3">Częstotliwość</label>
         <div class="btn-group">
-          <input type="radio" class="btn-check" id="occSingle" [checked]="form.value.occurrenceMode==='SINGLE'"
-                 (change)="form.controls.occurrenceMode.setValue('SINGLE')" />
-          <label class="btn btn-outline-primary" for="occSingle">Jednorazowy</label>
+          <input
+            type="radio"
+            class="btn-check"
+            id="occSingle"
+            [checked]="form.value.occurrenceMode === 'SINGLE'"
+            (change)="f.occurrenceMode.setValue('SINGLE')"
+          />
+          <label class="btn btn-outline-primary" for="occSingle"
+            >Jednorazowy</label
+          >
 
-          <input type="radio" class="btn-check" id="occRecur" [checked]="form.value.occurrenceMode==='RECURRENT'"
-                 (change)="form.controls.occurrenceMode.setValue('RECURRENT')" />
-          <label class="btn btn-outline-primary" for="occRecur">Cykliczny</label>
+          <input
+            type="radio"
+            class="btn-check"
+            id="occRecur"
+            [checked]="form.value.occurrenceMode === 'RECURRENT'"
+            (change)="f.occurrenceMode.setValue('RECURRENT')"
+          />
+          <label class="btn btn-outline-primary" for="occRecur"
+            >Cykliczny</label
+          >
         </div>
       </div>
 
@@ -127,25 +187,60 @@
         <div>
           <label class="text-start">Typ wydarzenia</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ attractionLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
-              <button type="button" class="dropdown-item"
-                [class.active]="form.value.attractionType === AttractionKind.Session"
-                (click)="pickAttractionType(AttractionKind.Session)">
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.attractionType === AttractionKind.Session
+                "
+                (click)="f.attractionType.setValue(AttractionKind.Session)"
+              >
                 {{ AttractionKindLabel[AttractionKind.Session] }}
               </button>
-              <button type="button" class="dropdown-item"
-                [class.active]="form.value.attractionType === AttractionKind.Discussion"
-                (click)="pickAttractionType(AttractionKind.Discussion)">
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.attractionType === AttractionKind.Discussion
+                "
+                (click)="f.attractionType.setValue(AttractionKind.Discussion)"
+              >
                 {{ AttractionKindLabel[AttractionKind.Discussion] }}
               </button>
-              <button type="button" class="dropdown-item"
-                [class.active]="form.value.attractionType === AttractionKind.Entertainment"
-                (click)="pickAttractionType(AttractionKind.Entertainment)">
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.attractionType === AttractionKind.Entertainment
+                "
+                (click)="
+                  f.attractionType.setValue(AttractionKind.Entertainment)
+                "
+              >
                 {{ AttractionKindLabel[AttractionKind.Entertainment] }}
               </button>
+
+              @if (form.value.occurrenceMode==='SINGLE') {
+              <div class="dropdown-divider"></div>
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.attractionType === AttractionKind.Composite
+                "
+                (click)="f.attractionType.setValue(AttractionKind.Composite)"
+              >
+                {{ AttractionKindLabel[AttractionKind.Composite] }}
+              </button>
+              }
             </div>
           </div>
         </div>
@@ -154,18 +249,28 @@
         <div>
           <label class="text-start">Kto może być prowadzącym</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ hostSignupLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
-              <button type="button" class="dropdown-item"
+              <button
+                type="button"
+                class="dropdown-item"
                 [class.active]="form.value.hostSignup === HostSignupScope.Staff"
-                (click)="pickHostSignup(HostSignupScope.Staff)">
+                (click)="f.hostSignup.setValue(HostSignupScope.Staff)"
+              >
                 {{ HostSignupScopeLabel[HostSignupScope.Staff] }}
               </button>
-              <button type="button" class="dropdown-item"
+              <button
+                type="button"
+                class="dropdown-item"
                 [class.active]="form.value.hostSignup === HostSignupScope.Any"
-                (click)="pickHostSignup(HostSignupScope.Any)">
+                (click)="f.hostSignup.setValue(HostSignupScope.Any)"
+              >
                 {{ HostSignupScopeLabel[HostSignupScope.Any] }}
               </button>
             </div>
@@ -174,52 +279,156 @@
         }
       </div>
 
-      <!-- Zapisy uczestników: rodzaj + limity -->
+      <!-- Poziom zgłoszeń prowadzących (event-level) -->
+      <div class="form-group">
+        <div class="row-inline">
+          <label class="text-start me-2"
+            >Zgłoszenie prowadzących
+            <img
+              src="/icons/wooden-sign.svg"
+              class="icon"
+              alt="Informacja"
+              [ngbTooltip]="
+                'Określa, na jakim poziomie prowadzący składają zgłoszenie: • Na wydarzenie – bez wyboru salki/terminu • Na salkę – z wyborem salki • Na slot – z wyborem konkretnego terminu.'
+              "
+              placement="top"
+              container="body"
+              role="button"
+              aria-label="Wyjaśnienie sposobu zgłaszania prowadzących"
+          /></label>
+        </div>
+        <div ngbDropdown class="d-block mt-1">
+          <button
+            type="button"
+            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+            ngbDropdownToggle
+          >
+            {{
+              f.hostSignupLevel.value === HostSignupLevel.Event
+                ? "Na wydarzenie"
+                : f.hostSignupLevel.value === HostSignupLevel.Room
+                ? "Na salkę"
+                : "Na slot"
+            }}
+          </button>
+          <div ngbDropdownMenu class="dropdown-pane">
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.active]="
+                form.value.hostSignupLevel === HostSignupLevel.Event
+              "
+              (click)="f.hostSignupLevel.setValue(HostSignupLevel.Event)"
+            >
+              Na wydarzenie
+            </button>
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.active]="
+                form.value.hostSignupLevel === HostSignupLevel.Room
+              "
+              (click)="f.hostSignupLevel.setValue(HostSignupLevel.Room)"
+            >
+              Na salkę
+            </button>
+            <button
+              type="button"
+              class="dropdown-item"
+              [class.active]="
+                form.value.hostSignupLevel === HostSignupLevel.Slot
+              "
+              (click)="f.hostSignupLevel.setValue(HostSignupLevel.Slot)"
+            >
+              Na slot
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zapisy uczestników -->
       @if (form.value.signupRequired) {
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Rodzaj zapisów</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ participantSignupLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
-              <button type="button" class="dropdown-item"
-                [class.active]="form.value.participantSignup === ParticipantSignupScope.Whole"
-                (click)="pickParticipantSignup(ParticipantSignupScope.Whole)">
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.participantSignup === ParticipantSignupScope.Whole
+                "
+                (click)="
+                  f.participantSignup.setValue(ParticipantSignupScope.Whole)
+                "
+              >
                 Na całe wydarzenie
               </button>
-              <button type="button" class="dropdown-item"
-                [class.active]="form.value.participantSignup === ParticipantSignupScope.Session"
-                (click)="pickParticipantSignup(ParticipantSignupScope.Session)">
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.participantSignup ===
+                  ParticipantSignupScope.Session
+                "
+                (click)="
+                  f.participantSignup.setValue(ParticipantSignupScope.Session)
+                "
+              >
                 Na sesje
               </button>
-              <button type="button" class="dropdown-item"
-                [class.active]="form.value.participantSignup === ParticipantSignupScope.Both"
-                (click)="pickParticipantSignup(ParticipantSignupScope.Both)">
+              <button
+                type="button"
+                class="dropdown-item"
+                [class.active]="
+                  form.value.participantSignup === ParticipantSignupScope.Both
+                "
+                (click)="
+                  f.participantSignup.setValue(ParticipantSignupScope.Both)
+                "
+              >
                 Na sesje i wydarzenie
               </button>
             </div>
           </div>
         </div>
 
-        @if (form.value.participantSignup === 'WHOLE' || form.value.participantSignup === 'BOTH') {
+        @if (form.value.participantSignup === 'WHOLE' ||
+        form.value.participantSignup === 'BOTH') {
         <div>
           <label class="text-start">Limit na wydarzenie (0 = bez limitu)</label>
-          <input type="number" class="form-control" formControlName="wholeCapacity" min="0" step="1" />
+          <input
+            type="number"
+            class="form-control"
+            formControlName="wholeCapacity"
+            min="0"
+            step="1"
+          />
         </div>
-        }
-
-        @if (form.value.participantSignup === 'SESSION' || form.value.participantSignup === 'BOTH') {
+        } @if (form.value.participantSignup === 'SESSION' ||
+        form.value.participantSignup === 'BOTH') {
         <div>
           <label class="text-start">Limit na sesję (3–5)</label>
-          <input type="number" class="form-control" formControlName="sessionCapacity" min="3" max="5" step="1" />
+          <input
+            type="number"
+            class="form-control"
+            formControlName="sessionCapacity"
+            min="3"
+            max="5"
+            step="1"
+          />
         </div>
         }
       </div>
-      }
-
-      @if (form.value.occurrenceMode==='SINGLE') {
+      } @if (form.value.occurrenceMode==='SINGLE') {
       <div class="form-group">
         <label class="text-start">Data</label>
         <input type="date" class="form-control" formControlName="singleDate" />
@@ -242,18 +451,26 @@
         </div>
       </div>
 
+      <!-- CYKLICZNE -->
       @if (form.value.occurrenceMode==='RECURRENT') {
       <div class="form-group">
         <label class="text-start">Powtarzanie</label>
         <div ngbDropdown class="d-block">
-          <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+          <button
+            type="button"
+            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+            ngbDropdownToggle
+          >
             {{ patternLabel() }}
           </button>
           <div ngbDropdownMenu class="dropdown-pane">
             @for (o of patternOptions; track o.value) {
-            <button type="button" class="dropdown-item"
+            <button
+              type="button"
+              class="dropdown-item"
               [class.active]="form.value.recPattern === o.value"
-              (click)="pickPattern(o.value)">
+              (click)="f.recPattern.setValue(o.value)"
+            >
               {{ o.label }}
             </button>
             }
@@ -261,19 +478,27 @@
         </div>
       </div>
 
-      @if (form.value.recPattern==='WEEKLY_1' || form.value.recPattern==='WEEKLY_2') {
+      @if (form.value.recPattern==='WEEKLY_1' ||
+      form.value.recPattern==='WEEKLY_2') {
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Dzień tygodnia</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ weekdayLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (w of weekdays; track w.value) {
-              <button type="button" class="dropdown-item"
+              <button
+                type="button"
+                class="dropdown-item"
                 [class.active]="form.value.weekday === w.value"
-                (click)="pickWeekday(w.value)">
+                (click)="f.weekday.setValue(w.value)"
+              >
                 {{ w.label }}
               </button>
               }
@@ -284,14 +509,21 @@
         <div>
           <label class="text-start">Wykluczenia w miesiącu</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ excludeNthLongLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (o of excludeNthOptions; track o.value) {
-              <button type="button" class="dropdown-item"
+              <button
+                type="button"
+                class="dropdown-item"
                 [class.active]="form.value.excludeNth === o.value"
-                (click)="pickExcludeNth(o.value)">
+                (click)="f.excludeNth.setValue(o.value)"
+              >
                 {{ excludeNthLongLabelFor(o.value) }}
               </button>
               }
@@ -299,21 +531,26 @@
           </div>
         </div>
       </div>
-      }
-
-      @if (form.value.recPattern==='MONTHLY_NTH') {
+      } @if (form.value.recPattern==='MONTHLY_NTH') {
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Który</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ monthlyNthLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (o of monthlyNthOptions; track o.value) {
-              <button type="button" class="dropdown-item"
+              <button
+                type="button"
+                class="dropdown-item"
                 [class.active]="form.value.monthlyNth === o.value"
-                (click)="pickMonthlyNth(o.value)">
+                (click)="f.monthlyNth.setValue(o.value)"
+              >
                 {{ o.label }}
               </button>
               }
@@ -323,14 +560,20 @@
         <div>
           <label class="text-start">Dzień tygodnia</label>
           <div ngbDropdown class="d-block">
-            <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
               {{ monthlyWeekdayLabel() }}
             </button>
             <div ngbDropdownMenu class="dropdown-pane">
               @for (w of weekdays; track w.value) {
-              <button class="dropdown-item"
+              <button
+                class="dropdown-item"
                 [class.active]="form.value.monthlyWeekday === w.value"
-                (click)="pickMonthlyWeekday(w.value)">
+                (click)="f.monthlyWeekday.setValue(w.value)"
+              >
                 {{ w.label }}
               </button>
               }
@@ -338,18 +581,432 @@
           </div>
         </div>
       </div>
-      }
-
-      @if (form.value.recPattern==='MONTHLY_DOM') {
+      } @if (form.value.recPattern==='MONTHLY_DOM') {
       <div class="form-group">
         <label class="text-start">Dzień miesiąca</label>
-        <input type="number" min="1" max="31" class="form-control" formControlName="dayOfMonth" />
+        <input
+          type="number"
+          min="1"
+          max="31"
+          class="form-control"
+          formControlName="dayOfMonth"
+        />
       </div>
       }
 
       <div class="form-group">
         <label class="text-start">Koniec cyklu</label>
         <input type="date" class="form-control" formControlName="endDate" />
+      </div>
+      }
+
+      <!-- JEDNORAZOWE + COMPOSITE: PLANY SAL -->
+      @if (form.value.occurrenceMode==='SINGLE' &&
+      form.value.attractionType===AttractionKind.Composite) {
+      <div class="form-group">
+        <label class="text-start">Plany salek (złożone)</label>
+
+        @for (r of form.value.rooms || []; track r) {
+        <div class="card-like mb-3 p-3">
+          <div class="row-inline">
+            <strong class="me-2">{{ r }}</strong>
+
+            <!-- Purpose -->
+            <div ngbDropdown class="d-block me-2">
+              <button
+                type="button"
+                class="btn btn-outline dropdown-toggle"
+                ngbDropdownToggle
+              >
+                {{ purposeLabel(roomPlans()[r].purpose) }}
+              </button>
+              <div ngbDropdownMenu class="dropdown-pane">
+                <button
+                  class="dropdown-item"
+                  [class.active]="
+                    roomPlans()[r].purpose === RoomPurpose.Session
+                  "
+                  (click)="setRoomPurpose(r, RoomPurpose.Session)"
+                >
+                  {{ RoomPurposeLabel[RoomPurpose.Session] }}
+                </button>
+                <button
+                  class="dropdown-item"
+                  [class.active]="
+                    roomPlans()[r].purpose === RoomPurpose.Discussion
+                  "
+                  (click)="setRoomPurpose(r, RoomPurpose.Discussion)"
+                >
+                  {{ RoomPurposeLabel[RoomPurpose.Discussion] }}
+                </button>
+                <button
+                  class="dropdown-item"
+                  [class.active]="
+                    roomPlans()[r].purpose === RoomPurpose.Entertainment
+                  "
+                  (click)="setRoomPurpose(r, RoomPurpose.Entertainment)"
+                >
+                  {{ RoomPurposeLabel[RoomPurpose.Entertainment] }}
+                </button>
+                <button
+                  class="dropdown-item"
+                  [class.active]="roomPlans()[r].purpose === RoomPurpose.None"
+                  (click)="setRoomPurpose(r, RoomPurpose.None)"
+                >
+                  {{ RoomPurposeLabel[RoomPurpose.None] }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom title; wymagane jeśli Rozrywka -->
+            <input
+              #titleInput
+              type="text"
+              class="form-control w-auto"
+              [placeholder]="
+                roomPlans()[r].purpose === RoomPurpose.Entertainment
+                  ? 'Szczegóły rozrywki (wymagane)'
+                  : 'Tytuł (opcjonalnie)'
+              "
+              [value]="roomPlans()[r].customTitle || ''"
+              (input)="setRoomTitle(r, titleInput.value)"
+            />
+            @if (roomPlans()[r].purpose===RoomPurpose.Entertainment &&
+            !(roomPlans()[r].customTitle || '').trim()) {
+            <div class="form-text text-danger ms-2">
+              Podaj, co to za rozrywka (np. turniej, Magic, Munchkin…)
+            </div>
+            }
+
+            <!-- Host level (override) -->
+            <div class="ms-2 row-inline">
+              <label class="text-start me-2"
+                >Zgłoszenie prowadzących
+                <img
+                  src="/icons/wooden-sign.svg"
+                  class="icon"
+                  alt="Informacja"
+                  [ngbTooltip]="
+                    'Nadpisuje poziom z wydarzenia, ale tylko dla tej salki: • Na wydarzenie – bez wyboru salki/terminu • Na salkę – z wyborem salki • Na slot – z wyborem konkretnego terminu.'
+                  "
+                  placement="top"
+                  container="body"
+                  role="button"
+                  aria-label="Wyjaśnienie sposobu zgłaszania dla tej salki"
+              /></label>
+            </div>
+            <div ngbDropdown class="d-block ms-2">
+              <button
+                type="button"
+                class="btn btn-outline dropdown-toggle"
+                ngbDropdownToggle
+              >
+                {{
+                  roomPlans()[r].hostSignup == null
+                    ? "Dziedzicz z wydarzenia"
+                    : roomPlans()[r].hostSignup === HostSignupLevel.Event
+                    ? "Na wydarzenie"
+                    : roomPlans()[r].hostSignup === HostSignupLevel.Room
+                    ? "Na salkę"
+                    : "Na slot"
+                }}
+              </button>
+              <div ngbDropdownMenu class="dropdown-pane">
+                <button
+                  class="dropdown-item"
+                  [class.active]="roomPlans()[r].hostSignup == null"
+                  (click)="setRoomHostLevel(r, null)"
+                >
+                  Dziedzicz z wydarzenia
+                </button>
+                <button
+                  class="dropdown-item"
+                  [class.active]="
+                    roomPlans()[r].hostSignup === HostSignupLevel.Event
+                  "
+                  (click)="setRoomHostLevel(r, HostSignupLevel.Event)"
+                >
+                  Na wydarzenie
+                </button>
+                <button
+                  class="dropdown-item"
+                  [class.active]="
+                    roomPlans()[r].hostSignup === HostSignupLevel.Room
+                  "
+                  (click)="setRoomHostLevel(r, HostSignupLevel.Room)"
+                >
+                  Na salkę
+                </button>
+                <button
+                  class="dropdown-item"
+                  [class.active]="
+                    roomPlans()[r].hostSignup === HostSignupLevel.Slot
+                  "
+                  (click)="setRoomHostLevel(r, HostSignupLevel.Slot)"
+                >
+                  Na slot
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tryb harmonogramu -->
+          <div class="mt-2">
+            <div class="btn-group">
+              <input
+                type="radio"
+                class="btn-check"
+                [id]="'sch-full-' + r"
+                [checked]="
+                  roomPlans()[r].scheduleKind === RoomScheduleKind.FullSpan
+                "
+                (change)="pickSchedule(r, RoomScheduleKind.FullSpan)"
+              />
+              <label class="btn btn-outline-primary" [for]="'sch-full-' + r"
+                >Cały przedział</label
+              >
+
+              <input
+                type="radio"
+                class="btn-check"
+                [id]="'sch-int-' + r"
+                [checked]="
+                  roomPlans()[r].scheduleKind === RoomScheduleKind.Interval
+                "
+                (change)="pickSchedule(r, RoomScheduleKind.Interval)"
+              />
+              <label class="btn btn-outline-primary" [for]="'sch-int-' + r"
+                >Co X godzin</label
+              >
+
+              <input
+                type="radio"
+                class="btn-check"
+                [id]="'sch-sch-' + r"
+                [checked]="
+                  roomPlans()[r].scheduleKind === RoomScheduleKind.Schedule
+                "
+                (change)="pickSchedule(r, RoomScheduleKind.Schedule)"
+              />
+              <label class="btn btn-outline-primary" [for]="'sch-sch-' + r"
+                >Ręcznie</label
+              >
+            </div>
+          </div>
+
+          <!-- INTERVAL -->
+          @if (roomPlans()[r].scheduleKind===RoomScheduleKind.Interval) {
+          <div class="row-inline mt-2">
+            <label class="text-start me-2">Długość slotu (h)</label>
+            <input
+              #ih
+              type="number"
+              min="1"
+              step="1"
+              class="form-control w-auto"
+              [value]="roomPlans()[r].intervalHours ?? 1"
+              (input)="setIntervalHours(r, ih.value)"
+            />
+            <div class="form-text">
+              Sloty będą dzielić cały przedział od „Godzina rozpoczęcia” do
+              „Godzina zakończenia”.
+            </div>
+          </div>
+          }
+
+          <!-- RĘCZNIE (Schedule) -->
+          @if (roomPlans()[r].scheduleKind===RoomScheduleKind.Schedule) {
+          <div class="mt-2">
+            @for (s of roomPlans()[r].slots || []; let i = $index; track i) {
+            <div class="row-inline mb-2">
+              <input
+                #st
+                type="time"
+                class="form-control w-auto"
+                [value]="s.startTime"
+                (input)="updateSlot(r, i, { startTime: st.value })"
+              />
+              <span>&nbsp;–&nbsp;</span>
+              <input
+                #en
+                type="time"
+                class="form-control w-auto"
+                [value]="s.endTime"
+                (input)="updateSlot(r, i, { endTime: en.value })"
+              />
+
+              <div ngbDropdown class="d-block ms-2">
+                <button
+                  type="button"
+                  class="btn btn-outline dropdown-toggle"
+                  ngbDropdownToggle
+                >
+                  {{
+                    RoomPurposeLabel[
+                      s.purpose || roomPlans()[r].purpose || RoomPurpose.None
+                    ]
+                  }}
+                </button>
+                <div ngbDropdownMenu class="dropdown-pane">
+                  <button
+                    class="dropdown-item"
+                    [class.active]="
+                      (s.purpose || roomPlans()[r].purpose) ===
+                      RoomPurpose.Session
+                    "
+                    (click)="updateSlot(r, i, { purpose: RoomPurpose.Session })"
+                  >
+                    {{ RoomPurposeLabel[RoomPurpose.Session] }}
+                  </button>
+                  <button
+                    class="dropdown-item"
+                    [class.active]="
+                      (s.purpose || roomPlans()[r].purpose) ===
+                      RoomPurpose.Discussion
+                    "
+                    (click)="
+                      updateSlot(r, i, { purpose: RoomPurpose.Discussion })
+                    "
+                  >
+                    {{ RoomPurposeLabel[RoomPurpose.Discussion] }}
+                  </button>
+                  <button
+                    class="dropdown-item"
+                    [class.active]="
+                      (s.purpose || roomPlans()[r].purpose) ===
+                      RoomPurpose.Entertainment
+                    "
+                    (click)="
+                      updateSlot(r, i, { purpose: RoomPurpose.Entertainment })
+                    "
+                  >
+                    {{ RoomPurposeLabel[RoomPurpose.Entertainment] }}
+                  </button>
+                  <button
+                    class="dropdown-item"
+                    [class.active]="
+                      (s.purpose || roomPlans()[r].purpose) === RoomPurpose.None
+                    "
+                    (click)="updateSlot(r, i, { purpose: RoomPurpose.None })"
+                  >
+                    {{ RoomPurposeLabel[RoomPurpose.None] }}
+                  </button>
+                </div>
+              </div>
+
+              <input
+                #slotTitle
+                type="text"
+                class="form-control w-auto ms-2"
+                [placeholder]="
+                  (s.purpose || roomPlans()[r].purpose) ===
+                  RoomPurpose.Entertainment
+                    ? 'Szczegóły rozrywki (wymagane)'
+                    : 'Tytuł (opcjonalnie)'
+                "
+                [value]="s.customTitle || ''"
+                (input)="
+                  updateSlot(r, i, { customTitle: slotTitle.value || null })
+                "
+              />
+              @if ((s.purpose ||
+              roomPlans()[r].purpose)===RoomPurpose.Entertainment &&
+              !(s.customTitle || '').trim()) {
+              <div class="form-text text-danger ms-2">
+                Podaj szczegóły rozrywki.
+              </div>
+              }
+
+              <div class="ms-2 row-inline">
+                <label class="text-start me-2"
+                  >Zgłoszenie prowadzących
+                  <img
+                    src="/icons/wooden-sign.svg"
+                    class="icon"
+                    alt="Informacja"
+                    [ngbTooltip]="
+                      'Nadpisuje poziom dla tego konkretnego slotu: • Dziedzicz – jak w salce/na wydarzeniu • Na wydarzenie – bez wyboru salki/terminu • Na salkę – z wyborem salki • Na slot – z wyborem konkretnego terminu.'
+                    "
+                    placement="top"
+                    container="body"
+                    role="button"
+                    aria-label="Wyjaśnienie sposobu zgłaszania dla slotu"
+                /></label>
+              </div>
+              <div ngbDropdown class="d-block ms-2">
+                <button
+                  type="button"
+                  class="btn btn-outline dropdown-toggle"
+                  ngbDropdownToggle
+                >
+                  {{
+                    s.hostSignup == null
+                      ? "Dziedzicz"
+                      : s.hostSignup === HostSignupLevel.Event
+                      ? "Na wydarzenie"
+                      : s.hostSignup === HostSignupLevel.Room
+                      ? "Na salkę"
+                      : "Na slot"
+                  }}
+                </button>
+                <div ngbDropdownMenu class="dropdown-pane">
+                  <button
+                    class="dropdown-item"
+                    [class.active]="s.hostSignup == null"
+                    (click)="updateSlot(r, i, { hostSignup: null })"
+                  >
+                    Dziedzicz
+                  </button>
+                  <button
+                    class="dropdown-item"
+                    [class.active]="s.hostSignup === HostSignupLevel.Event"
+                    (click)="
+                      updateSlot(r, i, { hostSignup: HostSignupLevel.Event })
+                    "
+                  >
+                    Na wydarzenie
+                  </button>
+                  <button
+                    class="dropdown-item"
+                    [class.active]="s.hostSignup === HostSignupLevel.Room"
+                    (click)="
+                      updateSlot(r, i, { hostSignup: HostSignupLevel.Room })
+                    "
+                  >
+                    Na salkę
+                  </button>
+                  <button
+                    class="dropdown-item"
+                    [class.active]="s.hostSignup === HostSignupLevel.Slot"
+                    (click)="
+                      updateSlot(r, i, { hostSignup: HostSignupLevel.Slot })
+                    "
+                  >
+                    Na slot
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-outline-danger w-auto ms-2"
+                (click)="removeSlot(r, i)"
+              >
+                Usuń
+              </button>
+            </div>
+            }
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              (click)="addSlot(r)"
+            >
+              Dodaj slot
+            </button>
+          </div>
+          }
+        </div>
+        }
       </div>
       }
 
@@ -369,12 +1026,16 @@
 
       <div class="actions">
         <button type="submit" class="btn btn-primary">
-          {{ isEdit() ? 'Zapisz zmiany' : 'Utwórz wydarzenie' }}
+          {{ isEdit() ? "Zapisz zmiany" : "Utwórz wydarzenie" }}
         </button>
       </div>
     </form>
   </div>
 
-  <ng-template #eventSuccessToast><strong>Sukces!</strong> Wydarzenie zostało zapisane.</ng-template>
-  <ng-template #eventErrorToast><strong>Błąd!</strong> Nie udało się zapisać wydarzenia.</ng-template>
+  <ng-template #eventSuccessToast
+    ><strong>Sukces!</strong> Wydarzenie zostało zapisane.</ng-template
+  >
+  <ng-template #eventErrorToast
+    ><strong>Błąd!</strong> Nie udało się zapisać wydarzenia.</ng-template
+  >
 </div>

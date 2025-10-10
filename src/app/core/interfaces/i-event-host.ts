@@ -3,12 +3,13 @@ import { GmStyleTag } from "../enums/gm-styles";
 import { IGmData } from "./i-gm-profile";
 import { IRPGSystem } from "./i-rpg-system";
 
-
 export interface IEventHost {
   id: string;
   eventId: string;
-  occurrenceDate: string;
+  occurrenceDate: string;     // 'YYYY-MM-DD'
   roomName: string | null;
+  /** Optional slot start time if signup is at SLOT level */
+  slotStartTime?: string | null; // 'HH:mm:ss'
   hostUserId: string;
   role: HostSignupScope;
   title: string | null;

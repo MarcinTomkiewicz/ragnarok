@@ -1,93 +1,50 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, of, switchMap, throwError, map } from 'rxjs';
-
-import { BackendService } from '../backend/backend.service';
+import { Observable, of, map, switchMap, throwError, forkJoin } from 'rxjs';
 import { ImageStorageService } from '../backend/image-storage/image-storage.service';
-import { FilterOperator } from '../../enums/filterOperator';
-import { toSnakeCase } from '../../utils/type-mappers';
+import { EventRepository } from './event.repository';
+import { RecurrenceUtil } from './recurrence.util';
+import { TimeUtil } from './time.util';
+import { ReservationsService } from './reservations.service';
+
 import { EventFull, RecurrenceRule } from '../../interfaces/i-events';
 import { formatYmdLocal } from '../../utils/weekday-options';
-import {
-  EventTag,
-  RecurrenceKind,
-  ParticipantSignupScope,
-} from '../../enums/events';
+import { FilterOperator } from '../../enums/filterOperator';
+import { EventTag, RecurrenceKind, ParticipantSignupScope } from '../../enums/events';
+import { RoomPurpose, RoomScheduleKind } from '../../enums/event-rooms';
+import { EventMapper } from './event.mapper';
 
 type EventForCreate = Omit<EventFull, 'id'>;
 
 @Injectable({ providedIn: 'root' })
 export class EventService {
-  private readonly backend = inject(BackendService);
+  private readonly repo = inject(EventRepository);
+  private readonly mapper = inject(EventMapper);
+  private readonly rec = inject(RecurrenceUtil);
+  private readonly time = inject(TimeUtil);
   private readonly images = inject(ImageStorageService);
+  private readonly reservations = inject(ReservationsService);
 
-  /** Active list with joins */
   getAllActive(): Observable<EventFull[]> {
-    return this.backend
-      .getAll<any>(
-        'new_events',
-        'name',
-        'asc',
-        {
-          filters: {
-            isActive: { operator: FilterOperator.EQ, value: true },
-          },
-        },
-        undefined,
-        'event_tags(*), event_rooms(*), event_recurrence(*)',
-        true
-      )
-      .pipe(map((rows) => rows.map((r) => this.mapDbCamelToEventFull(r))));
+    return this.repo.getAllActive().pipe(map((rows) => rows.map((r) => this.mapper.mapDbToEventFull(r))));
   }
 
-  /** By slug with joins */
   getBySlug(slug: string): Observable<EventFull | null> {
-    return this.backend
-      .getAll<any>(
-        'new_events',
-        undefined,
-        'asc',
-        {
-          filters: {
-            slug: { operator: FilterOperator.EQ, value: slug },
-          },
-        },
-        undefined,
-        'event_tags(*), event_rooms(*), event_recurrence(*)',
-        true
-      )
-      .pipe(map((rows) => (rows[0] ? this.mapDbCamelToEventFull(rows[0]) : null)));
+    return this.repo.getBySlug(slug).pipe(map((rows) => (rows[0] ? this.mapper.mapDbToEventFull(rows[0]) : null)));
   }
 
-  /** By id with joins */
   getById(id: string): Observable<EventFull | null> {
-    return this.backend
-      .getAll<any>(
-        'new_events',
-        undefined,
-        'asc',
-        {
-          filters: {
-            id: { operator: FilterOperator.EQ, value: id },
-          },
-        },
-        undefined,
-        'event_tags(*), event_rooms(*), event_recurrence(*)',
-        true
-      )
-      .pipe(map((rows) => (rows[0] ? this.mapDbCamelToEventFull(rows[0]) : null)));
+    return this.repo.getById(id).pipe(map((rows) => (rows[0] ? this.mapper.mapDbToEventFull(rows[0]) : null)));
   }
 
-  /** Create + related rows + (optional) cover + (optional) reservations */
   createEvent(
     payload: EventForCreate,
     coverFile?: File,
     regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE',
     opts?: { blockSlots?: boolean }
   ): Observable<{ id: string; slug: string }> {
-    const { recurrence, tags = [], rooms = [], ...coreRaw } = payload as any;
-    const core = { ...coreRaw };
+    const { recurrence, tags = [], rooms = [], roomPlans = null, ...core } = payload as any;
 
-    return this.backend.create('new_events', toSnakeCase(core)).pipe(
+    return this.repo.createCore('new_events', core).pipe(
       switchMap((created: any) => {
         const eventId = created?.id as string | undefined;
         const slug = created?.slug as string | undefined;
@@ -96,25 +53,17 @@ export class EventService {
         const writes: Observable<unknown>[] = [];
 
         if (tags.length) {
-          writes.push(
-            this.backend.createMany(
-              'event_tags',
-              tags.map((tag: string) => ({ eventId, tag } as any))
-            )
-          );
+          const tagRows = tags.map((tag: string) => ({ eventId, tag } as any));
+          writes.push(this.repo.createMany('event_tags', tagRows));
         }
 
         if (rooms.length) {
-          writes.push(
-            this.backend.createMany(
-              'event_rooms',
-              rooms.map((roomName: string) => ({ eventId, roomName } as any))
-            )
-          );
+          const roomRows = rooms.map((roomName: string) => ({ eventId, roomName } as any));
+          writes.push(this.repo.createMany('event_rooms', roomRows));
         }
 
         if (recurrence) {
-          const recRow = toSnakeCase({
+          const recRow = {
             eventId,
             kind: recurrence.kind,
             interval: recurrence.interval,
@@ -125,32 +74,53 @@ export class EventService {
             startDate: recurrence.startDate,
             endDate: recurrence.endDate ?? null,
             exdates: recurrence.exdates ?? [],
-          });
-          writes.push(this.backend.create('event_recurrence', recRow));
+          };
+          writes.push(this.repo.createMany('event_recurrence', [recRow]));
+        }
+
+        if (Array.isArray(roomPlans) && roomPlans.length) {
+          const planRows = roomPlans.map((p) => ({
+            eventId,
+            roomName: p.roomName,
+            purpose: p.purpose ?? RoomPurpose.None,
+            customTitle: p.customTitle ?? null,
+            scheduleKind: p.scheduleKind ?? RoomScheduleKind.FullSpan,
+            intervalHours: p.intervalHours ?? null,
+            hostSignup: p.hostSignup ?? null,
+          }));
+          writes.push(this.repo.createMany('event_room_plans', planRows as any));
+
+          const slotsRows = roomPlans.flatMap((p) =>
+            (p.slots ?? []).map((s: any) => ({
+              eventId,
+              roomName: p.roomName,
+              startTime: this.time.hhmmss(s.startTime),
+              endTime: this.time.hhmmss(s.endTime),
+              purpose: s.purpose ?? null,
+              customTitle: s.customTitle ?? null,
+              hostSignup: s.hostSignup ?? null,
+            }))
+          );
+          if (slotsRows.length) writes.push(this.repo.createMany('event_room_slots', slotsRows as any));
         }
 
         const writes$ = writes.length ? forkJoin(writes).pipe(map(() => void 0)) : of(void 0);
 
-        const fullEv: EventFull = {
-          ...(payload as any),
-          id: eventId,
-          tags,
-          rooms,
-          recurrence,
-        };
+        const fullEv: EventFull = { ...(payload as any), id: eventId, tags, rooms, recurrence, roomPlans };
 
         return writes$.pipe(
           switchMap(() => (coverFile ? this.uploadCover(eventId, coverFile) : of(void 0))),
-          switchMap(() =>
-            opts?.blockSlots === false ? of(void 0) : this.ensureReservationsClient(fullEv, regenMode)
-          ),
+          switchMap(() => {
+            if (opts?.blockSlots === false) return of(void 0);
+            const dates = this.computeDatesForReservations(fullEv);
+            return this.reservations.ensureReservationsClient(fullEv, regenMode, dates);
+          }),
           map(() => ({ id: eventId, slug: slug as string }))
         );
       })
     );
   }
 
-  /** Update core + related + (optional) cover + (optional) reservations */
   updateEvent(
     id: string,
     patch: Partial<EventFull> & { recurrence?: RecurrenceRule | null },
@@ -158,58 +128,28 @@ export class EventService {
     regenMode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE',
     opts?: { blockSlots?: boolean }
   ): Observable<void> {
-    const { recurrence, tags, rooms, ...core } = patch;
+    const { recurrence, tags, rooms, roomPlans, ...core } = patch;
     const ops: Observable<void>[] = [];
 
     if (Object.keys(core).length) {
-      ops.push(this.backend.update('new_events', id, toSnakeCase(core) as any).pipe(map(() => void 0)));
+      ops.push(this.repo.updateCore('new_events', id, core).pipe(map(() => void 0)));
     }
 
     if (Array.isArray(tags)) {
-      ops.push(
-        this.backend
-          .delete('event_tags', { eventId: { operator: FilterOperator.EQ, value: id } } as any)
-          .pipe(
-            switchMap(() =>
-              tags.length
-                ? this.backend.createMany(
-                    'event_tags',
-                    tags.map((t) => ({ eventId: id, tag: t } as any))
-                  )
-                : of(void 0)
-            ),
-            map(() => void 0)
-          )
-      );
+      const rows = tags.map((t) => ({ eventId: id, tag: t } as any));
+      ops.push(this.repo.replaceRelations(id, [{ table: 'event_tags', whereCol: 'eventId', rows }]));
     }
 
     if (Array.isArray(rooms)) {
-      ops.push(
-        this.backend
-          .delete('event_rooms', { eventId: { operator: FilterOperator.EQ, value: id } } as any)
-          .pipe(
-            switchMap(() =>
-              rooms.length
-                ? this.backend.createMany(
-                    'event_rooms',
-                    rooms.map((r) => ({ eventId: id, roomName: r } as any))
-                  )
-                : of(void 0)
-            ),
-            map(() => void 0)
-          )
-      );
+      const rows = rooms.map((r) => ({ eventId: id, roomName: r } as any));
+      ops.push(this.repo.replaceRelations(id, [{ table: 'event_rooms', whereCol: 'eventId', rows }]));
     }
 
     if (recurrence !== undefined) {
       if (recurrence === null) {
-        ops.push(
-          this.backend
-            .delete('event_recurrence', { eventId: { operator: FilterOperator.EQ, value: id } } as any)
-            .pipe(map(() => void 0))
-        );
+        ops.push(this.repo.deleteWhere('event_recurrence', { eventId: { operator: FilterOperator.EQ, value: id } }).pipe(map(() => void 0)));
       } else {
-        const recRow = toSnakeCase({
+        const recRow = {
           eventId: id,
           kind: recurrence.kind,
           interval: recurrence.interval,
@@ -220,9 +160,48 @@ export class EventService {
           startDate: recurrence.startDate,
           endDate: recurrence.endDate ?? null,
           exdates: recurrence.exdates ?? [],
-        });
-        ops.push(this.backend.upsert('event_recurrence', recRow, 'event_id').pipe(map(() => void 0)));
+        };
+        ops.push(this.repo.upsert('event_recurrence', recRow as any, 'event_id').pipe(map(() => void 0)));
       }
+    }
+
+    if (roomPlans !== undefined) {
+      ops.push(
+        this.repo
+          .deleteWhere('event_room_slots', { eventId: { operator: FilterOperator.EQ, value: id } })
+          .pipe(
+            switchMap(() =>
+              this.repo.deleteWhere('event_room_plans', { eventId: { operator: FilterOperator.EQ, value: id } })
+            ),
+            switchMap(() => {
+              if (!Array.isArray(roomPlans) || !roomPlans.length) return of(void 0);
+              const planRows = roomPlans.map((p) => ({
+                eventId: id,
+                roomName: p.roomName,
+                purpose: p.purpose ?? RoomPurpose.None,
+                customTitle: p.customTitle ?? null,
+                scheduleKind: p.scheduleKind ?? RoomScheduleKind.FullSpan,
+                intervalHours: p.intervalHours ?? null,
+                hostSignup: p.hostSignup ?? null,
+              }));
+              const slotsRows = roomPlans.flatMap((p) =>
+                (p.slots ?? []).map((s) => ({
+                  eventId: id,
+                  roomName: p.roomName,
+                  startTime: this.time.hhmmss(s.startTime),
+                  endTime: this.time.hhmmss(s.endTime),
+                  purpose: s.purpose ?? null,
+                  customTitle: s.customTitle ?? null,
+                  hostSignup: s.hostSignup ?? null,
+                }))
+              );
+              return forkJoin([
+                this.repo.createMany('event_room_plans', planRows as any),
+                slotsRows.length ? this.repo.createMany('event_room_slots', slotsRows as any) : of(void 0),
+              ]).pipe(map(() => void 0));
+            })
+          )
+      );
     }
 
     const ops$ = ops.length ? forkJoin(ops).pipe(map(() => void 0)) : of(void 0);
@@ -230,36 +209,15 @@ export class EventService {
     return ops$.pipe(
       switchMap(() => (coverFile ? this.uploadCover(id, coverFile) : of(void 0))),
       switchMap(() => this.getById(id)),
-      switchMap((full) =>
-        full && opts?.blockSlots !== false ? this.ensureReservationsClient(full, regenMode) : of(void 0)
-      ),
+      switchMap((full) => {
+        if (!full || opts?.blockSlots === false) return of(void 0);
+        const dates = this.computeDatesForReservations(full);
+        return this.reservations.ensureReservationsClient(full, regenMode, dates);
+      }),
       map(() => void 0)
     );
   }
 
-  /** Cover upload + DB update */
-  private uploadCover(eventId: string, file: File): Observable<void> {
-    const basePath = `events/${eventId}/cover`;
-    return this.images
-      .transcodeAndUpload(file, basePath, {
-        keepBaseName: true,
-        uniqueStrategy: 'date',
-        dateFormat: 'dd-MM-yyyy-HHmmss',
-        prefer: 'avif',
-        quality: 0.82,
-        maxW: 1600,
-        maxH: 1200,
-        largerFallbackFactor: 1.15,
-      })
-      .pipe(
-        switchMap((fullPath) =>
-          this.backend.update('new_events', eventId, { coverImagePath: fullPath } as any)
-        ),
-        map(() => void 0)
-      );
-  }
-
-  /** Expand occurrences on FE */
   listOccurrencesFE(ev: EventFull, fromIso: string, toIso: string): string[] {
     const out: string[] = [];
     const fromD = new Date(fromIso + 'T00:00:00');
@@ -269,52 +227,10 @@ export class EventService {
       const d = new Date(ev.singleDate + 'T00:00:00');
       if (d >= fromD && d <= toD) out.push(ev.singleDate);
     }
-    if (ev.recurrence) out.push(...this.expandRecurrence(ev.recurrence, fromD, toD));
-
+    if (ev.recurrence) out.push(...this.rec.list(ev.recurrence, fromD, toD));
     return Array.from(new Set(out)).sort();
   }
 
-  /** Auto reservations based on rooms and dates */
-  ensureReservationsClient(
-    ev: EventFull,
-    mode: 'APPEND_ONLY' | 'REPLACE_FUTURE' = 'REPLACE_FUTURE'
-  ): Observable<void> {
-    const todayIso = formatYmdLocal(new Date());
-    const until = ev.singleDate ?? ev.recurrence?.endDate ?? todayIso;
-    const dates = this.listOccurrencesFE(ev, todayIso, until);
-
-    const start = (ev.startTime ?? '00:00:00').slice(0, 5) + ':00';
-    const end = (ev.endTime ?? '23:59:00').slice(0, 5) + ':00';
-    const durHours = Math.max(1, Math.ceil(this.diffHours(start, end)));
-
-    const clean$ =
-      mode === 'REPLACE_FUTURE'
-        ? this.backend.delete('reservations', {
-            eventId: { operator: FilterOperator.EQ, value: ev.id },
-            date: { operator: FilterOperator.GTE, value: todayIso },
-          } as any)
-        : of(void 0);
-
-    const rows = (ev.rooms ?? []).flatMap((room) =>
-      dates.map((date) => ({
-        eventId: ev.id,
-        roomName: room,
-        date,
-        startTime: start,
-        durationHours: durHours,
-        status: 'confirmed',
-      }))
-    );
-
-    if (!rows.length) return clean$.pipe(map(() => void 0));
-
-    return clean$.pipe(
-      switchMap(() => this.backend.upsertMany('reservations', rows as any, 'event_id,room_name,date,start_time')),
-      map(() => void 0)
-    );
-  }
-
-  /** Host fullness (single event) */
   getHostFullness(
     ev: EventFull,
     fromIso: string,
@@ -324,15 +240,10 @@ export class EventService {
     const hasRooms = rooms.size > 0;
     const capacity = hasRooms ? rooms.size : 1;
 
-    return this.backend
-      .getAll<any>('event_occurrence_hosts', undefined, 'asc', {
-        filters: {
-          eventId: { operator: FilterOperator.EQ, value: ev.id },
-          occurrenceDate: { operator: FilterOperator.GTE, value: fromIso },
-        },
-      })
+    return this.repo
+      .getHostsRange({ eventId: { operator: FilterOperator.EQ, value: ev.id }, occurrenceDate: { operator: FilterOperator.GTE, value: fromIso } })
       .pipe(
-        map((rows) => rows.filter((r) => r.occurrenceDate <= toIso)),
+        map((rows) => rows.filter((r: any) => r.occurrenceDate <= toIso)),
         map((rows: Array<{ occurrenceDate: string; roomName: string | null }>) => {
           const out: Record<string, { count: number; capacity: number; isFull: boolean }> = {};
           if (hasRooms) {
@@ -357,48 +268,34 @@ export class EventService {
       );
   }
 
-  /** Host fullness (batch) */
   getHostFullnessForMany(
     events: EventFull[],
     fromIso: string,
     toIso: string
-  ): Observable<
-    Record<string, Record<string, { count: number; capacity: number; isFull: boolean }>>
-  > {
+  ): Observable<Record<string, Record<string, { count: number; capacity: number; isFull: boolean }>>> {
     if (!events.length) return of({});
 
     const evById = new Map(events.map((e) => [e.id, e]));
     const eventIds = events.map((e) => e.id);
 
-    return this.backend
-      .getAll<any>('event_occurrence_hosts', undefined, 'asc', {
-        filters: {
-          eventId: { operator: FilterOperator.IN, value: eventIds },
-          occurrenceDate: { operator: FilterOperator.GTE, value: fromIso },
-        },
-      })
+    return this.repo
+      .getHostsRange({ eventId: { operator: FilterOperator.IN, value: eventIds }, occurrenceDate: { operator: FilterOperator.GTE, value: fromIso } })
       .pipe(
-        map((rows) => rows.filter((r) => r.occurrenceDate <= toIso)),
+        map((rows) => rows.filter((r: any) => r.occurrenceDate <= toIso)),
         map(
           (rows: Array<{ eventId: string; occurrenceDate: string; roomName: string | null }>) => {
-            const out: Record<
-              string,
-              Record<string, { count: number; capacity: number; isFull: boolean }>
-            > = {};
-
+            const out: Record<string, Record<string, { count: number; capacity: number; isFull: boolean }>> = {};
             const capacityOf = (evId: string) => {
               const ev = evById.get(evId);
               const rooms = ev?.rooms ?? [];
               return rooms.length > 0 ? rooms.length : 1;
             };
-
             const seenRooms = new Map<string, Map<string, Set<string>>>();
             const seenDates = new Map<string, Set<string>>();
 
             for (const r of rows) {
               const ev = evById.get(r.eventId);
               if (!ev) continue;
-
               if ((ev.rooms?.length ?? 0) > 0) {
                 const allowed = new Set(ev.rooms ?? []);
                 const rm = r.roomName ?? '';
@@ -421,26 +318,19 @@ export class EventService {
               const inner: Record<string, { count: number; capacity: number; isFull: boolean }> = {};
               if ((e.rooms?.length ?? 0) > 0) {
                 const byDate = seenRooms.get(e.id) ?? new Map<string, Set<string>>();
-                for (const [date, set] of byDate) {
-                  const count = set.size;
-                  inner[date] = { count, capacity: cap, isFull: count >= cap };
-                }
+                for (const [date, set] of byDate) inner[date] = { count: set.size, capacity: cap, isFull: set.size >= cap };
               } else {
                 const dset = seenDates.get(e.id) ?? new Set<string>();
-                for (const date of dset) {
-                  inner[date] = { count: 1, capacity: 1, isFull: true };
-                }
+                for (const date of dset) inner[date] = { count: 1, capacity: 1, isFull: true };
               }
               out[e.id] = inner;
             }
-
             return out;
           }
         )
       );
   }
 
-  /** Host data for user (batch) */
   getHostDataForMany(
     userId: string,
     eventIds: string[],
@@ -448,17 +338,10 @@ export class EventService {
     toIso: string
   ): Observable<Record<string, Record<string, true>>> {
     if (!userId || !eventIds.length) return of({});
-
-    return this.backend
-      .getAll<any>('event_occurrence_hosts', undefined, 'asc', {
-        filters: {
-          hostUserId: { operator: FilterOperator.EQ, value: userId },
-          eventId: { operator: FilterOperator.IN, value: eventIds },
-          occurrenceDate: { operator: FilterOperator.GTE, value: fromIso },
-        },
-      })
+    return this.repo
+      .getHostsRange({ hostUserId: { operator: FilterOperator.EQ, value: userId }, eventId: { operator: FilterOperator.IN, value: eventIds }, occurrenceDate: { operator: FilterOperator.GTE, value: fromIso } })
       .pipe(
-        map((rows) => rows.filter((r) => r.occurrenceDate <= toIso)),
+        map((rows) => rows.filter((r: any) => r.occurrenceDate <= toIso)),
         map((rows: Array<{ eventId: string; occurrenceDate: string }>) => {
           const out: Record<string, Record<string, true>> = {};
           for (const r of rows) (out[r.eventId] ??= {})[r.occurrenceDate] = true;
@@ -467,146 +350,28 @@ export class EventService {
       );
   }
 
-  // ---------------- mapping & helpers ----------------
-
-  private mapDbCamelToEventFull(row: any): EventFull {
-    const tags: EventTag[] = (row.eventTags ?? []).map((t: any) => t.tag);
-    const rooms: string[] = (row.eventRooms ?? []).map((r: any) => r.roomName);
-
-    const recRow = row.eventRecurrence;
-    const rec: RecurrenceRule | undefined = recRow
-      ? {
-          kind: recRow.kind as RecurrenceKind,
-          interval: recRow.interval,
-          byweekday: recRow.byweekday ?? undefined,
-          monthlyNth: recRow.monthlyNth ?? undefined,
-          monthlyWeekday: recRow.monthlyWeekday ?? undefined,
-          dayOfMonth: recRow.dayOfMonth ?? undefined,
-          startDate: recRow.startDate,
-          endDate: recRow.endDate ?? undefined,
-          exdates: recRow.exdates ?? [],
-        }
-      : undefined;
-
-    return {
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      shortDescription: row.shortDescription,
-      longDescription: row.longDescription,
-      coverImagePath: row.coverImagePath ?? undefined,
-      facebookLink: row.facebookLink ?? undefined,
-      isActive: !!row.isActive,
-      isForBeginners: !!row.isForBeginners,
-      requiresHosts: !!row.requiresHosts,
-      attractionType: row.attractionType,
-      hostSignup: row.hostSignup,
-      timezone: row.timezone,
-      startTime: row.startTime,
-      endTime: row.endTime,
-      singleDate: row.singleDate ?? undefined,
-      tags,
-      rooms,
-      entryFeePln: Number(row.entryFeePln ?? 0),
-      recurrence: rec,
-      autoReservation: !!row.autoReservation,
-
-      // new fields
-      participantSignup: (row.participantSignup ??
-        'WHOLE') as ParticipantSignupScope,
-      signupRequired: !!row.signupRequired,
-      wholeCapacity:
-        row.wholeCapacity === null || row.wholeCapacity === undefined
-          ? null
-          : Number(row.wholeCapacity),
-      sessionCapacity:
-        row.sessionCapacity === null || row.sessionCapacity === undefined
-          ? null
-          : Number(row.sessionCapacity),
-      signupOpensAt: row.signupOpensAt ?? undefined,
-      signupClosesAt: row.signupClosesAt ?? undefined,
-    } as EventFull;
+  private computeDatesForReservations(ev: EventFull): string[] {
+    const todayIso = formatYmdLocal(new Date());
+    const until = ev.singleDate ?? ev.recurrence?.endDate ?? todayIso;
+    return this.listOccurrencesFE(ev, todayIso, until);
   }
 
-  private expandRecurrence(r: RecurrenceRule, from: Date, to: Date): string[] {
-    const out: string[] = [];
-    const clip = (d: Date) => new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-
-    const start = r.startDate ? new Date(r.startDate + 'T00:00:00') : from;
-    const end = r.endDate ? new Date(r.endDate + 'T00:00:00') : to;
-    const rangeFrom = from > start ? from : start;
-    const rangeTo = to < end ? to : end;
-
-    const ex = new Set((r.exdates ?? []).map((x) => x));
-
-    if (r.kind === RecurrenceKind.Weekly && r.byweekday?.length) {
-      for (let d = new Date(rangeFrom); d <= rangeTo; d.setDate(d.getDate() + 1)) {
-        const dow = d.getDay();
-        if (!r.byweekday.includes(dow)) continue;
-        const weeksFromStart = Math.floor((clip(d).getTime() - clip(start).getTime()) / (7 * 24 * 3600 * 1000));
-        if (weeksFromStart % Math.max(1, r.interval) !== 0) continue;
-
-        const iso = formatYmdLocal(d);
-        if (!ex.has(iso)) out.push(iso);
-      }
-    }
-
-    if (r.kind === RecurrenceKind.MonthlyNthWeekday && r.monthlyNth && (r.monthlyWeekday ?? -10) >= 0) {
-      const m = new Date(rangeFrom.getFullYear(), rangeFrom.getMonth(), 1);
-      while (m <= rangeTo) {
-        const nth = this.nthWeekdayOfMonth(m.getFullYear(), m.getMonth(), r.monthlyWeekday!, r.monthlyNth);
-        if (nth && nth >= rangeFrom && nth <= rangeTo) {
-          const iso = formatYmdLocal(nth);
-          if (!ex.has(iso)) out.push(iso);
-        }
-        m.setMonth(m.getMonth() + Math.max(1, r.interval));
-      }
-    }
-
-    if (r.kind === RecurrenceKind.MonthlyDayOfMonth && r.dayOfMonth) {
-      const interval = Math.max(1, r.interval || 1);
-      const firstMonth = new Date(start.getFullYear(), start.getMonth(), 1);
-
-      for (let m = new Date(firstMonth); m <= rangeTo; m.setMonth(m.getMonth() + 1)) {
-        const monthsFromStart =
-          (m.getFullYear() - firstMonth.getFullYear()) * 12 + (m.getMonth() - firstMonth.getMonth());
-        if (monthsFromStart % interval !== 0) continue;
-
-        const lastDay = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
-        if (r.dayOfMonth >= 1 && r.dayOfMonth <= lastDay) {
-          const d = new Date(m.getFullYear(), m.getMonth(), r.dayOfMonth);
-          if (d >= rangeFrom && d <= rangeTo) {
-            const iso = formatYmdLocal(d);
-            if (!ex.has(iso)) out.push(iso);
-          }
-        }
-      }
-    }
-
-    return out;
-    }
-
-  private nthWeekdayOfMonth(year: number, month0: number, weekday: number, n: number): Date | null {
-    if (n > 0) {
-      const first = new Date(year, month0, 1);
-      const shift = (weekday - first.getDay() + 7) % 7;
-      const day = 1 + shift + (n - 1) * 7;
-      const d = new Date(year, month0, day);
-      return d.getMonth() === month0 ? d : null;
-    } else if (n === -1) {
-      const last = new Date(year, month0 + 1, 0);
-      const shiftBack = (last.getDay() - weekday + 7) % 7;
-      const day = last.getDate() - shiftBack;
-      return new Date(year, month0, day);
-    }
-    return null;
-  }
-
-  private diffHours(hhmmA: string, hhmmB: string): number {
-    const [aH, aM] = hhmmA.split(':').map(Number);
-    const [bH, bM] = hhmmB.split(':').map(Number);
-    const a = aH + aM / 60;
-    const b = bH + bM / 60;
-    return Math.max(0, b - a);
+  private uploadCover(eventId: string, file: File) {
+    const basePath = `events/${eventId}/cover`;
+    return this.images
+      .transcodeAndUpload(file, basePath, {
+        keepBaseName: true,
+        uniqueStrategy: 'date',
+        dateFormat: 'dd-MM-yyyy-HHmmss',
+        prefer: 'avif',
+        quality: 0.82,
+        maxW: 1600,
+        maxH: 1200,
+        largerFallbackFactor: 1.15,
+      })
+      .pipe(
+        switchMap((fullPath) => this.repo.updateCore('new_events', eventId, { coverImagePath: fullPath })),
+        map(() => void 0)
+      );
   }
 }
