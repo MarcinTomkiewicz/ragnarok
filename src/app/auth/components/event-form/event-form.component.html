@@ -622,6 +622,7 @@
               </button>
               <div ngbDropdownMenu class="dropdown-pane">
                 <button
+                  type="button"
                   class="dropdown-item"
                   [class.active]="
                     roomPlans()[r].purpose === RoomPurpose.Session
@@ -631,6 +632,7 @@
                   {{ RoomPurposeLabel[RoomPurpose.Session] }}
                 </button>
                 <button
+                  type="button"
                   class="dropdown-item"
                   [class.active]="
                     roomPlans()[r].purpose === RoomPurpose.Discussion
@@ -640,6 +642,7 @@
                   {{ RoomPurposeLabel[RoomPurpose.Discussion] }}
                 </button>
                 <button
+                  type="button"
                   class="dropdown-item"
                   [class.active]="
                     roomPlans()[r].purpose === RoomPurpose.Entertainment
@@ -649,6 +652,7 @@
                   {{ RoomPurposeLabel[RoomPurpose.Entertainment] }}
                 </button>
                 <button
+                  type="button"
                   class="dropdown-item"
                   [class.active]="roomPlans()[r].purpose === RoomPurpose.None"
                   (click)="setRoomPurpose(r, RoomPurpose.None)"
@@ -657,8 +661,7 @@
                 </button>
               </div>
             </div>
-
-            <!-- Custom title; wymagane jeśli Rozrywka -->
+            
             <input
               #titleInput
               type="text"
@@ -679,8 +682,8 @@
             }
 
             <!-- Host level (override) -->
-            <div class="ms-2 row-inline">
-              <label class="text-start me-2"
+            <div class="ms-2">
+              <label class="text-start me-2 w-100"
                 >Zgłoszenie prowadzących
                 <img
                   src="/icons/wooden-sign.svg"
@@ -849,6 +852,7 @@
                 </button>
                 <div ngbDropdownMenu class="dropdown-pane">
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="
                       (s.purpose || roomPlans()[r].purpose) ===
@@ -859,6 +863,7 @@
                     {{ RoomPurposeLabel[RoomPurpose.Session] }}
                   </button>
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="
                       (s.purpose || roomPlans()[r].purpose) ===
@@ -871,6 +876,7 @@
                     {{ RoomPurposeLabel[RoomPurpose.Discussion] }}
                   </button>
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="
                       (s.purpose || roomPlans()[r].purpose) ===
@@ -883,6 +889,7 @@
                     {{ RoomPurposeLabel[RoomPurpose.Entertainment] }}
                   </button>
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="
                       (s.purpose || roomPlans()[r].purpose) === RoomPurpose.None
@@ -951,6 +958,7 @@
                 </button>
                 <div ngbDropdownMenu class="dropdown-pane">
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="s.hostSignup == null"
                     (click)="updateSlot(r, i, { hostSignup: null })"
@@ -958,6 +966,7 @@
                     Dziedzicz
                   </button>
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="s.hostSignup === HostSignupLevel.Event"
                     (click)="
@@ -967,6 +976,7 @@
                     Na wydarzenie
                   </button>
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="s.hostSignup === HostSignupLevel.Room"
                     (click)="
@@ -976,6 +986,7 @@
                     Na salkę
                   </button>
                   <button
+                    type="button"
                     class="dropdown-item"
                     [class.active]="s.hostSignup === HostSignupLevel.Slot"
                     (click)="
