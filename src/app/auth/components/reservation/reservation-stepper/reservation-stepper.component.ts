@@ -74,7 +74,7 @@ export class ReservationStepperComponent {
   // Summary przesuwa się o +1 gdy mamy extra-info
   // i o +1 gdy jest odroczone user-info (recepcja).
   readonly summaryStep = computed(() => {
-    const base = 4; // bazowo bez extra-info i bez deferred user-info
+    const base = 5; // bazowo bez extra-info i bez deferred user-info
     const addExtra = this.extraInfoEnabled() ? 1 : 0;
     const addDeferred = (this.isReception() && this.deferredInfo()) ? 1 : 0;
     return base + addExtra + addDeferred;
