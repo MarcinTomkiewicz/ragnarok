@@ -13,7 +13,12 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbDropdownModule, NgbModal, NgbModalModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbDropdownModule,
+  NgbModal,
+  NgbModalModule,
+  NgbTooltipModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { startWith, switchMap, of } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -40,8 +45,16 @@ import {
 } from '../../../core/enums/events';
 import { ImageStorageService } from '../../../core/services/backend/image-storage/image-storage.service';
 import { toSlug } from '../../../core/utils/slug-creator';
-import { formatYmdLocal, weekdayOptionsPl } from '../../../core/utils/weekday-options';
-import { HostSignupLevel, RoomPurpose, RoomScheduleKind, RoomPurposeLabel } from '../../../core/enums/event-rooms';
+import {
+  formatYmdLocal,
+  weekdayOptionsPl,
+} from '../../../core/utils/weekday-options';
+import {
+  HostSignupLevel,
+  RoomPurpose,
+  RoomScheduleKind,
+  RoomPurposeLabel,
+} from '../../../core/enums/event-rooms';
 import { InfoModalComponent } from '../../../common/info-modal/info-modal.component';
 
 type OccurrenceMode = 'SINGLE' | 'RECURRENT';
@@ -49,10 +62,14 @@ type RecPattern = 'WEEKLY_1' | 'WEEKLY_2' | 'MONTHLY_NTH' | 'MONTHLY_DOM';
 
 type SlotVM = {
   startTime: string; // 'HH:mm'
-  endTime: string;   // 'HH:mm'
+  endTime: string; // 'HH:mm'
   purpose?: RoomPurpose;
   customTitle?: string | null;
-  hostSignup?: HostSignupLevel | null;
+
+  /** Czy ten slot wymaga prowadzącego; null/undefined => traktuj jak true (dla zgodności wstecz) */
+  requiresHosts?: boolean | null;
+  /** Zakres kto może prowadzić dla slotu (gdy wymaga) */
+  hostScope?: HostSignupScope | null;
 };
 
 type RoomPlanVM = {
@@ -61,14 +78,28 @@ type RoomPlanVM = {
   customTitle: string | null;
   scheduleKind: RoomScheduleKind;
   intervalHours: number | null;
-  hostSignup: HostSignupLevel | null; // null => dziedziczy z eventu
+
+  /** Czy ta salka wymaga prowadzących (dotyczy FullSpan/Interval; dla Schedule można ustawiać per slot) */
+  requiresHosts?: boolean | null;
+  /** Zakres kto może prowadzić dla całej salki (gdy wymaga i gdy FullSpan/Interval) */
+  hostScope?: HostSignupScope | null;
+
+  /** Pozostawione dla zgodności z wcześniejszą wersją (nieużywane w Composite) */
+  hostSignup: HostSignupLevel | null;
+
   slots: SlotVM[];
 };
 
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgbDropdownModule, NgbTooltipModule, NgbModalModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    NgbDropdownModule,
+    NgbTooltipModule,
+    NgbModalModule,
+  ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss',
 })
@@ -110,9 +141,18 @@ export class EventFormComponent implements OnDestroy {
 
   readonly patternOptions: { value: RecPattern; label: string }[] = [
     { value: 'WEEKLY_1', label: WeeklyIntervalLabel[WeeklyInterval.EveryWeek] },
-    { value: 'WEEKLY_2', label: WeeklyIntervalLabel[WeeklyInterval.EveryTwoWeeks] },
-    { value: 'MONTHLY_NTH', label: RecurrenceKindLabel[RecurrenceKind.MonthlyNthWeekday] },
-    { value: 'MONTHLY_DOM', label: RecurrenceKindLabel[RecurrenceKind.MonthlyDayOfMonth] },
+    {
+      value: 'WEEKLY_2',
+      label: WeeklyIntervalLabel[WeeklyInterval.EveryTwoWeeks],
+    },
+    {
+      value: 'MONTHLY_NTH',
+      label: RecurrenceKindLabel[RecurrenceKind.MonthlyNthWeekday],
+    },
+    {
+      value: 'MONTHLY_DOM',
+      label: RecurrenceKindLabel[RecurrenceKind.MonthlyDayOfMonth],
+    },
   ];
 
   readonly monthlyNthOptions = [
@@ -149,7 +189,7 @@ export class EventFormComponent implements OnDestroy {
     attractionType: [AttractionKind.Session],
     hostSignup: [HostSignupScope.Staff],
 
-    // event-level host signup granularity
+    // event-level host signup granularity (ukrywane przy Composite SINGLE)
     hostSignupLevel: [HostSignupLevel.Event],
 
     // participant signups
@@ -179,17 +219,22 @@ export class EventFormComponent implements OnDestroy {
   // roomPlans (UI state dla SINGLE + Composite)
   roomPlans = signal<Record<string, RoomPlanVM>>({});
 
-  get f() { return this.form.controls; }
+  get f() {
+    return this.form.controls;
+  }
 
   isEdit = computed(() => !!this.event());
-  title = computed(() => (this.isEdit() ? 'Edytuj wydarzenie' : 'Nowe wydarzenie'));
+  title = computed(() =>
+    this.isEdit() ? 'Edytuj wydarzenie' : 'Nowe wydarzenie'
+  );
 
   readonly successTpl = viewChild<TemplateRef<unknown>>('eventSuccessToast');
   readonly errorTpl = viewChild<TemplateRef<unknown>>('eventErrorToast');
 
   // --- lifecycle ---
   ngOnInit() {
-    const e = (this.event() ?? this.route.snapshot.data['event']) as EventFull | null;
+    const e = (this.event() ??
+      this.route.snapshot.data['event']) as EventFull | null;
 
     if (e) {
       this.f.slug.setValue(e.slug);
@@ -206,13 +251,14 @@ export class EventFormComponent implements OnDestroy {
         entryFeePln: e.entryFeePln ?? 0,
         attractionType: e.attractionType,
         hostSignup: e.hostSignup,
-        hostSignupLevel: (e.hostSignupLevel ?? HostSignupLevel.Event) as HostSignupLevel,
+        hostSignupLevel: (e.hostSignupLevel ??
+          HostSignupLevel.Event) as HostSignupLevel,
         startTime: e.startTime.slice(0, 5),
         endTime: e.endTime.slice(0, 5),
         signupRequired: !!e.signupRequired,
-        participantSignup: (e.participantSignup ?? ParticipantSignupScope.Whole) as ParticipantSignupScope,
-        wholeCapacity:
-          e.wholeCapacity == null ? 0 : Number(e.wholeCapacity),
+        participantSignup: (e.participantSignup ??
+          ParticipantSignupScope.Whole) as ParticipantSignupScope,
+        wholeCapacity: e.wholeCapacity == null ? 0 : Number(e.wholeCapacity),
         sessionCapacity:
           e.sessionCapacity == null ? 5 : Number(e.sessionCapacity),
       });
@@ -223,11 +269,15 @@ export class EventFormComponent implements OnDestroy {
       } else if (e.recurrence) {
         this.f.occurrenceMode.setValue('RECURRENT');
         if (e.recurrence.kind === RecurrenceKind.Weekly) {
-          this.f.recPattern.setValue(e.recurrence.interval === 2 ? 'WEEKLY_2' : 'WEEKLY_1');
+          this.f.recPattern.setValue(
+            e.recurrence.interval === 2 ? 'WEEKLY_2' : 'WEEKLY_1'
+          );
           this.f.weekday.setValue(e.recurrence.byweekday?.[0] ?? 4);
         } else if (e.recurrence.kind === RecurrenceKind.MonthlyNthWeekday) {
           this.f.recPattern.setValue('MONTHLY_NTH');
-          this.f.monthlyNth.setValue(e.recurrence.monthlyNth ?? MonthlyNth.First);
+          this.f.monthlyNth.setValue(
+            e.recurrence.monthlyNth ?? MonthlyNth.First
+          );
           this.f.monthlyWeekday.setValue(e.recurrence.monthlyWeekday ?? 4);
         } else if (e.recurrence.kind === RecurrenceKind.MonthlyDayOfMonth) {
           this.f.recPattern.setValue('MONTHLY_DOM');
@@ -249,17 +299,29 @@ export class EventFormComponent implements OnDestroy {
             scheduleKind: p.scheduleKind,
             intervalHours: p.intervalHours ?? null,
             hostSignup: p.hostSignup ?? null,
-            slots: (p.slots ?? []).map(s => ({
+
+            // KLUCZOWE: zachowaj jak w DB (false/true/null), żadnego true by default
+            requiresHosts: (p as any).requiresHosts ?? null,
+            hostScope: (p as any).hostScope ?? null,
+
+            slots: (p.slots ?? []).map((s) => ({
               startTime: (s.startTime ?? '').slice(0, 5),
               endTime: (s.endTime ?? '').slice(0, 5),
               purpose: s.purpose,
               customTitle: s.customTitle ?? null,
               hostSignup: s.hostSignup ?? null,
+
+              // gdy w przyszłości dojdzie wsparcie per-slot requires/hostScope:
+              ...((s as any).requiresHosts !== undefined
+                ? { requiresHosts: (s as any).requiresHosts }
+                : {}),
+              ...((s as any).hostScope !== undefined
+                ? { hostScope: (s as any).hostScope }
+                : {}),
             })),
-          };
+          } as unknown as RoomPlanVM;
         }
         this.roomPlans.set(initial);
-        // jeśli były plany, sensownie zakładamy „Composite”
         if (this.f.occurrenceMode.value === 'SINGLE') {
           this.f.attractionType.setValue(AttractionKind.Composite);
         }
@@ -274,7 +336,10 @@ export class EventFormComponent implements OnDestroy {
 
     // Required dates depending on mode
     this.f.occurrenceMode.valueChanges
-      .pipe(startWith(this.f.occurrenceMode.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.f.occurrenceMode.value),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((mode) => {
         if (mode === 'SINGLE') {
           this.f.singleDate.addValidators([Validators.required]);
@@ -309,11 +374,24 @@ export class EventFormComponent implements OnDestroy {
 
       this.f.participantSignup.addValidators([Validators.required]);
 
-      if (scope === ParticipantSignupScope.Whole || scope === ParticipantSignupScope.Both) {
-        this.f.wholeCapacity.addValidators([Validators.required, Validators.min(0)]);
+      if (
+        scope === ParticipantSignupScope.Whole ||
+        scope === ParticipantSignupScope.Both
+      ) {
+        this.f.wholeCapacity.addValidators([
+          Validators.required,
+          Validators.min(0),
+        ]);
       }
-      if (scope === ParticipantSignupScope.Session || scope === ParticipantSignupScope.Both) {
-        this.f.sessionCapacity.addValidators([Validators.required, Validators.min(3), Validators.max(5)]);
+      if (
+        scope === ParticipantSignupScope.Session ||
+        scope === ParticipantSignupScope.Both
+      ) {
+        this.f.sessionCapacity.addValidators([
+          Validators.required,
+          Validators.min(3),
+          Validators.max(5),
+        ]);
       }
 
       this.f.participantSignup.updateValueAndValidity({ emitEvent: false });
@@ -322,7 +400,10 @@ export class EventFormComponent implements OnDestroy {
     };
 
     this.f.signupRequired.valueChanges
-      .pipe(startWith(this.f.signupRequired.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.f.signupRequired.value),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((on) => {
         if (on && !this.f.participantSignup.value) {
           this.f.participantSignup.setValue(ParticipantSignupScope.Whole);
@@ -331,12 +412,18 @@ export class EventFormComponent implements OnDestroy {
       });
 
     this.f.participantSignup.valueChanges
-      .pipe(startWith(this.f.participantSignup.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.f.participantSignup.value),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe(() => applySignupValidators());
 
     // Recurrence validations
     this.f.recPattern.valueChanges
-      .pipe(startWith(this.f.recPattern.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.f.recPattern.value),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((p) => {
         if (p === 'WEEKLY_1' || p === 'WEEKLY_2') {
           this.f.weekday.addValidators([Validators.required]);
@@ -349,7 +436,11 @@ export class EventFormComponent implements OnDestroy {
           this.f.weekday.clearValidators();
           this.f.dayOfMonth.clearValidators();
         } else {
-          this.f.dayOfMonth.addValidators([Validators.required, Validators.min(1), Validators.max(31)]);
+          this.f.dayOfMonth.addValidators([
+            Validators.required,
+            Validators.min(1),
+            Validators.max(31),
+          ]);
           this.f.weekday.clearValidators();
           this.f.monthlyNth.clearValidators();
           this.f.monthlyWeekday.clearValidators();
@@ -369,17 +460,25 @@ export class EventFormComponent implements OnDestroy {
       const kind = this.f.attractionType.value;
       if (kind === AttractionKind.Composite) {
         const plans = this.roomPlans();
-        Object.values(plans).forEach(p => {
+        Object.values(plans).forEach((p) => {
           if (p.purpose === RoomPurpose.Session) tags.add(EventTag.Session);
-          else if (p.purpose === RoomPurpose.Discussion) tags.add(EventTag.Discussion);
-          else if (p.purpose === RoomPurpose.Entertainment) tags.add(EventTag.Entertainment);
+          else if (p.purpose === RoomPurpose.Discussion)
+            tags.add(EventTag.Discussion);
+          else if (p.purpose === RoomPurpose.Entertainment)
+            tags.add(EventTag.Entertainment);
         });
       } else {
         switch (kind) {
-          case AttractionKind.Session: tags.add(EventTag.Session); break;
-          case AttractionKind.Discussion: tags.add(EventTag.Discussion); break;
+          case AttractionKind.Session:
+            tags.add(EventTag.Session);
+            break;
+          case AttractionKind.Discussion:
+            tags.add(EventTag.Discussion);
+            break;
           case AttractionKind.None:
-          case AttractionKind.Entertainment: tags.add(EventTag.Entertainment); break;
+          case AttractionKind.Entertainment:
+            tags.add(EventTag.Entertainment);
+            break;
         }
       }
       this.f.tags.setValue(Array.from(tags));
@@ -392,15 +491,18 @@ export class EventFormComponent implements OnDestroy {
 
     this.f.attractionType.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(val => {
+      .subscribe((val) => {
         // Composite działa tylko z SINGLE
-        if (val === AttractionKind.Composite && this.f.occurrenceMode.value === 'RECURRENT') {
+        if (
+          val === AttractionKind.Composite &&
+          this.f.occurrenceMode.value === 'RECURRENT'
+        ) {
           this.f.occurrenceMode.setValue('SINGLE');
         }
         applyTags();
-        // aktualizuj domyślny purpose w planach, jeśli nie są ręczne (tylko gdy nie Composite -> dziedziczenie sensu stricto)
+        // aktualizuj domyślny purpose w planach, jeśli nie są ręczne
         const plans = { ...this.roomPlans() };
-        Object.keys(plans).forEach(r => {
+        Object.keys(plans).forEach((r) => {
           if (plans[r].scheduleKind !== RoomScheduleKind.Schedule) {
             plans[r].purpose = this.defaultPurposeFromEvent();
           }
@@ -409,10 +511,18 @@ export class EventFormComponent implements OnDestroy {
       });
 
     // Recurrence helpers
-    this.f.excludeNth.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
-    this.f.startDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
-    this.f.endDate.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
-    this.f.weekday.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.rebuildExdates());
+    this.f.excludeNth.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
+    this.f.startDate.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
+    this.f.endDate.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
+    this.f.weekday.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.rebuildExdates());
   }
 
   // --- cover helpers ---
@@ -420,7 +530,8 @@ export class EventFormComponent implements OnDestroy {
     const blob = this.coverPreviewUrl();
     if (blob) return blob;
     if (this.coverMode() === 'remove') return null;
-    const path = this.form.value.coverImagePath ?? this.event()?.coverImagePath ?? null;
+    const path =
+      this.form.value.coverImagePath ?? this.event()?.coverImagePath ?? null;
     if (!path) return null;
     if (/^https?:\/\//i.test(path)) return path;
     return this.images.getOptimizedPublicUrl(path, 800, 450);
@@ -447,10 +558,17 @@ export class EventFormComponent implements OnDestroy {
     return 'Na całe wydarzenie';
   }
   weekdayLabel(): string {
-    return this.weekdays.find((w) => w.value === (this.form.value.weekday ?? 4))?.label ?? '—';
+    return (
+      this.weekdays.find((w) => w.value === (this.form.value.weekday ?? 4))
+        ?.label ?? '—'
+    );
   }
   monthlyWeekdayLabel(): string {
-    return this.weekdays.find((w) => w.value === (this.form.value.monthlyWeekday ?? 4))?.label ?? '—';
+    return (
+      this.weekdays.find(
+        (w) => w.value === (this.form.value.monthlyWeekday ?? 4)
+      )?.label ?? '—'
+    );
   }
   monthlyNthLabel(): string {
     return MonthlyNthLabel[this.form.value.monthlyNth as MonthlyNth] ?? '';
@@ -461,7 +579,12 @@ export class EventFormComponent implements OnDestroy {
   excludeNthLongLabelFor(v: number): string {
     if (v === 0) return 'Nie wykluczaj';
     if (v === -1) return 'Wyklucz ostatnie wystąpienie w miesiącu';
-    const map: Record<number, string> = { 1: 'pierwsze', 2: 'drugie', 3: 'trzecie', 4: 'czwarte' };
+    const map: Record<number, string> = {
+      1: 'pierwsze',
+      2: 'drugie',
+      3: 'trzecie',
+      4: 'czwarte',
+    };
     const which = map[v] ?? String(v);
     return `Wyklucz ${which} wystąpienie w miesiącu`;
   }
@@ -490,7 +613,8 @@ export class EventFormComponent implements OnDestroy {
 
   // --- rooms & plans ---
   onToggleRoom(room: Rooms, ev: Event) {
-    const checked = (ev.target as HTMLInputElement | null)?.checked ?? false;
+    const target = ev.target as HTMLInputElement | null;
+    const checked = !!target?.checked;
     const current = new Set(this.f.rooms.value ?? []);
     checked ? current.add(room) : current.delete(room);
     this.f.rooms.setValue(Array.from(current));
@@ -517,7 +641,11 @@ export class EventFormComponent implements OnDestroy {
         customTitle: null,
         scheduleKind: RoomScheduleKind.FullSpan,
         intervalHours: null,
-        hostSignup: null, // dziedziczy z eventu
+
+        requiresHosts: this.f.requiresHosts.value || null,
+        hostScope: this.f.hostSignup.value ?? HostSignupScope.Staff,
+
+        hostSignup: null, // nieużywane w Composite
         slots: [],
       };
       this.roomPlans.set(map);
@@ -543,13 +671,18 @@ export class EventFormComponent implements OnDestroy {
       p.slots = [];
     } else if (kind === RoomScheduleKind.Schedule) {
       p.intervalHours = null;
-      p.slots = p.slots?.length ? p.slots : [{
-        startTime: (this.f.startTime.value || '00:00'),
-        endTime: (this.f.endTime.value || '23:59'),
-        purpose: p.purpose,
-        customTitle: p.customTitle ?? null,
-        hostSignup: null,
-      }];
+      p.slots = p.slots?.length
+        ? p.slots
+        : [
+            {
+              startTime: this.f.startTime.value || '00:00',
+              endTime: this.f.endTime.value || '23:59',
+              purpose: p.purpose,
+              customTitle: p.customTitle ?? null,
+              requiresHosts: p.requiresHosts ?? true,
+              hostScope: p.hostScope ?? HostSignupScope.Staff,
+            },
+          ];
     }
     this.roomPlans.set(map);
   }
@@ -569,12 +702,31 @@ export class EventFormComponent implements OnDestroy {
     map[room].purpose = purpose;
     this.roomPlans.set(map);
   }
+
+  /** NOWE: per-salka — czy wymaga prowadzących (dla FullSpan/Interval) */
+  setRoomRequiresHosts(room: string, requires: boolean) {
+    const map = { ...this.roomPlans() };
+    if (!map[room]) return;
+    map[room].requiresHosts = requires;
+    this.roomPlans.set(map);
+  }
+
+  /** NOWE: per-salka — kto może być prowadzącym (dla FullSpan/Interval) */
+  setRoomHostScope(room: string, scope: HostSignupScope) {
+    const map = { ...this.roomPlans() };
+    if (!map[room]) return;
+    map[room].hostScope = scope;
+    this.roomPlans.set(map);
+  }
+
+  /** Stara logika (pozostawiona do zgodności; UI Composite jej nie używa) */
   setRoomHostLevel(room: string, level: HostSignupLevel | null) {
     const map = { ...this.roomPlans() };
     if (!map[room]) return;
     map[room].hostSignup = level;
     this.roomPlans.set(map);
   }
+
   setRoomTitle(room: string, title: string | null) {
     const map = { ...this.roomPlans() };
     if (!map[room]) return;
@@ -591,10 +743,12 @@ export class EventFormComponent implements OnDestroy {
       endTime: this.f.endTime.value || '23:59',
       purpose: p.purpose,
       customTitle: p.customTitle ?? null,
-      hostSignup: null,
+      requiresHosts: p.requiresHosts ?? true,
+      hostScope: p.hostScope ?? HostSignupScope.Staff,
     });
     this.roomPlans.set(map);
   }
+
   removeSlot(room: string, idx: number) {
     const map = { ...this.roomPlans() };
     const p = map[room];
@@ -602,6 +756,7 @@ export class EventFormComponent implements OnDestroy {
     p.slots.splice(idx, 1);
     this.roomPlans.set(map);
   }
+
   updateSlot(room: string, idx: number, patch: Partial<SlotVM>) {
     const map = { ...this.roomPlans() };
     const p = map[room];
@@ -617,13 +772,19 @@ export class EventFormComponent implements OnDestroy {
     if (this.f.attractionType.value !== AttractionKind.Composite) return true;
     const plans = this.roomPlans();
     for (const p of Object.values(plans)) {
-      if (p.purpose === RoomPurpose.Entertainment && !(p.customTitle && p.customTitle.trim())) {
+      if (
+        p.purpose === RoomPurpose.Entertainment &&
+        !(p.customTitle && p.customTitle.trim())
+      ) {
         return false;
       }
       if (p.scheduleKind === RoomScheduleKind.Schedule) {
         for (const s of p.slots) {
           const purpose = s.purpose ?? p.purpose;
-          if (purpose === RoomPurpose.Entertainment && !(s.customTitle && s.customTitle.trim())) {
+          if (
+            purpose === RoomPurpose.Entertainment &&
+            !(s.customTitle && s.customTitle.trim())
+          ) {
             return false;
           }
         }
@@ -636,13 +797,13 @@ export class EventFormComponent implements OnDestroy {
     if (this.form.invalid) return;
 
     if (!this.validateEntertainmentDetails()) {
-       const ref = this.modal.open(InfoModalComponent, { backdrop: 'static' });
-       ref.componentInstance.header = 'Informacja';
-       ref.componentInstance.message = 'Dla „Rozrywki” podaj konkrety (np. turniej, Magic, Munchkin) w tytule sali lub slotu.';
-       ref.componentInstance.showCancel = false;
-     
-       return;
-      };
+      const ref = this.modal.open(InfoModalComponent, { backdrop: 'static' });
+      ref.componentInstance.header = 'Informacja';
+      ref.componentInstance.message =
+        'Dla „Rozrywki” podaj konkrety (np. turniej, Magic, Munchkin) w tytule sali lub slotu.';
+      ref.componentInstance.showCancel = false;
+      return;
+    }
 
     const v = this.form.getRawValue();
 
@@ -693,17 +854,23 @@ export class EventFormComponent implements OnDestroy {
       isForBeginners: v.isForBeginners,
       requiresHosts: v.requiresHosts,
       attractionType: v.attractionType,
+
+      // event-level host scope/level nadal wysyłamy (potrzebne dla nie-Composite)
       hostSignup: v.hostSignup,
       hostSignupLevel: v.hostSignupLevel as HostSignupLevel,
 
       signupRequired: signupEnabled,
       participantSignup: signupEnabled ? scope : null,
       wholeCapacity:
-        signupEnabled && (scope === ParticipantSignupScope.Whole || scope === ParticipantSignupScope.Both)
+        signupEnabled &&
+        (scope === ParticipantSignupScope.Whole ||
+          scope === ParticipantSignupScope.Both)
           ? Number(v.wholeCapacity ?? 0)
           : null,
       sessionCapacity:
-        signupEnabled && (scope === ParticipantSignupScope.Session || scope === ParticipantSignupScope.Both)
+        signupEnabled &&
+        (scope === ParticipantSignupScope.Session ||
+          scope === ParticipantSignupScope.Both)
           ? Number(v.sessionCapacity ?? 5)
           : null,
 
@@ -714,53 +881,96 @@ export class EventFormComponent implements OnDestroy {
       tags: v.tags,
       entryFeePln: Number(v.entryFeePln ?? 0),
 
-      singleDate: v.occurrenceMode === 'SINGLE' ? v.singleDate || undefined : undefined,
+      singleDate:
+        v.occurrenceMode === 'SINGLE' ? v.singleDate || undefined : undefined,
       recurrence,
       autoReservation: v.blockSlots,
     } satisfies Omit<EventFull, 'id'>;
 
     // roomPlans tylko dla SINGLE + Composite
     let roomPlansPayload: EventRoomPlan[] | null = null;
-    if (v.occurrenceMode === 'SINGLE' && v.attractionType === AttractionKind.Composite) {
+    if (
+      v.occurrenceMode === 'SINGLE' &&
+      v.attractionType === AttractionKind.Composite
+    ) {
       const map = this.roomPlans();
-      roomPlansPayload = Object.values(map).map(p => ({
+      roomPlansPayload = Object.values(map).map((p) => ({
         roomName: p.roomName,
         purpose: p.purpose,
         customTitle: p.customTitle ?? null,
         scheduleKind: p.scheduleKind,
-        intervalHours: p.scheduleKind === RoomScheduleKind.Interval ? (p.intervalHours ?? 1) : null,
-        hostSignup: p.hostSignup, // null => dziedziczy z eventu
-        slots: p.scheduleKind === RoomScheduleKind.Schedule
-          ? p.slots.map(s => ({
-              startTime: (s.startTime || '00:00') + ':00',
-              endTime: (s.endTime || '00:00') + ':00',
-              purpose: s.purpose,
-              customTitle: s.customTitle ?? null,
-              hostSignup: s.hostSignup ?? null,
-            }))
-          : null,
-      }));
+        intervalHours:
+          p.scheduleKind === RoomScheduleKind.Interval
+            ? p.intervalHours ?? 1
+            : null,
+
+        // NOWE kolumny po stronie DB:
+        requiresHosts: p.requiresHosts ?? null,
+        hostScope: p.hostScope ?? null,
+
+        // stara kolumna (zostaje w DB; my już nie korzystamy przy Composite):
+        hostSignup: p.hostSignup ?? null,
+
+        slots:
+          p.scheduleKind === RoomScheduleKind.Schedule
+            ? (p.slots || []).map((s) => ({
+                startTime: (s.startTime || '00:00') + ':00',
+                endTime: (s.endTime || '00:00') + ':00',
+                purpose: s.purpose,
+                customTitle: s.customTitle ?? null,
+
+                // NOWE per-slot:
+                requiresHosts: s.requiresHosts ?? true,
+                hostScope: s.hostScope ?? HostSignupScope.Staff,
+
+                // stara kolumna (nieużywana przy nowym modelu):
+                hostSignup: null,
+              }))
+            : null,
+      })) as any;
     }
 
-    const payloadFinal = (roomPlansPayload ? { ...basePayload, roomPlans: roomPlansPayload } : basePayload);
+    const payloadFinal = roomPlansPayload
+      ? { ...basePayload, roomPlans: roomPlansPayload }
+      : basePayload;
 
     const file = this.coverFile();
     const blockSlots = !!v.blockSlots;
 
     const save$ = this.isEdit()
-      ? this.events.updateEvent(this.event()!.id, payloadFinal as Partial<EventFull>, file ?? undefined, 'REPLACE_FUTURE', { blockSlots })
-      : this.events.createEvent(payloadFinal, file ?? undefined, 'REPLACE_FUTURE', { blockSlots }).pipe(switchMap(() => of(void 0)));
+      ? this.events.updateEvent(
+          this.event()!.id,
+          payloadFinal as Partial<EventFull>,
+          file ?? undefined,
+          'REPLACE_FUTURE',
+          { blockSlots }
+        )
+      : this.events
+          .createEvent(payloadFinal, file ?? undefined, 'REPLACE_FUTURE', {
+            blockSlots,
+          })
+          .pipe(switchMap(() => of(void 0)));
 
     save$.subscribe({
       next: () => {
         const tpl = this.successTpl();
-        if (tpl) this.toast.show({ template: tpl, classname: 'bg-success text-white', header: 'Zapisano wydarzenie' });
+        if (tpl)
+          this.toast.show({
+            template: tpl,
+            classname: 'bg-success text-white',
+            header: 'Zapisano wydarzenie',
+          });
         this.saved.emit();
         this.router.navigate(['/auth/events']);
       },
       error: () => {
         const tpl = this.errorTpl();
-        if (tpl) this.toast.show({ template: tpl, classname: 'bg-danger text-white', header: 'Nie udało się zapisać wydarzenia' });
+        if (tpl)
+          this.toast.show({
+            template: tpl,
+            classname: 'bg-danger text-white',
+            header: 'Nie udało się zapisać wydarzenia',
+          });
       },
     });
   }
@@ -778,8 +988,12 @@ export class EventFormComponent implements OnDestroy {
       return;
     }
     const start = this.form.value.startDate || '';
+    if (!start) {
+      this.f.exdates.setValue([]);
+      return;
+    }
     const end = this.form.value.endDate || '';
-    if (!start || !end) {
+    if (!end) {
       this.f.exdates.setValue([]);
       return;
     }
@@ -788,14 +1002,28 @@ export class EventFormComponent implements OnDestroy {
     this.f.exdates.setValue(ex);
   }
 
-  private computeExcludedNthWeekdays(startIso: string, endIso: string, weekday0to6: number, nth: ExcludeNth): string[] {
+  private computeExcludedNthWeekdays(
+    startIso: string,
+    endIso: string,
+    weekday0to6: number,
+    nth: ExcludeNth
+  ): string[] {
     const out: string[] = [];
     const start = new Date(startIso + 'T00:00:00');
     const end = new Date(endIso + 'T00:00:00');
-    const cur = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
-    const endMonth = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1));
+    const cur = new Date(
+      Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1)
+    );
+    const endMonth = new Date(
+      Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1)
+    );
     while (cur <= endMonth) {
-      const d = this.nthWeekdayOfMonth(cur.getUTCFullYear(), cur.getUTCMonth(), weekday0to6, nth);
+      const d = this.nthWeekdayOfMonth(
+        cur.getUTCFullYear(),
+        cur.getUTCMonth(),
+        weekday0to6,
+        nth
+      );
       if (d) {
         const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         if (local >= start && local <= end) out.push(formatYmdLocal(local));
@@ -805,7 +1033,12 @@ export class EventFormComponent implements OnDestroy {
     return out;
   }
 
-  private nthWeekdayOfMonth(year: number, month0: number, weekday: number, n: number): Date | null {
+  private nthWeekdayOfMonth(
+    year: number,
+    month0: number,
+    weekday: number,
+    n: number
+  ): Date | null {
     if (n > 0) {
       const first = new Date(year, month0, 1);
       const shift = (weekday - first.getDay() + 7) % 7;

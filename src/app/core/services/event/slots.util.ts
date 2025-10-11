@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { EventFull, EventRoomPlan } from '../../interfaces/i-events';
 import { HostSignupLevel, RoomPurpose, RoomScheduleKind } from '../../enums/event-rooms';
+import { HostSignupScope, ParticipantSignupScope } from '../../enums/events';
 import { TimeUtil } from './time.util';
 
 export type SlotDef = {
@@ -8,7 +9,15 @@ export type SlotDef = {
   endTime: string;   // 'HH:mm:ss'
   purpose: RoomPurpose;
   title: string | null;
+
+  /** Efektywny poziom zgłoszeń (Event/Room/Slot) – legacy, ale przydatne do UI */
   hostSignup: HostSignupLevel;
+
+  /** NEW: czy ten slot finalnie wymaga prowadzących (po kaskadzie slot→room→event) */
+  requiresHosts: boolean;
+
+  /** NEW: efektywny scope prowadzących (STAFF / ANY) po kaskadzie */
+  hostScope: HostSignupScope;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -30,6 +39,7 @@ export class SlotsUtil {
       return out;
     }
 
+    // Brak planów – pojedynczy slot na salę wg eventu
     const purposeFromEvent =
       ev.attractionType === 'SESSION'
         ? RoomPurpose.Session
@@ -40,6 +50,10 @@ export class SlotsUtil {
     const start = this.time.hhmmss(ev.startTime);
     const end = this.time.hhmmss(ev.endTime);
 
+    const eventLevel = (ev.hostSignupLevel ?? HostSignupLevel.Event) as HostSignupLevel;
+    const eventRequires = !!ev.requiresHosts;
+    const eventScope = (ev.hostSignup ?? HostSignupScope.Staff) as HostSignupScope;
+
     for (const r of rooms) {
       out.push({
         roomName: r,
@@ -49,7 +63,9 @@ export class SlotsUtil {
             endTime: end,
             purpose: purposeFromEvent,
             title: purposeFromEvent === RoomPurpose.Entertainment ? 'Rozrywka' : null,
-            hostSignup: (ev.hostSignupLevel ?? HostSignupLevel.Event) as HostSignupLevel,
+            hostSignup: eventLevel,
+            requiresHosts: eventRequires,
+            hostScope: eventScope,
           },
         ],
       });
@@ -62,12 +78,27 @@ export class SlotsUtil {
     const evEnd = this.time.hhmmss(ev.endTime);
     const defaultPurpose = (plan.purpose ?? RoomPurpose.None) as RoomPurpose;
     const defaultTitle = plan.customTitle ?? null;
+
     const eventLevel = (ev.hostSignupLevel ?? HostSignupLevel.Event) as HostSignupLevel;
     const roomLevel = (plan.hostSignup ?? null) as HostSignupLevel | null;
     const effectiveLevel = (slotLevel?: HostSignupLevel | null): HostSignupLevel =>
       (slotLevel ?? roomLevel ?? eventLevel);
 
-    if ((plan.scheduleKind ?? RoomScheduleKind.FullSpan) === RoomScheduleKind.FullSpan) {
+    // Kaskada requiresHosts (slot -> room -> event)
+    const eventRequires = !!ev.requiresHosts;
+    const roomRequiresTri = (plan as any).requiresHosts as boolean | null | undefined;
+    const roomRequires = roomRequiresTri === undefined || roomRequiresTri === null ? eventRequires : !!roomRequiresTri;
+
+    // Kaskada scope (slot -> room -> event)
+    const eventScope = (ev.hostSignup ?? HostSignupScope.Staff) as HostSignupScope;
+    const roomScope = ((plan as any).hostScope ?? null) as HostSignupScope | null;
+
+    const effectiveScope = (slotScope?: HostSignupScope | null): HostSignupScope =>
+      (slotScope ?? roomScope ?? eventScope);
+
+    const schedule = (plan.scheduleKind ?? RoomScheduleKind.FullSpan) as RoomScheduleKind;
+
+    if (schedule === RoomScheduleKind.FullSpan) {
       return [
         {
           startTime: evStart,
@@ -75,11 +106,13 @@ export class SlotsUtil {
           purpose: defaultPurpose,
           title: defaultPurpose === RoomPurpose.Entertainment ? (defaultTitle ?? 'Rozrywka') : null,
           hostSignup: effectiveLevel(null),
+          requiresHosts: roomRequires,
+          hostScope: effectiveScope(null),
         },
       ];
     }
 
-    if (plan.scheduleKind === RoomScheduleKind.Interval) {
+    if (schedule === RoomScheduleKind.Interval) {
       const intervalH = Math.max(1, Number(plan.intervalHours ?? 0) || 0);
       const out: SlotDef[] = [];
       let cursor = evStart;
@@ -95,22 +128,35 @@ export class SlotsUtil {
           purpose: defaultPurpose,
           title: defaultPurpose === RoomPurpose.Entertainment ? (defaultTitle ?? 'Rozrywka') : null,
           hostSignup: effectiveLevel(null),
+          requiresHosts: roomRequires,
+          hostScope: effectiveScope(null),
         });
         cursor = slotEnd;
       }
       return out;
     }
 
+    // Schedule (ręczne sloty) – tu może być per-slot requiresHosts/hostScope
     const explicit = (plan.slots ?? []).map<SlotDef>((s) => {
-      const st = this.time.hhmmss(s.startTime);
-      const en = this.time.hhmmss(s.endTime);
+      const st = this.time.hhmmss(s.startTime as any);
+      const en = this.time.hhmmss(s.endTime as any);
       const p = (s.purpose as RoomPurpose | undefined) ?? defaultPurpose;
+
+      // per-slot override
+      const slotRequiresTri = (s as any).requiresHosts as boolean | null | undefined;
+      const slotRequires =
+        slotRequiresTri === undefined || slotRequiresTri === null ? roomRequires : !!slotRequiresTri;
+
+      const slotScope = ((s as any).hostScope ?? null) as HostSignupScope | null;
+
       return {
         startTime: st,
         endTime: en,
         purpose: p,
         title: p === RoomPurpose.Entertainment ? (s.customTitle ?? defaultTitle ?? 'Rozrywka') : (s.customTitle ?? null),
         hostSignup: effectiveLevel((s.hostSignup as HostSignupLevel | null) ?? null),
+        requiresHosts: slotRequires,
+        hostScope: effectiveScope(slotScope),
       };
     });
 

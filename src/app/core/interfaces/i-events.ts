@@ -5,7 +5,11 @@ import {
   RecurrenceKind,
 } from '../enums/events';
 import { ParticipantSignupScope } from '../enums/events';
-import { HostSignupLevel, RoomPurpose, RoomScheduleKind } from '../enums/event-rooms';
+import {
+  HostSignupLevel,
+  RoomPurpose,
+  RoomScheduleKind,
+} from '../enums/event-rooms';
 
 export interface EventCore {
   id: string;
@@ -35,7 +39,7 @@ export interface EventCore {
   autoReservation: boolean;
 
   /** Default host-signup granularity; falls back to EVENT if absent */
-  hostSignupLevel?: HostSignupLevel; // maps to DB new_events.host_signup_level
+  hostSignupLevel?: HostSignupLevel; 
 }
 
 export interface RecurrenceRule {
@@ -56,18 +60,14 @@ export interface EventRoomPlan {
   purpose: RoomPurpose;
   customTitle?: string | null;
   scheduleKind: RoomScheduleKind;
-
-  // Interval mode
   intervalHours?: number | null;
-
-  // Default host-signup level for this room (overrides event-level if set)
   hostSignup?: HostSignupLevel | null;
-
-  // Explicit slots for Schedule mode
+  requiresHosts?: boolean | null;
+  hostScope?: HostSignupScope | null;
   slots?: Array<{
-    startTime: string; // 'HH:mm:ss'
-    endTime: string;   // 'HH:mm:ss'
-    purpose?: RoomPurpose; // optional override
+    startTime: string;
+    endTime: string; 
+    purpose?: RoomPurpose;
     customTitle?: string | null;
     hostSignup?: HostSignupLevel | null;
   }> | null;
@@ -112,7 +112,7 @@ export type EventDbJoined = Omit<
   eventRoomSlots?: Array<{
     roomName: string;
     startTime: string; // 'HH:mm' | 'HH:mm:ss'
-    endTime: string;   // 'HH:mm' | 'HH:mm:ss'
+    endTime: string; // 'HH:mm' | 'HH:mm:ss'
     purpose?: RoomPurpose | null;
     customTitle?: string | null;
     hostSignup?: HostSignupLevel | null;

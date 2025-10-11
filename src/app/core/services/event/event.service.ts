@@ -9,7 +9,7 @@ import { ReservationsService } from './reservations.service';
 import { EventFull, RecurrenceRule } from '../../interfaces/i-events';
 import { formatYmdLocal } from '../../utils/weekday-options';
 import { FilterOperator } from '../../enums/filterOperator';
-import { EventTag, RecurrenceKind, ParticipantSignupScope } from '../../enums/events';
+import { EventTag, RecurrenceKind, ParticipantSignupScope, HostSignupScope } from '../../enums/events';
 import { RoomPurpose, RoomScheduleKind } from '../../enums/event-rooms';
 import { EventMapper } from './event.mapper';
 
@@ -79,6 +79,7 @@ export class EventService {
         }
 
         if (Array.isArray(roomPlans) && roomPlans.length) {
+          // ====== POPRAWKA: plany zapisujemy z requiresHosts/hostScope (+ uczestnicy jeśli masz w DB) ======
           const planRows = roomPlans.map((p) => ({
             eventId,
             roomName: p.roomName,
@@ -86,10 +87,19 @@ export class EventService {
             customTitle: p.customTitle ?? null,
             scheduleKind: p.scheduleKind ?? RoomScheduleKind.FullSpan,
             intervalHours: p.intervalHours ?? null,
+            // legacy:
             hostSignup: p.hostSignup ?? null,
+            // NEW (DB: requires_hosts, host_scope):
+            requiresHosts: (p as any).requiresHosts ?? null,
+            hostScope: (p as any).hostScope ?? null,
+            // Participants per room (opcjonalnie — jeśli masz kolumny w DB, które pokazałeś):
+            requiresParticipants: (p as any).requiresParticipants ?? null,
+            participantSignup: (p as any).participantSignup ?? null,
+            sessionCapacity: (p as any).sessionCapacity ?? null,
           }));
           writes.push(this.repo.createMany('event_room_plans', planRows as any));
 
+          // ====== POPRAWKA: sloty zapisujemy z requiresHosts/hostScope (DB: requires_hosts, host_scope) ======
           const slotsRows = roomPlans.flatMap((p) =>
             (p.slots ?? []).map((s: any) => ({
               eventId,
@@ -98,7 +108,11 @@ export class EventService {
               endTime: this.time.hhmmss(s.endTime),
               purpose: s.purpose ?? null,
               customTitle: s.customTitle ?? null,
+              // legacy:
               hostSignup: s.hostSignup ?? null,
+              // NEW:
+              requiresHosts: (s as any).requiresHosts ?? null,
+              hostScope: (s as any).hostScope ?? null,
             }))
           );
           if (slotsRows.length) writes.push(this.repo.createMany('event_room_slots', slotsRows as any));
@@ -147,7 +161,11 @@ export class EventService {
 
     if (recurrence !== undefined) {
       if (recurrence === null) {
-        ops.push(this.repo.deleteWhere('event_recurrence', { eventId: { operator: FilterOperator.EQ, value: id } }).pipe(map(() => void 0)));
+        ops.push(
+          this.repo
+            .deleteWhere('event_recurrence', { eventId: { operator: FilterOperator.EQ, value: id } })
+            .pipe(map(() => void 0))
+        );
       } else {
         const recRow = {
           eventId: id,
@@ -170,11 +188,11 @@ export class EventService {
         this.repo
           .deleteWhere('event_room_slots', { eventId: { operator: FilterOperator.EQ, value: id } })
           .pipe(
-            switchMap(() =>
-              this.repo.deleteWhere('event_room_plans', { eventId: { operator: FilterOperator.EQ, value: id } })
-            ),
+            switchMap(() => this.repo.deleteWhere('event_room_plans', { eventId: { operator: FilterOperator.EQ, value: id } })),
             switchMap(() => {
               if (!Array.isArray(roomPlans) || !roomPlans.length) return of(void 0);
+
+              // ====== POPRAWKA: plany z requiresHosts/hostScope (+ uczestnicy) ======
               const planRows = roomPlans.map((p) => ({
                 eventId: id,
                 roomName: p.roomName,
@@ -182,8 +200,18 @@ export class EventService {
                 customTitle: p.customTitle ?? null,
                 scheduleKind: p.scheduleKind ?? RoomScheduleKind.FullSpan,
                 intervalHours: p.intervalHours ?? null,
+                // legacy:
                 hostSignup: p.hostSignup ?? null,
+                // NEW:
+                requiresHosts: (p as any).requiresHosts ?? null,
+                hostScope: (p as any).hostScope ?? null,
+                // participants per room (opcjonalnie):
+                requiresParticipants: (p as any).requiresParticipants ?? null,
+                participantSignup: (p as any).participantSignup ?? null,
+                sessionCapacity: (p as any).sessionCapacity ?? null,
               }));
+
+              // ====== POPRAWKA: sloty z requiresHosts/hostScope ======
               const slotsRows = roomPlans.flatMap((p) =>
                 (p.slots ?? []).map((s) => ({
                   eventId: id,
@@ -192,9 +220,14 @@ export class EventService {
                   endTime: this.time.hhmmss(s.endTime),
                   purpose: s.purpose ?? null,
                   customTitle: s.customTitle ?? null,
+                  // legacy:
                   hostSignup: s.hostSignup ?? null,
+                  // NEW:
+                  requiresHosts: (s as any).requiresHosts ?? null,
+                  hostScope: (s as any).hostScope ?? null,
                 }))
               );
+
               return forkJoin([
                 this.repo.createMany('event_room_plans', planRows as any),
                 slotsRows.length ? this.repo.createMany('event_room_slots', slotsRows as any) : of(void 0),

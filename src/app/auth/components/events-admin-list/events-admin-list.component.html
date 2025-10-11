@@ -1,6 +1,6 @@
 <div class="events-admin-list full-height">
   <div class="container">
-      <h2 class="section-title mb-3">Poprowadź wydarzenie</h2>
+    <h2 class="section-title mb-3">Poprowadź wydarzenie</h2>
 
     @if (visibleEvents().length) {
 
@@ -20,7 +20,7 @@
         }
       </div>
 
-      <!-- panel szczegółów wybranego eventu (karty zostają bez zmian) -->
+      <!-- panel szczegółów wybranego eventu -->
       @let ev = selected();
       @if (ev) {
         <section class="card card-dark card-body event-details event-card">
@@ -37,9 +37,7 @@
               </div>
             </div>
             <div class="actions">
-              <button type="button" class="btn btn-primary" (click)="goEdit()">
-                Edytuj
-              </button>
+              <button type="button" class="btn btn-primary" (click)="goEdit()">Edytuj</button>
             </div>
           </header>
 
@@ -53,7 +51,8 @@
             <p class="desc">{{ ev.shortDescription }}</p>
           }
 
-          @if (ev.singleDate) {
+          <!-- JEDNORAZOWE PROSTE: data -->
+          @if (ev.singleDate && !isComposite(ev)) {
             <div class="dates">
               <h4 class="h6">Termin</h4>
               <div>
@@ -70,6 +69,65 @@
                 </button>
               </div>
             </div>
+
+          <!-- JEDNORAZOWE ZŁOŻONE (Composite): lista salek -->
+          } @else if (isComposite(ev)) {
+            <div class="occ">
+              <h4 class="h6">Zgłoszenia per salkę</h4>
+
+              @if ((ev.rooms || []).length) {
+                <div class="rooms-grid">
+                  @for (room of roomUiList(ev); track room.roomName) {
+                    <div class="room-tile card-like p-2">
+
+                      <div class="room-head">
+                        <strong class="me-2">{{ room.roomName }}</strong>
+                        <span class="tag-badge gray">
+                          {{ roomGranularityLabel(ev, room.roomName) }}
+                        </span>
+                      </div>
+
+                      <!-- BRAK ZGŁOSZEŃ -->
+                      @if (room.mode === 'none') {
+                        <div class="muted mt-2">
+                          Do tej salki nie są wymagane zgłoszenia prowadzących.
+                        </div>
+                      }
+
+                      <!-- CAŁY PRZEDZIAŁ (jeden przycisk) -->
+                      @if (room.mode === 'full') {
+                        <div class="room-actions mt-2">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline"
+                            (click)="goSignupRoom(room.roomName)">
+                            Zgłoś się
+                          </button>
+                        </div>
+                      }
+
+                      <!-- WIELE SLOTÓW (przyciski HH:mm–HH:mm) -->
+                      @if (room.mode === 'slots') {
+                        <div class="dates mt-2">
+                          @for (s of room.slots; track s.startTime) {
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-outline"
+                              (click)="goSignupRoom(room.roomName, s.startTime, s.endTime)">
+                              {{ s.startTime.slice(0,5) }}–{{ s.endTime.slice(0,5) }}
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="muted">Brak zdefiniowanych salek.</div>
+              }
+            </div>
+
+          <!-- CYKLICZNE: jak dotąd -->
           } @else {
             <div class="occ">
               <h4 class="h6">Zgłoszenie prowadzących</h4>
