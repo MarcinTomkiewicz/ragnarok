@@ -99,8 +99,13 @@
                         <div class="room-actions mt-2">
                           <button
                             type="button"
-                            class="btn btn-sm btn-outline"
-                            (click)="goSignupRoom(room.roomName)">
+                            class="btn btn-sm"
+                            [class.btn-outline]="roomStatus(ev.id, ev.singleDate!, room.roomName) === 'free'"
+                            [class.btn-danger]="roomStatus(ev.id, ev.singleDate!, room.roomName) !== 'free'"
+                            [disabled]="roomStatus(ev.id, ev.singleDate!, room.roomName) === 'taken'"
+                            (click)="roomStatus(ev.id, ev.singleDate!, room.roomName) !== 'taken'
+                              ? goSignupRoom(room.roomName, ev.singleDate!)
+                              : null">
                             Zgłoś się
                           </button>
                         </div>
@@ -112,8 +117,13 @@
                           @for (s of room.slots; track s.startTime) {
                             <button
                               type="button"
-                              class="btn btn-sm btn-outline"
-                              (click)="goSignupRoom(room.roomName, s.startTime, s.endTime)">
+                              class="btn btn-sm"
+                              [class.btn-outline]="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) === 'free'"
+                              [class.btn-danger]="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) !== 'free'"
+                              [disabled]="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) === 'taken'"
+                              (click)="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) !== 'taken'
+                                ? goSignupRoom(room.roomName, ev.singleDate!, s.startTime, s.endTime)
+                                : null">
                               {{ s.startTime.slice(0,5) }}–{{ s.endTime.slice(0,5) }}
                             </button>
                           }
