@@ -79,7 +79,7 @@ export class EventService {
         }
 
         if (Array.isArray(roomPlans) && roomPlans.length) {
-          // ====== POPRAWKA: plany zapisujemy z requiresHosts/hostScope (+ uczestnicy jeśli masz w DB) ======
+          // PLANY SAL
           const planRows = roomPlans.map((p) => ({
             eventId,
             roomName: p.roomName,
@@ -89,17 +89,17 @@ export class EventService {
             intervalHours: p.intervalHours ?? null,
             // legacy:
             hostSignup: p.hostSignup ?? null,
-            // NEW (DB: requires_hosts, host_scope):
+            // hosts @ room:
             requiresHosts: (p as any).requiresHosts ?? null,
             hostScope: (p as any).hostScope ?? null,
-            // Participants per room (opcjonalnie — jeśli masz kolumny w DB, które pokazałeś):
+            // participants @ room:
             requiresParticipants: (p as any).requiresParticipants ?? null,
             participantSignup: (p as any).participantSignup ?? null,
             sessionCapacity: (p as any).sessionCapacity ?? null,
           }));
           writes.push(this.repo.createMany('event_room_plans', planRows as any));
 
-          // ====== POPRAWKA: sloty zapisujemy z requiresHosts/hostScope (DB: requires_hosts, host_scope) ======
+          // SLOTY (Schedule) — łącznie z polami uczestników
           const slotsRows = roomPlans.flatMap((p) =>
             (p.slots ?? []).map((s: any) => ({
               eventId,
@@ -108,11 +108,18 @@ export class EventService {
               endTime: this.time.hhmmss(s.endTime),
               purpose: s.purpose ?? null,
               customTitle: s.customTitle ?? null,
+
               // legacy:
               hostSignup: s.hostSignup ?? null,
-              // NEW:
+
+              // hosts @ slot:
               requiresHosts: (s as any).requiresHosts ?? null,
               hostScope: (s as any).hostScope ?? null,
+
+              // participants @ slot:
+              requiresParticipants: (s as any).requiresParticipants ?? null,
+              participantSignup: (s as any).participantSignup ?? null,
+              sessionCapacity: (s as any).sessionCapacity ?? null,
             }))
           );
           if (slotsRows.length) writes.push(this.repo.createMany('event_room_slots', slotsRows as any));
@@ -192,7 +199,6 @@ export class EventService {
             switchMap(() => {
               if (!Array.isArray(roomPlans) || !roomPlans.length) return of(void 0);
 
-              // ====== POPRAWKA: plany z requiresHosts/hostScope (+ uczestnicy) ======
               const planRows = roomPlans.map((p) => ({
                 eventId: id,
                 roomName: p.roomName,
@@ -202,16 +208,15 @@ export class EventService {
                 intervalHours: p.intervalHours ?? null,
                 // legacy:
                 hostSignup: p.hostSignup ?? null,
-                // NEW:
+                // hosts @ room:
                 requiresHosts: (p as any).requiresHosts ?? null,
                 hostScope: (p as any).hostScope ?? null,
-                // participants per room (opcjonalnie):
+                // participants @ room:
                 requiresParticipants: (p as any).requiresParticipants ?? null,
                 participantSignup: (p as any).participantSignup ?? null,
                 sessionCapacity: (p as any).sessionCapacity ?? null,
               }));
 
-              // ====== POPRAWKA: sloty z requiresHosts/hostScope ======
               const slotsRows = roomPlans.flatMap((p) =>
                 (p.slots ?? []).map((s) => ({
                   eventId: id,
@@ -220,11 +225,18 @@ export class EventService {
                   endTime: this.time.hhmmss(s.endTime),
                   purpose: s.purpose ?? null,
                   customTitle: s.customTitle ?? null,
+
                   // legacy:
                   hostSignup: s.hostSignup ?? null,
-                  // NEW:
+
+                  // hosts @ slot:
                   requiresHosts: (s as any).requiresHosts ?? null,
                   hostScope: (s as any).hostScope ?? null,
+
+                  // participants @ slot:
+                  requiresParticipants: (s as any).requiresParticipants ?? null,
+                  participantSignup: (s as any).participantSignup ?? null,
+                  sessionCapacity: (s as any).sessionCapacity ?? null,
                 }))
               );
 

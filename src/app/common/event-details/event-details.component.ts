@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal, effect } from '@angular/core';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { NgbAlertModule, NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
@@ -9,8 +9,9 @@ import { EventService } from '../../core/services/event/event.service';
 import { ImageStorageService } from '../../core/services/backend/image-storage/image-storage.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 
-import { EventFull } from '../../core/interfaces/i-events';
+import { EventFull, EventRoomPlan } from '../../core/interfaces/i-events';
 import { EventTag, EventTagLabel, AttractionKind, HostSignupScope, ParticipantSignupScope } from '../../core/enums/events';
+import { RoomScheduleKind } from '../../core/enums/event-rooms';
 import { formatYmdLocal } from '../../core/utils/weekday-options';
 
 import { of, combineLatest, forkJoin } from 'rxjs';
@@ -26,6 +27,8 @@ import { AuthService } from '../../core/services/auth/auth.service';
 import { EventSignupPanelComponent } from '../event-signup-panel/event-signup-panel.component';
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
+
+type SlotVM = { start: string; end: string; kind: 'session' | 'discussion' | 'entertainment' };
 
 @Component({
   selector: 'app-event-details',
@@ -47,14 +50,14 @@ export class EventDetailsComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
 
-  HostSignupScope = HostSignupScope; // do szablonu
+  HostSignupScope = HostSignupScope;
 
   // --- Stan
   private readonly loading = signal(true);
   private readonly errorMessage = signal<string | null>(null);
   private readonly today = signal(formatYmdLocal(new Date()));
 
-  // user (computed z AuthService)
+  // user
   readonly currentUser = this.auth.user;
 
   // --- Sygnały
@@ -67,7 +70,6 @@ export class EventDetailsComponent {
   readonly occurrenceDate = computed<string | null>(() => {
     const ev = this.rawEventSig();
     if (!ev) return null;
-
     if (ev.singleDate) return ev.singleDate;
 
     const qd = this.queryDateSig();
@@ -95,48 +97,91 @@ export class EventDetailsComponent {
 
   readonly eventId = computed(() => this.event()?.id ?? null);
 
-  // Pojemność przekazywana do dzieci (fallback dla całego eventu i sesji bez własnego limitu)
+  // Composite helpers
+  readonly isComposite = computed(() => this.event()?.attractionType === AttractionKind.Composite);
+  readonly rooms = computed<string[]>(() => this.event()?.rooms ?? []);
+
+  // wybrana salka (chipsy salek)
+  readonly selectedRoom = signal<string | null>(null);
+
+  // plan dla wybranej salki
+  readonly roomPlanForSelected = computed<EventRoomPlan | null>(() => {
+    const ev = this.event();
+    const r = this.selectedRoom();
+    if (!ev || !r) return null;
+    return (ev.roomPlans ?? []).find((p) => p.roomName === r) ?? null;
+  });
+
+  // Slots do debugowania (nie renderujemy chipów slotów, ale wyliczamy i logujemy)
+  private hhmm = (s?: string | null) => (s ?? '').slice(0, 5);
+  private mapPurposeToKind(raw: any): 'session' | 'discussion' | 'entertainment' {
+    const v = String(raw ?? '').trim().toUpperCase();
+    if (v === 'SESSION' || v === 'SESJA') return 'session';
+    if (v === 'DISCUSSION' || v === 'DYSKUSJA') return 'discussion';
+    if (v === 'ENTERTAINMENT' || v === 'ROZRYWKA') return 'entertainment';
+    return 'session';
+  }
+
+  readonly slotsForSelectedRoom = computed<SlotVM[]>(() => {
+    const ev = this.event();
+    const plan = this.roomPlanForSelected();
+    if (!ev || !plan) return [];
+
+    if (plan.scheduleKind === RoomScheduleKind.FullSpan) {
+      const st = this.hhmm(ev.startTime) || '00:00';
+      const en = this.hhmm(ev.endTime) || '23:59';
+      const kind = this.mapPurposeToKind((plan as any).purpose);
+      return [{ start: st, end: en, kind }];
+    }
+
+    if (plan.scheduleKind === RoomScheduleKind.Interval) {
+      // INTERVAL: mamy cykliczne sloty co X. Jeśli backend nie daje gotowych slots,
+      // logujemy sam plan – lista kart i tak wczyta się po hostach.
+      const st = this.hhmm(ev.startTime) || '00:00';
+      const en = this.hhmm(ev.endTime) || '23:59';
+      const kind = this.mapPurposeToKind((plan as any).purpose);
+      return [{ start: st, end: en, kind }];
+    }
+
+    // Explicit slots
+    const slots = (plan.slots ?? []).map((s) => {
+      const purpose = (s as any).purpose ?? (s as any).attractionKind ?? null;
+      return { start: this.hhmm(s.startTime), end: this.hhmm(s.endTime), kind: this.mapPurposeToKind(purpose) };
+    });
+    return slots.sort((a, b) => a.start.localeCompare(b.start));
+  });
+
+  // Capacity
   readonly wholeCapacity = computed<number | null>(() => {
-  const raw = this.event()?.wholeCapacity ?? null;
-  return raw === 0 ? null : raw;          // 0 => bez limitu (null)
-});
+    const raw = this.event()?.wholeCapacity ?? null;
+    return raw === 0 ? null : raw;
+  });
+  readonly wholeCapacityNormalized = computed<number | null>(() => {
+    const cap = this.event()?.wholeCapacity ?? null;
+    return cap != null && cap <= 0 ? null : cap;
+  });
+  readonly sessionDefaultCapacity = computed<number | null>(() => {
+    const raw = this.event()?.sessionCapacity ?? null;
+    return raw && raw > 0 ? raw : null;
+  });
 
-// 0 lub null -> null (brak limitu)
-readonly wholeCapacityNormalized = computed<number | null>(() => {
-  const cap = this.event()?.wholeCapacity ?? null;
-  return cap != null && cap <= 0 ? null : cap;
-});
-
-
-// Domyślna pojemność sesji (fallback dla kart sesji):
-readonly sessionDefaultCapacity = computed<number | null>(() => {
-  const raw = this.event()?.sessionCapacity ?? null;
-  // tu 0 raczej nie wystąpi (masz check 1..5), ale gdyby kiedyś:
-  return raw && raw > 0 ? raw : null;
-});
-
-  // Tryb zapisów (z backendu) + bezpieczny fallback gdyby pole było puste
+  // Participant signup scope
   readonly participantSignup = computed<ParticipantSignupScope>(() => {
     const ev = this.event();
     if (!ev) return ParticipantSignupScope.Whole;
     return (
       ev.participantSignup ??
-      (ev.attractionType === AttractionKind.Session
-        ? ParticipantSignupScope.Session
-        : ParticipantSignupScope.Whole)
+      (ev.attractionType === AttractionKind.Session ? ParticipantSignupScope.Session : ParticipantSignupScope.Whole)
     );
   });
-
   readonly showSessionSignup = computed<boolean>(() => {
     const s = this.participantSignup();
     return s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both;
-    }
-  );
+  });
   readonly showWholeSignup = computed<boolean>(() => {
     const s = this.participantSignup();
     return s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both;
-    }
-  );
+  });
 
   private readonly coverSizes = [
     { w: 480, h: 320 },
@@ -150,7 +195,7 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     const name = this.event()?.name ?? '';
     const mid = this.coverSizes[1];
     const src = this.images.getOptimizedPublicUrl(path, mid.w, mid.h);
-    const srcset = this.coverSizes.map(s => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`).join(', ');
+    const srcset = this.coverSizes.map((s) => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`).join(', ');
     const sizesAttr = '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
     return { src, srcset, sizesAttr, alt: name };
   });
@@ -181,7 +226,7 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     }));
   });
 
-  // „Następne spotkanie” (dla niesesyjnych)
+  // „Niesesyjne” dla prostych wydarzeń
   readonly nextTitle = computed(() => {
     const h = this.nonSessionHostsSig()?.find((x) => !!x.title?.trim());
     return h?.title?.trim() || '—';
@@ -322,6 +367,57 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
         })
       )
       .subscribe();
+
+    // --- inicjalny wybór salki (chip salek; BEZ chipów godzin)
+    toObservable(this.event)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((ev) => {
+        if (!ev || !this.isComposite()) return;
+        const qp = this.route.snapshot.queryParamMap;
+        const r = qp.get('room');
+        const first = (ev.rooms ?? [])[0] ?? null;
+        this.selectedRoom.set(r ?? first);
+      });
+
+  //   // === DEBUG: pełny event + plany + sloty (kiedy tylko się zmienią) ===
+  //   effect(() => {
+  //     const ev = this.event();
+  //     if (!ev) return;
+  //     // pełny event
+  //     console.groupCollapsed('[event-details] Event');
+  //     console.log('id:', ev.id);
+  //     console.log('name:', ev.name);
+  //     console.log('date:', ev.singleDate);
+  //     console.log('time:', this.timeRangeLabel());
+  //     console.log('rooms:', ev.rooms);
+  //     console.log('attractionType:', ev.attractionType);
+  //     console.groupEnd();
+
+  //     // plany salek
+  //     console.groupCollapsed('[event-details] Room plans');
+  //     (ev.roomPlans ?? []).forEach((p) => {
+  //       console.groupCollapsed(`room: ${p.roomName}`);
+  //       console.log('scheduleKind:', p.scheduleKind);
+  //       console.log('requiresHosts:', (p as any).requiresHosts);
+  //       console.log('purpose:', (p as any).purpose);
+  //       console.log('intervalHours:', (p as any).intervalHours);
+  //       console.log('intervalMinutes:', (p as any).intervalMinutes);
+  //       console.log('slotDurationMinutes:', (p as any).slotDurationMinutes);
+  //       console.log('slots:', (p as any).slots ?? []);
+  //       console.groupEnd();
+  //     });
+  //     console.groupEnd();
+  //   });
+
+  //   effect(() => {
+  //     const r = this.selectedRoom();
+  //     const slots = this.slotsForSelectedRoom();
+  //     if (!r) return;
+  //     console.groupCollapsed('[event-details] Selected room view');
+  //     console.log('room:', r);
+  //     console.table(slots);
+  //     console.groupEnd();
+  //   });
   }
 
   openFacebook(link?: string) {

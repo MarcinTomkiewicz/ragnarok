@@ -3,8 +3,8 @@ import {
   EventTag,
   HostSignupScope,
   RecurrenceKind,
+  ParticipantSignupScope,
 } from '../enums/events';
-import { ParticipantSignupScope } from '../enums/events';
 import {
   HostSignupLevel,
   RoomPurpose,
@@ -23,23 +23,28 @@ export interface EventCore {
   isForBeginners: boolean;
   requiresHosts: boolean;
   attractionType: AttractionKind;
+
   hostSignup: HostSignupScope;
+  /** Default host granularity (fallback = EVENT) */
+  hostSignupLevel?: HostSignupLevel;
+
+  /** Participants on event level */
   participantSignup?: ParticipantSignupScope | null;
   signupRequired: boolean;
   wholeCapacity?: number | null;
   sessionCapacity?: number | null;
+
   signupOpensAt?: string | null;
   signupClosesAt?: string | null;
+
   timezone: string;
   startTime: string;
   endTime: string;
+
   tags: EventTag[];
   rooms: string[];
   entryFeePln: number;
   autoReservation: boolean;
-
-  /** Default host-signup granularity; falls back to EVENT if absent */
-  hostSignupLevel?: HostSignupLevel; 
 }
 
 export interface RecurrenceRule {
@@ -54,33 +59,49 @@ export interface RecurrenceRule {
   exdates: string[];
 }
 
-/** Room-level plan driving generated or manual slots */
+/** Plan sali (room-level) + ewentualne ręczne sloty */
 export interface EventRoomPlan {
   roomName: string;
   purpose: RoomPurpose;
   customTitle?: string | null;
+
   scheduleKind: RoomScheduleKind;
   intervalHours?: number | null;
-  hostSignup?: HostSignupLevel | null;
+
+  // Hosts @ room/slot
+  hostSignup?: HostSignupLevel | null;     // ROOM vs SLOT
   requiresHosts?: boolean | null;
   hostScope?: HostSignupScope | null;
+
+  // Participants @ room level (dla FullSpan/Interval, oraz defaulty dla Schedule)
+  requiresParticipants?: boolean | null;
+  participantSignup?: ParticipantSignupScope | null; // zostawione dla zgodności
+  sessionCapacity?: number | null;                   // 3–5 dla Session
+
+  // Ręczne sloty (Schedule)
   slots?: Array<{
     startTime: string;
-    endTime: string; 
+    endTime: string;
     purpose?: RoomPurpose;
     customTitle?: string | null;
     hostSignup?: HostSignupLevel | null;
+
+    // NEW: participants @ slot level
+    requiresParticipants?: boolean | null;
+    participantSignup?: ParticipantSignupScope | null; // dla spójności
+    sessionCapacity?: number | null;                   // 3–5 dla Session
+    requiresHosts?: boolean | null;
+    hostScope?: HostSignupScope | null;
   }> | null;
 }
 
 export type EventFull = EventCore & {
   singleDate?: string;
   recurrence?: RecurrenceRule;
-
-  /** Optional advanced room planning; when absent app behaves as today */
   roomPlans?: EventRoomPlan[] | null;
 };
 
+/** Zrzut z joinów DB -> mapper konwertuje na EventFull */
 export type EventDbJoined = Omit<
   EventFull,
   'tags' | 'rooms' | 'recurrence' | 'roomPlans'
@@ -106,15 +127,29 @@ export type EventDbJoined = Omit<
     customTitle?: string | null;
     scheduleKind?: RoomScheduleKind | null;
     intervalHours?: number | null;
+
     hostSignup?: HostSignupLevel | null;
+    requiresHosts?: boolean | null;
+    hostScope?: HostSignupScope | null;
+
+    requiresParticipants?: boolean | null;
+    participantSignup?: ParticipantSignupScope | null;
+    sessionCapacity?: number | null;
   }>;
 
   eventRoomSlots?: Array<{
     roomName: string;
     startTime: string; // 'HH:mm' | 'HH:mm:ss'
-    endTime: string; // 'HH:mm' | 'HH:mm:ss'
+    endTime: string;   // 'HH:mm' | 'HH:mm:ss'
     purpose?: RoomPurpose | null;
     customTitle?: string | null;
     hostSignup?: HostSignupLevel | null;
+    requiresHosts?: boolean | null;
+    hostScope?: HostSignupScope | null;
+
+    // NEW on slot
+    requiresParticipants?: boolean | null;
+    participantSignup?: ParticipantSignupScope | null;
+    sessionCapacity?: number | null;
   }>;
 };

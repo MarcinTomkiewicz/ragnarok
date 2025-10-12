@@ -20,12 +20,9 @@
     gap: 0.5rem;
     color: $secondary-text-color;
     @include responsive-font-size($font-size-xs);
-    .separator {
-      opacity: 0.6;
-    }
+    .separator { opacity: 0.6; }
   }
 
-  /* Okładka */
   .event-image-wrapper {
     width: 100%;
     max-width: 768px;
@@ -40,20 +37,9 @@
       aspect-ratio: 16 / 10;
     }
   }
+  .event-image { width: 100%; height: 100%; display: block; object-fit: cover; }
 
-  .event-image {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-  }
-
-  /* Tytuł i opis */
-  .section-title {
-    margin: 0.5rem 0 0.25rem;
-    text-align: center;
-    text-wrap: balance;
-  }
+  .section-title { margin: 0.5rem 0 0.25rem; text-align: center; text-wrap: balance; }
 
   .event-description {
     width: 100%;
@@ -61,37 +47,22 @@
     margin: 0.5rem auto 0;
     text-align: left;
 
-    .event-paragraph {
-      margin: 0 0 1rem;
-      line-height: 1.65;
-    }
+    .event-paragraph { margin: 0 0 1rem; line-height: 1.65; }
   }
 
-  .chip-row {
-    margin: 0 auto;
-  }
+  .chip-row { margin: 0 auto; }
 
   .table.table-dark-style {
     margin-top: 0.5rem;
     width: 100%;
     table-layout: fixed;
 
-    th,
-    td {
-      text-align: left;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
+    th, td { text-align: left; white-space: normal; overflow-wrap: anywhere; }
 
-    & tbody tr > th:first-child {
-      width: 40%;
-    }
-    & tbody tr > td:last-child {
-      width: 60%;
-    }
+    & tbody tr > th:first-child { width: 40%; }
+    & tbody tr > td:last-child { width: 60%; }
   }
 
-  /* Rooms grid (chips) */
   .rooms-grid {
     @include mg-grid(4);
     gap: 0.5rem;
@@ -99,70 +70,45 @@
     width: min-content;
   }
 
-  /* Skeleton loader */
-  .skeleton-cover {
-    width: 100%;
-    height: 100%;
-    border-radius: inherit;
+  /* ===== Composite UI ===== */
+  .rooms-tabs {
+    display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center; margin: .25rem 0 0.5rem;
+    .btn.active { border-color: var(--primary, #7a5af8); }
+  }
+  .room-schedule { max-width: 1100px; margin: 0 auto; }
+  .slot-chips {
+    display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; margin-bottom: .75rem;
+    .btn { display:flex; align-items:center; gap:.5rem; }
+    .slot-kind-badge {
+      font-size: .8em; padding: .15rem .4rem; border-radius: .35rem; opacity:.95;
+      &.violet { background:#6f42c1; color:#fff; }
+      &.gray   { background:#666; color:#fff; }
+      &.golden { background:#c6a645; color:#1b1b1b; }
+    }
   }
 
+  /* Skeleton loader */
+  .skeleton-cover { width: 100%; height: 100%; border-radius: inherit; }
   .skeleton-table {
     @include data-grid(0.5rem);
-    width: 100%;
-    max-width: 960px;
-    margin-top: 1rem;
+    width: 100%; max-width: 960px; margin-top: 1rem;
 
     .skeleton-row {
-      @include data-grid-row(
-        220px 1fr,
-        0.5rem 0.5rem,
-        transparent,
-        0.5rem,
-        0.75rem
-      );
-      border: 1px dashed $border-color;
-      border-radius: 0.5rem;
+      @include data-grid-row(220px 1fr, 0.5rem 0.5rem, transparent, 0.5rem, 0.75rem);
+      border: 1px dashed $border-color; border-radius: 0.5rem;
     }
-
-    .skeleton-cell {
-      height: 16px;
-      border-radius: 4px;
-    }
+    .skeleton-cell { height: 16px; border-radius: 4px; }
   }
-
-  .skeleton-box {
-    position: relative;
-    overflow: hidden;
-    background: lighten($bg-color-light, 4%);
-  }
+  .skeleton-box { position: relative; overflow: hidden; background: lighten($bg-color-light, 4%); }
   .skeleton-box::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0) 100%
-    );
+    content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0) 100%);
     animation: skeleton-shimmer 1.2s infinite;
   }
-  @keyframes skeleton-shimmer {
-    100% {
-      transform: translateX(100%);
-    }
-  }
+  @keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
 
-  /* Druk */
   @media print {
-    .btn,
-    .ngb-alert {
-      display: none !important;
-    }
-    .event-image-wrapper {
-      box-shadow: none;
-      border-radius: 0;
-    }
+    .btn, .ngb-alert { display: none !important; }
+    .event-image-wrapper { box-shadow: none; border-radius: 0; }
   }
 }

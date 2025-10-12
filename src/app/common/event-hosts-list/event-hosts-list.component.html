@@ -5,23 +5,81 @@
   </div>
   } @else if (errorSig()) {
   <div class="error">{{ errorSig() }}</div>
-  } @else if (!hasItems()) {
-  <div class="empty muted">
-    Brak zgłoszonych sesji na najbliższe wydarzenie.
+  } @else { @if (isFullSpan()) {
+  <div class="fullspan-wrapper">
+    @if (fullSpanImage()) {
+    <div class="fullspan-media">
+      <img
+        [src]="fullSpanImage()!"
+        [alt]="fullSpanTitle()"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+    }
+    <h3 class="section-title text-center">{{ fullSpanTitle() }}</h3>
+    <table class="table table-dark-style align-middle font-size-small w-100">
+      <tbody>
+        <tr>
+          <th scope="row">Salka:</th>
+          <td>{{ filterRoom() || "—" }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Godziny:</th>
+          <td>
+            {{ eventStart() || "00:00" | slice : 0 : 5 }} -
+            {{ eventEnd() || "23:59" | slice : 0 : 5 }}
+          </td>
+        </tr>
+        @if (fullSpanRequiresHosts()) {
+        <tr>
+          <th scope="row">Prowadzący:</th>
+          <td>
+            @if (fullSpanLeads().length) { @for (l of fullSpanLeads(); track
+            l.id; let last = $last) { @if (l.clickable) {
+            <button
+              class="btn btn-outline btn-sm"
+              (click)="openGmProfile(l.host, $event)"
+            >
+              {{ l.display }}
+            </button>
+            } @else {
+            <span>{{ l.display }}</span>
+            } @if (!last) {<span>, </span>} } } @else {
+            <span>—</span>
+            }
+          </td>
+        </tr>
+        }
+        @if (fullSpanDescription()) {
+        <tr>
+          <th scope="row">Opis:</th>
+          <td>
+            @let paragraphs = (fullSpanDescription() || '').split('\n'); @for
+            (paragraph of paragraphs; let i = $index; track i) { @if
+            (paragraph.trim().length) {
+            <div>{{ paragraph }}</div>
+            } }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
   </div>
-  } @else {
-
-  <!-- MOBILE (≤ sm): SWIPER -->
-  @if (isSmallScreen() && itemsSig().length) {
+  } @else if (!filteredItems().length) {
+  <div class="empty muted">
+    Brak zgłoszonych pozycji na najbliższe wydarzenie.
+  </div>
+  } @else { @if (isSmallScreen()) {
   <swiper-container
     class="mg-swiper"
     slides-per-view="auto"
     centered-slides="true"
     navigation="true"
     speed="500"
-    [attr.loop]="itemsSig().length > 1 ? 'true' : null"
+    [attr.loop]="filteredItems().length > 3 ? 'true' : null"
   >
-    @for (h of itemsSig(); track h.id) {
+    @for (h of filteredItems(); track h.id) {
     <swiper-slide>
       <article
         class="session-card card-dark is-swiper"
@@ -30,28 +88,35 @@
         tabindex="0"
       >
         <div class="content">
-          <h4 class="title-dark session-title">{{ h.title || "Sesja" }}</h4>
+          <h4 class="title-dark session-title">{{ h.title || "Pozycja" }}</h4>
 
-          @if (h.imageUrl) {
-          <div class="image-wrap">
+          <div class="image-wrap" [class.is-placeholder]="isPlaceholder(h)">
+            <span class="kind-row tag-badge {{ kindClass(h) }}">{{ kindLabel(h) }}</span>
             <img
-              [src]="h.imageUrl"
-              [alt]="h.title || 'Ilustracja sesji'"
+              [src]="h.imageUrl || '/ragnarok.avif'"
+              [alt]="h.title || 'Ilustracja'"
               loading="lazy"
               decoding="async"
             />
           </div>
-          }
 
+          @if (isSessionCard(h)) {
           <div class="meta-row">
             <span class="muted">System:</span>
             <span class="text-start">{{ h.system?.name || "—" }}</span>
           </div>
-
+          }
+          @if (filterRoom()) {
+          <div class="meta-row">
+            <span class="muted">Godziny:</span>
+            <span class="text-start">{{ timeRangeLabel(h) }}</span>
+          </div>
+          } @else {
           <div class="meta-row">
             <span class="muted">Salka:</span>
             <span class="text-start">{{ h.roomName || "—" }}</span>
           </div>
+          }
 
           <div class="meta-row">
             <span class="muted">Prowadzący:</span>
@@ -68,19 +133,26 @@
           </div>
 
           <div class="meta-row tags mt-3">
-            @if (h.playstyleTags.length) { @for (t of h.playstyleTags; track t)
-            {
+            @if (h.playstyleTags.length && isSessionCard(h)) { @for (t of
+            h.playstyleTags; track t) {
             <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
             } }
           </div>
 
+          @if (isSessionCard(h)) {
           <div class="triggers mt-2">
-            @if (h.triggersTop.length) { @for (tr of h.triggersTop; track tr) {
-            <span class="tag-badge violet">{{ tr }}</span>
-            } } @if (h.triggersExtraCount > 0) {
-            <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
+            @if (h.triggersTop.length || h.triggersExtraCount > 0) {
+              @for (tr of h.triggersTop; track tr) {
+                <span class="tag-badge violet">{{ tr }}</span>
+              }
+              @if (h.triggersExtraCount > 0) {
+                <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
+              }
+            } @else {
+              <span class="sr-only">Brak triggerów</span>
             }
           </div>
+          }
 
           @if (showSignup()) {
           <div class="actions mt-3" (click)="$event.stopPropagation()">
@@ -111,10 +183,8 @@
     }
   </swiper-container>
   } @else {
-
-  <!-- DESKTOP/TABLET: GRID -->
   <div class="sessions-grid">
-    @for (h of itemsSig(); track h.id) {
+    @for (h of filteredItems(); track h.id) {
     <article
       class="session-card card-dark"
       (click)="openDetails(h)"
@@ -122,28 +192,35 @@
       tabindex="0"
     >
       <div class="content">
-        <h4 class="title-dark session-title">{{ h.title || "Sesja" }}</h4>
+        <h4 class="title-dark session-title">{{ h.title || "Pozycja" }}</h4>
 
-        @if (h.imageUrl) {
-        <div class="image-wrap">
+        <div class="image-wrap" [class.is-placeholder]="isPlaceholder(h)">
+          <span class="kind-row tag-badge {{ kindClass(h) }}">{{ kindLabel(h) }}</span>
           <img
-            [src]="h.imageUrl"
-            [alt]="h.title || 'Ilustracja sesji'"
+            [src]="h.imageUrl || '/ragnarok.avif'"
+            [alt]="h.title || 'Ilustracja'"
             loading="lazy"
             decoding="async"
           />
         </div>
-        }
 
+        @if (isSessionCard(h)) {
         <div class="meta-row">
           <span class="muted">System:</span>
           <span class="text-start">{{ h.system?.name || "—" }}</span>
         </div>
-
+        }
+        @if (filterRoom()) {
+        <div class="meta-row">
+          <span class="muted">Godziny:</span>
+          <span class="text-start">{{ timeRangeLabel(h) }}</span>
+        </div>
+        } @else {
         <div class="meta-row">
           <span class="muted">Salka:</span>
           <span class="text-start">{{ h.roomName || "—" }}</span>
         </div>
+        }
 
         <div class="meta-row">
           <span class="muted">Prowadzący:</span>
@@ -160,18 +237,26 @@
         </div>
 
         <div class="meta-row tags mt-3">
-          @if (h.playstyleTags.length) { @for (t of h.playstyleTags; track t) {
+          @if (h.playstyleTags.length && isSessionCard(h)) { @for (t of
+          h.playstyleTags; track t) {
           <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
           } }
         </div>
 
+        @if (isSessionCard(h)) {
         <div class="triggers mt-2">
-          @if (h.triggersTop.length) { @for (tr of h.triggersTop; track tr) {
-          <span class="tag-badge violet">{{ tr }}</span>
-          } } @if (h.triggersExtraCount > 0) {
-          <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
+          @if (h.triggersTop.length || h.triggersExtraCount > 0) {
+            @for (tr of h.triggersTop; track tr) {
+              <span class="tag-badge violet">{{ tr }}</span>
+            }
+            @if (h.triggersExtraCount > 0) {
+              <span class="tag-badge muted">+{{ h.triggersExtraCount }}</span>
+            }
+          } @else {
+            <span class="sr-only">Brak triggerów</span>
           }
         </div>
+        }
 
         @if (showSignup()) {
         <div class="actions mt-3" (click)="$event.stopPropagation()">
@@ -200,5 +285,5 @@
     </article>
     }
   </div>
-  } }
+  } } }
 </div>
