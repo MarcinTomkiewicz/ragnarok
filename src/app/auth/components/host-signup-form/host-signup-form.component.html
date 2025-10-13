@@ -84,11 +84,16 @@
       }
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
+
         @if (event!.rooms.length > 1) {
           <div class="form-group">
             <label class="text-start">Salka</label>
             <div class="d-block" ngbDropdown>
-              <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle [disabled]="takenLoadingSignal() || allRoomsTaken()">
+              <button
+                type="button"
+                class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+                ngbDropdownToggle
+                [disabled]="takenLoadingSignal() || allRoomsTaken() || lockRoomSignal()">
                 {{ selectedRoomLabel() }}
               </button>
               <div ngbDropdownMenu class="dropdown-pane dropdown-list">
@@ -97,9 +102,9 @@
                     type="button"
                     class="dropdown-item"
                     [class.active]="form.value.roomName === room"
-                    [disabled]="isRoomTaken(room)"
+                    [disabled]="lockRoomSignal() || isRoomTaken(room)"
                     (click)="pickRoom(room)">
-                    {{ room }} @if (isRoomTaken(room)) { <span class="muted">&nbsp;— zajęta</span> }
+                    {{ room }} @if (!lockRoomSignal() && isRoomTaken(room)) { <span class="muted">&nbsp;— zajęta</span> }
                   </button>
                 } @if (!event!.rooms.length) {
                   <div class="dropdown-empty">Brak salek.</div>
@@ -212,10 +217,20 @@
                 <button type="button" class="btn btn-outline btn-sm" (click)="cancelDetailsEdit()">Anuluj edycję</button>
               }
               <button type="button" class="btn btn-outline-danger btn-sm" (click)="resign()">Zrezygnuj z prowadzenia</button>
-              <button type="submit" class="btn btn-primary btn-sm" [disabled]="(event!.rooms.length && allRoomsTaken()) || (event!.rooms.length > 1 && !form.value.roomName)">Zapisz zmiany</button>
+              <button
+                type="submit"
+                class="btn btn-primary btn-sm"
+                [disabled]="shouldButtonDisable()">
+                Zapisz zmiany
+              </button>
             </div>
           } @else {
-            <button type="submit" class="btn btn-primary btn-sm" [disabled]="(event!.rooms.length && allRoomsTaken()) || form.invalid">Zgłoś się</button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              [disabled]="shouldButtonDisable()">
+              Zgłoś się
+            </button>
           }
         </div>
       </form>

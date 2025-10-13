@@ -1,7 +1,18 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+  effect,
+} from '@angular/core';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { NgbAlertModule, NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbAlertModule,
+  NgbModal,
+  NgbModalModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
 
 import { SeoService } from '../../core/services/seo/seo.service';
@@ -9,12 +20,27 @@ import { EventService } from '../../core/services/event/event.service';
 import { ImageStorageService } from '../../core/services/backend/image-storage/image-storage.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 
-import { EventFull } from '../../core/interfaces/i-events';
-import { EventTag, EventTagLabel, AttractionKind, HostSignupScope, ParticipantSignupScope } from '../../core/enums/events';
+import { EventFull, EventRoomPlan } from '../../core/interfaces/i-events';
+import {
+  EventTag,
+  EventTagLabel,
+  AttractionKind,
+  HostSignupScope,
+  ParticipantSignupScope,
+} from '../../core/enums/events';
+import { RoomScheduleKind } from '../../core/enums/event-rooms';
 import { formatYmdLocal } from '../../core/utils/weekday-options';
 
 import { of, combineLatest, forkJoin } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
+import {
+  catchError,
+  distinctUntilChanged,
+  filter,
+  finalize,
+  map,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 
 import { EventHostsListComponent } from '../event-hosts-list/event-hosts-list.component';
 import { GmDetailsModalComponent } from '../gm-details-modal/gm-details-modal.component';
@@ -27,10 +53,23 @@ import { EventSignupPanelComponent } from '../event-signup-panel/event-signup-pa
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
 
+type SlotVM = {
+  start: string;
+  end: string;
+  kind: 'session' | 'discussion' | 'entertainment';
+};
+
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [NgbAlertModule, DatePipe, EventHostsListComponent, NgbModalModule, EventSignupPanelComponent, ParticipantsListComponent],
+  imports: [
+    NgbAlertModule,
+    DatePipe,
+    EventHostsListComponent,
+    NgbModalModule,
+    EventSignupPanelComponent,
+    ParticipantsListComponent,
+  ],
   templateUrl: './event-details.component.html',
   styleUrl: './event-details.component.scss',
 })
@@ -47,14 +86,14 @@ export class EventDetailsComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(AuthService);
 
-  HostSignupScope = HostSignupScope; // do szablonu
+  HostSignupScope = HostSignupScope;
 
   // --- Stan
   private readonly loading = signal(true);
   private readonly errorMessage = signal<string | null>(null);
   private readonly today = signal(formatYmdLocal(new Date()));
 
-  // user (computed z AuthService)
+  // user
   readonly currentUser = this.auth.user;
 
   // --- Sygnały
@@ -67,7 +106,6 @@ export class EventDetailsComponent {
   readonly occurrenceDate = computed<string | null>(() => {
     const ev = this.rawEventSig();
     if (!ev) return null;
-
     if (ev.singleDate) return ev.singleDate;
 
     const qd = this.queryDateSig();
@@ -80,7 +118,11 @@ export class EventDetailsComponent {
     const todayHits = this.events.listOccurrencesFE(ev, today, today);
     if (todayHits.length) return today;
 
-    const nexts = this.events.listOccurrencesFE(ev, today, addDaysIso(today, 365));
+    const nexts = this.events.listOccurrencesFE(
+      ev,
+      today,
+      addDaysIso(today, 365)
+    );
     return nexts.length ? nexts[0] : null;
   });
 
@@ -95,27 +137,85 @@ export class EventDetailsComponent {
 
   readonly eventId = computed(() => this.event()?.id ?? null);
 
-  // Pojemność przekazywana do dzieci (fallback dla całego eventu i sesji bez własnego limitu)
+  // Composite helpers
+  readonly isComposite = computed(
+    () => this.event()?.attractionType === AttractionKind.Composite
+  );
+  readonly rooms = computed<string[]>(() => this.event()?.rooms ?? []);
+
+  // wybrana salka (chipsy salek)
+  readonly selectedRoom = signal<string | null>(null);
+
+  // plan dla wybranej salki
+  readonly roomPlanForSelected = computed<EventRoomPlan | null>(() => {
+    const ev = this.event();
+    const r = this.selectedRoom();
+    if (!ev || !r) return null;
+    return (ev.roomPlans ?? []).find((p) => p.roomName === r) ?? null;
+  });
+
+  // Slots do debugowania (nie renderujemy chipów slotów, ale wyliczamy i logujemy)
+  private hhmm = (s?: string | null) => (s ?? '').slice(0, 5);
+  private mapPurposeToKind(
+    raw: any
+  ): 'session' | 'discussion' | 'entertainment' {
+    const v = String(raw ?? '')
+      .trim()
+      .toUpperCase();
+    if (v === 'SESSION' || v === 'SESJA') return 'session';
+    if (v === 'DISCUSSION' || v === 'DYSKUSJA') return 'discussion';
+    if (v === 'ENTERTAINMENT' || v === 'ROZRYWKA') return 'entertainment';
+    return 'session';
+  }
+
+  readonly slotsForSelectedRoom = computed<SlotVM[]>(() => {
+    const ev = this.event();
+    const plan = this.roomPlanForSelected();
+    if (!ev || !plan) return [];
+
+    if (plan.scheduleKind === RoomScheduleKind.FullSpan) {
+      const st = this.hhmm(ev.startTime) || '00:00';
+      const en = this.hhmm(ev.endTime) || '23:59';
+      const kind = this.mapPurposeToKind((plan as any).purpose);
+      return [{ start: st, end: en, kind }];
+    }
+
+    if (plan.scheduleKind === RoomScheduleKind.Interval) {
+      // INTERVAL: mamy cykliczne sloty co X. Jeśli backend nie daje gotowych slots,
+      // logujemy sam plan – lista kart i tak wczyta się po hostach.
+      const st = this.hhmm(ev.startTime) || '00:00';
+      const en = this.hhmm(ev.endTime) || '23:59';
+      const kind = this.mapPurposeToKind((plan as any).purpose);
+      return [{ start: st, end: en, kind }];
+    }
+
+    // Explicit slots
+    const slots = (plan.slots ?? []).map((s) => {
+      const purpose = (s as any).purpose ?? (s as any).attractionKind ?? null;
+      return {
+        start: this.hhmm(s.startTime),
+        end: this.hhmm(s.endTime),
+        kind: this.mapPurposeToKind(purpose),
+      };
+    });
+    return slots.sort((a, b) => a.start.localeCompare(b.start));
+  });
+
+  // Capacity
   readonly wholeCapacity = computed<number | null>(() => {
-  const raw = this.event()?.wholeCapacity ?? null;
-  return raw === 0 ? null : raw;          // 0 => bez limitu (null)
-});
+    const raw = this.event()?.wholeCapacity ?? null;
+    return raw === 0 ? null : raw;
+  });
+  readonly wholeCapacityNormalized = computed<number | null>(() => {
+    const cap = this.event()?.wholeCapacity ?? null;
+    return cap != null && cap <= 0 ? null : cap;
+  });
+  readonly sessionDefaultCapacity = computed<number | null>(() => {
+    const raw = this.event()?.sessionCapacity ?? null;
+    return raw && raw > 0 ? raw : null;
+  });
 
-// 0 lub null -> null (brak limitu)
-readonly wholeCapacityNormalized = computed<number | null>(() => {
-  const cap = this.event()?.wholeCapacity ?? null;
-  return cap != null && cap <= 0 ? null : cap;
-});
-
-
-// Domyślna pojemność sesji (fallback dla kart sesji):
-readonly sessionDefaultCapacity = computed<number | null>(() => {
-  const raw = this.event()?.sessionCapacity ?? null;
-  // tu 0 raczej nie wystąpi (masz check 1..5), ale gdyby kiedyś:
-  return raw && raw > 0 ? raw : null;
-});
-
-  // Tryb zapisów (z backendu) + bezpieczny fallback gdyby pole było puste
+  // Participant signup scope
   readonly participantSignup = computed<ParticipantSignupScope>(() => {
     const ev = this.event();
     if (!ev) return ParticipantSignupScope.Whole;
@@ -126,17 +226,18 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
         : ParticipantSignupScope.Whole)
     );
   });
-
   readonly showSessionSignup = computed<boolean>(() => {
     const s = this.participantSignup();
-    return s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both;
-    }
-  );
+    return (
+      s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both
+    );
+  });
   readonly showWholeSignup = computed<boolean>(() => {
     const s = this.participantSignup();
-    return s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both;
-    }
-  );
+    return (
+      s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both
+    );
+  });
 
   private readonly coverSizes = [
     { w: 480, h: 320 },
@@ -150,8 +251,13 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     const name = this.event()?.name ?? '';
     const mid = this.coverSizes[1];
     const src = this.images.getOptimizedPublicUrl(path, mid.w, mid.h);
-    const srcset = this.coverSizes.map(s => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`).join(', ');
-    const sizesAttr = '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
+    const srcset = this.coverSizes
+      .map(
+        (s) => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`
+      )
+      .join(', ');
+    const sizesAttr =
+      '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
     return { src, srcset, sizesAttr, alt: name };
   });
 
@@ -181,7 +287,7 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     }));
   });
 
-  // „Następne spotkanie” (dla niesesyjnych)
+  // „Niesesyjne” dla prostych wydarzeń
   readonly nextTitle = computed(() => {
     const h = this.nonSessionHostsSig()?.find((x) => !!x.title?.trim());
     return h?.title?.trim() || '—';
@@ -194,7 +300,11 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     this.nonSessionHostsSig()?.map((h) => ({
       id: h.id,
       clickable: h.role === HostSignupScope.Staff,
-      display: h.displayName || (h.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący'),
+      display:
+        h.displayName ||
+        (h.role === HostSignupScope.Staff
+          ? 'Prowadzący (staff)'
+          : 'Prowadzący'),
       host: h,
     }))
   );
@@ -211,7 +321,9 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     loading: this.loading(),
     error: this.errorMessage(),
     event: this.event(),
-    isArchive: !!(this.event()?.singleDate && this.event()!.singleDate! < this.today()),
+    isArchive: !!(
+      this.event()?.singleDate && this.event()!.singleDate! < this.today()
+    ),
     cover: this.cover(),
     timeRangeLabel: this.timeRangeLabel(),
     feeLabel: this.setEventFee(this.event()?.entryFeePln ?? 0),
@@ -262,7 +374,9 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
           this.events.getBySlug(slug).pipe(
             catchError((err) => {
               console.error('Błąd przy pobieraniu wydarzenia:', err);
-              this.errorMessage.set('Wystąpił błąd podczas pobierania danych wydarzenia.');
+              this.errorMessage.set(
+                'Wystąpił błąd podczas pobierania danych wydarzenia.'
+              );
               return of(null);
             }),
             finalize(() => {
@@ -276,24 +390,38 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     // --- dociąg „niesesyjnych” hostów dla najbliższej daty
     const eventId$ = toObservable(this.eventId);
     const date$ = toObservable(this.occurrenceDate);
-    const kind$ = toObservable(this.event).pipe(map((ev) => ev?.attractionType));
+    const kind$ = toObservable(this.event).pipe(
+      map((ev) => ev?.attractionType)
+    );
 
     combineLatest([eventId$, date$, kind$])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         switchMap(([id, date, kind]) => {
-          if (!id || !date || kind === AttractionKind.Session) return of([] as HostCardVM[]);
-          return this.hostsSrv.getHostsWithSystems(id, date).pipe(catchError(() => of([] as HostCardVM[])));
+          if (!id || !date || kind === AttractionKind.Session)
+            return of([] as HostCardVM[]);
+          return this.hostsSrv
+            .getHostsWithSystems(id, date)
+            .pipe(catchError(() => of([] as HostCardVM[])));
         }),
         switchMap((rows: any[]) => {
           if (!rows?.length) return of([] as HostCardVM[]);
           const uniqueIds = Array.from(new Set(rows.map((r) => r.hostUserId)));
-          return forkJoin(uniqueIds.map((uid) => this.gmDirectory.getGmById(uid))).pipe(
+          return forkJoin(
+            uniqueIds.map((uid) => this.gmDirectory.getGmById(uid))
+          ).pipe(
             map((gms) => {
-              const byId = new Map(gms.filter(Boolean).map((gm) => [gm!.userId, gm!]));
+              const byId = new Map(
+                gms.filter(Boolean).map((gm) => [gm!.userId, gm!])
+              );
               return rows.map((r) => {
-                const gm = r.role === HostSignupScope.Staff ? byId.get(r.hostUserId) ?? null : null;
-                const imageUrl = r.imagePath ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512) : null;
+                const gm =
+                  r.role === HostSignupScope.Staff
+                    ? byId.get(r.hostUserId) ?? null
+                    : null;
+                const imageUrl = r.imagePath
+                  ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512)
+                  : null;
                 return {
                   ...r,
                   gm,
@@ -314,7 +442,11 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
     toObservable(this.event)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        distinctUntilChanged((a, b) => (a?.id ?? '') === (b?.id ?? '') && (a?.singleDate ?? '') === (b?.singleDate ?? '')),
+        distinctUntilChanged(
+          (a, b) =>
+            (a?.id ?? '') === (b?.id ?? '') &&
+            (a?.singleDate ?? '') === (b?.singleDate ?? '')
+        ),
         tap((ev) => {
           if (!ev) return;
           const d = ev.singleDate ? ` – ${ev.singleDate}` : '';
@@ -322,6 +454,17 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
         })
       )
       .subscribe();
+
+    // --- inicjalny wybór salki (chip salek; BEZ chipów godzin)
+    toObservable(this.event)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((ev) => {
+        if (!ev || !this.isComposite()) return;
+        const qp = this.route.snapshot.queryParamMap;
+        const r = qp.get('room');
+        const first = (ev.rooms ?? [])[0] ?? null;
+        this.selectedRoom.set(r ?? first);
+      });
   }
 
   openFacebook(link?: string) {
@@ -332,7 +475,11 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
   openGmProfile(h: HostCardVM, e: MouseEvent) {
     e.stopPropagation();
     if (h.role !== HostSignupScope.Staff) return;
-    const ref = this.modal.open(GmDetailsModalComponent, { size: 'lg', centered: true, scrollable: true });
+    const ref = this.modal.open(GmDetailsModalComponent, {
+      size: 'lg',
+      centered: true,
+      scrollable: true,
+    });
     if (h.gm) {
       ref.componentInstance.gm = h.gm;
       return;
@@ -344,6 +491,14 @@ readonly sessionDefaultCapacity = computed<number | null>(() => {
 
   setEventFee(fee: number): string {
     return fee && fee > 0 ? `${fee} zł` : 'Bezpłatne';
+  }
+  longDescParagraphs(): string[] {
+    const v = this.vm?.();
+    const raw = v?.event?.longDescription ?? '';   
+    return raw.split(/\n/);
+  }
+  log(data: any): any {
+    console.log(data);
   }
 }
 

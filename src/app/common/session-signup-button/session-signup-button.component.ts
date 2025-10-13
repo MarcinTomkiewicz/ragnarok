@@ -9,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { combineLatest, map, switchMap } from 'rxjs';
+import { combineLatest, map, of, switchMap } from 'rxjs';
 
 import { IUser } from '../../core/interfaces/i-user';
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
@@ -17,75 +17,77 @@ import { EventParticipantsService } from '../../core/services/event-participant/
 import { ToastService } from '../../core/services/toast/toast.service';
 import { AuthService } from '../../core/services/auth/auth.service';
 
+type Scope = { hostId?: string; roomName?: string };
+
 @Component({
   selector: 'app-session-signup-button',
   standalone: true,
-  // hard stop: nic z tego komponentu nie bąbelkuje do karty
   host: {
     '(click)': '$event.stopPropagation()',
     '(mousedown)': '$event.stopPropagation()',
     '(pointerdown)': '$event.stopPropagation()',
   },
   template: `
-    @if (isLoggedIn()) {
-      <button
-        type="button"
-        class="btn btn-success btn-sm"
-        [disabled]="isPending() || isFull()"
-        (click)="onLoggedClick($event)"
-        (mousedown)="$event.stopPropagation()"
-        (pointerdown)="$event.stopPropagation()"
-      >
-        @if (isPending()) { Zapisywanie… }
-        @else if (isFull()) { Pełne }
-        @else { Dołącz }
-      </button>
+    @if (isValidTarget()) { @if (isLoggedIn()) {
+    <button
+      type="button"
+      class="btn btn-success btn-sm"
+      [disabled]="isPending() || isFull()"
+      (click)="onLoggedClick($event)"
+      (mousedown)="$event.stopPropagation()"
+      (pointerdown)="$event.stopPropagation()"
+    >
+      @if (isPending()) { Zapisywanie… } @else if (isFull()) { Pełne } @else {
+      Dołącz }
+    </button>
     } @else {
+    <button
+      type="button"
+      class="btn btn-outline btn-sm"
+      [disabled]="isFull()"
+      (click)="toggleForm($event)"
+      (mousedown)="$event.stopPropagation()"
+      (pointerdown)="$event.stopPropagation()"
+    >
+      @if (isFull()) { Pełne } @else { Dołącz (gość) }
+    </button>
+
+    @if (isFormOpen() && !isFull()) {
+    <form class="form-group mt-2">
+      <input
+        class="form-control"
+        placeholder="Imię/pseudonim"
+        [value]="guestName()"
+        (input)="onGuestNameInput($event)"
+        (click)="$event.stopPropagation()"
+        (mousedown)="$event.stopPropagation()"
+        (pointerdown)="$event.stopPropagation()"
+        [disabled]="isPending()"
+      />
+      <input
+        class="form-control form-control-input mt-1"
+        placeholder="Telefon"
+        [value]="guestPhone()"
+        (input)="onGuestPhoneInput($event)"
+        (click)="$event.stopPropagation()"
+        (mousedown)="$event.stopPropagation()"
+        (pointerdown)="$event.stopPropagation()"
+        [disabled]="isPending()"
+      />
       <button
         type="button"
-        class="btn btn-outline btn-sm"
-        [disabled]="isFull()"
-        (click)="toggleForm($event)"
+        class="btn btn-primary btn-sm mt-1"
+        [disabled]="!canSubmitGuestForm() || isPending()"
+        (click)="onGuestConfirmClick($event)"
         (mousedown)="$event.stopPropagation()"
         (pointerdown)="$event.stopPropagation()"
       >
-        @if (isFull()) { Pełne } @else { Dołącz (gość) }
+        @if (isPending()) { Zapisywanie… } @else { Potwierdź }
       </button>
-
-      @if (isFormOpen() && !isFull()) {
-        <form class="form-group mt-2">
-          <input
-            class="form-control"
-            placeholder="Imię/pseudonim"
-            [value]="guestName()"
-            (input)="onGuestNameInput($event)"
-            (click)="$event.stopPropagation()"
-            (mousedown)="$event.stopPropagation()"
-            (pointerdown)="$event.stopPropagation()"
-            [disabled]="isPending()"
-          />
-          <input
-            class="form-control form-control-input mt-1"
-            placeholder="Telefon"
-            [value]="guestPhone()"
-            (input)="onGuestPhoneInput($event)"
-            (click)="$event.stopPropagation()"
-            (mousedown)="$event.stopPropagation()"
-            (pointerdown)="$event.stopPropagation()"
-            [disabled]="isPending()"
-          />
-          <button
-            type="button"
-            class="btn btn-primary btn-sm mt-1"
-            [disabled]="!canSubmitGuestForm() || isPending()"
-            (click)="onGuestConfirmClick($event)"
-            (mousedown)="$event.stopPropagation()"
-            (pointerdown)="$event.stopPropagation()"
-          >
-            @if (isPending()) { Zapisywanie… } @else { Potwierdź }
-          </button>
-        </form>
-      }
+    </form>
+    } } } @else {
+    <!-- jeśli nie podano hostId ani roomName — nic nie renderujemy -->
+    <span class="sr-only">Brak celu zapisu</span>
     }
 
     <ng-template #signupSuccessToast>
@@ -105,17 +107,27 @@ export class SessionSignupButtonComponent {
   // wymagane
   eventId = input.required<string>();
   dateIso = input.required<string>();
-  hostId = input.required<string>();
   currentUser = input<IUser | null>(null);
 
-  // NOWE: limit miejsc (0 lub null => brak limitu)
+  /**
+   * Cel zapisu:
+   * - hostId (dla kart/slotów),
+   * - roomName (dla FullSpan).
+   * Min. jeden z nich musi być ustawiony.
+   */
+  hostId = input<string | null>(null);
+  roomName = input<string | null>(null);
+
+  // limit miejsc (0 => bez limitu, null => nie pokazuj licznika / brak limitu)
   capacity = input<number | null>(null);
 
   signed = output<IEventParticipant>();
   error = output<string>();
 
-  readonly signupSuccessToast = viewChild<TemplateRef<unknown>>('signupSuccessToast');
-  readonly signupErrorToast   = viewChild<TemplateRef<unknown>>('signupErrorToast');
+  readonly signupSuccessToast =
+    viewChild<TemplateRef<unknown>>('signupSuccessToast');
+  readonly signupErrorToast =
+    viewChild<TemplateRef<unknown>>('signupErrorToast');
 
   // auth.user to signal — wywołujemy!
   private readonly effectiveUser = computed<IUser | null>(() => {
@@ -134,24 +146,41 @@ export class SessionSignupButtonComponent {
   // odświeżenie lokalnego licznika po udanym zapisie
   private readonly refreshTick = signal(0);
 
-  // ile osób już zapisanych na tę sesję
+  // walidacja celu zapisu: hostId XOR roomName
+  isValidTarget = computed(() => {
+    const h = (this.hostId() ?? '').trim();
+    const r = (this.roomName() ?? '').trim();
+    return (h && !r) || (!h && r);
+  });
+
+  private targetScope = computed<Scope | null>(() => {
+    if (!this.isValidTarget()) return null;
+    const h = (this.hostId() ?? '').trim();
+    const r = (this.roomName() ?? '').trim();
+    return h ? { hostId: h } : { roomName: r };
+  });
+
   private readonly occupiedCount = toSignal(
     combineLatest([
       toObservable(this.eventId),
       toObservable(this.dateIso),
-      toObservable(this.hostId),
+      toObservable(this.targetScope),
       toObservable(this.refreshTick),
     ]).pipe(
-      switchMap(([eventId, dateIso, hostId]) =>
-        this.participantsService
-          .listForOccurrence(eventId, dateIso, { hostId })
-          .pipe(map(rows => rows.length))
-      )
+      switchMap(([eventId, dateIso, scope]) => {
+        if (!scope) return of(0);
+        return this.participantsService
+          .listForOccurrence(eventId, dateIso, scope)
+          .pipe(map((rows) => rows.length));
+      })
     ),
-    { initialValue: 0 }
+    {
+      initialValue: 0,
+      requireSync: false,
+    } as const
   );
 
-  // czy sesja jest pełna wg capacity
+  // czy pełne wg capacity
   isFull = computed(() => {
     const cap = this.capacity();
     if (cap == null || cap <= 0) return false; // brak limitu
@@ -160,7 +189,7 @@ export class SessionSignupButtonComponent {
 
   toggleForm(e: Event) {
     e.stopPropagation();
-    if (this.isFull()) return; // nic nie rób, jeśli pełne
+    if (!this.isValidTarget() || this.isFull()) return;
     this.isFormOpen.set(!this.isFormOpen());
   }
 
@@ -182,41 +211,57 @@ export class SessionSignupButtonComponent {
   private showSuccessToast(header: string) {
     const tpl = this.signupSuccessToast();
     if (tpl) {
-      this.toastService.show({ template: tpl, classname: 'bg-success text-white', header });
+      this.toastService.show({
+        template: tpl,
+        classname: 'bg-success text-white',
+        header,
+      });
     }
   }
   private showErrorToast(header: string) {
     const tpl = this.signupErrorToast();
     if (tpl) {
-      this.toastService.show({ template: tpl, classname: 'bg-danger text-white', header });
+      this.toastService.show({
+        template: tpl,
+        classname: 'bg-danger text-white',
+        header,
+      });
     }
   }
 
-  // jawne stopPropagation + prosty log do weryfikacji
   onLoggedClick(e: Event) {
     e.stopPropagation();
-    if (this.isFull() || this.isPending()) return;
+    if (!this.isValidTarget() || this.isFull() || this.isPending()) return;
     this.signupAsLoggedUser();
   }
   onGuestConfirmClick(e: Event) {
     e.stopPropagation();
-    if (this.isFull() || this.isPending() || !this.canSubmitGuestForm()) return;
+    if (
+      !this.isValidTarget() ||
+      this.isFull() ||
+      this.isPending() ||
+      !this.canSubmitGuestForm()
+    )
+      return;
     this.signupAsGuest();
   }
 
   private signupAsLoggedUser() {
+    const scope = this.targetScope();
+    if (!scope) return;
     this.isPending.set(true);
+
     this.participantsService
       .createForUser({
         eventId: this.eventId(),
         occurrenceDate: this.dateIso(),
-        hostId: this.hostId(),
-      })
+        ...scope, // hostId LUB roomName
+      } as any)
       .subscribe({
         next: (participant) => {
           this.isPending.set(false);
           this.signed.emit(participant);
-          this.refreshTick.set(this.refreshTick() + 1); // odśwież licznik
+          this.refreshTick.set(this.refreshTick() + 1);
           this.showSuccessToast('Zapisano na sesję');
         },
         error: (err) => {
@@ -229,15 +274,18 @@ export class SessionSignupButtonComponent {
   }
 
   private signupAsGuest() {
+    const scope = this.targetScope();
+    if (!scope) return;
     this.isPending.set(true);
+
     this.participantsService
       .createForGuest({
         eventId: this.eventId(),
         occurrenceDate: this.dateIso(),
-        hostId: this.hostId(),
         guestName: this.guestName().trim(),
         guestPhone: this.guestPhone().trim(),
-      })
+        ...scope, // hostId LUB roomName
+      } as any)
       .subscribe({
         next: (participant) => {
           this.isPending.set(false);
@@ -245,7 +293,7 @@ export class SessionSignupButtonComponent {
           this.guestPhone.set('');
           this.isFormOpen.set(false);
           this.signed.emit(participant);
-          this.refreshTick.set(this.refreshTick() + 1); // odśwież licznik
+          this.refreshTick.set(this.refreshTick() + 1);
           this.showSuccessToast('Zapisano na sesję');
         },
         error: (err) => {

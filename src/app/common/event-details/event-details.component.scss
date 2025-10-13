@@ -25,7 +25,6 @@
     }
   }
 
-  /* Okładka */
   .event-image-wrapper {
     width: 100%;
     max-width: 768px;
@@ -40,7 +39,6 @@
       aspect-ratio: 16 / 10;
     }
   }
-
   .event-image {
     width: 100%;
     height: 100%;
@@ -48,7 +46,6 @@
     object-fit: cover;
   }
 
-  /* Tytuł i opis */
   .section-title {
     margin: 0.5rem 0 0.25rem;
     text-align: center;
@@ -62,8 +59,11 @@
     text-align: left;
 
     .event-paragraph {
-      margin: 0 0 1rem;
-      line-height: 1.65;
+      margin: 0 0 0.5rem;
+      line-height: 1.25;
+    }
+    .empty:not(:last-of-type) {
+      height: 1rem;
     }
   }
 
@@ -91,12 +91,57 @@
     }
   }
 
-  /* Rooms grid (chips) */
   .rooms-grid {
     @include mg-grid(4);
     gap: 0.5rem;
     margin-top: 0;
     width: min-content;
+  }
+
+  /* ===== Composite UI ===== */
+  .rooms-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 0.25rem 0 0.5rem;
+    .btn.active {
+      border-color: var(--primary, #7a5af8);
+    }
+  }
+  .room-schedule {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .slot-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .slot-kind-badge {
+      font-size: 0.8em;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.35rem;
+      opacity: 0.95;
+      &.violet {
+        background: #6f42c1;
+        color: #fff;
+      }
+      &.gray {
+        background: #666;
+        color: #fff;
+      }
+      &.golden {
+        background: #c6a645;
+        color: #1b1b1b;
+      }
+    }
   }
 
   /* Skeleton loader */
@@ -105,7 +150,6 @@
     height: 100%;
     border-radius: inherit;
   }
-
   .skeleton-table {
     @include data-grid(0.5rem);
     width: 100%;
@@ -123,13 +167,11 @@
       border: 1px dashed $border-color;
       border-radius: 0.5rem;
     }
-
     .skeleton-cell {
       height: 16px;
       border-radius: 4px;
     }
   }
-
   .skeleton-box {
     position: relative;
     overflow: hidden;
@@ -154,7 +196,6 @@
     }
   }
 
-  /* Druk */
   @media print {
     .btn,
     .ngb-alert {
