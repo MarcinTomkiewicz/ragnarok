@@ -52,6 +52,7 @@ import { AuthService } from '../../core/services/auth/auth.service';
 import { EventSignupPanelComponent } from '../event-signup-panel/event-signup-panel.component';
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
+import { LinkifyPipe } from '../../core/pipes/linkify.pipe';
 
 type SlotVM = {
   start: string;
@@ -69,6 +70,7 @@ type SlotVM = {
     NgbModalModule,
     EventSignupPanelComponent,
     ParticipantsListComponent,
+    LinkifyPipe,
   ],
   templateUrl: './event-details.component.html',
   styleUrl: './event-details.component.scss',

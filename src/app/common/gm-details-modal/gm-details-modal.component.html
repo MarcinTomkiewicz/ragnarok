@@ -69,7 +69,7 @@
     <div class="card card-dark gm-bottom-row">
       <h5>Doświadczenie</h5>
       @for (experience of experienceParagraphs; track $index) {
-      <div
+      <div class="experience"
         [innerHTML]="experience | linkify"
         [class.empty]="!experience.trim()"
       ></div>
