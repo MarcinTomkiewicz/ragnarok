@@ -2,13 +2,19 @@
 @import "abstracts/mixins";
 
 .hosts-list-section {
-  .error { color: $danger-color; }
-  .empty { text-align: center; padding: 1rem 0; }
+  .error {
+    color: $danger-color;
+  }
+  .empty {
+    text-align: center;
+    padding: 1rem 0;
+  }
   width: 100%;
 
   .skeleton-grid {
     @include mg-grid(4);
     gap: 1rem;
+
     .skeleton-card {
       height: 240px;
       border-radius: $border-radius;
@@ -25,6 +31,7 @@
 
   .fullspan-wrapper {
     width: 100%;
+
     .fullspan-media {
       width: 100%;
       max-width: 768px;
@@ -34,16 +41,48 @@
       box-shadow: $card-shadow;
       background: $bg-color-light;
       aspect-ratio: 16/10;
-      img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
     }
-    .section-title { margin: 0.5rem 0 0.25rem; }
+
+    .section-title {
+      margin: 0.5rem 0 0.25rem;
+    }
+
     .table.table-dark-style {
       margin-top: 0.5rem;
       width: 100%;
       table-layout: fixed;
-      th, td { text-align: left; white-space: normal; overflow-wrap: anywhere; }
-      & tbody tr > th:first-child { width: 40%; }
-      & tbody tr > td:last-child { width: 60%; }
+
+      th,
+      td {
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        vertical-align: top;
+      }
+
+      & tbody tr > th:first-child {
+        width: 40%;
+      }
+      & tbody tr > td:last-child {
+        width: 60%;
+      }
+
+      .fullspan-signups {
+        .actions {
+          @include flex-wrapper(column, flex-start, flex-start);
+          gap: 0.5rem;
+        }
+        .participants {
+          @include flex-wrapper(column, flex-start, flex-start);
+        }
+      }
     }
   }
 
@@ -89,13 +128,15 @@
 
       &.is-placeholder {
         background: transparent;
-        img { object-fit: contain; }
+        img {
+          object-fit: contain;
+        }
       }
 
       .kind-row {
         position: absolute;
-        top: .5rem;
-        right: .5rem;
+        top: 0.5rem;
+        right: 0.5rem;
         z-index: 1;
         pointer-events: none;
       }
@@ -105,6 +146,7 @@
       display: flex;
       flex-direction: column;
       flex: 1;
+      min-height: 100%;
       padding: 0.75rem 0.9rem;
       gap: 0.25rem;
 
@@ -121,7 +163,10 @@
         align-items: baseline;
         font-size: 0.95rem;
         flex-wrap: wrap;
-        .muted { color: $secondary-text-color; }
+
+        .muted {
+          color: $secondary-text-color;
+        }
       }
 
       .tags,
@@ -132,12 +177,25 @@
         gap: 0.35rem;
         min-height: 1.6rem;
       }
+
+      .signup-area {
+        margin-top: auto;
+        @include flex-wrapper(column, center, space-between);
+
+        .actions {
+          @include flex-wrapper(column, center, center);
+        }
+      }
     }
   }
 
   @keyframes shimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: -100% 0; }
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
   }
 }
 
@@ -149,11 +207,13 @@
   --swiper-navigation-color: $primary-color;
   --swiper-navigation-size: 18px;
 }
+
 .mg-swiper swiper-slide {
   width: 310px;
   display: flex;
   justify-content: center;
 }
+
 .session-card.is-swiper {
   width: 320px;
   max-width: 320px;

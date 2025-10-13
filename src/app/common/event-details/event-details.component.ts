@@ -1,7 +1,18 @@
-import { Component, computed, DestroyRef, inject, signal, effect } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+  effect,
+} from '@angular/core';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { NgbAlertModule, NgbModal, NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbAlertModule,
+  NgbModal,
+  NgbModalModule,
+} from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
 
 import { SeoService } from '../../core/services/seo/seo.service';
@@ -10,12 +21,26 @@ import { ImageStorageService } from '../../core/services/backend/image-storage/i
 import { PlatformService } from '../../core/services/platform/platform.service';
 
 import { EventFull, EventRoomPlan } from '../../core/interfaces/i-events';
-import { EventTag, EventTagLabel, AttractionKind, HostSignupScope, ParticipantSignupScope } from '../../core/enums/events';
+import {
+  EventTag,
+  EventTagLabel,
+  AttractionKind,
+  HostSignupScope,
+  ParticipantSignupScope,
+} from '../../core/enums/events';
 import { RoomScheduleKind } from '../../core/enums/event-rooms';
 import { formatYmdLocal } from '../../core/utils/weekday-options';
 
 import { of, combineLatest, forkJoin } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, finalize, map, switchMap, tap } from 'rxjs/operators';
+import {
+  catchError,
+  distinctUntilChanged,
+  filter,
+  finalize,
+  map,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 
 import { EventHostsListComponent } from '../event-hosts-list/event-hosts-list.component';
 import { GmDetailsModalComponent } from '../gm-details-modal/gm-details-modal.component';
@@ -28,12 +53,23 @@ import { EventSignupPanelComponent } from '../event-signup-panel/event-signup-pa
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
 
-type SlotVM = { start: string; end: string; kind: 'session' | 'discussion' | 'entertainment' };
+type SlotVM = {
+  start: string;
+  end: string;
+  kind: 'session' | 'discussion' | 'entertainment';
+};
 
 @Component({
   selector: 'app-event-details',
   standalone: true,
-  imports: [NgbAlertModule, DatePipe, EventHostsListComponent, NgbModalModule, EventSignupPanelComponent, ParticipantsListComponent],
+  imports: [
+    NgbAlertModule,
+    DatePipe,
+    EventHostsListComponent,
+    NgbModalModule,
+    EventSignupPanelComponent,
+    ParticipantsListComponent,
+  ],
   templateUrl: './event-details.component.html',
   styleUrl: './event-details.component.scss',
 })
@@ -82,7 +118,11 @@ export class EventDetailsComponent {
     const todayHits = this.events.listOccurrencesFE(ev, today, today);
     if (todayHits.length) return today;
 
-    const nexts = this.events.listOccurrencesFE(ev, today, addDaysIso(today, 365));
+    const nexts = this.events.listOccurrencesFE(
+      ev,
+      today,
+      addDaysIso(today, 365)
+    );
     return nexts.length ? nexts[0] : null;
   });
 
@@ -98,7 +138,9 @@ export class EventDetailsComponent {
   readonly eventId = computed(() => this.event()?.id ?? null);
 
   // Composite helpers
-  readonly isComposite = computed(() => this.event()?.attractionType === AttractionKind.Composite);
+  readonly isComposite = computed(
+    () => this.event()?.attractionType === AttractionKind.Composite
+  );
   readonly rooms = computed<string[]>(() => this.event()?.rooms ?? []);
 
   // wybrana salka (chipsy salek)
@@ -114,8 +156,12 @@ export class EventDetailsComponent {
 
   // Slots do debugowania (nie renderujemy chipów slotów, ale wyliczamy i logujemy)
   private hhmm = (s?: string | null) => (s ?? '').slice(0, 5);
-  private mapPurposeToKind(raw: any): 'session' | 'discussion' | 'entertainment' {
-    const v = String(raw ?? '').trim().toUpperCase();
+  private mapPurposeToKind(
+    raw: any
+  ): 'session' | 'discussion' | 'entertainment' {
+    const v = String(raw ?? '')
+      .trim()
+      .toUpperCase();
     if (v === 'SESSION' || v === 'SESJA') return 'session';
     if (v === 'DISCUSSION' || v === 'DYSKUSJA') return 'discussion';
     if (v === 'ENTERTAINMENT' || v === 'ROZRYWKA') return 'entertainment';
@@ -146,7 +192,11 @@ export class EventDetailsComponent {
     // Explicit slots
     const slots = (plan.slots ?? []).map((s) => {
       const purpose = (s as any).purpose ?? (s as any).attractionKind ?? null;
-      return { start: this.hhmm(s.startTime), end: this.hhmm(s.endTime), kind: this.mapPurposeToKind(purpose) };
+      return {
+        start: this.hhmm(s.startTime),
+        end: this.hhmm(s.endTime),
+        kind: this.mapPurposeToKind(purpose),
+      };
     });
     return slots.sort((a, b) => a.start.localeCompare(b.start));
   });
@@ -171,16 +221,22 @@ export class EventDetailsComponent {
     if (!ev) return ParticipantSignupScope.Whole;
     return (
       ev.participantSignup ??
-      (ev.attractionType === AttractionKind.Session ? ParticipantSignupScope.Session : ParticipantSignupScope.Whole)
+      (ev.attractionType === AttractionKind.Session
+        ? ParticipantSignupScope.Session
+        : ParticipantSignupScope.Whole)
     );
   });
   readonly showSessionSignup = computed<boolean>(() => {
     const s = this.participantSignup();
-    return s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both;
+    return (
+      s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both
+    );
   });
   readonly showWholeSignup = computed<boolean>(() => {
     const s = this.participantSignup();
-    return s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both;
+    return (
+      s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both
+    );
   });
 
   private readonly coverSizes = [
@@ -195,8 +251,13 @@ export class EventDetailsComponent {
     const name = this.event()?.name ?? '';
     const mid = this.coverSizes[1];
     const src = this.images.getOptimizedPublicUrl(path, mid.w, mid.h);
-    const srcset = this.coverSizes.map((s) => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`).join(', ');
-    const sizesAttr = '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
+    const srcset = this.coverSizes
+      .map(
+        (s) => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`
+      )
+      .join(', ');
+    const sizesAttr =
+      '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
     return { src, srcset, sizesAttr, alt: name };
   });
 
@@ -239,7 +300,11 @@ export class EventDetailsComponent {
     this.nonSessionHostsSig()?.map((h) => ({
       id: h.id,
       clickable: h.role === HostSignupScope.Staff,
-      display: h.displayName || (h.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący'),
+      display:
+        h.displayName ||
+        (h.role === HostSignupScope.Staff
+          ? 'Prowadzący (staff)'
+          : 'Prowadzący'),
       host: h,
     }))
   );
@@ -256,7 +321,9 @@ export class EventDetailsComponent {
     loading: this.loading(),
     error: this.errorMessage(),
     event: this.event(),
-    isArchive: !!(this.event()?.singleDate && this.event()!.singleDate! < this.today()),
+    isArchive: !!(
+      this.event()?.singleDate && this.event()!.singleDate! < this.today()
+    ),
     cover: this.cover(),
     timeRangeLabel: this.timeRangeLabel(),
     feeLabel: this.setEventFee(this.event()?.entryFeePln ?? 0),
@@ -307,7 +374,9 @@ export class EventDetailsComponent {
           this.events.getBySlug(slug).pipe(
             catchError((err) => {
               console.error('Błąd przy pobieraniu wydarzenia:', err);
-              this.errorMessage.set('Wystąpił błąd podczas pobierania danych wydarzenia.');
+              this.errorMessage.set(
+                'Wystąpił błąd podczas pobierania danych wydarzenia.'
+              );
               return of(null);
             }),
             finalize(() => {
@@ -321,24 +390,38 @@ export class EventDetailsComponent {
     // --- dociąg „niesesyjnych” hostów dla najbliższej daty
     const eventId$ = toObservable(this.eventId);
     const date$ = toObservable(this.occurrenceDate);
-    const kind$ = toObservable(this.event).pipe(map((ev) => ev?.attractionType));
+    const kind$ = toObservable(this.event).pipe(
+      map((ev) => ev?.attractionType)
+    );
 
     combineLatest([eventId$, date$, kind$])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         switchMap(([id, date, kind]) => {
-          if (!id || !date || kind === AttractionKind.Session) return of([] as HostCardVM[]);
-          return this.hostsSrv.getHostsWithSystems(id, date).pipe(catchError(() => of([] as HostCardVM[])));
+          if (!id || !date || kind === AttractionKind.Session)
+            return of([] as HostCardVM[]);
+          return this.hostsSrv
+            .getHostsWithSystems(id, date)
+            .pipe(catchError(() => of([] as HostCardVM[])));
         }),
         switchMap((rows: any[]) => {
           if (!rows?.length) return of([] as HostCardVM[]);
           const uniqueIds = Array.from(new Set(rows.map((r) => r.hostUserId)));
-          return forkJoin(uniqueIds.map((uid) => this.gmDirectory.getGmById(uid))).pipe(
+          return forkJoin(
+            uniqueIds.map((uid) => this.gmDirectory.getGmById(uid))
+          ).pipe(
             map((gms) => {
-              const byId = new Map(gms.filter(Boolean).map((gm) => [gm!.userId, gm!]));
+              const byId = new Map(
+                gms.filter(Boolean).map((gm) => [gm!.userId, gm!])
+              );
               return rows.map((r) => {
-                const gm = r.role === HostSignupScope.Staff ? byId.get(r.hostUserId) ?? null : null;
-                const imageUrl = r.imagePath ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512) : null;
+                const gm =
+                  r.role === HostSignupScope.Staff
+                    ? byId.get(r.hostUserId) ?? null
+                    : null;
+                const imageUrl = r.imagePath
+                  ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512)
+                  : null;
                 return {
                   ...r,
                   gm,
@@ -359,7 +442,11 @@ export class EventDetailsComponent {
     toObservable(this.event)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        distinctUntilChanged((a, b) => (a?.id ?? '') === (b?.id ?? '') && (a?.singleDate ?? '') === (b?.singleDate ?? '')),
+        distinctUntilChanged(
+          (a, b) =>
+            (a?.id ?? '') === (b?.id ?? '') &&
+            (a?.singleDate ?? '') === (b?.singleDate ?? '')
+        ),
         tap((ev) => {
           if (!ev) return;
           const d = ev.singleDate ? ` – ${ev.singleDate}` : '';
@@ -378,46 +465,6 @@ export class EventDetailsComponent {
         const first = (ev.rooms ?? [])[0] ?? null;
         this.selectedRoom.set(r ?? first);
       });
-
-  //   // === DEBUG: pełny event + plany + sloty (kiedy tylko się zmienią) ===
-  //   effect(() => {
-  //     const ev = this.event();
-  //     if (!ev) return;
-  //     // pełny event
-  //     console.groupCollapsed('[event-details] Event');
-  //     console.log('id:', ev.id);
-  //     console.log('name:', ev.name);
-  //     console.log('date:', ev.singleDate);
-  //     console.log('time:', this.timeRangeLabel());
-  //     console.log('rooms:', ev.rooms);
-  //     console.log('attractionType:', ev.attractionType);
-  //     console.groupEnd();
-
-  //     // plany salek
-  //     console.groupCollapsed('[event-details] Room plans');
-  //     (ev.roomPlans ?? []).forEach((p) => {
-  //       console.groupCollapsed(`room: ${p.roomName}`);
-  //       console.log('scheduleKind:', p.scheduleKind);
-  //       console.log('requiresHosts:', (p as any).requiresHosts);
-  //       console.log('purpose:', (p as any).purpose);
-  //       console.log('intervalHours:', (p as any).intervalHours);
-  //       console.log('intervalMinutes:', (p as any).intervalMinutes);
-  //       console.log('slotDurationMinutes:', (p as any).slotDurationMinutes);
-  //       console.log('slots:', (p as any).slots ?? []);
-  //       console.groupEnd();
-  //     });
-  //     console.groupEnd();
-  //   });
-
-  //   effect(() => {
-  //     const r = this.selectedRoom();
-  //     const slots = this.slotsForSelectedRoom();
-  //     if (!r) return;
-  //     console.groupCollapsed('[event-details] Selected room view');
-  //     console.log('room:', r);
-  //     console.table(slots);
-  //     console.groupEnd();
-  //   });
   }
 
   openFacebook(link?: string) {
@@ -428,7 +475,11 @@ export class EventDetailsComponent {
   openGmProfile(h: HostCardVM, e: MouseEvent) {
     e.stopPropagation();
     if (h.role !== HostSignupScope.Staff) return;
-    const ref = this.modal.open(GmDetailsModalComponent, { size: 'lg', centered: true, scrollable: true });
+    const ref = this.modal.open(GmDetailsModalComponent, {
+      size: 'lg',
+      centered: true,
+      scrollable: true,
+    });
     if (h.gm) {
       ref.componentInstance.gm = h.gm;
       return;
@@ -440,6 +491,14 @@ export class EventDetailsComponent {
 
   setEventFee(fee: number): string {
     return fee && fee > 0 ? `${fee} zł` : 'Bezpłatne';
+  }
+  longDescParagraphs(): string[] {
+    const v = this.vm?.();
+    const raw = v?.event?.longDescription ?? '';   
+    return raw.split(/\n/);
+  }
+  log(data: any): any {
+    console.log(data);
   }
 }
 

@@ -860,7 +860,7 @@ export class EventFormComponent implements OnDestroy {
     }
 
     const v = this.form.getRawValue();
-
+    
     let recurrence: any;
     if (v.occurrenceMode === 'RECURRENT') {
       if (v.recPattern === 'WEEKLY_1' || v.recPattern === 'WEEKLY_2') {

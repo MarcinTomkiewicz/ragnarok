@@ -72,6 +72,8 @@ export class EventHostsListComponent implements OnDestroy {
   dateIso = input.required<string>();
   currentUser = input<IUser | null>(null);
   showSignup = input<boolean>(true);
+
+  /** Domyślny limit na slot z poziomu wydarzenia (np. 5). 0 = bez limitu, null = brak limitu/nie dotyczy. */
   eventCapacity = input<number | null>(null);
 
   filterRoom = input<string | null>(null);
@@ -140,6 +142,28 @@ export class EventHostsListComponent implements OnDestroy {
     const plan = this.roomPlan();
     if (!plan) return false;
     return plan.scheduleKind === RoomScheduleKind.FullSpan;
+  });
+
+  /** Czy w trybie FullSpan mamy w ogóle zapisy (plan.requiresParticipants)? */
+  readonly fullSpanAllowsSignup = computed<boolean>(() => {
+    const plan = this.roomPlan();
+    if (!plan || plan.scheduleKind !== RoomScheduleKind.FullSpan) return false;
+    const v =
+      (plan as any)?.requiresParticipants ??
+      (plan as any)?.requires_participants ??
+      null;
+    return v === true;
+  });
+
+  /** Limit zapisów dla FullSpan (0 = bez limitu, null = brak licznika). */
+  readonly fullSpanCapacity = computed<number | null>(() => {
+    const plan = this.roomPlan();
+    if (!plan || plan.scheduleKind !== RoomScheduleKind.FullSpan) return null;
+    const raw =
+      (plan as any)?.sessionCapacity ??
+      (plan as any)?.session_capacity ??
+      this.eventCapacity();
+    return raw == null ? null : Number(raw);
   });
 
   readonly fullSpanTitle = computed<string>(() => {
@@ -380,11 +404,43 @@ export class EventHostsListComponent implements OnDestroy {
     }
   }
 
+  /**
+   * Zwraca limit na kartę:
+   * - najpierw bierze "slot-cap" z hosta (może być 0 = bez limitu),
+   * - jeśli brak, dla Schedule próbuje dopasować slot w planie,
+   * - dalej spada do "plan-cap" (jeśli ustawiony) lub "eventCapacity".
+   * Zwraca 0 (bez limitu) / N / null (brak licznika).
+   */
   hostCapacity(h: HostCardVM): number | null {
-    const own = h.sessionCapacity;
-    if (own != null && own > 0) return own;
+    // 1) limit przypisany bezpośrednio do zgłoszenia/slotu (0 = bez limitu)
+    if (h.sessionCapacity != null) return Number(h.sessionCapacity);
+
+    const plan = this.roomPlan();
+    if (plan) {
+      // 2) Schedule — poszukaj odpowiadającego slota i weź jego cap/padnij do cap planu
+      if (plan.scheduleKind === RoomScheduleKind.Schedule) {
+        const st = this.hhmm(h.slotStartTime ?? null);
+        const slot = (plan.slots ?? []).find((s) => this.hhmm(s.startTime) === st);
+        const slotCap =
+          (slot as any)?.sessionCapacity ?? (slot as any)?.session_capacity ?? null;
+        if (slotCap != null) return Number(slotCap);
+
+        const planCap =
+          (plan as any)?.sessionCapacity ?? (plan as any)?.session_capacity ?? null;
+        if (planCap != null) return Number(planCap);
+      }
+
+      // 3) Interval/FullSpan — użyj cap planu jeśli jest
+      if (plan.scheduleKind === RoomScheduleKind.Interval || plan.scheduleKind === RoomScheduleKind.FullSpan) {
+        const planCap =
+          (plan as any)?.sessionCapacity ?? (plan as any)?.session_capacity ?? null;
+        if (planCap != null) return Number(planCap);
+      }
+    }
+
+    // 4) domyślny cap z eventu, jeśli przekazany
     const fallback = this.eventCapacity();
-    return fallback != null && fallback > 0 ? fallback : null;
+    return fallback == null ? null : Number(fallback);
   }
 
   openDetails(host: HostCardVM) {
@@ -429,7 +485,6 @@ export class EventHostsListComponent implements OnDestroy {
 
   log(data: any): void {
     console.log(data);
-    
   }
 
   listDisplayName(h: HostCardVM): string {

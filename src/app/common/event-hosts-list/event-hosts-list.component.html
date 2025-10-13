@@ -18,12 +18,14 @@
     </div>
     }
     <h3 class="section-title text-center">{{ fullSpanTitle() }}</h3>
+
     <table class="table table-dark-style align-middle font-size-small w-100">
       <tbody>
         <tr>
           <th scope="row">Salka:</th>
           <td>{{ filterRoom() || "—" }}</td>
         </tr>
+
         <tr>
           <th scope="row">Godziny:</th>
           <td>
@@ -31,35 +33,73 @@
             {{ eventEnd() || "23:59" | slice : 0 : 5 }}
           </td>
         </tr>
+
         @if (fullSpanRequiresHosts()) {
         <tr>
           <th scope="row">Prowadzący:</th>
           <td>
-            @if (fullSpanLeads().length) { @for (l of fullSpanLeads(); track
-            l.id; let last = $last) { @if (l.clickable) {
-            <button
-              class="btn btn-outline btn-sm"
-              (click)="openGmProfile(l.host, $event)"
-            >
-              {{ l.display }}
-            </button>
+            @if (fullSpanLeads().length) {
+              @for (l of fullSpanLeads(); track l.id; let last = $last) {
+                @if (l.clickable) {
+                  <button
+                    class="btn btn-outline btn-sm"
+                    (click)="openGmProfile(l.host, $event)"
+                  >
+                    {{ l.display }}
+                  </button>
+                } @else {
+                  <span>{{ l.display }}</span>
+                }
+                @if (!last) { <span>, </span> }
+              }
             } @else {
-            <span>{{ l.display }}</span>
-            } @if (!last) {<span>, </span>} } } @else {
-            <span>—</span>
+              <span>—</span>
             }
           </td>
         </tr>
         }
+
         @if (fullSpanDescription()) {
         <tr>
           <th scope="row">Opis:</th>
           <td>
-            @let paragraphs = (fullSpanDescription() || '').split('\n'); @for
-            (paragraph of paragraphs; let i = $index; track i) { @if
-            (paragraph.trim().length) {
-            <div>{{ paragraph }}</div>
-            } }
+            @let paragraphs = (fullSpanDescription() || '').split('\n');
+            @for (paragraph of paragraphs; let i = $index; track i) {
+              @if (paragraph.trim().length) {
+                <div>{{ paragraph }}</div>
+              }
+            }
+          </td>
+        </tr>
+        }
+
+        @if (showSignup() && fullSpanAllowsSignup()) {
+        <tr>
+          <th scope="row">Lista uczestników:</th>
+          <td>
+            <div class="fullspan-signups">
+              <div class="actions">
+                <app-session-signup-button
+                  [eventId]="eventId()"
+                  [dateIso]="dateIso()"
+                  [currentUser]="currentUser()"
+                  [capacity]="fullSpanCapacity()"
+                  [roomName]="filterRoom()"
+                  (signed)="onSessionSigned(filterRoom() || '')"
+                />
+              </div>
+
+              <div class="participants mt-2">
+                <app-participants-list
+                  [eventId]="eventId()"
+                  [dateIso]="dateIso()"
+                  [scope]="{ roomName: filterRoom() || null }"
+                  [currentUser]="currentUser()"
+                  [refreshKey]="getRefreshKey(filterRoom() || '')"
+                  [capacity]="fullSpanCapacity()"
+                />
+              </div>
+            </div>
           </td>
         </tr>
         }
@@ -106,6 +146,7 @@
             <span class="text-start">{{ h.system?.name || "—" }}</span>
           </div>
           }
+
           @if (filterRoom()) {
           <div class="meta-row">
             <span class="muted">Godziny:</span>
@@ -133,10 +174,11 @@
           </div>
 
           <div class="meta-row tags mt-3">
-            @if (h.playstyleTags.length && isSessionCard(h)) { @for (t of
-            h.playstyleTags; track t) {
-            <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
-            } }
+            @if (h.playstyleTags.length && isSessionCard(h)) {
+              @for (t of h.playstyleTags; track t) {
+                <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
+              }
+            }
           </div>
 
           @if (isSessionCard(h)) {
@@ -155,26 +197,28 @@
           }
 
           @if (showSignup()) {
-          <div class="actions mt-3" (click)="$event.stopPropagation()">
-            <app-session-signup-button
-              [eventId]="eventId()"
-              [dateIso]="dateIso()"
-              [hostId]="h.id"
-              [currentUser]="currentUser()"
-              [capacity]="hostCapacity(h)"
-              (signed)="onSessionSigned(h.id)"
-            />
-          </div>
+          <div class="signup-area" (click)="$event.stopPropagation()">
+            <div class="actions">
+              <app-session-signup-button
+                [eventId]="eventId()"
+                [dateIso]="dateIso()"
+                [hostId]="h.id"
+                [currentUser]="currentUser()"
+                [capacity]="hostCapacity(h)"
+                (signed)="onSessionSigned(h.id)"
+              />
+            </div>
 
-          <div class="participants mt-2" (click)="$event.stopPropagation()">
-            <app-participants-list
-              [eventId]="eventId()"
-              [dateIso]="dateIso()"
-              [scope]="{ hostId: h.id }"
-              [currentUser]="currentUser()"
-              [refreshKey]="getRefreshKey(h.id)"
-              [capacity]="hostCapacity(h)"
-            />
+            <div class="participants mt-2">
+              <app-participants-list
+                [eventId]="eventId()"
+                [dateIso]="dateIso()"
+                [scope]="{ hostId: h.id }"
+                [currentUser]="currentUser()"
+                [refreshKey]="getRefreshKey(h.id)"
+                [capacity]="hostCapacity(h)"
+              />
+            </div>
           </div>
           }
         </div>
@@ -210,6 +254,7 @@
           <span class="text-start">{{ h.system?.name || "—" }}</span>
         </div>
         }
+
         @if (filterRoom()) {
         <div class="meta-row">
           <span class="muted">Godziny:</span>
@@ -237,10 +282,11 @@
         </div>
 
         <div class="meta-row tags mt-3">
-          @if (h.playstyleTags.length && isSessionCard(h)) { @for (t of
-          h.playstyleTags; track t) {
-          <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
-          } }
+          @if (h.playstyleTags.length && isSessionCard(h)) {
+            @for (t of h.playstyleTags; track t) {
+              <span class="tag-badge golden">{{ GmStyleTagLabels[t] }}</span>
+            }
+          }
         </div>
 
         @if (isSessionCard(h)) {
@@ -259,26 +305,28 @@
         }
 
         @if (showSignup()) {
-        <div class="actions mt-3" (click)="$event.stopPropagation()">
-          <app-session-signup-button
-            [eventId]="eventId()"
-            [dateIso]="dateIso()"
-            [hostId]="h.id"
-            [currentUser]="currentUser()"
-            [capacity]="hostCapacity(h)"
-            (signed)="onSessionSigned(h.id)"
-          />
-        </div>
+        <div class="signup-area" (click)="$event.stopPropagation()">
+          <div class="actions">
+            <app-session-signup-button
+              [eventId]="eventId()"
+              [dateIso]="dateIso()"
+              [hostId]="h.id"
+              [currentUser]="currentUser()"
+              [capacity]="hostCapacity(h)"
+              (signed)="onSessionSigned(h.id)"
+            />
+          </div>
 
-        <div class="participants mt-2" (click)="$event.stopPropagation()">
-          <app-participants-list
-            [eventId]="eventId()"
-            [dateIso]="dateIso()"
-            [scope]="{ hostId: h.id }"
-            [currentUser]="currentUser()"
-            [refreshKey]="getRefreshKey(h.id)"
-            [capacity]="hostCapacity(h)"
-          />
+          <div class="participants mt-2">
+            <app-participants-list
+              [eventId]="eventId()"
+              [dateIso]="dateIso()"
+              [scope]="{ hostId: h.id }"
+              [currentUser]="currentUser()"
+              [refreshKey]="getRefreshKey(h.id)"
+              [capacity]="hostCapacity(h)"
+            />
+          </div>
         </div>
         }
       </div>

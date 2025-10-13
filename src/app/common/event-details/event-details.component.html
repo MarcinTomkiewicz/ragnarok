@@ -54,12 +54,15 @@
     </div>
     }
 
-    <div class="event-description">
-      @let paragraphs = (v.event.longDescription || '').split('\n');
-      @for (paragraph of paragraphs; let i = $index; track i) { @if (paragraph.trim().length) {
-      <p class="event-paragraph">{{ paragraph }}</p>
-      } }
-    </div>
+<div class="event-description">
+  @for (paragraph of longDescParagraphs(); let i = $index; track i) {
+    <div
+      class="event-paragraph"
+      [class.empty]="!paragraph.trim()"
+      [innerHTML]="paragraph"
+    ></div>
+  }
+</div>
 
     <!-- ===== COMPOSITE: tylko CHIPY SAL -> bez chipów godzin ===== -->
     @if (isComposite() && rooms().length) {
