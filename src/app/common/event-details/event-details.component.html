@@ -59,7 +59,7 @@
     <div
       class="event-paragraph"
       [class.empty]="!paragraph.trim()"
-      [innerHTML]="paragraph"
+      [innerHTML]="paragraph | linkify"
     ></div>
   }
 </div>
