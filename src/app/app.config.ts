@@ -14,7 +14,7 @@ import {
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { AppInitializerProvider } from './core/config/app.initializer';
-import { ENV_GOOGLE_MAPS_API_KEY, ENV_GTM_ID } from './core/tokens';
+import { ENV_FACEBOOK_PIXEL_ID, ENV_GOOGLE_MAPS_API_KEY, ENV_GTM_ID } from './core/tokens';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -33,6 +33,7 @@ export const appConfig: ApplicationConfig = {
       useValue: 'AIzaSyDiASRjUg6MXHh0K7Ct9U3TpaLtSfYZmIs',
     },
     { provide: ENV_GTM_ID, useValue: 'GTM-P5FPPLDC' },
+    { provide: ENV_FACEBOOK_PIXEL_ID, useValue: '691368896799868' },
     AppInitializerProvider,
   ],
 };
