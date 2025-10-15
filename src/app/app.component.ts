@@ -11,12 +11,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TrackingService } from './core/services/tracking/tracking.service';
 import { SeoService } from './core/services/seo/seo.service';
 import { PlatformService } from './core/services/platform/platform.service';
-import { ENV_GTM_ID } from './core/tokens';
+import { ENV_FACEBOOK_PIXEL_ID, ENV_GTM_ID } from './core/tokens';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { ToastContainerComponent } from './common/toast-container/toast-container.component';
 import { LoaderComponent } from './common/loader/loader.component';
+import { fromEvent } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -39,9 +40,35 @@ export class AppComponent {
   private readonly platform = inject(PlatformService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly GTM_ID = inject(ENV_GTM_ID);
+  private readonly ENV_FACEBOOK_PIXEL_ID = inject(ENV_FACEBOOK_PIXEL_ID);
 
   constructor() {
     this.tracking.initGtm(this.GTM_ID);
+    this.tracking.initFacebookPixel(this.ENV_FACEBOOK_PIXEL_ID);
+
+    if (this.platform.isBrowser) {
+      fromEvent<MouseEvent>(document, 'click')
+        .pipe(
+          // bierz najbliższy element z atrybutem data-buynow
+          map(
+            (e) =>
+              (e.target as Element)?.closest(
+                '[data-buynow]'
+              ) as HTMLElement | null
+          ),
+          filter((el): el is HTMLElement => !!el),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe((el) => {
+          const id = el.getAttribute('data-item-id') || undefined;
+          const name = el.getAttribute('data-item-name') || undefined;
+          const value =
+            Number(el.getAttribute('data-price') || '0') || undefined;
+          const currency = el.getAttribute('data-currency') || 'PLN';
+
+          this.tracking.trackBuyNowClick({ id, name, value, currency });
+        });
+    }
 
     this.router.events
       .pipe(
@@ -72,31 +99,31 @@ export class AppComponent {
         }
       });
 
-       this.router.events
-    .pipe(
-      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      takeUntilDestroyed(this.destroyRef)
-    )
-    .subscribe((e) => {
-      if (!this.platform.isBrowser) return;
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((e) => {
+        if (!this.platform.isBrowser) return;
 
-      const url = e.urlAfterRedirects || e.url;
-      const cleanPath = url.split('?')[0].split('#')[0];
+        const url = e.urlAfterRedirects || e.url;
+        const cleanPath = url.split('?')[0].split('#')[0];
 
-      if (cleanPath === '/') return;
+        if (cleanPath === '/') return;
 
-      requestAnimationFrame(() => {
-        const target = document.getElementById('router-outlet');
-        const nav = document.querySelector('.nav-bar') as HTMLElement | null;
-        const offset = nav?.getBoundingClientRect().height ?? 0;
+        requestAnimationFrame(() => {
+          const target = document.getElementById('router-outlet');
+          const nav = document.querySelector('.nav-bar') as HTMLElement | null;
+          const offset = nav?.getBoundingClientRect().height ?? 0;
 
-        const top = target
-          ? target.getBoundingClientRect().top + window.scrollY - offset
-          : 0;
+          const top = target
+            ? target.getBoundingClientRect().top + window.scrollY - offset
+            : 0;
 
-        window.scrollTo({ top, behavior: 'smooth' });
+          window.scrollTo({ top, behavior: 'smooth' });
+        });
       });
-    });
   }
 
   private deepestChild(route: ActivatedRoute): ActivatedRoute | null {
