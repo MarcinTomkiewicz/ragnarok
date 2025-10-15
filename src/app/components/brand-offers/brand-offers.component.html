@@ -12,7 +12,8 @@
         <app-category-list
           [categories]="brandCategories()"
           [subcategories]="subcategories()"
-          (subcategorySelected)="onSubcategoryClick($event)">
+          (subcategorySelected)="onSubcategoryClick($event)"
+        >
         </app-category-list>
       </aside>
 
@@ -25,7 +26,8 @@
           <app-category-list
             [categories]="brandCategories()"
             [subcategories]="subcategories()"
-            (subcategorySelected)="onSubcategoryClick($event)">
+            (subcategorySelected)="onSubcategoryClick($event)"
+          >
           </app-category-list>
         </div>
       </div>
@@ -35,10 +37,13 @@
           <span class="sort-label">Sortuj</span>
           <div class="flex-row-regular gap-2 flex-wrap">
             @for (field of sortFields(); track field) {
-              <button class="btn btn-plain-light sort-button" (click)="sortBy(field)">
-                {{ offerLabels[field] }}
-                <i [ngClass]="getSortIcon(field)"></i>
-              </button>
+            <button
+              class="btn btn-plain-light sort-button"
+              (click)="sortBy(field)"
+            >
+              {{ offerLabels[field] }}
+              <i [ngClass]="getSortIcon(field)"></i>
+            </button>
             }
           </div>
 
@@ -50,85 +55,103 @@
               [ngbTypeahead]="search"
               [resultFormatter]="resultFormatter"
               [inputFormatter]="inputFormatter"
-              (selectItem)="onSelectOffer($event)" />
+              (selectItem)="onSelectOffer($event)"
+            />
           </div>
         </div>
 
         @if (!offers().length) {
-          <div class="no-offers">Brak produktów w tej sekcji.</div>
+        <div class="no-offers">Brak produktów w tej sekcji.</div>
         } @else {
-          <div class="offers-grid">
-            @for (offer of offers(); track offer.slug) {
-              @if (!isMobile()) {
-                <article class="offer-card">
-                  <div class="card-img">
-                    <img [src]="offer.image" [alt]="offer.title" />
-                  </div>
-                  <div class="offer-content">
-                    <h3>{{ offer.title }}</h3>
-                    <p><strong>Cena:</strong> {{ offer.price }} PLN</p>
-                    <p>
-                      @if (offer.stock > 0) {
-                        <strong>Sztuk na stanie:</strong> {{ offer.stock }}
-                      } @else {
-                        <strong class="text-danger">Produkt niedostępny</strong>
-                      }
-                    </p>
-                    <div class="buttons">
-                      <button class="btn btn-primary"
-                              [routerLink]="['/offers', 'store', offer.slug]">
-                        Szczegóły
-                      </button>
-                      <button class="btn btn-warning"
-                              [disabled]="!offer.buyNowLink || !offer.stock"
-                              (click)="buyNow(offer.buyNowLink)">
-                        Kup Teraz
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              } @else {
-                <article class="product-card-mobile card card-dark">
-                  <img class="product-image" [src]="offer.image" [alt]="offer.title" />
-                  <div class="card-body">
-                    <h3 class="card-title">{{ offer.title }}</h3>
-                    <p class="card-text">Cena: {{ offer.price }} PLN</p>
-                    <p class="card-text">
-                      @if (offer.stock > 0) {
-                        <strong>Sztuk na stanie:</strong> {{ offer.stock }}
-                      } @else {
-                        <strong class="text-danger">Produkt niedostępny</strong>
-                      }
-                    </p>
-                    <div class="btn-group w-100 flex-column gap-2 mt-2">
-                      <button class="btn btn-primary"
-                              [routerLink]="['/offers', 'store', offer.slug]">
-                        Szczegóły
-                      </button>
-                      <button class="btn btn-warning"
-                              [disabled]="!offer.buyNowLink || !offer.stock"
-                              (click)="buyNow(offer.buyNowLink)">
-                        Kup Teraz
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              }
-            }
-          </div>
+        <div class="offers-grid">
+          @for (offer of offers(); track offer.slug) { @if (!isMobile()) {
+          <article class="offer-card">
+            <div class="card-img">
+              <img [src]="offer.image" [alt]="offer.title" />
+            </div>
+            <div class="offer-content">
+              <h3>{{ offer.title }}</h3>
+              <p><strong>Cena:</strong> {{ offer.price }} PLN</p>
+              <p>
+                @if (offer.stock > 0) {
+                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                } @else {
+                <strong class="text-danger">Produkt niedostępny</strong>
+                }
+              </p>
+              <div class="buttons">
+                <button
+                  class="btn btn-primary"
+                  [routerLink]="['/offers', 'store', offer.slug]"
+                >
+                  Szczegóły
+                </button>
+                <button
+                  class="btn btn-warning"
+                  data-buynow
+                  [attr.data-item-name]="offer.title"
+                  [attr.data-price]="offer.price"
+                  [disabled]="!offer.buyNowLink || !offer.stock"
+                  (click)="buyNow(offer.buyNowLink)"
+                >
+                  Kup Teraz
+                </button>
+              </div>
+            </div>
+          </article>
+          } @else {
+          <article class="product-card-mobile card card-dark">
+            <img
+              class="product-image"
+              [src]="offer.image"
+              [alt]="offer.title"
+            />
+            <div class="card-body">
+              <h3 class="card-title">{{ offer.title }}</h3>
+              <p class="card-text">Cena: {{ offer.price }} PLN</p>
+              <p class="card-text">
+                @if (offer.stock > 0) {
+                <strong>Sztuk na stanie:</strong> {{ offer.stock }}
+                } @else {
+                <strong class="text-danger">Produkt niedostępny</strong>
+                }
+              </p>
+              <div class="btn-group w-100 flex-column gap-2 mt-2">
+                <button
+                  class="btn btn-primary"
+                  [routerLink]="['/offers', 'store', offer.slug]"
+                >
+                  Szczegóły
+                </button>
+                <button
+                  class="btn btn-warning"
+                  data-buynow
+                  [attr.data-item-name]="offer.title"
+                  [attr.data-price]="offer.price"
+                  [disabled]="!offer.buyNowLink || !offer.stock"
+                  (click)="buyNow(offer.buyNowLink)"
+                >
+                  Kup Teraz
+                </button>
+              </div>
+            </div>
+          </article>
+          } }
+        </div>
 
-          @if (totalOffers() > pageSize()) {
-            <ngb-pagination class="pagination-wrapper"
-                            [collectionSize]="totalOffers()"
-                            [(page)]="currentPage"
-                            [pageSize]="pageSize()"
-                            (pageChange)="onPageChange($event)"
-                            [boundaryLinks]="true"
-                            [maxSize]="3"
-                            size="sm">
-            </ngb-pagination>
-          }
-        }
+        @if (totalOffers() > pageSize()) {
+        <ngb-pagination
+          class="pagination-wrapper"
+          [collectionSize]="totalOffers()"
+          [(page)]="currentPage"
+          [pageSize]="pageSize()"
+          (pageChange)="onPageChange($event)"
+          [boundaryLinks]="true"
+          [maxSize]="3"
+          size="sm"
+        >
+        </ngb-pagination>
+        } }
       </div>
     </div>
   </div>

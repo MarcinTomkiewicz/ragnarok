@@ -21,7 +21,7 @@ import {
 
 import {
   BackendService,
-  IPagination
+  IPagination,
 } from '../../core/services/backend/backend.service';
 import { FilterOperator } from '../../core/enums/filterOperator';
 import { OfferSortField, SortOrder } from '../../core/enums/search';
@@ -43,7 +43,7 @@ import { CategoryListComponent } from '../../common/category-list/category-list/
     NgbDropdownModule,
     NgbPaginationModule,
     NgbTypeaheadModule,
-    CategoryListComponent
+    CategoryListComponent,
   ],
   templateUrl: './brand-offers.component.html',
   styleUrl: './brand-offers.component.scss',
