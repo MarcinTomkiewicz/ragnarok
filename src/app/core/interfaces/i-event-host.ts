@@ -8,7 +8,6 @@ export interface IEventHost {
   eventId: string;
   occurrenceDate: string;     // 'YYYY-MM-DD'
   roomName: string | null;
-  /** Optional slot start time if signup is at SLOT level */
   slotStartTime?: string | null; // 'HH:mm:ss'
   hostUserId: string;
   role: HostSignupScope;
@@ -37,4 +36,5 @@ export type HostCardVM = IEventHost & {
   gm?: IGmData | null;
   triggersTop: string[];
   triggersExtraCount: number;
+  isSpacer?: boolean;
 };
