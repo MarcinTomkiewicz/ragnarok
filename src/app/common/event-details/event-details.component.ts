@@ -53,6 +53,7 @@ import { EventSignupPanelComponent } from '../event-signup-panel/event-signup-pa
 import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
 import { LinkifyPipe } from '../../core/pipes/linkify.pipe';
+import { roomsOrder } from '../../core/utils/roomsOrder';
 
 type SlotVM = {
   start: string;
@@ -143,7 +144,7 @@ export class EventDetailsComponent {
   readonly isComposite = computed(
     () => this.event()?.attractionType === AttractionKind.Composite
   );
-  readonly rooms = computed<string[]>(() => this.event()?.rooms ?? []);
+  readonly rooms = computed<string[]>(() => roomsOrder(this.event()?.rooms ?? []));
 
   // wybrana salka (chipsy salek)
   readonly selectedRoom = signal<string | null>(null);
