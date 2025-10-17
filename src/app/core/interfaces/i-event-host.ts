@@ -1,3 +1,4 @@
+import { RoomPurpose } from "../enums/event-rooms";
 import { HostSignupScope } from "../enums/events";
 import { GmStyleTag } from "../enums/gm-styles";
 import { IGmData } from "./i-gm-profile";
@@ -37,4 +38,6 @@ export type HostCardVM = IEventHost & {
   triggersTop: string[];
   triggersExtraCount: number;
   isSpacer?: boolean;
+  isVirtual?: boolean;
+  purpose?: RoomPurpose
 };
