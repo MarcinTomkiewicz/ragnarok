@@ -12,6 +12,7 @@ import { ReservationService } from '../../core/services/reservation/reservation.
 import { ReservationDetailsModalComponent } from '../../common/reservation-details-modal/reservation-details-modal.component';
 import { ReservationsCalendarFacade } from '../../core/services/reservations-calendar/reservations-calendar.facade';
 import { toCamelCase } from '../../../core/utils/type-mappers';
+import { hasMinimumCoworkerRole } from '../../../core/utils/required-roles';
 
 @Component({
   selector: 'app-room-reservation-overview',
@@ -81,7 +82,6 @@ export class RoomReservationsOverviewComponent {
 
   readonly isPrivilegedUser = computed(
     () =>
-      [CoworkerRoles.Owner, CoworkerRoles.Reception].includes(this.auth.userCoworkerRole()!)
-      || this.auth.userSystemRole() === SystemRole.Admin
+      hasMinimumCoworkerRole(this.auth.user(), CoworkerRoles.Reception)
   );
 }
