@@ -45,6 +45,7 @@
       
       .card-text-dark {
         margin-bottom: 0.5rem;
+        align-self: flex-start;
       }
       
       .badge {
@@ -82,6 +83,10 @@
   .gm-bottom-row {
     padding: 1rem;
     width: 100%;
+
+    .experience {
+      align-self: start;
+    }
 
     .empty:not(:last-of-type) {
       height: 1rem;

@@ -54,14 +54,16 @@
     </div>
     }
 
-    <div class="event-description">
-      @let paragraphs = (v.event.longDescription || '').split('\n');
-      @for (paragraph of paragraphs; let i = $index; track i) { @if (paragraph.trim().length) {
-      <p class="event-paragraph">{{ paragraph }}</p>
-      } }
-    </div>
+<div class="event-description">
+  @for (paragraph of longDescParagraphs(); let i = $index; track i) {
+    <div
+      class="event-paragraph"
+      [class.empty]="!paragraph.trim()"
+      [innerHTML]="paragraph | linkify"
+    ></div>
+  }
+</div>
 
-    <!-- ===== COMPOSITE: tylko CHIPY SAL -> bez chipów godzin ===== -->
     @if (isComposite() && rooms().length) {
 
     <!-- Pasek salek -->
@@ -80,30 +82,28 @@
     </div>
 
     <!-- Lista: karty prowadzących (sesje + dyskusje) dla wybranej salki -->
-    <app-event-hosts-list
-      [eventId]="eventId()!"
-      [dateIso]="occurrenceDate()!"
-      [currentUser]="currentUser()"
-      [showSignup]="showSessionSignup()"
-      [eventCapacity]="sessionDefaultCapacity()"
-      [filterRoom]="selectedRoom()"
-      [eventStart]="event()?.startTime || null"
-      [eventEnd]="event()?.endTime || null"
-      [roomPlan]="roomPlanForSelected()"
-    />
+<app-event-hosts-list
+  [event]="event()!"
+  [dateIso]="occurrenceDate()!"
+  [filterRoom]="selectedRoom()"
+  [currentUser]="currentUser()"
+  [showSignup]="showSessionSignup()"
+></app-event-hosts-list>
+
     }
 
     <!-- ===== Wydarzenia typu Session (proste) ===== -->
     @if (v.event.attractionType === 'SESSION') {
     <h3 class="section-title text-center">Sesje do wyboru</h3>
     @if (hasOccurrence()) {
-    <app-event-hosts-list
-      [eventId]="eventId()!"
-      [dateIso]="occurrenceDate()!"
-      [currentUser]="currentUser()"
-      [showSignup]="showSessionSignup()"
-      [eventCapacity]="sessionDefaultCapacity()"
-    />
+<app-event-hosts-list
+  [event]="event()!"
+  [dateIso]="occurrenceDate()!"
+  [filterRoom]="selectedRoom()"
+  [currentUser]="currentUser()"
+  [showSignup]="showSessionSignup()"
+></app-event-hosts-list>
+
     } } @else if (v.event.requiresHosts && !isComposite()) {
     <!-- Proste non-session z prowadzącymi -->
     <h3 class="section-title text-center">Następne spotkanie</h3>

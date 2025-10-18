@@ -144,6 +144,32 @@
         />
       </div>
 
+            <div class="form-group">
+        <label class="text-start">Tryb wystąpień</label>
+        <div class="btn-group" role="group" aria-label="Tryb wystąpień">
+          <input
+            type="radio"
+            class="btn-check"
+            id="occ-single"
+            [checked]="form.value.occurrenceMode==='SINGLE'"
+            (change)="f.occurrenceMode.setValue('SINGLE')"
+          />
+          <label class="btn btn-outline-primary" for="occ-single">Jednorazowe</label>
+
+          <input
+            type="radio"
+            class="btn-check"
+            id="occ-recurrent"
+            [checked]="form.value.occurrenceMode==='RECURRENT'"
+            (change)="f.occurrenceMode.setValue('RECURRENT')"
+          />
+          <label class="btn btn-outline-primary" for="occ-recurrent">Cykliczne</label>
+        </div>
+        <div class="form-text">
+          Wydarzenie <strong>złożone</strong> (plany salek) dostępne tylko dla trybu <em>Jednorazowe</em>.
+        </div>
+      </div>
+
       <div class="form-group row-inline">
         <div>
           <label class="text-start">Typ wydarzenia</label>

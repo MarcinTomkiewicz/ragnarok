@@ -2,9 +2,15 @@
 @import "abstracts/mixins";
 
 .hosts-list-section {
-  .error { color: $danger-color; }
-  .empty { text-align: center; padding: 1rem 0; }
   width: 100%;
+
+  .error {
+    color: $danger-color;
+  }
+  .empty {
+    text-align: center;
+    padding: 1rem 0;
+  }
 
   .skeleton-grid {
     @include mg-grid(4);
@@ -34,23 +40,45 @@
       box-shadow: $card-shadow;
       background: $bg-color-light;
       aspect-ratio: 16/10;
-      img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
     }
-    .section-title { margin: 0.5rem 0 0.25rem; }
+    .section-title {
+      margin: 0.5rem 0 0.25rem;
+    }
+
     .table.table-dark-style {
       margin-top: 0.5rem;
       width: 100%;
       table-layout: fixed;
-      th, td { text-align: left; white-space: normal; overflow-wrap: anywhere; }
-      & tbody tr > th:first-child { width: 40%; }
-      & tbody tr > td:last-child { width: 60%; }
-    }
-  }
+      th,
+      td {
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        vertical-align: top;
+      }
+      & tbody tr > th:first-child {
+        width: 40%;
+      }
+      & tbody tr > td:last-child {
+        width: 60%;
+      }
 
-  .sessions-grid {
-    @include mg-grid(4);
-    gap: 1rem;
-    align-items: stretch;
+      .fullspan-signups {
+        .actions {
+          @include flex-wrapper(column, flex-start, flex-start);
+          gap: 0.5rem;
+        }
+        .participants {
+          @include flex-wrapper(column, flex-start, flex-start);
+        }
+      }
+    }
   }
 
   .session-card {
@@ -63,9 +91,7 @@
     transition: all $transition-fast;
     box-shadow: 0 0 10px rgba($secondary-color, 0.2);
     height: 100%;
-    max-width: 320px;
     width: 100%;
-    justify-self: center;
 
     &:hover {
       transform: translateY(-2px);
@@ -74,28 +100,27 @@
 
     .image-wrap {
       width: 100%;
-      aspect-ratio: 16 / 10;
+      aspect-ratio: 16/10;
       background: $bg-color-light;
       overflow: hidden;
       margin-bottom: 10px;
       position: relative;
-
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
       }
-
       &.is-placeholder {
         background: transparent;
-        img { object-fit: contain; }
+        img {
+          object-fit: contain;
+        }
       }
-
       .kind-row {
         position: absolute;
-        top: .5rem;
-        right: .5rem;
+        top: 0.5rem;
+        right: 0.5rem;
         z-index: 1;
         pointer-events: none;
       }
@@ -104,26 +129,28 @@
     .content {
       display: flex;
       flex-direction: column;
-      flex: 1;
+      flex: 1 1 auto; 
+      min-height: 100%;
       padding: 0.75rem 0.9rem;
       gap: 0.25rem;
-
+      
       .session-title {
         margin: 0;
         @include truncate-lines(2);
         @include flex-wrapper(row, center, center);
         min-height: 3.1em;
       }
-
       .meta-row {
         display: flex;
         gap: 0.5rem;
         align-items: baseline;
         font-size: 0.95rem;
         flex-wrap: wrap;
-        .muted { color: $secondary-text-color; }
+        width: 100%;
+        .muted {
+          color: $secondary-text-color;
+        }
       }
-
       .tags,
       .triggers {
         margin-top: 0.35rem;
@@ -132,29 +159,91 @@
         gap: 0.35rem;
         min-height: 1.6rem;
       }
+      .signup-area {
+        margin-top: auto;
+        display: flex;
+        justify-self: flex-end;
+
+        @include flex-wrapper(column, center, space-between);
+        .actions {
+          @include flex-wrapper(column, center, center);
+        }
+      }
     }
   }
 
   @keyframes shimmer {
-    0% { background-position: 100% 0; }
-    100% { background-position: -100% 0; }
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
   }
 }
 
-.mg-swiper {
+/* Kontener swipera nie ma stałej szerokości, ale ma responsywny MAX,
+   który limituje ile kart mieści się naraz: 1 / 2 / 4 */
+.mg-swiper.attraction-swiper {
   width: 100%;
-  max-width: 320px;
   margin: 0 auto;
+  box-sizing: border-box;
+
   --swiper-pagination-color: $primary-color;
   --swiper-navigation-color: $primary-color;
   --swiper-navigation-size: 18px;
 }
-.mg-swiper swiper-slide {
-  width: 310px;
+
+/* Wyrównanie wysokości kart: wrapper i slide muszą być flex + stretch */
+.mg-swiper.attraction-swiper swiper-wrapper {
   display: flex;
-  justify-content: center;
+  align-items: stretch;
 }
-.session-card.is-swiper {
-  width: 320px;
-  max-width: 320px;
+
+/* Klucz: każdy slajd ma *stałą* szerokość 300px, dzięki czemu
+   slides-per-view="auto" pokaże tyle kart, ile wejdzie w max-width kontenera */
+.mg-swiper.attraction-swiper swiper-slide {
+  width: 300px; /* stała szerokość karty */
+  @include flex-wrapper(column, stretch, center);
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+/* Karta wypełnia slajd i rozciąga się na jego wysokość */
+.mg-swiper.attraction-swiper .session-card.is-swiper {
+  width: 100%;
+  height: 100%;
+  min-height: 650px;
+  max-width: 300px;
+  @include flex-wrapper(column, stretch, center);
+  box-sizing: border-box;
+}
+
+.mg-swiper.attraction-swiper .session-card.is-swiper .content {
+  @include flex-wrapper(column, stretch, center);
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+/* Ile kart ma się mieścić naraz:
+   - small: 1 x 300px
+   - md:    2 x 300px + 1 przerwa 16px
+   - lg:    4 x 300px + 3 przerwy 16px
+*/
+@media (max-width: 767px) {
+  .mg-swiper.attraction-swiper {
+    max-width: 300px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .mg-swiper.attraction-swiper {
+    max-width: calc(2 * 300px + 1 * 16px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .mg-swiper.attraction-swiper {
+    max-width: calc(4 * 300px + 3 * 16px);
+  }
 }
