@@ -1,7 +1,14 @@
 @import "abstracts/variables";
 
 .icon {
-    height: 2em;
-    width: 2em;
-    filter: $icon-filter-dark;
-  }
+  display: inline-block;
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+  object-fit: contain;
+  filter: $icon-filter-dark;
+}
+
+.icon-dark {
+  filter: $icon-filter-dark;
+}

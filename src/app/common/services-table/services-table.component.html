@@ -17,7 +17,13 @@
     <tr [ngbTooltip]="service.longDescription || null" triggers="click:blur">
       <td class="text-start">
         @if (service.longDescription) {
-        <span><i class="bi bi-info-square icon-dark"></i></span>
+          <span class="me-1 align-middle">
+            <img
+              src="/icons/wooden-sign.svg"
+              alt="Szczegóły"
+              class="icon icon-dark"
+            />
+          </span>
         }
         {{ service.name }}
       </td>
@@ -31,27 +37,27 @@
 
       @if (hasDetails()) {
       <td>
-        @if (service.details && service.detailsLink) { @if (!isMobile) {
-        <button
-          (click)="openDetails(service.detailsLink)"
-          class="btn btn-primary"
-        >
-          {{ service.details }}
-        </button>
-        } @else {
-        <button
-          class="btn btn-outline small-screens w-100 btn-plain"
-          (click)="openDetails(service.detailsLink)"
-        >
-          <img
-            src="icons/3.svg"
-            alt="Ikona drakkara"
-            class="icon small-screens"
-            width="2em"
-            height="2em"
-          />
-        </button>
-        } }
+        @if (service.details && service.detailsLink) { 
+          @if (!isMobile) {
+            <button
+              (click)="openDetails(service.detailsLink)"
+              class="btn btn-primary"
+            >
+              {{ service.details }}
+            </button>
+          } @else {
+            <button
+              class="btn btn-outline small-screens w-100 btn-plain"
+              (click)="openDetails(service.detailsLink)"
+            >
+              <img
+                src="/icons/3.svg"
+                alt="Ikona drakkara"
+                class="icon small-screens icon-dark"
+              />
+            </button>
+          } 
+        }
       </td>
       }
     </tr>

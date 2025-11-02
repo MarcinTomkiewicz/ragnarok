@@ -1,45 +1,47 @@
 <section class="offers-page-section full-height">
   <div class="container">
-    @if (offerCategory) {
-      <h2 class="section-title">{{ offerCategory.title }}</h2>
-      @if (offerCategory.subtitle) {
-        <p class="section-subtitle">{{ offerCategory.subtitle }}</p>
-      }
-
-      @for (section of offerCategory.sections; track section.title) {
-        <div class="price-category">
-          <h3>{{ section.title }}</h3>
-          @if (section.description) {
-            <p>{{ section.description }}</p>
-          }
-
-          <app-services-table
-            [services]="section.services"
-            [isServiceByHour]="section.isServiceByHour ?? true"
-          />
-
-          @if (section.regulationType) {
-            <div class="disclaimer">
-              Przed
-              {{
-                section.regulationType === 'pass' ? 'zakupem' : 'rezerwacją'
-              }},
-              zapoznaj się z naszym
-              <button (click)="openRules(section.regulationType)" class="btn btn-plain">
-                Regulaminem
-              </button>
-            </div>
-          }
-
-          @if (section.comments) {
-            @for (comment of section.comments; track comment) {
-              <div class="disclaimer" [innerHTML]="comment"></div>
-            }
-          }
-        </div>
-      }
+    @if (loading()) {
+      <app-loader [active]="true" />
     } @else {
-      <p>Nie znaleziono strony z ofertą.</p>
+      @if (offerCategory) {
+        <h2 class="section-title">{{ offerCategory.title }}</h2>
+        @if (offerCategory.subtitle) {
+          <p class="section-subtitle">{{ offerCategory.subtitle }}</p>
+        }
+
+        @for (section of offerCategory.sections; track section.title) {
+          <div class="price-category">
+            <h3>{{ section.title }}</h3>
+            @if (section.description) {
+              <p>{{ section.description }}</p>
+            }
+
+            <app-services-table
+              [services]="section.services"
+              [isServiceByHour]="section.isServiceByHour ?? true"
+            />
+
+            @if (section.regulationType) {
+              <div class="disclaimer">
+                Przed
+                {{ section.regulationType === 'pass' ? 'zakupem' : 'rezerwacją' }},
+                zapoznaj się z naszym
+                <button (click)="openRules(section.regulationType)" class="btn btn-plain">
+                  Regulaminem
+                </button>
+              </div>
+            }
+
+            @if (section.comments) {
+              @for (comment of section.comments; track comment) {
+                <div class="disclaimer" [innerHTML]="comment"></div>
+              }
+            }
+          </div>
+        }
+      } @else {
+        <p>Nie znaleziono strony z ofertą.</p>
+      }
     }
   </div>
 </section>

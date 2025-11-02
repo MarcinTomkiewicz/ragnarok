@@ -1,9 +1,21 @@
-import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { Component, inject, OnDestroy, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  DestroyRef,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { GoogleMapsModule } from '@angular/google-maps';
-import { NgbModal, NgbProgressbarModule, NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
-import { take } from 'rxjs';
+import {
+  NgbModal,
+  NgbProgressbarModule,
+  NgbToastModule,
+} from '@ng-bootstrap/ng-bootstrap';
+import { fromEvent, take } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { MessageModalComponent } from '../../common/message-modal/message-modal.component';
 import { OverlayService } from '../../core/services/overlay.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
@@ -11,7 +23,7 @@ import { SendGridService } from '../../core/services/send-grid/send-grid.service
 import { SeoService } from '../../core/services/seo/seo.service';
 import { MapComponent } from '../../common/map/map.component';
 
-declare const google: any;
+type LatLngLiteral = { lat: number; lng: number };
 
 @Component({
   selector: 'app-contact',
@@ -21,43 +33,40 @@ declare const google: any;
     ReactiveFormsModule,
     NgbToastModule,
     NgbProgressbarModule,
-    GoogleMapsModule,
-    MapComponent
+    MapComponent,
   ],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss'],
 })
-export class ContactComponent implements OnDestroy {
-  // Services
+export class ContactComponent implements OnInit, OnDestroy {
+  // DI
   private readonly modalService = inject(NgbModal);
   private readonly overlayService = inject(OverlayService);
   private readonly sendGridService = inject(SendGridService);
   private readonly fb = inject(FormBuilder);
-  private readonly platformService = inject(PlatformService);
+  private readonly platform = inject(PlatformService);
   private readonly seo = inject(SeoService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  // Google Maps options and markers
-  options: google.maps.MapOptions = {
-    mapId: 'Ragnarok',
-    center: { lat: 52.39693009077769, lng: 16.92630935511027 },
-    zoom: 17,
-  };
+  // Map — przekazywane do <app-map>
+  readonly mapCenter = signal<LatLngLiteral>({
+    lat: 52.39693009077769,
+    lng: 16.92630935511027,
+  });
+  readonly mapZoom = signal<number>(17);
+  readonly mapId = signal<string>('Ragnarok');
+  readonly showMarker = signal<boolean>(true);
+  readonly mapHeight = signal<number>(300);
 
-  markerPosition: google.maps.LatLngLiteral = { lat: 52.39693009077769, lng: 16.92630935511027 };
-  markerOptions: google.maps.marker.AdvancedMarkerElementOptions = {
-    position: this.markerPosition,
-    content: this.createIcon(),
-  };
-
-  // Form properties
-  topics = [
+  // Formularz
+  readonly topics = [
     'Rezerwacja salki',
     'Zapytanie o towar',
     'Organizacja eventu',
     'Ogólne',
   ];
 
-  contactForm = this.fb.group({
+  readonly contactForm = this.fb.group({
     topic: [this.topics[0]],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
@@ -67,20 +76,23 @@ export class ContactComponent implements OnDestroy {
     message: ['', Validators.required],
   });
 
-  // UI properties (signals)
-  isSmallScreen = signal(false);
-  showToast = signal(false);
-  toastMessage = signal('');
-  toastType = signal<'success' | 'error'>('success');
-  progress = signal(100);
-  progressInterval: any;
+  // UI
+  readonly isSmallScreen = signal(false);
+  readonly showToast = signal(false);
+  readonly toastMessage = signal('');
+  readonly toastType = signal<'success' | 'error'>('success');
+  readonly progress = signal(100);
+  private progressInterval: any;
 
-  // Lifecycle hooks
   ngOnInit(): void {
     this.seo.setTitleAndMeta('Kontakt');
-    if (this.platformService.isBrowser) {
+
+    if (this.platform.isBrowser) {
       this.isSmallScreen.set(window.innerWidth < 576);
-      this.observeResize();
+
+      fromEvent(window, 'resize')
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => this.isSmallScreen.set(window.innerWidth < 576));
     }
   }
 
@@ -88,84 +100,64 @@ export class ContactComponent implements OnDestroy {
     clearInterval(this.progressInterval);
   }
 
-  // Methods for handling window resizing
-  private observeResize(): void {
-    if (!this.platformService.isBrowser) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      this.isSmallScreen.set(window.innerWidth < 576);
-    });
-    resizeObserver.observe(document.body);
-  }
-
-  // Map Icon creation (only works on the client-side)
-  private createIcon(): HTMLElement | null {
-    if (!this.platformService.isBrowser) return null;
-
-    const img = document.createElement('img');
-    img.src = 'ragnarok.avif';
-    img.style.backgroundColor = '#16140f';
-    img.style.width = '50px';
-    img.style.height = '50px';
-    img.style.borderRadius = '100%';
-    return img;
-  }
-
-  // Modal handling for small screens
   openModal(): void {
-    if (this.isSmallScreen()) {
-      const modalRef = this.modalService.open(MessageModalComponent, {
-        size: 'sm',
-        centered: true,
+    if (!this.isSmallScreen()) return;
+    const modalRef = this.modalService.open(MessageModalComponent, {
+      size: 'sm',
+      centered: true,
+    });
+    modalRef.componentInstance.message =
+      this.contactForm.get('message')?.value || '';
+    modalRef.componentInstance.result$
+      .pipe(take(1))
+      .subscribe((result: string) => {
+        this.contactForm.patchValue({ message: result });
       });
-      modalRef.componentInstance.message = this.contactForm.get('message')?.value || '';
-      modalRef.componentInstance.result$
-        .pipe(take(1))
-        .subscribe((result: string) => {
-          this.contactForm.patchValue({ message: result });
-        });
-    }
   }
 
-  // Form submission handler
   onSubmit(): void {
-    if (this.contactForm.valid) {
-      this.overlayService.showLoader();
+    if (!this.contactForm.valid) return;
 
-      const emailPayload = {
-        to: 'ragnarok.rooms@gmail.com',
-        subject: `Nowa wiadomość od ${this.contactForm.value.firstName} ${this.contactForm.value.lastName}`,
-        message: `
-          Temat: ${this.contactForm.value.topic}
-          Firma: ${this.contactForm.value.company || 'Nie podano'}
-          Email: ${this.contactForm.value.email}
-          Telefon: ${this.contactForm.value.phone}
-          Wiadomość:
-          ${this.contactForm.value.message}
-        `,
-      };
+    this.overlayService.showLoader();
 
-      this.sendGridService.sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message).subscribe({
+    const v = this.contactForm.value;
+    const emailPayload = {
+      to: 'ragnarok.rooms@gmail.com',
+      subject: `Nowa wiadomość od ${v.firstName} ${v.lastName}`,
+      message: `
+Temat: ${v.topic}
+Firma: ${v.company || 'Nie podano'}
+Email: ${v.email}
+Telefon: ${v.phone}
+Wiadomość:
+${v.message}
+      `,
+    };
+
+    this.sendGridService
+      .sendEmail(emailPayload.to, emailPayload.subject, emailPayload.message)
+      .subscribe({
         next: () => {
           this.overlayService.hideLoader();
-          this.showSuccessToast('Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.');
+          this.showSuccessToast(
+            'Dziękujemy za wiadomość! Skontaktujemy się z Tobą wkrótce.'
+          );
           this.onReset();
         },
-        error: (err: any) => {
+        error: (err) => {
           this.overlayService.hideLoader();
           console.error('Błąd podczas wysyłania e-maila:', err);
-          this.showErrorToast('Wystąpił problem z wysyłaniem wiadomości. Spróbuj ponownie później.');
+          this.showErrorToast(
+            'Wystąpił problem z wysyłaniem wiadomości. Spróbuj ponownie później.'
+          );
         },
       });
-    }
   }
 
-  // Reset the form
   onReset(): void {
     this.contactForm.reset({ topic: this.topics[0] });
   }
 
-  // Toast message handling
   showSuccessToast(message: string): void {
     this.showToast.set(true);
     this.toastMessage.set(message);
@@ -180,8 +172,7 @@ export class ContactComponent implements OnDestroy {
     this.startProgressBar();
   }
 
-  // Progress bar handling
-  startProgressBar(): void {
+  private startProgressBar(): void {
     this.progress.set(100);
     const intervalTime = 50;
     const totalSteps = 5000 / intervalTime;
@@ -189,9 +180,7 @@ export class ContactComponent implements OnDestroy {
 
     this.progressInterval = setInterval(() => {
       this.progress.set(this.progress() - progressStep);
-      if (this.progress() <= 0) {
-        this.closeToast();
-      }
+      if (this.progress() <= 0) this.closeToast();
     }, intervalTime);
   }
 

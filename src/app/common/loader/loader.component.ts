@@ -1,5 +1,5 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LoaderService } from '../../core/services/loader/loader.service';
 
 @Component({
@@ -8,20 +8,24 @@ import { LoaderService } from '../../core/services/loader/loader.service';
   templateUrl: './loader.component.html',
   styleUrls: ['./loader.component.scss'],
 })
-export class LoaderComponent implements OnInit, OnDestroy {
-  isLoading = false;
-  private subscription!: Subscription;
-  private loaderService = inject(LoaderService);
+export class LoaderComponent {
+  /** Optional external control; when set, overrides service state. */
+  active = input<boolean | null>(null);
 
-  ngOnInit() {
-    this.subscription = this.loaderService.loading$.subscribe({
-      next: (state) => {
-        this.isLoading = state
-      },
-    });    
-  }
+  private readonly loaderService = inject(LoaderService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
+  private readonly svcLoading = signal(false);
+
+  /** Final loading flag used by the template. */
+  readonly isLoading = computed<boolean>(() => {
+    const external = this.active();
+    return external ?? this.svcLoading();
+  });
+
+  constructor() {
+    this.loaderService.loading$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((state) => this.svcLoading.set(state));
   }
 }

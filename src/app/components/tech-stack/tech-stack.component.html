@@ -1,20 +1,16 @@
 <section class="tech-stack-section full-height">
   <div class="container">
-    <h2 class="section-title">Poznaj naszych Mistrzów Gry</h2>
-    <p class="section-subtitle">
-      Zespół Ragnaroku to grupa kreatywnych osób, których pasja i zaangażowanie
-      sprawiają, że każda sesja RPG staje się wyjątkowym przeżyciem.
-    </p>
-
     @if (error()) {
       <p class="text-danger text-center">{{ error() }}</p>
     } @else if (isLoading()) {
-      <div class="mg-grid loader-wrapper">
-        <app-loader />
-      </div>
+      <app-loader [active]="true" />
     } @else {
+      <h2 class="section-title">Poznaj naszych Mistrzów Gry</h2>
+      <p class="section-subtitle">
+        Zespół Ragnaroku to grupa kreatywnych osób, których pasja i zaangażowanie
+        sprawiają, że każda sesja RPG staje się wyjątkowym przeżyciem.
+      </p>
 
-      <!-- MOBILE (≤ sm): SWIPER — pokazujemy wszystkich -->
       @if (isSmallScreen() && gms().length) {
         <swiper-container
           class="mg-swiper"
@@ -44,10 +40,7 @@
             </swiper-slide>
           }
         </swiper-container>
-
       } @else {
-
-        <!-- DESKTOP/TABLET: GRID — 4 na start + 'Pokaż więcej' -->
         <div class="mg-grid">
           @for (gm of visibleGms(); track gm.userId) {
             <div class="mg-card gm-card" (click)="onCardClick(gm)">
