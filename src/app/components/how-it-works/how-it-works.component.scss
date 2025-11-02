@@ -5,12 +5,14 @@
 .how-it-works-section {
   @include section-wrapper;
 
+  /* DESKTOP GRID */
   .steps-grid {
     @include mg-grid(4);
     gap: 2.5rem;
     position: relative;
   }
 
+  /* WSPÓLNE STYLE KART (grid/swiper) */
   .step-card {
     position: relative;
     background-color: $bg-color;
@@ -23,6 +25,8 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    width: 280px;
+    height: 350px;
 
     &:hover {
       transform: translateY(-5px);
@@ -43,6 +47,7 @@
       z-index: 3;
     }
 
+    /* łączniki tylko na desktopie */
     &::after {
       content: "";
       position: absolute;
@@ -51,15 +56,8 @@
       width: 20%;
       height: 2px;
       background: linear-gradient(to right, $primary-color, transparent);
-
-      @media (max-width: $breakpoint-sm) {
-        display: none;
-      }
     }
-
-    &:last-child::after {
-      display: none;
-    }
+    &:last-child::after { display: none; }
 
     .step-icon {
       width: 40px;
@@ -108,15 +106,30 @@
     }
 
     &.optional {
-      opacity: 0.85;
+      opacity: 0.88;
+    }
+  }
 
-      &::after {
-        background: linear-gradient(
-          to right,
-          lighten($secondary-color, 10%),
-          transparent
-        );
-      }
+//   .mg-swiper {
+//     swiper-slide {
+//       width: 300px;
+//       display: flex;
+//       justify-content: center;
+//     }
+
+    // .step-card {
+    //   width: 100%;
+    //   height: 334px;
+    //   max-width: 300px;
+    //   padding: 1.5rem;
+    //   &::after { display: none; }
+    // }
+//   }
+
+  @media (max-width: $breakpoint-md) {
+    .step-card {
+      padding: 1.5rem;
+      &::after { display: none; }
     }
   }
 }
