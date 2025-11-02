@@ -22,6 +22,17 @@ import { BackendService } from '../backend/backend.service';
 import { ImageStorageService } from '../backend/image-storage/image-storage.service';
 import { IReservation, ReservationStatus } from '../../interfaces/i-reservation';
 
+type SignupOptions = {
+  /** Pomija sprawdzanie blokad sal przed zapisem hosta (dla admina) */
+  bypassConflicts?: boolean;
+  /**
+   * W trybie manualnych rezerwacji (auto_reservation=false) – jeśli nie uda się
+   * utworzyć/zaktualizować rezerwacji w `reservations`, nie cofaj zapisanego hosta.
+   * (dla admina)
+   */
+  allowReservationFailure?: boolean;
+};
+
 @Injectable({ providedIn: 'root' })
 export class EventHostsService {
   private readonly backend = inject(BackendService);
@@ -112,66 +123,68 @@ export class EventHostsService {
     );
   }
 
-listExternallyBlockedRooms(
-  eventId: string,
-  dateIso: string,
-  rooms: string[],
-  startTime: string,
-  endTime: string,
-  statuses: ReservationStatus[] = [ReservationStatus.Confirmed, ReservationStatus.Pending],
-) {
-  if (!rooms?.length) return of(new Set<string>());
+  listExternallyBlockedRooms(
+    eventId: string,
+    dateIso: string,
+    rooms: string[],
+    startTime: string,
+    endTime: string,
+    statuses: ReservationStatus[] = [ReservationStatus.Confirmed, ReservationStatus.Pending],
+  ) {
+    if (!rooms?.length) return of(new Set<string>());
 
-  // (a) najlepiej odfiltrować status już w zapytaniu (IN)
-  return this.backend
-    .getAll<IReservation>(
-      'reservations',
-      undefined,
-      'asc',
-      {
-        filters: {
-          date: { operator: FilterOperator.EQ, value: dateIso },
-          room_name: { operator: FilterOperator.IN, value: rooms },
-          status: { operator: FilterOperator.IN, value: statuses },
-        } as any,
-      },
-      undefined,
-      undefined,
-      false
-    )
-    .pipe(
-      // (b) bezpieczeństwo: dodatkowy filtr po stronie klienta
-      map((rows: IReservation[] | null) => (rows ?? [])
-        // wytnij rezerwacje należące do tego samego eventu
-        .filter(r => !r.eventId || r.eventId !== eventId)
-        // i upewnij się, że żadne 'cancelled' nie przejdzie
-        .filter(r => r.status !== ReservationStatus.Cancelled)
-      ),
-      map((rows: IReservation[]) => {
-        const evStart = this.hhmmssToMin(startTime);
-        const evEnd   = this.hhmmssToMin(endTime);
+    // (a) najlepiej odfiltrować status już w zapytaniu (IN)
+    return this.backend
+      .getAll<IReservation>(
+        'reservations',
+        undefined,
+        'asc',
+        {
+          filters: {
+            date: { operator: FilterOperator.EQ, value: dateIso },
+            room_name: { operator: FilterOperator.IN, value: rooms },
+            status: { operator: FilterOperator.IN, value: statuses },
+          } as any,
+        },
+        undefined,
+        undefined,
+        false
+      )
+      .pipe(
+        // (b) bezpieczeństwo: dodatkowy filtr po stronie klienta
+        map((rows: IReservation[] | null) => (rows ?? [])
+          // wytnij rezerwacje należące do tego samego eventu
+          .filter(r => !r.eventId || r.eventId !== eventId)
+          // i upewnij się, że żadne 'cancelled' nie przejdzie
+          .filter(r => r.status !== ReservationStatus.Cancelled)
+        ),
+        map((rows: IReservation[]) => {
+          const evStart = this.hhmmssToMin(startTime);
+          const evEnd   = this.hhmmssToMin(endTime);
 
-        const blocked = new Set<string>();
-        for (const r of rows) {
-          const resStart = this.hhmmssToMin(r.startTime);
-          const resEnd   = resStart + Math.max(1, r.durationHours) * 60;
-          // klasyczne sprawdzenie nachodzenia przedziałów
-          if (resStart < evEnd && evStart < resEnd) {
-            blocked.add(r.roomName);
+          const blocked = new Set<string>();
+          for (const r of rows) {
+            const resStart = this.hhmmssToMin(r.startTime);
+            const resEnd   = resStart + Math.max(1, r.durationHours) * 60;
+            // klasyczne sprawdzenie nachodzenia przedziałów
+            if (resStart < evEnd && evStart < resEnd) {
+              blocked.add(r.roomName);
+            }
           }
-        }
-        return blocked;
-      })
-    );
-}
+          return blocked;
+        })
+      );
+  }
 
   // --- create / update / delete signups -------------------------------------
 
-  createSignup(input: IEventHostCreate): Observable<IEventHost> {
+  createSignup(input: IEventHostCreate, options?: SignupOptions): Observable<IEventHost> {
     const { imageFile, ...rest } = input;
 
-    const precheck$ = rest.roomName
-      ? this.fetchEventMeta(rest.eventId).pipe(
+    // 1) (opcjonalnie) pomiń precheck konfliktu sali
+    const precheck$ = (options?.bypassConflicts || !rest.roomName)
+      ? of(void 0)
+      : this.fetchEventMeta(rest.eventId).pipe(
           switchMap(({ start_time, end_time }) =>
             this.assertRoomFree(
               rest.eventId,
@@ -182,8 +195,7 @@ listExternallyBlockedRooms(
               rest.role as HostSignupScope
             )
           )
-        )
-      : of(void 0);
+        );
 
     const upload$ = imageFile
       ? this.images
@@ -239,6 +251,7 @@ listExternallyBlockedRooms(
         } as any;
         return hostOut;
       }),
+      // 2) manual reservations: przy override nie wycofujemy hosta po błędzie rezerwacji
       switchMap((hostOut) => {
         if (!rest.roomName) return of(hostOut);
         return this.fetchEventMeta(rest.eventId).pipe(
@@ -253,9 +266,11 @@ listExternallyBlockedRooms(
             ).pipe(
               map(() => hostOut),
               catchError((err) =>
-                this.backend
-                  .delete('event_occurrence_hosts', hostOut.id)
-                  .pipe(switchMap(() => throwError(() => err)))
+                options?.allowReservationFailure
+                  ? (console.warn('Reservation failed (override keeps host):', err), of(hostOut))
+                  : this.backend
+                      .delete('event_occurrence_hosts', hostOut.id)
+                      .pipe(switchMap(() => throwError(() => err)))
               )
             );
           })
@@ -264,194 +279,204 @@ listExternallyBlockedRooms(
     );
   }
 
-  updateHost(id: string, patch: IEventHostUpdate): Observable<void> {
-  const { imageFile, ...rest } = patch;
+  updateHost(id: string, patch: IEventHostUpdate, options?: SignupOptions): Observable<void> {
+    const { imageFile, ...rest } = patch;
 
-  const prev$ = this.backend.getById<IEventHost>(
-    'event_occurrence_hosts',
-    id,
-    undefined,
-    undefined,
-    false
-  ) as Observable<IEventHost>;
+    const prev$ = this.backend.getById<IEventHost>(
+      'event_occurrence_hosts',
+      id,
+      undefined,
+      undefined,
+      false
+    ) as Observable<IEventHost>;
 
-  return prev$.pipe(
-    // 1) Precheck konfliktu sali (tylko jeśli zmieniamy salę i jest wskazana)
-    switchMap((prev) => {
-      const nextRoom = (rest.roomName as string | null | undefined) ?? prev.roomName;
-      const roomChanged = (prev.roomName || null) !== (nextRoom || null);
+    return prev$.pipe(
+      // 1) (opcjonalnie) pomiń precheck konfliktu sali przy zmianie sali
+      switchMap((prev) => {
+        const nextRoom = (rest.roomName as string | null | undefined) ?? prev.roomName;
+        const roomChanged = (prev.roomName || null) !== (nextRoom || null);
 
-      if (roomChanged && nextRoom) {
-        return this.fetchEventMeta(prev.eventId).pipe(
-          switchMap(({ start_time, end_time }) =>
-            this.assertRoomFree(
-              prev.eventId,
-              prev.occurrenceDate,
-              nextRoom,
-              start_time,
-              end_time,
-              prev.role as HostSignupScope
-            )
-          ),
-          map(() => prev)
-        );
-      }
-      return of(prev);
-    }),
-
-    switchMap((prev) => {
-      const upload$ = imageFile
-        ? this.images
-            .transcodeAndUpload(
-              imageFile,
-              // spójnie z createSignup:
-              `events/${prev.eventId}/hosts/${prev.occurrenceDate}`,
-              {
-                keepBaseName: true,
-                uniqueStrategy: 'date',
-                dateFormat: 'dd-MM-yyyy-HHmmss',
-                prefer: 'avif',
-                quality: 0.82,
-                maxW: 1600,
-                maxH: 1200,
-                largerFallbackFactor: 1.15,
-              }
-            )
-            .pipe(
-              map((p) => p ?? undefined),
-              catchError(() => of(undefined))
-            )
-        : of<string | undefined>(undefined);
-
-      return upload$.pipe(
-        switchMap((newImg) => {
-          const core: Record<string, unknown> = { ...rest };
-          if (newImg !== undefined) core['imagePath'] = newImg;
-
-          const snake = toSnakeCase(core) as Partial<Record<string, unknown>>;
-          return this.backend.update('event_occurrence_hosts', id, snake).pipe(map(() => prev));
-        }),
-
-        switchMap((prev) => {
-          const nextRoom = (rest.roomName as string | null | undefined) ?? prev.roomName;
-          const roomChanged = (prev.roomName || null) !== (nextRoom || null);
-          const sysChanged =
-            Object.prototype.hasOwnProperty.call(rest, 'systemId') &&
-            (rest.systemId ?? null) !== (prev.systemId ?? null);
-
-          if (!prev.roomName && !nextRoom && !sysChanged) return of(void 0);
-
+        if (roomChanged && nextRoom && !options?.bypassConflicts) {
           return this.fetchEventMeta(prev.eventId).pipe(
-            switchMap(({ start_time, end_time, auto_reservation }) => {
-              const duration_hours = this.diffHours(start_time, end_time);
+            switchMap(({ start_time, end_time }) =>
+              this.assertRoomFree(
+                prev.eventId,
+                prev.occurrenceDate,
+                nextRoom,
+                start_time,
+                end_time,
+                prev.role as HostSignupScope
+              )
+            ),
+            map(() => prev)
+          );
+        }
+        return of(prev);
+      }),
 
-              if (auto_reservation) {
+      switchMap((prev) => {
+        const upload$ = imageFile
+          ? this.images
+              .transcodeAndUpload(
+                imageFile,
+                // spójnie z createSignup:
+                `events/${prev.eventId}/hosts/${prev.occurrenceDate}`,
+                {
+                  keepBaseName: true,
+                  uniqueStrategy: 'date',
+                  dateFormat: 'dd-MM-yyyy-HHmmss',
+                  prefer: 'avif',
+                  quality: 0.82,
+                  maxW: 1600,
+                  maxH: 1200,
+                  largerFallbackFactor: 1.15,
+                }
+              )
+              .pipe(
+                map((p) => p ?? undefined),
+                catchError(() => of(undefined))
+              )
+          : of<string | undefined>(undefined);
+
+        return upload$.pipe(
+          switchMap((newImg) => {
+            const core: Record<string, unknown> = { ...rest };
+            if (newImg !== undefined) core['imagePath'] = newImg;
+
+            const snake = toSnakeCase(core) as Partial<Record<string, unknown>>;
+            return this.backend.update('event_occurrence_hosts', id, snake).pipe(map(() => prev));
+          }),
+
+          switchMap((prev) => {
+            const nextRoom = (rest.roomName as string | null | undefined) ?? prev.roomName;
+            const roomChanged = (prev.roomName || null) !== (nextRoom || null);
+            const sysChanged =
+              Object.prototype.hasOwnProperty.call(rest, 'systemId') &&
+              (rest.systemId ?? null) !== (prev.systemId ?? null);
+
+            if (!prev.roomName && !nextRoom && !sysChanged) return of(void 0);
+
+            return this.fetchEventMeta(prev.eventId).pipe(
+              switchMap(({ start_time, end_time, auto_reservation }) => {
+                const duration_hours = this.diffHours(start_time, end_time);
+
+                if (auto_reservation) {
+                  // AUTO: upserty po unikatowym (event_id, room_name, date, start_time)
+                  if (roomChanged) {
+                    const clear$ = prev.roomName
+                      ? this.backend
+                          .upsert(
+                            'reservations',
+                            {
+                              event_id: prev.eventId,
+                              room_name: prev.roomName,
+                              date: prev.occurrenceDate,
+                              start_time,
+                              duration_hours,
+                              status: 'confirmed',
+                              gm_id: null,
+                              system_id: null,
+                            } as any,
+                            'event_id,room_name,date,start_time'
+                          )
+                          .pipe(map(() => void 0))
+                      : of(void 0);
+
+                    const set$ = nextRoom
+                      ? this.backend
+                          .upsert(
+                            'reservations',
+                            {
+                              event_id: prev.eventId,
+                              room_name: nextRoom,
+                              date: prev.occurrenceDate,
+                              start_time,
+                              duration_hours,
+                              status: 'confirmed',
+                              gm_id: prev.hostUserId,
+                              system_id: (rest.systemId ?? prev.systemId) || null,
+                            } as any,
+                            'event_id,room_name,date,start_time'
+                          )
+                          .pipe(map(() => void 0))
+                      : of(void 0);
+
+                    return forkJoin([clear$, set$]).pipe(map(() => void 0));
+                  }
+
+                  if (sysChanged && nextRoom) {
+                    return this.backend
+                      .upsert(
+                        'reservations',
+                        {
+                          event_id: prev.eventId,
+                          room_name: nextRoom,
+                          date: prev.occurrenceDate,
+                          start_time,
+                          duration_hours,
+                          status: 'confirmed',
+                          gm_id: prev.hostUserId,
+                          system_id: rest.systemId ?? null,
+                        } as any,
+                        'event_id,room_name,date,start_time'
+                      )
+                      .pipe(map(() => void 0));
+                  }
+
+                  return of(void 0);
+                }
+
+                // MANUAL: przy override nie failujemy na błędzie rezerwacji
+                const handleErr = (err: any) => {
+                  if (options?.allowReservationFailure) {
+                    console.warn('Reservation update failed (override keeps host):', err);
+                    return of(void 0);
+                  }
+                  return throwError(() => err);
+                };
+
                 if (roomChanged) {
-                  const clear$ = prev.roomName
-                    ? this.backend
-                        .upsert(
-                          'reservations',
-                          {
-                            event_id: prev.eventId,
-                            room_name: prev.roomName,
-                            date: prev.occurrenceDate,
-                            start_time,
-                            duration_hours,
-                            status: 'confirmed',
-                            gm_id: null,
-                            system_id: null,
-                          } as any,
-                          'event_id,room_name,date,start_time'
-                        )
-                        .pipe(map(() => void 0))
+                  const del$ = prev.roomName
+                    ? this.deleteHostReservation(
+                        prev.eventId,
+                        prev.occurrenceDate,
+                        prev.roomName,
+                        prev.hostUserId
+                      )
                     : of(void 0);
 
-                  const set$ = nextRoom
-                    ? this.backend
-                        .upsert(
-                          'reservations',
-                          {
-                            event_id: prev.eventId,
-                            room_name: nextRoom,
-                            date: prev.occurrenceDate,
-                            start_time,
-                            duration_hours,
-                            status: 'confirmed',
-                            gm_id: prev.hostUserId,
-                            system_id: (rest.systemId ?? prev.systemId) || null,
-                          } as any,
-                          'event_id,room_name,date,start_time'
-                        )
-                        .pipe(map(() => void 0))
+                  const ins$ = nextRoom
+                    ? this.ensureHostReservation(
+                        prev.eventId,
+                        prev.occurrenceDate,
+                        nextRoom,
+                        prev.hostUserId,
+                        (rest.systemId ?? prev.systemId) || null
+                      ).pipe(catchError(handleErr))
                     : of(void 0);
 
-                  return forkJoin([clear$, set$]).pipe(map(() => void 0));
+                  return forkJoin([del$, ins$]).pipe(map(() => void 0));
                 }
 
                 if (sysChanged && nextRoom) {
-                  return this.backend
-                    .upsert(
-                      'reservations',
-                      {
-                        event_id: prev.eventId,
-                        room_name: nextRoom,
-                        date: prev.occurrenceDate,
-                        start_time,
-                        duration_hours,
-                        status: 'confirmed',
-                        gm_id: prev.hostUserId,
-                        system_id: rest.systemId ?? null,
-                      } as any,
-                      'event_id,room_name,date,start_time'
-                    )
-                    .pipe(map(() => void 0));
+                  return this.updateHostReservationSystem(
+                    prev.eventId,
+                    prev.occurrenceDate,
+                    nextRoom,
+                    prev.hostUserId,
+                    rest.systemId ?? null,
+                    false
+                  ).pipe(catchError(handleErr));
                 }
 
                 return of(void 0);
-              }
-
-              if (roomChanged) {
-                const del$ = prev.roomName
-                  ? this.deleteHostReservation(
-                      prev.eventId,
-                      prev.occurrenceDate,
-                      prev.roomName,
-                      prev.hostUserId
-                    )
-                  : of(void 0);
-
-                const ins$ = nextRoom
-                  ? this.ensureHostReservation(
-                      prev.eventId,
-                      prev.occurrenceDate,
-                      nextRoom,
-                      prev.hostUserId,
-                      (rest.systemId ?? prev.systemId) || null
-                    )
-                  : of(void 0);
-
-                return forkJoin([del$, ins$]).pipe(map(() => void 0));
-              }
-
-              if (sysChanged && nextRoom) {
-                return this.updateHostReservationSystem(
-                  prev.eventId,
-                  prev.occurrenceDate,
-                  nextRoom,
-                  prev.hostUserId,
-                  rest.systemId ?? null,
-                  false
-                );
-              }
-
-              return of(void 0);
-            })
-          );
-        })
-      );
-    })
-  );
-}
+              })
+            );
+          })
+        );
+      })
+    );
+  }
 
   deleteHost(id: string): Observable<void> {
     const prev$ = this.backend.getById<IEventHost>(
@@ -502,8 +527,8 @@ listExternallyBlockedRooms(
     );
   }
 
-  updateSignup(id: string, patch: Partial<IEventHostUpdate>) {
-    return this.updateHost(id, patch as IEventHostUpdate);
+  updateSignup(id: string, patch: Partial<IEventHostUpdate>, options?: SignupOptions) {
+    return this.updateHost(id, patch as IEventHostUpdate, options);
   }
   deleteSignup(id: string) {
     return this.deleteHost(id);

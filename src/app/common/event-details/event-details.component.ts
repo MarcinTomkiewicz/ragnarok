@@ -4,14 +4,15 @@ import {
   DestroyRef,
   inject,
   signal,
-  effect,
+  LOCALE_ID,
 } from '@angular/core';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   NgbAlertModule,
   NgbModal,
   NgbModalModule,
+  NgbDropdownModule,
 } from '@ng-bootstrap/ng-bootstrap';
 import { DatePipe } from '@angular/common';
 
@@ -28,7 +29,7 @@ import {
   HostSignupScope,
   ParticipantSignupScope,
 } from '../../core/enums/events';
-import { RoomScheduleKind } from '../../core/enums/event-rooms';
+import { RoomScheduleKind, RoomPurpose } from '../../core/enums/event-rooms';
 import { formatYmdLocal } from '../../core/utils/weekday-options';
 
 import { of, combineLatest, forkJoin } from 'rxjs';
@@ -54,11 +55,13 @@ import { IEventParticipant } from '../../core/interfaces/i-event-participant';
 import { ParticipantsListComponent } from '../event-participants-list/event-participants-list.component';
 import { LinkifyPipe } from '../../core/pipes/linkify.pipe';
 import { roomsOrder } from '../../core/utils/roomsOrder';
+import { TimeUtil } from '../../core/services/event/time.util';
+import { isIsoDate, addDaysIso, endOfNextMonthIso } from '../../core/utils/date.util';
 
 type SlotVM = {
   start: string;
   end: string;
-  kind: 'session' | 'discussion' | 'entertainment';
+  kind: RoomPurpose;
 };
 
 @Component({
@@ -66,6 +69,7 @@ type SlotVM = {
   standalone: true,
   imports: [
     NgbAlertModule,
+    NgbDropdownModule,
     DatePipe,
     EventHostsListComponent,
     NgbModalModule,
@@ -75,11 +79,13 @@ type SlotVM = {
   ],
   templateUrl: './event-details.component.html',
   styleUrl: './event-details.component.scss',
+  providers: [{ provide: LOCALE_ID, useValue: 'pl' }],
 })
 export class EventDetailsComponent {
-  // DI
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly events = inject(EventService);
+  private readonly time = inject(TimeUtil);
   private readonly seo = inject(SeoService);
   private readonly images = inject(ImageStorageService);
   private readonly platform = inject(PlatformService);
@@ -91,45 +97,40 @@ export class EventDetailsComponent {
 
   HostSignupScope = HostSignupScope;
 
-  // --- Stan
   private readonly loading = signal(true);
   private readonly errorMessage = signal<string | null>(null);
   private readonly today = signal(formatYmdLocal(new Date()));
 
-  // user
   readonly currentUser = this.auth.user;
 
-  // --- Sygnały
   private readonly slugSig = signal<string | null>(null);
   private readonly queryDateSig = signal<string | null>(null);
   private readonly rawEventSig = signal<EventFull | null>(null);
   private readonly nonSessionHostsSig = signal<HostCardVM[]>([]);
 
-  // --- computed
+  private readonly baselineDateSig = signal<string | null>(null);
+
   readonly occurrenceDate = computed<string | null>(() => {
     const ev = this.rawEventSig();
     if (!ev) return null;
     if (ev.singleDate) return ev.singleDate;
 
     const qd = this.queryDateSig();
-    if (qd) {
-      const hits = this.events.listOccurrencesFE(ev, qd, qd);
-      if (hits.length) return qd;
-    }
+    if (qd && this.events.listOccurrencesFE(ev, qd, qd).length) return qd;
 
-    const today = this.today();
-    const todayHits = this.events.listOccurrencesFE(ev, today, today);
-    if (todayHits.length) return today;
+    const t = this.today();
+    if (this.events.listOccurrencesFE(ev, t, t).length) return t;
 
-    const nexts = this.events.listOccurrencesFE(
-      ev,
-      today,
-      addDaysIso(today, 365)
-    );
-    return nexts.length ? nexts[0] : null;
+    const nexts = this.events.listOccurrencesFE(ev, t, addDaysIso(t, 365));
+    return nexts[0] ?? null;
   });
 
-  readonly hasOccurrence = computed<boolean>(() => !!this.occurrenceDate());
+  readonly occurrenceDateObj = computed<Date | null>(() => {
+    const s = this.occurrenceDate();
+    return s ? new Date(s + 'T00:00:00') : null;
+  });
+
+  readonly hasOccurrence = computed(() => !!this.occurrenceDate());
 
   readonly event = computed<EventFull | null>(() => {
     const ev = this.rawEventSig();
@@ -140,16 +141,45 @@ export class EventDetailsComponent {
 
   readonly eventId = computed(() => this.event()?.id ?? null);
 
-  // Composite helpers
+  private readonly navWindowEnd = computed<string | null>(() => {
+    const base = this.baselineDateSig() ?? this.occurrenceDate();
+    return base ? endOfNextMonthIso(base) : null;
+  });
+
+  readonly occurrenceOptions = computed<string[]>(() => {
+    const ev = this.rawEventSig();
+    const base = this.baselineDateSig() ?? this.occurrenceDate();
+    const end = this.navWindowEnd();
+    if (!ev || !base || !end) return [];
+    return this.events.listOccurrencesFE(ev, base, end);
+  });
+
+  readonly occurrenceOptionsVm = computed(() =>
+    this.occurrenceOptions().map((iso) => ({
+      iso,
+      date: new Date(iso + 'T00:00:00'),
+    }))
+  );
+
+  readonly currentIndex = computed<number>(() => {
+    const opts = this.occurrenceOptions();
+    const cur = this.occurrenceDate();
+    return cur ? Math.max(0, opts.indexOf(cur)) : 0;
+  });
+
+  readonly canPrev = computed(() => this.currentIndex() > 0);
+  readonly canNext = computed(() => {
+    const opts = this.occurrenceOptions();
+    return this.currentIndex() < (opts.length ? opts.length - 1 : 0);
+  });
+
   readonly isComposite = computed(
     () => this.event()?.attractionType === AttractionKind.Composite
   );
   readonly rooms = computed<string[]>(() => roomsOrder(this.event()?.rooms ?? []));
 
-  // wybrana salka (chipsy salek)
   readonly selectedRoom = signal<string | null>(null);
 
-  // plan dla wybranej salki
   readonly roomPlanForSelected = computed<EventRoomPlan | null>(() => {
     const ev = this.event();
     const r = this.selectedRoom();
@@ -157,54 +187,36 @@ export class EventDetailsComponent {
     return (ev.roomPlans ?? []).find((p) => p.roomName === r) ?? null;
   });
 
-  // Slots do debugowania (nie renderujemy chipów slotów, ale wyliczamy i logujemy)
-  private hhmm = (s?: string | null) => (s ?? '').slice(0, 5);
-  private mapPurposeToKind(
-    raw: any
-  ): 'session' | 'discussion' | 'entertainment' {
-    const v = String(raw ?? '')
-      .trim()
-      .toUpperCase();
-    if (v === 'SESSION' || v === 'SESJA') return 'session';
-    if (v === 'DISCUSSION' || v === 'DYSKUSJA') return 'discussion';
-    if (v === 'ENTERTAINMENT' || v === 'ROZRYWKA') return 'entertainment';
-    return 'session';
-  }
-
   readonly slotsForSelectedRoom = computed<SlotVM[]>(() => {
     const ev = this.event();
     const plan = this.roomPlanForSelected();
     if (!ev || !plan) return [];
 
     if (plan.scheduleKind === RoomScheduleKind.FullSpan) {
-      const st = this.hhmm(ev.startTime) || '00:00';
-      const en = this.hhmm(ev.endTime) || '23:59';
-      const kind = this.mapPurposeToKind((plan as any).purpose);
+      const st = this.time.hhmm(ev.startTime ?? '00:00');
+      const en = this.time.hhmm(ev.endTime ?? '23:59');
+      const kind = (plan.purpose as RoomPurpose) ?? RoomPurpose.Session;
       return [{ start: st, end: en, kind }];
     }
 
     if (plan.scheduleKind === RoomScheduleKind.Interval) {
-      // INTERVAL: mamy cykliczne sloty co X. Jeśli backend nie daje gotowych slots,
-      // logujemy sam plan – lista kart i tak wczyta się po hostach.
-      const st = this.hhmm(ev.startTime) || '00:00';
-      const en = this.hhmm(ev.endTime) || '23:59';
-      const kind = this.mapPurposeToKind((plan as any).purpose);
+      const st = this.time.hhmm(ev.startTime ?? '00:00');
+      const en = this.time.hhmm(ev.endTime ?? '23:59');
+      const kind = (plan.purpose as RoomPurpose) ?? RoomPurpose.Session;
       return [{ start: st, end: en, kind }];
     }
 
-    // Explicit slots
-    const slots = (plan.slots ?? []).map((s) => {
-      const purpose = (s as any).purpose ?? (s as any).attractionKind ?? null;
+    const slots = (plan.slots ?? []).map((s: any) => {
+      const purpose: RoomPurpose = (s.purpose as RoomPurpose) ?? RoomPurpose.Session;
       return {
-        start: this.hhmm(s.startTime),
-        end: this.hhmm(s.endTime),
-        kind: this.mapPurposeToKind(purpose),
+        start: this.time.hhmm(s.startTime),
+        end: this.time.hhmm(s.endTime),
+        kind: purpose,
       };
     });
     return slots.sort((a, b) => a.start.localeCompare(b.start));
   });
 
-  // Capacity
   readonly wholeCapacity = computed<number | null>(() => {
     const raw = this.event()?.wholeCapacity ?? null;
     return raw === 0 ? null : raw;
@@ -213,12 +225,7 @@ export class EventDetailsComponent {
     const cap = this.event()?.wholeCapacity ?? null;
     return cap != null && cap <= 0 ? null : cap;
   });
-  readonly sessionDefaultCapacity = computed<number | null>(() => {
-    const raw = this.event()?.sessionCapacity ?? null;
-    return raw && raw > 0 ? raw : null;
-  });
 
-  // Participant signup scope
   readonly participantSignup = computed<ParticipantSignupScope>(() => {
     const ev = this.event();
     if (!ev) return ParticipantSignupScope.Whole;
@@ -229,17 +236,13 @@ export class EventDetailsComponent {
         : ParticipantSignupScope.Whole)
     );
   });
-  readonly showSessionSignup = computed<boolean>(() => {
+  readonly showSessionSignup = computed(() => {
     const s = this.participantSignup();
-    return (
-      s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both
-    );
+    return s === ParticipantSignupScope.Session || s === ParticipantSignupScope.Both;
   });
-  readonly showWholeSignup = computed<boolean>(() => {
+  readonly showWholeSignup = computed(() => {
     const s = this.participantSignup();
-    return (
-      s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both
-    );
+    return s === ParticipantSignupScope.Whole || s === ParticipantSignupScope.Both;
   });
 
   private readonly coverSizes = [
@@ -255,20 +258,17 @@ export class EventDetailsComponent {
     const mid = this.coverSizes[1];
     const src = this.images.getOptimizedPublicUrl(path, mid.w, mid.h);
     const srcset = this.coverSizes
-      .map(
-        (s) => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`
-      )
+      .map((s) => `${this.images.getOptimizedPublicUrl(path, s.w, s.h)} ${s.w}w`)
       .join(', ');
-    const sizesAttr =
-      '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
+    const sizesAttr = '(max-width: 576px) 480px, (max-width: 992px) 768px, 1200px';
     return { src, srcset, sizesAttr, alt: name };
   });
 
   readonly timeRangeLabel = computed(() => {
     const ev = this.event();
     if (!ev) return '-';
-    const st = (ev.startTime ?? '').slice(0, 5);
-    const et = (ev.endTime ?? '').slice(0, 5);
+    const st = this.time.hhmm(ev.startTime ?? '');
+    const et = this.time.hhmm(ev.endTime ?? '');
     if (!st && !et) return ' - ';
     if (st === '00:00' && (!et || et === '23:59')) return 'Cały dzień';
     if (st && et) return `${st} - ${et}`;
@@ -290,7 +290,6 @@ export class EventDetailsComponent {
     }));
   });
 
-  // „Niesesyjne” dla prostych wydarzeń
   readonly nextTitle = computed(() => {
     const h = this.nonSessionHostsSig()?.find((x) => !!x.title?.trim());
     return h?.title?.trim() || '—';
@@ -305,28 +304,22 @@ export class EventDetailsComponent {
       clickable: h.role === HostSignupScope.Staff,
       display:
         h.displayName ||
-        (h.role === HostSignupScope.Staff
-          ? 'Prowadzący (staff)'
-          : 'Prowadzący'),
+        (h.role === HostSignupScope.Staff ? 'Prowadzący (staff)' : 'Prowadzący'),
       host: h,
     }))
   );
 
-  // refresh listy uczestników eventu (WHOLE) po zapisie
   readonly participantsRefresh = signal(0);
   onWholeSignupSuccess(_p: IEventParticipant) {
     this.participantsRefresh.set(this.participantsRefresh() + 1);
   }
   onWholeSignupError(_msg: string) {}
 
-  // VM do widoku
   readonly vm = computed(() => ({
     loading: this.loading(),
     error: this.errorMessage(),
     event: this.event(),
-    isArchive: !!(
-      this.event()?.singleDate && this.event()!.singleDate! < this.today()
-    ),
+    isArchive: !!(this.event()?.singleDate && this.event()!.singleDate! < this.today()),
     cover: this.cover(),
     timeRangeLabel: this.timeRangeLabel(),
     feeLabel: this.setEventFee(this.event()?.entryFeePln ?? 0),
@@ -336,19 +329,24 @@ export class EventDetailsComponent {
       description: this.nextDescription(),
       leads: this.leads(),
     },
+    occurrenceDateObj: this.occurrenceDateObj(),
+    occurrenceOptionsVm: this.occurrenceOptionsVm(),
+    canPrev: this.canPrev(),
+    canNext: this.canNext(),
   }));
 
   constructor() {
-    // --- slug z URL
     this.route.paramMap
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         map((p) => p.get('slug')),
         distinctUntilChanged()
       )
-      .subscribe((slug) => this.slugSig.set(slug));
+      .subscribe((slug) => {
+        this.slugSig.set(slug);
+        this.baselineDateSig.set(null);
+      });
 
-    // --- query date z URL
     this.route.queryParamMap
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -358,7 +356,6 @@ export class EventDetailsComponent {
       )
       .subscribe((d) => this.queryDateSig.set(d));
 
-    // --- ładowanie eventu po zmianie slug
     toObservable(this.slugSig)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -377,9 +374,7 @@ export class EventDetailsComponent {
           this.events.getBySlug(slug).pipe(
             catchError((err) => {
               console.error('Błąd przy pobieraniu wydarzenia:', err);
-              this.errorMessage.set(
-                'Wystąpił błąd podczas pobierania danych wydarzenia.'
-              );
+              this.errorMessage.set('Wystąpił błąd podczas pobierania danych wydarzenia.');
               return of(null);
             }),
             finalize(() => {
@@ -390,41 +385,36 @@ export class EventDetailsComponent {
       )
       .subscribe((ev) => this.rawEventSig.set(ev));
 
-    // --- dociąg „niesesyjnych” hostów dla najbliższej daty
+    toObservable(this.occurrenceDate)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        filter((d): d is string => !!d),
+        tap((d) => {
+          if (!this.baselineDateSig()) this.baselineDateSig.set(d);
+        })
+      )
+      .subscribe();
+
     const eventId$ = toObservable(this.eventId);
     const date$ = toObservable(this.occurrenceDate);
-    const kind$ = toObservable(this.event).pipe(
-      map((ev) => ev?.attractionType)
-    );
+    const kind$ = toObservable(this.event).pipe(map((ev) => ev?.attractionType));
 
     combineLatest([eventId$, date$, kind$])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         switchMap(([id, date, kind]) => {
-          if (!id || !date || kind === AttractionKind.Session)
-            return of([] as HostCardVM[]);
-          return this.hostsSrv
-            .getHostsWithSystems(id, date)
-            .pipe(catchError(() => of([] as HostCardVM[])));
+          if (!id || !date || kind === AttractionKind.Session) return of([] as HostCardVM[]);
+          return this.hostsSrv.getHostsWithSystems(id, date).pipe(catchError(() => of([] as HostCardVM[])));
         }),
         switchMap((rows: any[]) => {
           if (!rows?.length) return of([] as HostCardVM[]);
           const uniqueIds = Array.from(new Set(rows.map((r) => r.hostUserId)));
-          return forkJoin(
-            uniqueIds.map((uid) => this.gmDirectory.getGmById(uid))
-          ).pipe(
+          return forkJoin(uniqueIds.map((uid) => this.gmDirectory.getGmById(uid))).pipe(
             map((gms) => {
-              const byId = new Map(
-                gms.filter(Boolean).map((gm) => [gm!.userId, gm!])
-              );
+              const byId = new Map(gms.filter(Boolean).map((gm) => [gm!.userId, gm!]));
               return rows.map((r) => {
-                const gm =
-                  r.role === HostSignupScope.Staff
-                    ? byId.get(r.hostUserId) ?? null
-                    : null;
-                const imageUrl = r.imagePath
-                  ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512)
-                  : null;
+                const gm = r.role === HostSignupScope.Staff ? byId.get(r.hostUserId) ?? null : null;
+                const imageUrl = r.imagePath ? this.images.getOptimizedPublicUrl(r.imagePath, 768, 512) : null;
                 return {
                   ...r,
                   gm,
@@ -441,14 +431,11 @@ export class EventDetailsComponent {
       )
       .subscribe((items) => this.nonSessionHostsSig.set(items));
 
-    // --- SEO
     toObservable(this.event)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         distinctUntilChanged(
-          (a, b) =>
-            (a?.id ?? '') === (b?.id ?? '') &&
-            (a?.singleDate ?? '') === (b?.singleDate ?? '')
+          (a, b) => (a?.id ?? '') === (b?.id ?? '') && (a?.singleDate ?? '') === (b?.singleDate ?? '')
         ),
         tap((ev) => {
           if (!ev) return;
@@ -458,7 +445,6 @@ export class EventDetailsComponent {
       )
       .subscribe();
 
-    // --- inicjalny wybór salki (chip salek; BEZ chipów godzin)
     toObservable(this.event)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((ev) => {
@@ -470,11 +456,41 @@ export class EventDetailsComponent {
       });
   }
 
+  goPrev() {
+    if (!this.canPrev()) return;
+    const opts = this.occurrenceOptions();
+    this.updateDateQuery(opts[this.currentIndex() - 1]);
+  }
+  goNext() {
+    if (!this.canNext()) return;
+    const opts = this.occurrenceOptions();
+    this.updateDateQuery(opts[this.currentIndex() + 1]);
+  }
+
+  // Bierzemy event z templatki, rozstrzygamy ISO z data-date
+  chooseDateFromDropdown(evt: Event) {
+    const target = evt.currentTarget as HTMLElement | null;
+    const el = target ?? (evt.target as HTMLElement | null);
+    const btn = el?.closest('[data-date]') as HTMLElement | null;
+    const iso = btn?.getAttribute('data-date') ?? '';
+    if (!isIsoDate(iso)) return;
+    const opts = this.occurrenceOptions();
+    if (!opts.includes(iso)) return;
+    this.updateDateQuery(iso);
+  }
+
+  private updateDateQuery(dateIso: string) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { date: dateIso },
+      queryParamsHandling: 'merge',
+    });
+  }
+
   openFacebook(link?: string) {
     if (!link || !this.platform.isBrowser) return;
     window.open(link, '_blank', 'noopener,noreferrer');
   }
-
   openGmProfile(h: HostCardVM, e: MouseEvent) {
     e.stopPropagation();
     if (h.role !== HostSignupScope.Staff) return;
@@ -497,20 +513,7 @@ export class EventDetailsComponent {
   }
   longDescParagraphs(): string[] {
     const v = this.vm?.();
-    const raw = v?.event?.longDescription ?? '';   
+    const raw = v?.event?.longDescription ?? '';
     return raw.split(/\n/);
   }
-  log(data: any): any {
-    console.log(data);
-  }
-}
-
-/** utils */
-function isIsoDate(s: string | null): s is string {
-  return !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
-}
-function addDaysIso(isoYmd: string, days: number): string {
-  const d = new Date(isoYmd + 'T00:00:00');
-  d.setDate(d.getDate() + days);
-  return formatYmdLocal(d);
 }

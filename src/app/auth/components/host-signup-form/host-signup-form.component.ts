@@ -94,9 +94,16 @@ export class HostSignupFormComponent {
   // Datasets & selections
   readonly signupsSignal = signal<IEventHost[]>([]);
   readonly mySignupSignal = signal<IEventHost | null>(null);
+
+  // Staff / Admin
   readonly isStaffSignal = computed<boolean>(() =>
     hasMinimumCoworkerRole(this.auth.user(), CoworkerRoles.Reception)
   );
+  /** TYLKO admin ma override blokad sal/rezerwacji */
+  readonly isAdminSignal = computed<boolean>(() =>
+    hasMinimumCoworkerRole(this.auth.user(), CoworkerRoles.Coowner)
+  );
+
   readonly selectedRoomForPreviewSignal = signal<string | null>(null);
   readonly gmNameByIdSignal = signal<Map<string, string>>(
     new Map<string, string>()
@@ -125,7 +132,7 @@ export class HostSignupFormComponent {
   readonly playstyleViewSignal = signal<GmStyleTag[]>([]);
   readonly triggersViewSignal = signal<string[]>([]);
 
-  // Rooms taken (uwzględnia blokady zewnętrzne + zgłoszenia, slot-aware dla Composite)
+  // Rooms taken
   readonly takenRoomsSignal = signal<Set<string>>(new Set<string>());
   readonly takenLoadingSignal = signal<boolean>(false);
 
@@ -583,7 +590,8 @@ export class HostSignupFormComponent {
         c.setValue(room, { emitEvent: false });
         c.disable({ emitEvent: false });
       } else {
-        if (!this.isRoomTaken(room)) c.setValue(room, { emitEvent: false });
+        if (!this.isRoomTaken(room) || this.isAdminSignal())
+          c.setValue(room, { emitEvent: false });
         c.enable({ emitEvent: false });
       }
     } else {
@@ -665,14 +673,21 @@ export class HostSignupFormComponent {
     const urlRoom = this.qpRoom();
 
     if (locked && urlRoom) return `${urlRoom} (zablokowana przez slot/plan)`;
-    if (event.rooms.length === 1) return event.rooms[0];
+    if (event.rooms.length === 1) {
+      const r = event.rooms[0];
+      if (this.isRoomTaken(r)) {
+        return this.isAdminSignal() ? `${r} — zajęta (override)` : `${r} — zajęta`;
+      }
+      return r;
+    }
 
     const selectedRoom = this.form.value.roomName;
     if (!selectedRoom) {
       const allTaken = event.rooms.every((room: string) =>
         this.takenRoomsSignal().has(room)
       );
-      return allTaken ? 'Brak wolnych salek' : 'Wybierz salkę';
+      if (allTaken) return this.isAdminSignal() ? 'Brak wolnych (override dostępny)' : 'Brak wolnych salek';
+      return 'Wybierz salkę';
     }
     return selectedRoom;
   }
@@ -693,7 +708,7 @@ export class HostSignupFormComponent {
 
   pickRoom(room: string): void {
     if (this.lockRoomSignal()) return; // zablokowane przez URL/plan
-    if (this.isRoomTaken(room)) return;
+    if (!this.isAdminSignal() && this.isRoomTaken(room)) return;
     this.form.controls.roomName.setValue(room);
   }
 
@@ -818,7 +833,7 @@ export class HostSignupFormComponent {
 
     // przy multi-room bez locka – musi być wskazana sala
     if (event.rooms?.length) {
-      if (this.allRoomsTaken()) return;
+      if (!this.isAdminSignal() && this.allRoomsTaken()) return;
       if (
         event.rooms.length > 1 &&
         !this.form.value.roomName &&
@@ -870,6 +885,10 @@ export class HostSignupFormComponent {
     const slotStartTime =
       !!startParam && !!endParam ? this.hhmm(startParam) + ':00' : null;
 
+    const adminOptions = this.isAdminSignal()
+      ? { bypassConflicts: true, allowReservationFailure: true }
+      : undefined;
+
     if (mySignup) {
       const allow = this.allowFullEditSignal();
       const patch: IEventHostUpdate = {
@@ -897,7 +916,7 @@ export class HostSignupFormComponent {
         else if (this.removeExistingImageSignal()) patch.imagePath = null;
       }
 
-      this.eventHostsService.updateHost(mySignup.id, patch).subscribe({
+      this.eventHostsService.updateHost(mySignup.id, patch, adminOptions).subscribe({
         next: () => this.afterSaveSuccess(),
         error: (err: unknown) => this.afterSaveError(err),
       });
@@ -923,7 +942,7 @@ export class HostSignupFormComponent {
         : {}),
     };
 
-    this.eventHostsService.createSignup(payload).subscribe({
+    this.eventHostsService.createSignup(payload, adminOptions).subscribe({
       next: () => this.afterSaveSuccess(),
       error: (err: unknown) => this.afterSaveError(err),
     });
@@ -1051,7 +1070,10 @@ export class HostSignupFormComponent {
 
     const can = this.canSignup;
 
-    const disabled = !can || taken || roomMissing || this.form.invalid;
+    // Admin ignoruje blokady „zajętości”
+    const blocked = this.isAdminSignal() ? false : taken;
+
+    const disabled = !can || blocked || roomMissing || this.form.invalid;
     return disabled;
   }
 }

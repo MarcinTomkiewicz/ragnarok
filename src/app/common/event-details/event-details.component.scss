@@ -15,13 +15,45 @@
   }
 
   .event-meta {
-    display: inline-flex;
-    align-items: center;
+    @include flex-wrapper(row, center, center);
     gap: 0.5rem;
     color: $secondary-text-color;
-    @include responsive-font-size($font-size-xs);
     .separator {
       opacity: 0.6;
+    }
+
+    @media (max-width: $breakpoint-xs) {
+      flex-direction: column;
+      gap: 0.25rem;
+      .separator {
+        display: none;
+      }
+    }
+  }
+
+  .occurrence-nav {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    max-width: 960px;
+    margin: 0.25rem auto 0.5rem;
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: 1fr;
+      .btn {
+        width: 100%;
+      }
+      .nav-center {
+        order: -1;
+      }
     }
   }
 
@@ -98,7 +130,6 @@
     width: min-content;
   }
 
-  /* ===== Composite UI ===== */
   .rooms-tabs {
     display: flex;
     gap: 0.5rem;
@@ -109,42 +140,7 @@
       border-color: var(--primary, #7a5af8);
     }
   }
-  .room-schedule {
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .slot-chips {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-    .btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .slot-kind-badge {
-      font-size: 0.8em;
-      padding: 0.15rem 0.4rem;
-      border-radius: 0.35rem;
-      opacity: 0.95;
-      &.violet {
-        background: #6f42c1;
-        color: #fff;
-      }
-      &.gray {
-        background: #666;
-        color: #fff;
-      }
-      &.golden {
-        background: #c6a645;
-        color: #1b1b1b;
-      }
-    }
-  }
 
-  /* Skeleton loader */
   .skeleton-cover {
     width: 100%;
     height: 100%;
@@ -155,7 +151,6 @@
     width: 100%;
     max-width: 960px;
     margin-top: 1rem;
-
     .skeleton-row {
       @include data-grid-row(
         220px 1fr,

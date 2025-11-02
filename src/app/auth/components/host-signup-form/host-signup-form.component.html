@@ -3,240 +3,349 @@
     <h2 class="section-title mb-4">Zgłoszenie prowadzącego</h2>
 
     @if (loadingSignal()) {
-      <p class="muted">Ładowanie…</p>
+    <p class="muted">Ładowanie…</p>
     } @else if (loadErrorSignal()) {
-      <p class="muted">{{ loadErrorSignal() }}</p>
+    <p class="muted">{{ loadErrorSignal() }}</p>
     } @else if (!eventSignal()) {
-      <p class="muted">Brak danych wydarzenia.</p>
+    <p class="muted">Brak danych wydarzenia.</p>
     } @else { @let event = eventSignal();
 
-      <div class="event-header">
-        <h3 class="event-title">{{ event!.name }}</h3>
-        <div class="event-meta">
-          <span class="meta-item">{{ formattedDateSignal() }}</span>
-          <span class="separator">•</span>
-          <span class="meta-item">{{ event!.startTime.slice(0, 5) }}–{{ event!.endTime.slice(0, 5) }}</span>
-          <span class="separator">•</span>
-          <span class="meta-item">{{ (event!.rooms || []).join(", ") || "-" }}</span>
+    <div class="event-header">
+      <h3 class="event-title">{{ event!.name }}</h3>
+      <div class="event-meta">
+        <span class="meta-item">{{ formattedDateSignal() }}</span>
+        <span class="separator">•</span>
+        <span class="meta-item"
+          >{{ event!.startTime.slice(0, 5) }}–{{
+            event!.endTime.slice(0, 5)
+          }}</span
+        >
+        <span class="separator">•</span>
+        <span class="meta-item">{{
+          (event!.rooms || []).join(", ") || "-"
+        }}</span>
+      </div>
+    </div>
+
+    @if (isStaffSignal()) {
+    <div class="card card-dark admin-preview">
+      <h5 class="title-dark mb-2">Zgłoszenia – podgląd salek</h5>
+
+      <div class="admin-room">
+        <div class="form-group">
+          <label class="text-start">Salka</label>
+          <div class="d-block" ngbDropdown>
+            <button
+              type="button"
+              class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+              ngbDropdownToggle
+            >
+              {{ selectedRoomForPreviewSignal() || "Wybierz salkę" }}
+            </button>
+            <div ngbDropdownMenu class="dropdown-pane dropdown-list">
+              @for (room of (event!.rooms || []); track room) {
+              <button
+                type="button"
+                class="dropdown-item"
+                (click)="pickRoomForPreview(room)"
+              >
+                {{ room }}
+              </button>
+              } @if (!event!.rooms.length) {
+              <div class="dropdown-empty">Brak salek.</div>
+              }
+            </div>
+          </div>
         </div>
       </div>
 
-      @if (isStaffSignal()) {
-        <div class="card card-dark admin-preview">
-          <h5 class="title-dark mb-2">Zgłoszenia – podgląd salek</h5>
-
-          <div class="admin-room">
-            <div class="form-group">
-              <label class="text-start">Salka</label>
-              <div class="d-block" ngbDropdown>
-                <button type="button" class="btn btn-outline dropdown-toggle dropdown-toggle-wide" ngbDropdownToggle>
-                  {{ selectedRoomForPreviewSignal() || "Wybierz salkę" }}
-                </button>
-                <div ngbDropdownMenu class="dropdown-pane dropdown-list">
-                  @for (room of (event!.rooms || []); track room) {
-                    <button type="button" class="dropdown-item" (click)="pickRoomForPreview(room)">{{ room }}</button>
-                  } @if (!event!.rooms.length) {
-                    <div class="dropdown-empty">Brak salek.</div>
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-
-          @if (staffPreviewViewModelSignal()) {
-            <div class="meta-grid">
-              <div class="muted">MG:</div><div>{{ staffPreviewViewModelSignal()!.gmName }}</div>
-              <div class="muted">Salka:</div><div>{{ staffPreviewViewModelSignal()!.room }}</div>
-              <div class="muted">Tytuł:</div><div>{{ staffPreviewViewModelSignal()!.title }}</div>
-
-              @if (isSessionEventSignal()) {
-                <div class="muted">System:</div><div>{{ staffPreviewViewModelSignal()!.systemName }}</div>
-                <div class="muted">Styl:</div>
-                <div>
-                  @if (staffPreviewViewModelSignal()!.styles.length) {
-                    <div class="tag-badges">
-                      @for (tag of staffPreviewViewModelSignal()!.styles; track tag) { <span class="tag-badge golden">{{ tag }}</span> }
-                    </div>
-                  } @else { <em>—</em> }
-                </div>
-                <div class="muted">Triggery:</div>
-                <div>
-                  @if (staffPreviewViewModelSignal()!.triggers.length) {
-                    <div class="tag-badges">
-                      @for (trigger of staffPreviewViewModelSignal()!.triggers; track trigger) { <span class="tag-badge violet">{{ trigger }}</span> }
-                    </div>
-                  } @else { Brak triggerów }
-                </div>
-              }
-
-              <div class="muted">Opis:</div><div class="card-text-dark truncate-4">{{ staffPreviewViewModelSignal()!.description || "-" }}</div>
-            </div>
-
-            @if (staffPreviewViewModelSignal()!.imageUrl) {
-              <div class="image-wrap mt-2">
-                <img [src]="staffPreviewViewModelSignal()!.imageUrl!" alt="Obraz sesji" />
-              </div>
-            }
-          } @else if (selectedRoomForPreviewSignal()) {
-            <div class="card-text-dark mt-2"><em>Brak zgłoszenia w tej salce.</em></div>
-          }
-        </div>
-      }
-
-      <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
-
-        @if (event!.rooms.length > 1) {
-          <div class="form-group">
-            <label class="text-start">Salka</label>
-            <div class="d-block" ngbDropdown>
-              <button
-                type="button"
-                class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
-                ngbDropdownToggle
-                [disabled]="takenLoadingSignal() || allRoomsTaken() || lockRoomSignal()">
-                {{ selectedRoomLabel() }}
-              </button>
-              <div ngbDropdownMenu class="dropdown-pane dropdown-list">
-                @for (room of (event!.rooms || []); track room) {
-                  <button
-                    type="button"
-                    class="dropdown-item"
-                    [class.active]="form.value.roomName === room"
-                    [disabled]="lockRoomSignal() || isRoomTaken(room)"
-                    (click)="pickRoom(room)">
-                    {{ room }} @if (!lockRoomSignal() && isRoomTaken(room)) { <span class="muted">&nbsp;— zajęta</span> }
-                  </button>
-                } @if (!event!.rooms.length) {
-                  <div class="dropdown-empty">Brak salek.</div>
-                }
-              </div>
-            </div>
-            @if (allRoomsTaken()) {
-              <div class="form-text text-danger mt-1">Wszystkie salki są już zajęte w tym terminie.</div>
-            }
-          </div>
-        } @else if (event!.rooms.length === 1) {
-          <div class="form-group">
-            <label class="text-start">Salka</label>
-            <div class="notice">
-              {{ event!.rooms[0] }} @if (isRoomTaken(event!.rooms[0])) { <span class="muted">— zajęta</span> }
-            </div>
-          </div>
-        }
-
-        <div class="form-group">
-          <label class="text-start">Temat</label>
-          <input type="text" class="form-control" formControlName="title" />
-        </div>
-
-        <div class="form-group">
-          <label class="text-start">Obrazek</label>
-          <div class="row-inline">
-            <input type="file" accept="image/*" class="form-control" (change)="onImageChange($event)" />
-            <button type="button" class="btn btn-outline-danger w-auto" (click)="clearNewImage()" [disabled]="!hostImagePreviewUrlSignal()">Usuń nowo dodany</button>
-            <button type="button" class="btn btn-outline-danger w-auto" (click)="removeExistingImage()" [disabled]="!existingImageUrlSignal()">Usuń istniejący</button>
-          </div>
-          @if (hostImagePreviewUrlSignal() || existingImageUrlSignal()) {
-            <div class="preview-wrap">
-              <img class="host-image-preview" [src]="hostImagePreviewUrlSignal() || existingImageUrlSignal()!" alt="Podgląd obrazka" />
-            </div>
-          }
-          <div class="form-text">Najlepiej obraz poziomy; większe pliki zostaną skompresowane (AVIF/WebP, ~max 1600×1200).</div>
-        </div>
+      @if (staffPreviewViewModelSignal()) {
+      <div class="meta-grid">
+        <div class="muted">MG:</div>
+        <div>{{ staffPreviewViewModelSignal()!.gmName }}</div>
+        <div class="muted">Salka:</div>
+        <div>{{ staffPreviewViewModelSignal()!.room }}</div>
+        <div class="muted">Tytuł:</div>
+        <div>{{ staffPreviewViewModelSignal()!.title }}</div>
 
         @if (isSessionEventSignal()) {
-          <div class="form-group">
-            <label class="text-start">System</label>
-            @if (systemsLoadingSignal()) {
-              <div class="muted">Ładowanie listy systemów…</div>
-            } @else {
-              <app-systems-picker
-                [systems]="systemsSignal()"
-                [selectedIds]="selectedSystemIdsViewSignal()"
-                (selectedChange)="onSystemsChange($event)">
-              </app-systems-picker>
-            }
+        <div class="muted">System:</div>
+        <div>{{ staffPreviewViewModelSignal()!.systemName }}</div>
+        <div class="muted">Styl:</div>
+        <div>
+          @if (staffPreviewViewModelSignal()!.styles.length) {
+          <div class="tag-badges">
+            @for (tag of staffPreviewViewModelSignal()!.styles; track tag) {
+            <span class="tag-badge golden">{{ tag }}</span> }
           </div>
-
-          <div class="form-group">
-            <label class="text-start">Tagi stylu gry (max 3)</label>
-            <style-tags
-              [selected]="playstyleViewSignal()"
-              (selectedChange)="onStyleTagsChange($event)">
-            </style-tags>
+          } @else { <em>—</em> }
+        </div>
+        <div class="muted">Triggery:</div>
+        <div>
+          @if (staffPreviewViewModelSignal()!.triggers.length) {
+          <div class="tag-badges">
+            @for (trigger of staffPreviewViewModelSignal()!.triggers; track
+            trigger) { <span class="tag-badge violet">{{ trigger }}</span> }
           </div>
-
-          <div class="form-group">
-            <label class="text-start">Triggery (max 12)</label>
-            @if (triggersLoadingSignal()) {
-              <div class="muted">Ładowanie triggerów…</div>
-            } @else if (!triggersSignal().length) {
-              <div class="muted">Brak triggerów.</div>
-            } @else {
-              <app-trigger-picker
-                [all]="triggersSignal()"
-                [selected]="triggersViewSignal()"
-                [maxSelected]="12"
-                (selectedChange)="form.controls.triggers.setValue($event)">
-              </app-trigger-picker>
-            }
-          </div>
-
-          @if (canEditSessionCapacitySignal()) {
-            <div class="form-group">
-              <label class="text-start">Liczba uczestników (3–5)</label>
-              <input
-                type="number"
-                class="form-control"
-                formControlName="sessionCapacity"
-                min="3"
-                max="5"
-                step="1"
-                [disabled]="detailsDisabledSignal()"
-              />
-              @if (form.controls.sessionCapacity.invalid && form.controls.sessionCapacity.touched) {
-                <div class="form-text text-danger mt-1">Podaj liczbę od 3 do 5.</div>
-              }
-            </div>
-          }
+          } @else { Brak triggerów }
+        </div>
         }
 
-        <div class="form-group">
-          <label class="text-start">Opis</label>
-          <textarea class="form-control" formControlName="description" rows="10"></textarea>
+        <div class="muted">Opis:</div>
+        <div class="card-text-dark truncate-4">
+          {{ staffPreviewViewModelSignal()!.description || "-" }}
         </div>
+      </div>
 
-        <div class="actions">
-          <button type="button" class="btn btn-outline btn-sm" (click)="goBack()">Wstecz</button>
+      @if (staffPreviewViewModelSignal()!.imageUrl) {
+      <div class="image-wrap mt-2">
+        <img
+          [src]="staffPreviewViewModelSignal()!.imageUrl!"
+          alt="Obraz sesji"
+        />
+      </div>
+      } } @else if (selectedRoomForPreviewSignal()) {
+      <div class="card-text-dark mt-2">
+        <em>Brak zgłoszenia w tej salce.</em>
+      </div>
+      }
+    </div>
+    }
 
-          @if (mySignupSignal()) {
-            <div class="inline-actions">
-              @if (!allowFullEditSignal()) {
-                <button type="button" class="btn btn-outline btn-sm" (click)="enableDetailsEdit()">Edytuj szczegóły</button>
-              } @else {
-                <button type="button" class="btn btn-outline btn-sm" (click)="cancelDetailsEdit()">Anuluj edycję</button>
-              }
-              <button type="button" class="btn btn-outline-danger btn-sm" (click)="resign()">Zrezygnuj z prowadzenia</button>
-              <button
-                type="submit"
-                class="btn btn-primary btn-sm"
-                [disabled]="shouldButtonDisable()">
-                Zapisz zmiany
-              </button>
-            </div>
-          } @else {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="user-info-form">
+      @if (event!.rooms.length > 1) {
+      <div class="form-group">
+        <label class="text-start">Salka</label>
+        <div class="d-block" ngbDropdown>
+          <button
+            type="button"
+            class="btn btn-outline dropdown-toggle dropdown-toggle-wide"
+            ngbDropdownToggle
+            [disabled]="
+              takenLoadingSignal() ||
+              (!isAdminSignal() && allRoomsTaken()) ||
+              lockRoomSignal()
+            "
+          >
+            {{ selectedRoomLabel() }}
+          </button>
+          <div ngbDropdownMenu class="dropdown-pane dropdown-list">
+            @for (room of (event!.rooms || []); track room) {
             <button
-              type="submit"
-              class="btn btn-primary btn-sm"
-              [disabled]="shouldButtonDisable()">
-              Zgłoś się
+              type="button"
+              class="dropdown-item"
+              [class.active]="form.value.roomName === room"
+              [disabled]="
+                lockRoomSignal() || (isRoomTaken(room) && !isAdminSignal())
+              "
+              (click)="pickRoom(room)"
+            >
+              {{ room }} @if (!lockRoomSignal() && isRoomTaken(room)) {
+              <span class="muted"
+                >&nbsp;— zajęta @if (isAdminSignal()) {
+                <span> (można dodać)</span>
+                }
+              </span>
+
+              }
             </button>
+            } @if (!event!.rooms.length) {
+            <div class="dropdown-empty">Brak salek.</div>
+            }
+          </div>
+        </div>
+        @if (allRoomsTaken() && !isAdminSignal()) {
+        <div class="form-text text-danger mt-1">
+          Wszystkie salki są już zajęte w tym terminie.
+        </div>
+        }
+      </div>
+      } @else if (event!.rooms.length === 1) {
+      <div class="form-group">
+        <label class="text-start">Salka</label>
+        <div class="notice">
+          {{ event!.rooms[0] }}
+          @if (isRoomTaken(event!.rooms[0])) {
+          <span class="muted"
+            >— zajęta<span *ngIf="isAdminSignal()"> (override)</span></span
+          >
           }
         </div>
-      </form>
+      </div>
+      }
 
-      <ng-template #hostSuccessToast><strong>Sukces!</strong> Zgłoszenie zostało zapisane.</ng-template>
-      <ng-template #hostErrorToast><strong>Błąd!</strong> Nie udało się zapisać zgłoszenia.</ng-template>
+      <div class="form-group">
+        <label class="text-start">Temat</label>
+        <input type="text" class="form-control" formControlName="title" />
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Obrazek</label>
+        <div class="row-inline">
+          <input
+            type="file"
+            accept="image/*"
+            class="form-control"
+            (change)="onImageChange($event)"
+          />
+          <button
+            type="button"
+            class="btn btn-outline-danger w-auto"
+            (click)="clearNewImage()"
+            [disabled]="!hostImagePreviewUrlSignal()"
+          >
+            Usuń nowo dodany
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-danger w-auto"
+            (click)="removeExistingImage()"
+            [disabled]="!existingImageUrlSignal()"
+          >
+            Usuń istniejący
+          </button>
+        </div>
+        @if (hostImagePreviewUrlSignal() || existingImageUrlSignal()) {
+        <div class="preview-wrap">
+          <img
+            class="host-image-preview"
+            [src]="hostImagePreviewUrlSignal() || existingImageUrlSignal()!"
+            alt="Podgląd obrazka"
+          />
+        </div>
+        }
+        <div class="form-text">
+          Najlepiej obraz poziomy; większe pliki zostaną skompresowane
+          (AVIF/WebP, ~max 1600×1200).
+        </div>
+      </div>
+
+      @if (isSessionEventSignal()) {
+      <div class="form-group">
+        <label class="text-start">System</label>
+        @if (systemsLoadingSignal()) {
+        <div class="muted">Ładowanie listy systemów…</div>
+        } @else {
+        <app-systems-picker
+          [systems]="systemsSignal()"
+          [selectedIds]="selectedSystemIdsViewSignal()"
+          (selectedChange)="onSystemsChange($event)"
+        >
+        </app-systems-picker>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Tagi stylu gry (max 3)</label>
+        <style-tags
+          [selected]="playstyleViewSignal()"
+          (selectedChange)="onStyleTagsChange($event)"
+        >
+        </style-tags>
+      </div>
+
+      <div class="form-group">
+        <label class="text-start">Triggery (max 12)</label>
+        @if (triggersLoadingSignal()) {
+        <div class="muted">Ładowanie triggerów…</div>
+        } @else if (!triggersSignal().length) {
+        <div class="muted">Brak triggerów.</div>
+        } @else {
+        <app-trigger-picker
+          [all]="triggersSignal()"
+          [selected]="triggersViewSignal()"
+          [maxSelected]="12"
+          (selectedChange)="form.controls.triggers.setValue($event)"
+        >
+        </app-trigger-picker>
+        }
+      </div>
+
+      @if (canEditSessionCapacitySignal()) {
+      <div class="form-group">
+        <label class="text-start">Liczba uczestników (3–5)</label>
+        <input
+          type="number"
+          class="form-control"
+          formControlName="sessionCapacity"
+          min="3"
+          max="5"
+          step="1"
+          [disabled]="detailsDisabledSignal()"
+        />
+        @if (form.controls.sessionCapacity.invalid &&
+        form.controls.sessionCapacity.touched) {
+        <div class="form-text text-danger mt-1">Podaj liczbę od 3 do 5.</div>
+        }
+      </div>
+      } }
+
+      <div class="form-group">
+        <label class="text-start">Opis</label>
+        <textarea
+          class="form-control"
+          formControlName="description"
+          rows="10"
+        ></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-outline btn-sm" (click)="goBack()">
+          Wstecz
+        </button>
+
+        @if (mySignupSignal()) {
+        <div class="inline-actions">
+          @if (!allowFullEditSignal()) {
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            (click)="enableDetailsEdit()"
+          >
+            Edytuj szczegóły
+          </button>
+          } @else {
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            (click)="cancelDetailsEdit()"
+          >
+            Anuluj edycję
+          </button>
+          }
+          <button
+            type="button"
+            class="btn btn-outline-danger btn-sm"
+            (click)="resign()"
+          >
+            Zrezygnuj z prowadzenia
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary btn-sm"
+            [disabled]="shouldButtonDisable()"
+          >
+            Zapisz zmiany
+          </button>
+        </div>
+        } @else {
+        <button
+          type="submit"
+          class="btn btn-primary btn-sm"
+          [disabled]="shouldButtonDisable()"
+        >
+          Zgłoś się
+        </button>
+        }
+      </div>
+    </form>
+
+    <ng-template #hostSuccessToast
+      ><strong>Sukces!</strong> Zgłoszenie zostało zapisane.</ng-template
+    >
+    <ng-template #hostErrorToast
+      ><strong>Błąd!</strong> Nie udało się zapisać zgłoszenia.</ng-template
+    >
     }
   </div>
 </div>
