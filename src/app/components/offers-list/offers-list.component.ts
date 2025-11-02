@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import {
@@ -18,9 +18,16 @@ import {
   OperatorFunction,
   switchMap,
   tap,
+  catchError,
+  finalize,
+  forkJoin,
 } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { CategoryListComponent } from '../../common/category-list/category-list/category-list.component';
 import { InfoModalComponent } from '../../common/info-modal/info-modal.component';
+import { LoaderComponent } from '../../common/loader/loader.component';
+
 import { CategoryType } from '../../core/enums/categories';
 import { FilterOperator } from '../../core/enums/filterOperator';
 import { IconClass } from '../../core/enums/icons';
@@ -37,7 +44,6 @@ import { SeoService } from '../../core/services/seo/seo.service';
 import { OffersService } from '../../core/services/offers/offers.service';
 
 type OfferRow = Offer & {
-  // join z Supabase (snake_case trafia do camelCase przez Twój backend)
   offersImages?: Array<{
     id: string;
     offerId: number;
@@ -46,6 +52,8 @@ type OfferRow = Offer & {
     sortIndex: number | null;
     createdAt: string;
   }>;
+  /** Precomputed, optimized image URL for card thumbnail */
+  _imgUrl?: string;
 };
 
 @Component({
@@ -60,6 +68,7 @@ type OfferRow = Offer & {
     NgbPaginationModule,
     NgbTypeaheadModule,
     FormsModule,
+    LoaderComponent,
   ],
   templateUrl: './offers-list.component.html',
   styleUrl: './offers-list.component.scss',
@@ -69,9 +78,11 @@ export class OffersListComponent implements OnInit {
   private readonly platformService = inject(PlatformService);
   private readonly modalService = inject(NgbModal);
   private readonly router = inject(Router);
-  readonly categoryService = inject(CategoryService);
   private readonly seo = inject(SeoService);
   private readonly offersSvc = inject(OffersService);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly categoryService = inject(CategoryService);
+
   readonly CategoryType = CategoryType;
 
   categories: Category[] = [];
@@ -85,6 +96,9 @@ export class OffersListComponent implements OnInit {
   currentPage = signal<number>(1);
   pageSize = signal<number>(10);
   totalOffers = signal<number>(0);
+
+  /** Local overlay loader (also used during pagination/sort/filter). Starts true for SSR. */
+  readonly isLoading = signal(true);
 
   offerLabels: Record<OfferSortField, string> = {
     [OfferSortField.ID]: 'Domyślnie',
@@ -111,19 +125,23 @@ export class OffersListComponent implements OnInit {
   modalOpened = false;
 
   ngOnInit(): void {
-    this.categoryService.loadCategories().subscribe({
-      next: ({ categories, subcategories }) => {
-        const brand = categories.find((c) => c.name === this.BRAND_NAME) ?? null;
-        this.brandCategoryId.set(brand?.id ?? null);
+    this.categoryService
+      .loadCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ categories, subcategories }) => {
+          const brand = categories.find((c) => c.name === this.BRAND_NAME) ?? null;
+          this.brandCategoryId.set(brand?.id ?? null);
 
-        const brandId = this.brandCategoryId();
-        this.categories = brandId == null ? categories : categories.filter((c) => c.id !== brandId);
-        this.subcategories = brandId == null ? subcategories : subcategories.filter((sc) => sc.categoryId !== brandId);
+          const brandId = this.brandCategoryId();
+          this.categories = brandId == null ? categories : categories.filter((c) => c.id !== brandId);
+          this.subcategories = brandId == null ? subcategories : subcategories.filter((sc) => sc.categoryId !== brandId);
 
-        this.loadOffers();
-      },
-      error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
-    });
+          this.loadOffers();
+        },
+        error: (err) => console.error('Błąd podczas pobierania kategorii:', err),
+      });
+
     this.seo.setTitleAndMeta('Sklep RPG');
   }
 
@@ -148,12 +166,8 @@ export class OffersListComponent implements OnInit {
     const brandId = this.brandCategoryId();
 
     const filters: IFilters = {};
-    if (subcategoryId != null) {
-      filters['subcategoryId'] = { operator: FilterOperator.EQ, value: subcategoryId };
-    }
-    if (brandId != null) {
-      filters['categoryId'] = { operator: FilterOperator.NE, value: brandId };
-    }
+    if (subcategoryId != null) filters['subcategoryId'] = { operator: FilterOperator.EQ, value: subcategoryId };
+    if (brandId != null)       filters['categoryId']   = { operator: FilterOperator.NE, value: brandId };
 
     const pagination: IPagination = {
       page,
@@ -164,24 +178,46 @@ export class OffersListComponent implements OnInit {
     const sortingField: OfferSortField = this.currentSorting();
     const sortingOrder = this.sortOrders().get(sortingField) ?? SortOrder.Asc;
 
-    // ← KLUCZOWE: dołączamy join na offers_images + przetwarzanie obrazów
+    this.isLoading.set(true);
+
     this.backendService
       .getAll<OfferRow>('offers', sortingField, sortingOrder, pagination, undefined, 'offers_images(*)', true)
-      .subscribe({
-        next: (offers) => {
-          this.offersList = offers;
-          this.filteredOffers = offers;
-          this.updateTotalOffers(pagination.filters);
-        },
-        error: (err) => console.error('Błąd podczas pobierania ofert:', err),
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError((err) => {
+          console.error('Błąd podczas pobierania ofert:', err);
+          return of<OfferRow[]>([]);
+        }),
+        switchMap((offers) => {
+          // Precompute image URLs for current page
+          const withUrls: OfferRow[] = offers.map((o) => ({
+            ...o,
+            _imgUrl: this.computeImageUrl(o),
+          }));
+
+          // Preload images (browser only). On SSR it's a no-op.
+          const urls = withUrls.map((o) => o._imgUrl!).filter(Boolean);
+          return this.preloadImages(urls).pipe(map(() => withUrls));
+        }),
+        finalize(() => {
+          // Important: avoid turning off loader on SSR
+          if (this.platformService.isBrowser) this.isLoading.set(false);
+        })
+      )
+      .subscribe((withUrls) => {
+        this.offersList = withUrls;
+        this.filteredOffers = withUrls;
+        this.updateTotalOffers(pagination.filters);
       });
   }
 
   updateTotalOffers(filters?: IFilters): void {
-    this.backendService.getCount<Offer>('offers', filters).subscribe({
-      next: (count) => this.totalOffers.set(count),
-      error: (err) => console.error('Błąd podczas liczenia ofert:', err),
-    });
+    this.backendService.getCount<Offer>('offers', filters)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (count) => this.totalOffers.set(count),
+        error: (err) => console.error('Błąd podczas liczenia ofert:', err),
+      });
   }
 
   get sortFields(): OfferSortField[] {
@@ -208,7 +244,7 @@ export class OffersListComponent implements OnInit {
   }
 
   buyNow(link: string | null | undefined, ev?: MouseEvent) {
-    ev?.stopPropagation(); // żeby klik nie otwierał karty
+    ev?.stopPropagation();
     if (link) window.open(link, '_blank', 'noopener,noreferrer');
   }
 
@@ -238,7 +274,7 @@ export class OffersListComponent implements OnInit {
     return order === SortOrder.Asc ? IconClass.AlphaAsc : IconClass.AlphaDesc;
   }
 
-  // Typeahead
+  // Typeahead (works independently of section overlay)
   search: OperatorFunction<string, OfferRow[]> = (text$: Observable<string>) =>
     text$.pipe(
       debounceTime(300),
@@ -255,11 +291,10 @@ export class OffersListComponent implements OnInit {
         }
 
         return this.backendService
-          // też z joinem, żeby później mieć obrazki w cache
           .getAll<OfferRow>('offers', OfferSortField.Title, SortOrder.Asc, { filters: baseFilters }, undefined, 'offers_images(*)', true)
           .pipe(
             tap((offers) => {
-              this.allOffers = offers;
+              this.allOffers = offers.map((o) => ({ ...o, _imgUrl: this.computeImageUrl(o) }));
               this.offersFetched = true;
             }),
             map(() => this.filterOffers(term))
@@ -271,18 +306,16 @@ export class OffersListComponent implements OnInit {
     return this.allOffers.filter((offer) => offer.title.toLowerCase().includes(term.toLowerCase()));
   }
 
-  // formatowanie w dropdownie
   resultFormatter = (offer: OfferRow) => offer.title;
   inputFormatter = (offer: OfferRow) => (typeof offer === 'string' ? offer : offer.title);
 
-  // Klik w całą kartę → szczegóły
   openDetails(offer: OfferRow) {
     this.router.navigate(['/offers', 'store', offer.slug]);
   }
 
-  // Rozwiązywanie miniatury: primary → first → legacy
-  resolveOfferImage(offer: OfferRow): string {
-    const imgs = (offer.offersImages ?? []);
+  /** Build optimized public URL for a card */
+  private computeImageUrl(offer: OfferRow): string {
+    const imgs = offer.offersImages ?? [];
     let path: string | null = null;
 
     if (imgs.length) {
@@ -295,14 +328,32 @@ export class OffersListComponent implements OnInit {
     return url ?? '';
   }
 
-  // klik w "Szczegóły" w karcie (zapobiega otwieraniu po zewn. kliknięciach)
+  /** Preload images; resolves after all load/error events fire. No-op on SSR. */
+  private preloadImages(urls: string[]): Observable<void> {
+    if (!this.platformService.isBrowser) return of(void 0);
+    const unique = Array.from(new Set(urls.filter(Boolean)));
+    if (!unique.length) return of(void 0);
+
+    const loaders = unique.map(
+      (src) =>
+        new Observable<void>((observer) => {
+          const img = new Image();
+          img.onload = () => { observer.next(); observer.complete(); };
+          img.onerror = () => { observer.next(); observer.complete(); };
+          img.src = src;
+        })
+    );
+
+    return forkJoin(loaders).pipe(map(() => void 0));
+  }
+
   goToDetails(ev: MouseEvent, offer: OfferRow) {
     ev.stopPropagation();
     this.openDetails(offer);
   }
 
   onSelectOffer(event: any) {
-  const selected: OfferRow = event.item;
-  this.router.navigate(['/offers', 'store', selected.slug]);
-}
+    const selected: OfferRow = event.item;
+    this.router.navigate(['/offers', 'store', selected.slug]);
+  }
 }

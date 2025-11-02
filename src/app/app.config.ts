@@ -15,6 +15,10 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { AppInitializerProvider } from './core/config/app.initializer';
 import { ENV_FACEBOOK_PIXEL_ID, ENV_GOOGLE_MAPS_API_KEY, ENV_GTM_ID } from './core/tokens';
+import { registerLocaleData } from '@angular/common';
+import localePl from '@angular/common/locales/pl';
+
+registerLocaleData(localePl);
 
 export const appConfig: ApplicationConfig = {
   providers: [

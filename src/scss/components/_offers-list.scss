@@ -5,6 +5,10 @@
 .offers-section {
   @include section-wrapper;
 
+  .container {
+    position: relative;
+  }
+
   .offers-wrapper {
     display: flex;
     gap: 2rem;

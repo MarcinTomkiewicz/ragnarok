@@ -1,24 +1,28 @@
 <section class="event-calendar-section full-height">
   <div class="container">
-    <h2 class="section-title">Kalendarz wydarzeń</h2>
-    <p class="section-subtitle">
-      Witamy w kalendarzu wydarzeń RPG! Znajdziesz tu sesje prowadzone przez
-      różnych Mistrzów Gry, wydarzenia otwarte oraz spotkania tematyczne.
-      Przeglądaj wydarzenia, wybieraj ulubione systemy i dołącz do przygody!
-    </p>
+    @if (loading()) {
+      <app-loader [active]="true" />
+    } @else {
+      <h2 class="section-title">Kalendarz wydarzeń</h2>
+      <p class="section-subtitle">
+        Witamy w kalendarzu wydarzeń RPG! Znajdziesz tu sesje prowadzone przez
+        różnych Mistrzów Gry, wydarzenia otwarte oraz spotkania tematyczne.
+        Przeglądaj wydarzenia, wybieraj ulubione systemy i dołącz do przygody!
+      </p>
 
-    <div class="event-section">
-      <h3 class="event-header">Wydarzenia cykliczne</h3>
-      <app-event-list
-        [events]="$any(recurringEvents$ | async) ?? []"
-        [recurring]="true"
-      ></app-event-list>
+      <div class="event-section">
+        <h3 class="event-header">Wydarzenia cykliczne</h3>
+        <app-event-list
+          [events]="$any(recurringEvents$ | async) ?? []"
+          [recurring]="true"
+        ></app-event-list>
 
-      <h3 class="event-header">Wydarzenia jednorazowe</h3>
-      <app-event-list
-        [events]="$any(singleEvents$ | async) ?? []"
-        [recurring]="false"
-      ></app-event-list>
-    </div>
+        <h3 class="event-header">Wydarzenia jednorazowe</h3>
+        <app-event-list
+          [events]="$any(singleEvents$ | async) ?? []"
+          [recurring]="false"
+        ></app-event-list>
+      </div>
+    }
   </div>
 </section>

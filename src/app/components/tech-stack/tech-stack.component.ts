@@ -9,8 +9,8 @@ import {
   DestroyRef,
 } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { startWith, map } from 'rxjs/operators';
-import { fromEvent } from 'rxjs';
+import { startWith, map, catchError, finalize } from 'rxjs/operators';
+import { fromEvent, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { register } from 'swiper/element/bundle';
 
@@ -19,7 +19,6 @@ import { GmDetailsModalComponent } from '../../common/gm-details-modal/gm-detail
 import { LoaderComponent } from '../../common/loader/loader.component';
 import { CoworkerRoles, RoleDisplay } from '../../core/enums/roles';
 import { IGmData } from '../../core/interfaces/i-gm-profile';
-import { LoaderService } from '../../core/services/loader/loader.service';
 import { PlatformService } from '../../core/services/platform/platform.service';
 import { SeoService } from '../../core/services/seo/seo.service';
 
@@ -34,7 +33,6 @@ const SMALL_BP = 767;
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class TechStackComponent implements OnInit {
-  private readonly loader = inject(LoaderService);
   private readonly platform = inject(PlatformService);
   private readonly seo = inject(SeoService);
   private readonly gmDirectory = inject(GmDirectoryService);
@@ -61,46 +59,43 @@ export class TechStackComponent implements OnInit {
   ngOnInit(): void {
     this.seo.setTitleAndMeta('Nasi Mistrzowie Gry');
 
-    if (!this.platform.isBrowser) {
-      this.isLoading.set(false);
-      return;
+    // Rejestracja Swipera i resize — tylko w przeglądarce
+    if (this.platform.isBrowser) {
+      register();
+      const win = this.platform.getWindow()!;
+      fromEvent(win, 'resize')
+        .pipe(
+          startWith(null),
+          map(() => win.innerWidth <= SMALL_BP),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe((isSm) => this.isSmallScreen.set(isSm));
     }
 
-    register();
-
-    const win = this.platform.getWindow()!;
-    fromEvent(win, 'resize')
-      .pipe(
-        startWith(null),
-        map(() => win.innerWidth <= SMALL_BP),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((isSm) => this.isSmallScreen.set(isSm));
-
+    // Pobieranie danych: uruchamiaj zarówno w SSR, jak i w przeglądarce
     this.loadData();
   }
 
   private loadData(): void {
-    this.loader.show();
-    this.gmDirectory.getAllGms().subscribe({
-      next: (rows) => {
+    this.isLoading.set(true);
+    this.gmDirectory
+      .getAllGms()
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        catchError((err) => {
+          console.error(err);
+          this.error.set('Nie udało się pobrać danych.');
+          return of<IGmData[]>([]);
+        }),
+        finalize(() => this.isLoading.set(false))
+      )
+      .subscribe((rows) => {
         const uniq = this.deduplicateByUserId(rows ?? []);
-        // defensywnie sortujemy po dacie (rosnąco)
         uniq.sort(
-          (a, b) =>
-            this.dateMs(a.gmProfileCreatedAt) -
-            this.dateMs(b.gmProfileCreatedAt)
+          (a, b) => this.dateMs(a.gmProfileCreatedAt) - this.dateMs(b.gmProfileCreatedAt)
         );
         this.gms.set(uniq);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error(err);
-        this.error.set('Nie udało się pobrać danych.');
-        this.isLoading.set(false);
-      },
-      complete: () => this.loader.hide(),
-    });
+      });
   }
 
   private dateMs(d: Date | string | null | undefined): number {

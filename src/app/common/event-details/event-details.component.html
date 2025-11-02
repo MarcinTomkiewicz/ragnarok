@@ -2,9 +2,7 @@
 <section class="event-details-section">
   <div class="container">
     <h2 class="section-title">Wczytywanie…</h2>
-
     <div class="skeleton-cover skeleton-box" aria-hidden="true"></div>
-
     <div class="skeleton-table" role="status" aria-label="Ładowanie szczegółów">
       @for (i of [0,1,2,3,4]; track i) {
       <div class="skeleton-row">
@@ -23,14 +21,75 @@
     <h2 class="section-title text-center">{{ v.event.name }}</h2>
 
     <div class="event-meta">
-      <span class="meta-item">{{ v.event.singleDate | date : "dd.MM.yyyy" }}</span>
+      <span class="meta-item">{{
+        v.occurrenceDateObj | date : "dd.MM.yyyy"
+      }}</span>
       <span class="separator">•</span>
       <span class="meta-item">{{ v.timeRangeLabel }}</span>
       <span class="separator">•</span>
-      <span class="meta-item">{{ (v.event!.rooms || []).join(", ") || "-" }}</span>
+      <span class="meta-item">{{
+        (v.event!.rooms || []).join(", ") || "-"
+      }}</span>
     </div>
 
-    @if (v.chips.length) {
+    @if (v.occurrenceOptionsVm.length > 1) {
+    <div class="occurrence-nav" role="group" aria-label="Wystąpienia cyklu">
+      <button
+        type="button"
+        class="btn btn-outline"
+        [disabled]="!v.canPrev"
+        (click)="goPrev()"
+      >
+        ‹ Poprzednie
+      </button>
+
+      <div class="nav-center">
+        <div ngbDropdown #occDD="ngbDropdown" class="w-100">
+          <button
+            type="button"
+            ngbDropdownToggle
+            class="btn btn-outline dropdown-toggle-wide"
+          >
+            <span>{{ v.occurrenceDateObj | date : "EEEE, dd.MM.yyyy" }}</span>
+          </button>
+
+          <div ngbDropdownMenu class="dropdown-pane">
+            <div class="dropdown-list">
+              @for (opt of v.occurrenceOptionsVm; track opt.iso) {
+              <button
+                ngbDropdownItem
+                class="item dropdown-item"
+                [attr.data-date]="opt.iso"
+                [class.active]="opt.iso === occurrenceDate()!"
+                (click)="
+                  $event.preventDefault();
+                  chooseDateFromDropdown($event);
+                  occDD.close()
+                "
+              >
+                <div class="lhs">
+                  <div class="name">
+                    {{ opt.date | date : "EEEE, dd.MM.yyyy" }}
+                  </div>
+                </div>
+                <div class="rhs"></div>
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-outline"
+        [disabled]="!v.canNext"
+        (click)="goNext()"
+      >
+        Następne ›
+      </button>
+    </div>
+    } @if (v.chips.length) {
     <div class="tag-badges chip-row">
       @for (c of v.chips; track c.key) {
       <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span>
@@ -54,19 +113,17 @@
     </div>
     }
 
-<div class="event-description">
-  @for (paragraph of longDescParagraphs(); let i = $index; track i) {
-    <div
-      class="event-paragraph"
-      [class.empty]="!paragraph.trim()"
-      [innerHTML]="paragraph | linkify"
-    ></div>
-  }
-</div>
+    <div class="event-description">
+      @for (paragraph of longDescParagraphs(); let i = $index; track i) {
+      <div
+        class="event-paragraph"
+        [class.empty]="!paragraph.trim()"
+        [innerHTML]="paragraph | linkify"
+      ></div>
+      }
+    </div>
 
     @if (isComposite() && rooms().length) {
-
-    <!-- Pasek salek -->
     <div class="rooms-tabs" role="tablist" aria-label="Salki">
       @for (r of rooms(); track r) {
       <button
@@ -81,31 +138,24 @@
       }
     </div>
 
-    <!-- Lista: karty prowadzących (sesje + dyskusje) dla wybranej salki -->
-<app-event-hosts-list
-  [event]="event()!"
-  [dateIso]="occurrenceDate()!"
-  [filterRoom]="selectedRoom()"
-  [currentUser]="currentUser()"
-  [showSignup]="showSessionSignup()"
-></app-event-hosts-list>
-
-    }
-
-    <!-- ===== Wydarzenia typu Session (proste) ===== -->
-    @if (v.event.attractionType === 'SESSION') {
+    <app-event-hosts-list
+      [event]="event()!"
+      [dateIso]="occurrenceDate()!"
+      [filterRoom]="selectedRoom()"
+      [currentUser]="currentUser()"
+      [showSignup]="showSessionSignup()"
+    ></app-event-hosts-list>
+    } @if (v.event.attractionType === 'SESSION') {
     <h3 class="section-title text-center">Sesje do wyboru</h3>
     @if (hasOccurrence()) {
-<app-event-hosts-list
-  [event]="event()!"
-  [dateIso]="occurrenceDate()!"
-  [filterRoom]="selectedRoom()"
-  [currentUser]="currentUser()"
-  [showSignup]="showSessionSignup()"
-></app-event-hosts-list>
-
+    <app-event-hosts-list
+      [event]="event()!"
+      [dateIso]="occurrenceDate()!"
+      [filterRoom]="selectedRoom()"
+      [currentUser]="currentUser()"
+      [showSignup]="showSessionSignup()"
+    ></app-event-hosts-list>
     } } @else if (v.event.requiresHosts && !isComposite()) {
-    <!-- Proste non-session z prowadzącymi -->
     <h3 class="section-title text-center">Następne spotkanie</h3>
     <table class="table table-dark-style align-middle font-size-small">
       <tbody>
@@ -116,26 +166,26 @@
         <tr>
           <th scope="row">Prowadzący:</th>
           <td>
-            @if (v.nonSession.leads.length) {
-              @for (l of v.nonSession.leads; track l.id; let last = $last) {
-                @if (l.clickable) {
-                  <button class="btn btn-outline btn-sm" (click)="openGmProfile(l.host, $event)">
-                    {{ l.display }}
-                  </button>
-                } @else {
-                  <span>{{ l.display }}</span>
-                }
-                @if (!last) {<span>, </span>}
-              }
-            } @else { <span>—</span> }
+            @if (v.nonSession.leads.length) { @for (l of v.nonSession.leads;
+            track l.id; let last = $last) { @if (l.clickable) {
+            <button
+              class="btn btn-outline btn-sm"
+              (click)="openGmProfile(l.host, $event)"
+            >
+              {{ l.display }}
+            </button>
+            } @else {
+            <span>{{ l.display }}</span>
+            } @if (!last) {<span>, </span>} } } @else { <span>—</span> }
           </td>
         </tr>
         @if (v.nonSession.description) {
         <tr>
           <th scope="row">Opis spotkania:</th>
           <td>
-            @let paragraphs = (v.nonSession.description || '').split('\n');
-            @for (paragraph of paragraphs; let i = $index; track i) { @if (paragraph.trim().length) {
+            @let paragraphs = (v.nonSession.description || '').split('\n'); @for
+            (paragraph of paragraphs; let i = $index; track i) { @if
+            (paragraph.trim().length) {
             <div>{{ paragraph }}</div>
             } }
           </td>
@@ -145,7 +195,6 @@
     </table>
     } @if (showWholeSignup()) {
     <h3 class="section-title text-center">Zapisz się na wydarzenie</h3>
-
     @if (hasOccurrence() && !v.isArchive) {
     <app-event-signup-panel
       [eventId]="eventId()!"
@@ -172,8 +221,13 @@
     <table class="table table-dark-style align-middle font-size-small">
       <tbody>
         <tr>
-          <th scope="row">{{ v.event.recurrence ? "Następna data:" : "Data spotkania:" }}</th>
-          <td>@if (v.event.singleDate) { {{ v.event.singleDate | date : "dd.MM.yyyy" }} } @else { - }</td>
+          <th scope="row">
+            {{ v.event.recurrence ? "Następna data:" : "Data spotkania:" }}
+          </th>
+          <td>
+            @if (v.event.singleDate) {
+            {{ v.event.singleDate | date : "dd.MM.yyyy" }} } @else { - }
+          </td>
         </tr>
         <tr>
           <th scope="row">Godziny:</th>
@@ -187,7 +241,12 @@
           <th scope="row">Link do wydarzenia:</th>
           <td>
             @if (v.event.facebookLink) {
-            <button class="btn btn-info btn-sm" (click)="openFacebook(v.event.facebookLink!)">Zobacz na Facebooku</button>
+            <button
+              class="btn btn-info btn-sm"
+              (click)="openFacebook(v.event.facebookLink!)"
+            >
+              Zobacz na Facebooku
+            </button>
             } @else { <span>Brak wydarzenia</span> }
           </td>
         </tr>
@@ -197,7 +256,8 @@
           <th scope="row" class="td-40">Tagi:</th>
           <td class="td-60">
             <div class="tag-badges">
-              @for (c of v.chips; track c.key) { <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span> }
+              @for (c of v.chips; track c.key) {
+              <span class="tag-badge {{ c.cssClass }}">{{ c.label }}</span> }
             </div>
           </td>
         </tr>
@@ -206,7 +266,8 @@
           <th scope="row" class="td-40">Salki:</th>
           <td class="td-60">
             <div class="rooms-grid">
-              @for (room of v.event.rooms; track room) { <span class="tag-badge golden">{{ room }}</span> }
+              @for (room of v.event.rooms; track room) {
+              <span class="tag-badge golden">{{ room }}</span> }
             </div>
           </td>
         </tr>
