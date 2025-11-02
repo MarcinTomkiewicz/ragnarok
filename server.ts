@@ -7,6 +7,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import bootstrap from './src/main.server';
 
+const STATUS_MARKER_RE = /<!--SSR_STATUS:(\d{3})-->/;
+
 export function app(): express.Express {
   const server = express();
   const serverDistFolder = dirname(fileURLToPath(import.meta.url));
@@ -18,12 +20,16 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserDistFolder);
 
-  server.get('*.*', express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: 'index.html',
-  }));
+  // Pliki statyczne (cache 1 rok, bez ingerencji SSR)
+  server.get(
+    '*.*',
+    express.static(browserDistFolder, {
+      maxAge: '1y',
+      index: 'index.html',
+    })
+  );
 
-  // All regular routes use the Angular engine
+  // Wszystkie pozostałe trasy renderuje Angular SSR
   server.get('**', (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
 
@@ -35,9 +41,29 @@ export function app(): express.Express {
         publicPath: browserDistFolder,
         providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
       })
-      .then((html) => res.send(html))
+      .then((html) => {
+        // Wykryj marker statusu z komponentu (np. <!--SSR_STATUS:404-->)
+        const m = html.match(STATUS_MARKER_RE);
+        if (m) {
+          const code = parseInt(m[1], 10);
+          if (!Number.isNaN(code)) {
+            res.status(code);
+          }
+        }
+        res.send(html);
+      })
       .catch((err) => next(err));
   });
+
+  // Prost y handler błędów – 500 na wypadek wyjątków
+  // (Nginx i tak zwróci 502/500 jeśli Node nie odpowie)
+  server.use(
+    (err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      // eslint-disable-next-line no-console
+      console.error('[SSR ERROR]', err);
+      res.status(500).send('Wewnętrzny błąd serwera');
+    }
+  );
 
   return server;
 }
@@ -45,7 +71,6 @@ export function app(): express.Express {
 function run(): void {
   const port = process.env['PORT'] || 4000;
 
-  // Start up the Node server
   const server = app();
 
   const options = {
@@ -54,6 +79,7 @@ function run(): void {
   };
 
   https.createServer(options, server).listen(port, () => {
+    // eslint-disable-next-line no-console
     console.log(`Node HTTPS server listening on https://localhost:${port}`);
   });
 }
