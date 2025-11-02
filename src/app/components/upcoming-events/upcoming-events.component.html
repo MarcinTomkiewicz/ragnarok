@@ -2,12 +2,11 @@
   <div class="container">
     <h2 class="section-title">Nadchodzące wydarzenia</h2>
     <p class="section-subtitle">
-      Dołącz do nas na specjalne wydarzenia, warsztaty i sesje one-shot.
+      Dołącz do nas na specjalne wydarzenia, warsztaty i sesje one-shot — m.in. <strong>Chaotyczne Czwartki</strong> i program 
+      <strong>„Dołącz do Drużyny”</strong>. Sprawdź kalendarz i zagraj w ulubione <em>gry fabularne</em>.
     </p>
 
-    <!-- SMALL: swiper -->
     @if (isSmallScreen() && upcomingEvents().length) {
-    <!-- space-between="16" -->
     <swiper-container
       class="mg-swiper"
       slides-per-view="auto"
@@ -20,29 +19,21 @@
       <swiper-slide>
         <div class="event-card">
           <div class="image-wrapper">
-            <img [src]="event.coverUrl" [alt]="event.name" />
+            <img [src]="event.coverUrl" [alt]="event.name + ' – wydarzenie RPG w Poznaniu'" />
             <div class="tag-badges">
-              <span class="tag-badge amber">{{
-                getAttractionLabel(event.attractionKind)
-              }}</span>
-              @if (event.isForBeginners) {
-              <span class="tag-badge green">Dla początkujących</span>
-              }
+              <span class="tag-badge amber">{{ getAttractionLabel(event.attractionKind) }}</span>
+              @if (event.isForBeginners) { <span class="tag-badge green">Dla początkujących</span> }
             </div>
           </div>
           <div class="event-content">
             <h3>{{ event.name }}</h3>
             <div class="event-date">
-              <img src="/icons/calendar.svg" alt="calendar" />
+              <img src="/icons/calendar.svg" alt="Kalendarz wydarzeń RPG" />
               <span>{{ event.occurrenceDate | date : "dd.MM.yyyy" }}</span>
             </div>
             <p class="event-description">{{ event.shortDescription }}</p>
             <div class="event-actions">
-              <a
-                [routerLink]="detailsLink(event)"
-                class="button-like button-like-outline"
-                >Szczegóły</a
-              >
+              <a [routerLink]="detailsLink(event)" class="button-like button-like-outline">Szczegóły</a>
             </div>
           </div>
         </div>
@@ -54,29 +45,21 @@
       @for (event of upcomingEvents(); track trackBySlugDate(event)) {
       <div class="event-card">
         <div class="image-wrapper">
-          <img [src]="event.coverUrl" [alt]="event.name" />
+          <img [src]="event.coverUrl" [alt]="event.name + ' – wydarzenie RPG w Poznaniu'" />
           <div class="tag-badges">
-            <span class="tag-badge amber">{{
-              getAttractionLabel(event.attractionKind)
-            }}</span>
-            @if (event.isForBeginners) {
-            <span class="tag-badge green">Dla początkujących</span>
-            }
+            <span class="tag-badge amber">{{ getAttractionLabel(event.attractionKind) }}</span>
+            @if (event.isForBeginners) { <span class="tag-badge green">Dla początkujących</span> }
           </div>
         </div>
         <div class="event-content">
           <h3>{{ event.name }}</h3>
           <div class="event-date">
-            <img src="/icons/calendar.svg" alt="calendar" />
+            <img src="/icons/calendar.svg" alt="Kalendarz wydarzeń RPG" />
             <span>{{ event.occurrenceDate | date : "dd.MM.yyyy" }}</span>
           </div>
           <p>{{ event.shortDescription }}</p>
           <div class="event-actions">
-            <a
-              [routerLink]="detailsLink(event)"
-              class="button-like button-like-outline"
-              >Szczegóły</a
-            >
+            <a [routerLink]="detailsLink(event)" class="button-like button-like-outline">Szczegóły</a>
           </div>
         </div>
       </div>

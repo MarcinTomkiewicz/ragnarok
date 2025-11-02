@@ -2,7 +2,8 @@
   <div class="container">
     <h2 class="section-title">Poznaj nasz zespół</h2>
     <p class="section-subtitle">
-      Nasi Mistrzowie Gry i pracownicy z pasją tworzą niezapomniane przygody.
+      Nasi <strong>Mistrzowie Gry</strong> i opiekunowie społeczności tworzą niezapomniane przygody. 
+      To osoby z pasją, które wspierają graczy w wyborze systemów, prowadzeniu kampanii i odkrywaniu gier fabularnych.
     </p>
 
     @if (isSmallScreen() && team.length) {
@@ -19,7 +20,7 @@
           <swiper-slide>
             <div class="team-card">
               <div class="avatar">
-                <img [src]="member.image" [alt]="member.name" />
+                <img [src]="member.image" [alt]="member.name + ' – Mistrz Gry w Ragnaroku'" />
               </div>
               <h3>{{ member.name }}</h3>
               <p class="role">{{ member.roleDisplay }}</p>
@@ -33,7 +34,7 @@
         @for (member of team; track member.id) {
           <div class="team-card">
             <div class="avatar">
-              <img [src]="member.image" [alt]="member.name" />
+              <img [src]="member.image" [alt]="member.name + ' – Mistrz Gry w Ragnaroku'" />
             </div>
             <h3>{{ member.name }}</h3>
             <p class="role">{{ member.roleDisplay }}</p>
