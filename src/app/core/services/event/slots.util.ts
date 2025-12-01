@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { EventFull, EventRoomPlan } from '../../interfaces/i-events';
 import { HostSignupLevel, RoomPurpose, RoomScheduleKind } from '../../enums/event-rooms';
-import { HostSignupScope, ParticipantSignupScope } from '../../enums/events';
+import { HostSignupScope } from '../../enums/events';
 import { TimeUtil } from './time.util';
 
 export type SlotDef = {
@@ -30,7 +30,9 @@ export class SlotsUtil {
     const out: Array<{ roomName: string; slots: SlotDef[] }> = [];
 
     if (hasPlans) {
-      const plansByRoom = new Map<string, EventRoomPlan>((ev.roomPlans ?? []).map((p) => [p.roomName, p]));
+      const plansByRoom = new Map<string, EventRoomPlan>(
+        (ev.roomPlans ?? []).map((p) => [p.roomName, p])
+      );
       for (const room of rooms) {
         const plan = plansByRoom.get(room);
         if (!plan) continue;
@@ -62,7 +64,10 @@ export class SlotsUtil {
             startTime: start,
             endTime: end,
             purpose: purposeFromEvent,
-            title: purposeFromEvent === RoomPurpose.Entertainment ? 'Rozrywka' : null,
+            title:
+              purposeFromEvent === RoomPurpose.Entertainment
+                ? 'Rozrywka'
+                : null,
             hostSignup: eventLevel,
             requiresHosts: eventRequires,
             hostScope: eventScope,
@@ -84,12 +89,19 @@ export class SlotsUtil {
     const effectiveLevel = (slotLevel?: HostSignupLevel | null): HostSignupLevel =>
       (slotLevel ?? roomLevel ?? eventLevel);
 
-    // Kaskada requiresHosts (slot -> room -> event)
+    // --- Kaskada requiresHosts (slot -> room -> event) ---
     const eventRequires = !!ev.requiresHosts;
     const roomRequiresTri = (plan as any).requiresHosts as boolean | null | undefined;
-    const roomRequires = roomRequiresTri === undefined || roomRequiresTri === null ? eventRequires : !!roomRequiresTri;
 
-    // Kaskada scope (slot -> room -> event)
+    // ważne: NULL / false na salce = "nie zbiera MG" (nie dziedziczymy po evencie)
+    const roomRequires =
+      roomRequiresTri === true
+        ? true
+        : roomRequiresTri === false || roomRequiresTri === null
+        ? false
+        : eventRequires; // tylko przy undefined dziedziczymy z eventu
+
+    // --- Kaskada scope (slot -> room -> event) ---
     const eventScope = (ev.hostSignup ?? HostSignupScope.Staff) as HostSignupScope;
     const roomScope = ((plan as any).hostScope ?? null) as HostSignupScope | null;
 
@@ -98,13 +110,17 @@ export class SlotsUtil {
 
     const schedule = (plan.scheduleKind ?? RoomScheduleKind.FullSpan) as RoomScheduleKind;
 
+    // --- FULL_SPAN ---
     if (schedule === RoomScheduleKind.FullSpan) {
       return [
         {
           startTime: evStart,
           endTime: evEnd,
           purpose: defaultPurpose,
-          title: defaultPurpose === RoomPurpose.Entertainment ? (defaultTitle ?? 'Rozrywka') : null,
+          title:
+            defaultPurpose === RoomPurpose.Entertainment
+              ? (defaultTitle ?? 'Rozrywka')
+              : null,
           hostSignup: effectiveLevel(null),
           requiresHosts: roomRequires,
           hostScope: effectiveScope(null),
@@ -112,40 +128,61 @@ export class SlotsUtil {
       ];
     }
 
+    // --- INTERVAL (bez 37:00, z obsługą przejścia przez północ) ---
     if (schedule === RoomScheduleKind.Interval) {
       const intervalH = Math.max(1, Number(plan.intervalHours ?? 0) || 0);
+
+      let total = this.time.diffHours(evStart, evEnd);
+      // jeśli end <= start → zakładamy przejście przez północ
+      if (total <= 0) {
+        total += 24;
+      }
+
       const out: SlotDef[] = [];
+      let remaining = total;
       let cursor = evStart;
-      while (this.time.diffHours(cursor, evEnd) > 0) {
-        const nextEndHours = Math.min(
-          this.time.diffHours(evStart, evEnd),
-          this.time.diffHours(evStart, cursor) + intervalH
-        );
-        const slotEnd = this.time.addHours(evStart, nextEndHours);
+
+      while (remaining > 0) {
+        const step = Math.min(intervalH, remaining);
+        const slotEnd = this.time.addHours(cursor, step);
+
         out.push({
           startTime: cursor,
           endTime: slotEnd,
           purpose: defaultPurpose,
-          title: defaultPurpose === RoomPurpose.Entertainment ? (defaultTitle ?? 'Rozrywka') : null,
+          title:
+            defaultPurpose === RoomPurpose.Entertainment
+              ? (defaultTitle ?? 'Rozrywka')
+              : null,
           hostSignup: effectiveLevel(null),
           requiresHosts: roomRequires,
           hostScope: effectiveScope(null),
         });
+
         cursor = slotEnd;
+        remaining -= step;
       }
+
       return out;
     }
 
-    // Schedule (ręczne sloty) – tu może być per-slot requiresHosts/hostScope
+    // --- SCHEDULE (ręczne sloty) ---
     const explicit = (plan.slots ?? []).map<SlotDef>((s) => {
       const st = this.time.hhmmss(s.startTime as any);
       const en = this.time.hhmmss(s.endTime as any);
       const p = (s.purpose as RoomPurpose | undefined) ?? defaultPurpose;
 
-      // per-slot override
+      // per-slot override:
+      //  TRUE  → slot zbiera MG
+      //  FALSE / NULL → slot NIE zbiera MG (nie dziedziczymy)
+      //  undefined → dziedziczy roomRequires
       const slotRequiresTri = (s as any).requiresHosts as boolean | null | undefined;
       const slotRequires =
-        slotRequiresTri === undefined || slotRequiresTri === null ? roomRequires : !!slotRequiresTri;
+        slotRequiresTri === true
+          ? true
+          : slotRequiresTri === false || slotRequiresTri === null
+          ? false
+          : roomRequires;
 
       const slotScope = ((s as any).hostScope ?? null) as HostSignupScope | null;
 
@@ -153,15 +190,20 @@ export class SlotsUtil {
         startTime: st,
         endTime: en,
         purpose: p,
-        title: p === RoomPurpose.Entertainment ? (s.customTitle ?? defaultTitle ?? 'Rozrywka') : (s.customTitle ?? null),
+        title:
+          p === RoomPurpose.Entertainment
+            ? (s.customTitle ?? defaultTitle ?? 'Rozrywka')
+            : (s.customTitle ?? null),
         hostSignup: effectiveLevel((s.hostSignup as HostSignupLevel | null) ?? null),
         requiresHosts: slotRequires,
         hostScope: effectiveScope(slotScope),
       };
     });
 
-    return explicit
-      .filter((sl) => this.time.diffHours(sl.startTime, sl.endTime) > 0)
-      .filter((sl) => this.time.hhmmss(sl.startTime) >= evStart && this.time.hhmmss(sl.endTime) <= evEnd);
+    // zostawiamy tylko sensowne sloty (>0h); NIE przycinamy do [evStart, evEnd],
+    // bo ręczne sloty mogą minimalnie wystawać i nie chcemy ich wycinać po cichu
+    return explicit.filter(
+      (sl) => this.time.diffHours(sl.startTime, sl.endTime) > 0
+    );
   }
 }
