@@ -2,10 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import {
-  NgbAccordionModule,
-  NgbTooltipModule,
-} from '@ng-bootstrap/ng-bootstrap';
+import { NgbAccordionModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { combineLatest, map, of, startWith, switchMap } from 'rxjs';
 
 import {
@@ -14,7 +11,12 @@ import {
   HostSignupScope,
   HostSignupScopeLabel,
 } from '../../../core/enums/events';
-import { EventFull, EventRoomPlan } from '../../../core/interfaces/i-events';
+
+import {
+  EventFull,
+  EventRoomPlan,
+} from '../../../core/interfaces/i-events';
+
 import { EventService } from '../../../core/services/event/event.service';
 import { formatYmdLocal } from '../../../core/utils/weekday-options';
 
@@ -23,19 +25,11 @@ import { CoworkerRoles } from '../../../core/enums/roles';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { hasMinimumCoworkerRole } from '../../../core/utils/required-roles';
 
-// NEW: Slots util (kaskadowe requiresHosts/hostScope)
 import { SlotsUtil, SlotDef } from '../../../core/services/event/slots.util';
-
-// NEW: Potrzebne do sprawdzania zajętości per room/slot
 import { EventHostsService } from '../../../core/services/event-hosts/event-hosts.service';
 import { IEventHost } from '../../../core/interfaces/i-event-host';
 
 type ViewMode = 'tabs' | 'accordion';
-
-type RoomUi =
-  | { mode: 'none'; roomName: string }
-  | { mode: 'full'; roomName: string; slot: SlotDef }
-  | { mode: 'slots'; roomName: string; slots: SlotDef[] };
 
 @Component({
   selector: 'app-events-admin-list',
@@ -49,8 +43,6 @@ export class EventsAdminListComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly slots = inject(SlotsUtil);
-
-  // NEW: do pobierania zgłoszeń dla Composite/singleDate
   private readonly eventHosts = inject(EventHostsService);
 
   AttractionKind = AttractionKind;
@@ -88,17 +80,21 @@ export class EventsAdminListComponent {
     return hasMinimumCoworkerRole(u, CoworkerRoles.User);
   };
 
+  /**
+   * Czy event w ogóle wymaga prowadzących (żeby pokazać go na liście)?
+   * DLA COMPOSITE: patrzymy na sloty, które faktycznie są slotami do zapisów MG
+   * (SlotDef.requiresHosts === true po kaskadzie).
+   */
   private eventRequiresHosts(ev: EventFull): boolean {
     if (ev.attractionType === AttractionKind.Composite) {
       const plans = ev.roomPlans ?? [];
       if (!plans.length) return false;
 
-      for (const p of plans) {
-        const slots = this.slots.generateSlotsForRoom(ev, p);
-        if (slots.some((s) => s.requiresHosts)) return true;
-      }
-      return false;
+      // Czy w którejkolwiek salce jest choć jeden slot z requiresHosts = true?
+      return plans.some((p) => this.slotsForRoom(ev, p).length > 0);
     }
+
+    // dla innych typów – globalny event.requiresHosts
     return !!ev.requiresHosts;
   }
 
@@ -225,69 +221,62 @@ export class EventsAdminListComponent {
   public isFull(evId: string, dateIso: string): boolean {
     return !!this.fullnessAll()[evId]?.[dateIso]?.isFull;
   }
+
   private isMine(evId: string, dateIso: string): boolean {
     return !!this.myHostDatesAll()[evId]?.[dateIso];
   }
+
   canClick(ev: EventFull, dateIso: string): boolean {
     if (this.isAdmin()) return true;
     if (this.isMine(ev.id, dateIso)) return true;
     return !this.isFull(ev.id, dateIso);
   }
+
   private readonly todayYmd = computed(() => formatYmdLocal(new Date()));
   private isFutureDate = (dateIso: string): boolean => dateIso > this.todayYmd();
 
-  // ---- POMOCNICZE: Composite ----
+  // ---- Composite helpers ----
   isComposite(ev: EventFull | null): boolean {
-    return (
-      !!ev && ev.attractionType === AttractionKind.Composite && !!ev.singleDate
-    );
+    return !!ev && ev.attractionType === AttractionKind.Composite && !!ev.singleDate;
   }
 
-  private roomPlanMap(ev: EventFull): Record<string, EventRoomPlan> {
-    const out: Record<string, EventRoomPlan> = {};
-    (ev.roomPlans ?? []).forEach((p) => (out[p.roomName] = p));
-    return out;
-  }
-
-  private buildRoomUi(ev: EventFull, roomName: string): RoomUi {
-    const plan = this.roomPlanMap(ev)[roomName];
-    if (!plan) return { mode: 'none', roomName };
-
-    if (
-      (plan.scheduleKind === this.RoomScheduleKind.FullSpan ||
-        plan.scheduleKind === this.RoomScheduleKind.Interval) &&
-      (plan as any).requiresHosts !== true
-    ) {
-      return { mode: 'none', roomName };
-    }
-
+  /**
+   * Sloty w danej sali, które REALNIE są "slotami do zapisów MG".
+   * Po poprawionym SlotsUtil interpretujemy to po prostu jako:
+   *   SlotDef.requiresHosts === true
+   */
+  slotsForRoom(ev: EventFull, plan: EventRoomPlan): SlotDef[] {
     const allSlots = this.slots.generateSlotsForRoom(ev, plan);
-    const req = allSlots.filter((s: any) => s.requiresHosts === true);
-
-    if (req.length === 0) return { mode: 'none', roomName };
-
-    const isFullSpan =
-      req.length === 1 &&
-      req[0].startTime.slice(0, 5) === ev.startTime.slice(0, 5) &&
-      req[0].endTime.slice(0, 5) === ev.endTime.slice(0, 5);
-
-    if (isFullSpan) return { mode: 'full', roomName, slot: req[0] };
-    return { mode: 'slots', roomName, slots: req };
+    return allSlots.filter((s) => s.requiresHosts);
   }
 
-  roomGranularityLabel(ev: EventFull, roomName: string): string {
-    const ui = this.buildRoomUi(ev, roomName);
-    if (ui.mode === 'none') return 'Brak zgłoszeń';
-    if (ui.mode === 'full') return 'Na salkę';
+  /**
+   * Label "Brak zgłoszeń" / "Na salkę" / "Na slot"
+   */
+  roomGranularityLabel(ev: EventFull, plan: EventRoomPlan): string {
+    const hostSlots = this.slotsForRoom(ev, plan);
+    if (!hostSlots.length) return 'Brak zgłoszeń';
+
+    const schedule =
+      (plan.scheduleKind ?? RoomScheduleKind.FullSpan) as RoomScheduleKind;
+
+    if (schedule === RoomScheduleKind.FullSpan && hostSlots.length === 1) {
+      return 'Na salkę';
+    }
     return 'Na slot';
   }
 
-  roomUiList(ev: EventFull): RoomUi[] {
-    const rooms = ev.rooms ?? [];
-    return rooms.map((r) => this.buildRoomUi(ev, r));
+  /**
+   * Nazwy sal, które są w ev.rooms, ale nie mają zdefiniowanego EventRoomPlan.
+   * (dla info/debug – zgłoszeń i tak tam nie będzie)
+   */
+  roomsWithoutPlan(ev: EventFull): string[] {
+    const plans = ev.roomPlans ?? [];
+    const plannedNames = new Set(plans.map((p) => p.roomName));
+    return (ev.rooms ?? []).filter((name) => !plannedNames.has(name));
   }
 
-  // ---- ZGŁOSZENIA DLA WYBRANEGO COMPOSITE (room/slot status) ----
+  // ---- Zgłoszenia dla wybranego Composite (room/slot status) ----
   private readonly selectedCompositeSignups = toSignal(
     toObservable(this.selected).pipe(
       switchMap((ev) =>
@@ -304,25 +293,35 @@ export class EventsAdminListComponent {
     return this.selectedCompositeSignups() ?? [];
   }
 
-  /** Status sali w trybie "full" (cały przedział, bez slotStartTime) */
   roomStatus(evId: string, date: string, roomName: string): 'free' | 'mine' | 'taken' {
     const me = this.userId();
     const list = this.signupsForSelectedComposite();
-    const found = list.find(s => s.eventId === evId && s.occurrenceDate === date && s.roomName === roomName && !s.slotStartTime);
+    const found = list.find(
+      (s) =>
+        s.eventId === evId &&
+        s.occurrenceDate === date &&
+        s.roomName === roomName &&
+        !s.slotStartTime
+    );
     if (!found) return 'free';
     return found.hostUserId === me ? 'mine' : 'taken';
   }
 
-  /** Status slota w sali (Composite slot) */
-  slotStatus(evId: string, date: string, roomName: string, startTime: string): 'free' | 'mine' | 'taken' {
+  slotStatus(
+    evId: string,
+    date: string,
+    roomName: string,
+    startTime: string
+  ): 'free' | 'mine' | 'taken' {
     const me = this.userId();
     const hhmm = startTime.slice(0, 5);
     const list = this.signupsForSelectedComposite();
-    const found = list.find(s =>
-      s.eventId === evId &&
-      s.occurrenceDate === date &&
-      s.roomName === roomName &&
-      (s.slotStartTime?.slice(0, 5) ?? '') === hhmm
+    const found = list.find(
+      (s) =>
+        s.eventId === evId &&
+        s.occurrenceDate === date &&
+        s.roomName === roomName &&
+        (s.slotStartTime?.slice(0, 5) ?? '') === hhmm
     );
     if (!found) return 'free';
     return found.hostUserId === me ? 'mine' : 'taken';
@@ -342,7 +341,6 @@ export class EventsAdminListComponent {
     this.router.navigate(['/auth/events', slug, 'host-signup', dateIso]);
   }
 
-  /** Composite: zgłoszenie z wybraną salką (opcjonalnie slot HH:mm–HH:mm) */
   goSignupRoom(roomName: string, dateIso: string, start?: string, end?: string) {
     const ev = this.selected();
     const slug =

@@ -71,71 +71,80 @@
             </div>
 
           <!-- JEDNORAZOWE ZŁOŻONE (Composite): lista salek -->
-          } @else if (isComposite(ev)) {
-            <div class="occ">
-              <h4 class="h6">Zgłoszenia per salkę</h4>
+      } @else if (isComposite(ev)) {
+        <div class="occ">
+          <h4 class="h6">Zgłoszenia per salkę</h4>
 
-              @if ((ev.rooms || []).length) {
-                <div class="rooms-grid">
-                  @for (room of roomUiList(ev); track room.roomName) {
-                    <div class="room-tile card-like p-2">
+          @if (ev.roomPlans?.length) {
+            <div class="rooms-grid">
+              @for (plan of ev.roomPlans; track plan.roomName) {
+                @let slots = slotsForRoom(ev, plan);
 
-                      <div class="room-head">
-                        <strong class="me-2">{{ room.roomName }}</strong>
-                        <span class="tag-badge gray">
-                          {{ roomGranularityLabel(ev, room.roomName) }}
-                        </span>
+                <div class="room-tile card-like p-2">
+                  <div class="room-head">
+                    <strong class="me-2">{{ plan.roomName }}</strong>
+                    <span class="tag-badge gray">
+                      {{ roomGranularityLabel(ev, plan) }}
+                    </span>
+                  </div>
+
+                  <!-- BRAK ZGŁOSZEŃ DLA TEJ SALI -->
+                  @if (!slots.length) {
+                    <div class="muted mt-2">
+                      Do tej salki nie są wymagane zgłoszenia prowadzących.
+                    </div>
+                  } @else {
+                    @let schedule = plan.scheduleKind ?? RoomScheduleKind.FullSpan;
+
+                    <!-- CAŁY PRZEDZIAŁ (jeden przycisk) -->
+                    @if (schedule === RoomScheduleKind.FullSpan && slots.length === 1) {
+                      <div class="room-actions mt-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm"
+                          [class.btn-outline]="roomStatus(ev.id, ev.singleDate!, plan.roomName) === 'free'"
+                          [class.btn-danger]="roomStatus(ev.id, ev.singleDate!, plan.roomName) !== 'free'"
+                          [disabled]="roomStatus(ev.id, ev.singleDate!, plan.roomName) === 'taken'"
+                          (click)="roomStatus(ev.id, ev.singleDate!, plan.roomName) !== 'taken'
+                            ? goSignupRoom(plan.roomName, ev.singleDate!)
+                            : null">
+                          Zgłoś się
+                        </button>
                       </div>
-
-                      <!-- BRAK ZGŁOSZEŃ -->
-                      @if (room.mode === 'none') {
-                        <div class="muted mt-2">
-                          Do tej salki nie są wymagane zgłoszenia prowadzących.
-                        </div>
-                      }
-
-                      <!-- CAŁY PRZEDZIAŁ (jeden przycisk) -->
-                      @if (room.mode === 'full') {
-                        <div class="room-actions mt-2">
+                    } @else {
+                      <!-- WIELE SLOTÓW (przyciski HH:mm–HH:mm) -->
+                      <div class="dates mt-2">
+                        @for (s of slots; track s.startTime) {
                           <button
                             type="button"
                             class="btn btn-sm"
-                            [class.btn-outline]="roomStatus(ev.id, ev.singleDate!, room.roomName) === 'free'"
-                            [class.btn-danger]="roomStatus(ev.id, ev.singleDate!, room.roomName) !== 'free'"
-                            [disabled]="roomStatus(ev.id, ev.singleDate!, room.roomName) === 'taken'"
-                            (click)="roomStatus(ev.id, ev.singleDate!, room.roomName) !== 'taken'
-                              ? goSignupRoom(room.roomName, ev.singleDate!)
+                            [class.btn-outline]="slotStatus(ev.id, ev.singleDate!, plan.roomName, s.startTime) === 'free'"
+                            [class.btn-danger]="slotStatus(ev.id, ev.singleDate!, plan.roomName, s.startTime) !== 'free'"
+                            [disabled]="slotStatus(ev.id, ev.singleDate!, plan.roomName, s.startTime) === 'taken'"
+                            (click)="slotStatus(ev.id, ev.singleDate!, plan.roomName, s.startTime) !== 'taken'
+                              ? goSignupRoom(plan.roomName, ev.singleDate!, s.startTime, s.endTime)
                               : null">
-                            Zgłoś się
+                            {{ s.startTime.slice(0,5) }}–{{ s.endTime.slice(0,5) }}
                           </button>
-                        </div>
-                      }
-
-                      <!-- WIELE SLOTÓW (przyciski HH:mm–HH:mm) -->
-                      @if (room.mode === 'slots') {
-                        <div class="dates mt-2">
-                          @for (s of room.slots; track s.startTime) {
-                            <button
-                              type="button"
-                              class="btn btn-sm"
-                              [class.btn-outline]="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) === 'free'"
-                              [class.btn-danger]="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) !== 'free'"
-                              [disabled]="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) === 'taken'"
-                              (click)="slotStatus(ev.id, ev.singleDate!, room.roomName, s.startTime) !== 'taken'
-                                ? goSignupRoom(room.roomName, ev.singleDate!, s.startTime, s.endTime)
-                                : null">
-                              {{ s.startTime.slice(0,5) }}–{{ s.endTime.slice(0,5) }}
-                            </button>
-                          }
-                        </div>
-                      }
-                    </div>
+                        }
+                      </div>
+                    }
                   }
                 </div>
-              } @else {
-                <div class="muted">Brak zdefiniowanych salek.</div>
               }
             </div>
+
+            @let leftovers = roomsWithoutPlan(ev);
+            @if (leftovers.length) {
+              <div class="muted mt-3">
+                Brak zdefiniowanych planów zapisów dla salek:
+                {{ leftovers.join(', ') }}.
+              </div>
+            }
+          } @else {
+            <div class="muted">Brak zdefiniowanych planów salek.</div>
+          }
+        </div>
 
           <!-- CYKLICZNE: jak dotąd -->
           } @else {
